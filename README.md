@@ -48,10 +48,12 @@ on a test plate, solder the long female pin from your Wemos D1 mini
 
 ![Alt text](./images/1.jpg) 
 
+( I cut the 3rd pin ( RX ) I use the place for GND connector ) 
 
 solder a 5.6kOhms resistance between 3.3V hole ( first hole ) 
 and D2 ( last hole ) 
-and connect 3.3V - GND and D2 to your Dallas 18b20 
+and sold 3.3V - GND and D2 to your Dallas 18b20 
+or add connector 
 
 ![Alt text](images/3.jpg) 
 
