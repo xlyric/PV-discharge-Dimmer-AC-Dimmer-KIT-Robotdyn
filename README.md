@@ -46,16 +46,17 @@ lib_deps = https://github.com/xlyric/RBDDimmer
 
 on a test plate, solder the long female pin from your Wemos D1 mini 
 
-(images/1.jpg) 
+![Alt text](./images/1.jpg) 
+
 
 solder a 5.6kOhms resistance between 3.3V hole ( first hole ) 
 and D2 ( last hole ) 
 and connect 3.3V - GND and D2 to your Dallas 18b20 
 
-(images/3) 
+![Alt text](images/3) 
 
 you can now connect the board to the main board 
-(images/4)
-(images/5)
+![Alt text](./images/4)
+![Alt text](./images/5)
 
 
