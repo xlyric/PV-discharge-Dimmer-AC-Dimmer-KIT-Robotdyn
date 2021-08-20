@@ -3,7 +3,7 @@
 I remaster the distant dimmer with the new ALL in dimmer from Robotdyn
 https://robotdyn.com/diy-iot-ac-dimmer-kit-esp8266-wi-fi-d1-mini-for-ac-110-240v-dimming-control.html
 
-![enter image description here](https://robotdyn.com/pub/media/catalog/product/cache/3c7e6817bfdaeedae5fc1f56c1800828/i/o/iotdimmer_angle2_esp_logo.jpg)
+![enter image description here](https://robotdyn.com/pub/media/catalog/product/cache/3c7e6817bfdaeedae5fc1f56c1800828/i/o/iotdimmer_angle2_esp_logo.jpg =500x)
 
 
 # Installation
@@ -11,6 +11,8 @@ https://robotdyn.com/diy-iot-ac-dimmer-kit-esp8266-wi-fi-d1-mini-for-ac-110-240v
 make a git clone of the project and use Visual studio code for build and upload to the board. 
 by default, D0 and D1 is used and solt on the board. 
 D2 can be used by a Dallas 18b20, I explaint after how to make the small board
+
+![Alt text](./images/front.png) 
 
 # USE
 
