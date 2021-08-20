@@ -53,10 +53,10 @@ solder a 5.6kOhms resistance between 3.3V hole ( first hole )
 and D2 ( last hole ) 
 and connect 3.3V - GND and D2 to your Dallas 18b20 
 
-![Alt text](images/3) 
+![Alt text](images/3.jpg) 
 
 you can now connect the board to the main board 
-![Alt text](./images/4)
-![Alt text](./images/5)
+![Alt text](./images/4.jpg)
+![Alt text](./images/5.jpg)
 
 
