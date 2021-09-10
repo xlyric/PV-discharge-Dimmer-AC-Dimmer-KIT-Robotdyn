@@ -98,7 +98,7 @@
  * Begin Settings
  **************************/
 
-const String VERSION = "Version 2.2" ;
+const String VERSION = "Version 2.4" ;
 
 /***************************
  * temperature de sécurité
@@ -127,6 +127,7 @@ int puissance = 0 ;
 int change = 0; 
 
 void reconnect();
+void child_communication(int delest_power);
 
 //***********************************
 //************* Time
@@ -179,11 +180,16 @@ DeviceAddress insideThermometer;
 struct Config {
   char hostname[15];
   int port;
-  int IDX;
-  int IDXAlarme;
-  int maxtemp;
   char Publish[100];
-  
+  int IDXTemp;
+  int maxtemp;
+  int IDXAlarme;
+  int IDX;
+  int maxpow;
+  char child[15];
+  char mode[10];
+  int minpow;
+    
 };
 
 const char *filename_conf = "/config.json";
@@ -209,17 +215,28 @@ void loadConfiguration(const char *filename, Config &config) {
     Serial.println(F("Failed to read file, using default configuration"));
 
   // Copy values from the JsonDocument to the Config
-  config.port = doc["port"] | 1883;
+  
   strlcpy(config.hostname,                  // <- destination
           doc["hostname"] | "192.168.1.20", // <- source
           sizeof(config.hostname));         // <- destination's capacity
-  config.IDX = doc["IDX"] | 61; 
-  config.IDXAlarme = doc["IDXAlarme"] | 100; 
-  config.maxtemp = doc["maxtemp"] | 75; 
-  strlcpy(config.Publish,                  // <- destination
-          doc["Publish"] | "domoticz/in", // <- source
-          sizeof(config.Publish));         // <- destination's capacity
+  config.port = doc["port"] | 1883;
+  strlcpy(config.Publish,                 
+          doc["Publish"] | "domoticz/in", 
+          sizeof(config.Publish));        
+  config.IDXTemp = doc["IDXTemp"] | 200; 
+  config.maxtemp = doc["maxtemp"] | 60; 
+  config.IDXAlarme = doc["IDXAlarme"] | 202; 
+  config.IDX = doc["IDX"] | 201; 
+  config.maxpow = doc["maxpow"] | 50; 
+  config.minpow = doc["minpow"] | 5;
+  strlcpy(config.child,                  
+          doc["child"] | "192.168.1.20", 
+          sizeof(config.child));         
+  strlcpy(config.mode,                  
+          doc["mode"] | "off", 
+          sizeof(config.mode));
   configFile.close();
+  
       
 }
 
@@ -239,15 +256,20 @@ void saveConfiguration(const char *filename, const Config &config) {
   // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/assistant to compute the capacity.
-  StaticJsonDocument<512> doc;
+  StaticJsonDocument<1024> doc;
 
   // Set the values in the document
   doc["hostname"] = config.hostname;
   doc["port"] = config.port;
-  doc["IDX"] = config.IDX;
-  doc["IDXAlarme"] = config.IDXAlarme;
-  doc["maxtemp"] = config.maxtemp;
   doc["Publish"] = config.Publish;
+  doc["IDXTemp"] = config.IDXTemp;
+  doc["maxtemp"] = config.maxtemp;
+  doc["IDXAlarme"] = config.IDXAlarme;
+  doc["IDX"] = config.IDX;  
+  doc["maxpow"] = config.maxpow;
+  doc["minpow"] = config.minpow;
+  doc["child"] = config.child;
+  doc["mode"] = config.mode;
   
 
 
@@ -308,9 +330,26 @@ String getTime() {
 
 String getconfig() {
   String configweb;  
-  configweb = String(config.hostname) + ";" +  config.port + ";"  + config.IDX + ";"  +  config.IDXAlarme +";"+config.maxtemp+";"+config.Publish;
+  configweb = String(config.hostname) + ";" +  config.port+";"+ config.Publish +";"+ config.IDXTemp +";"+ config.maxtemp+ ";"  +  config.IDXAlarme + ";"  + config.IDX + ";"  +  config.maxpow+ ";"  +  config.minpow+ ";" +  config.child+ ";"  +  config.mode ;
   return String(configweb);
 }
+
+void dimmer_on()
+{
+  if (dimmer.getState()==0) {
+    dimmer.setState(ON);
+    delay(50);
+    }
+}
+
+void dimmer_off()
+{
+  if (dimmer.getState()==1) {
+    dimmer.setState(OFF);
+    delay(50);
+    }
+}
+
 
     //***********************************
     //************* Setup 
@@ -411,6 +450,10 @@ void setup() {
     
   }); 
 
+      server.on("/config.html",HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->send(LittleFS, "/config.html", String(), false, processor);
+  });
+
   server.on("/state", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain", getState().c_str());
   });
@@ -438,27 +481,40 @@ void setup() {
   server.on("/sb-admin-2.min.css", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send(LittleFS, "/sb-admin-2.min.css", "text/css");
   });
+  
+  
+  server.on("/jquery.easing.min.js", HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->send(LittleFS, "/jquery.easing.min.js", "text/javascript");
+  });
 
   server.on("/config.json", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send(LittleFS, "/config.json", "application/json");
   });
 
+  server.on("/config", HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/plain", getconfig().c_str());
+  });
 /////////////////////////
 ////// mise à jour parametre d'envoie vers domoticz et récupération des modifications de configurations
 /////////////////////////
 
-server.on("/set", HTTP_ANY, [] (AsyncWebServerRequest *request) {
-      ///   /set?paramettre=xxxx
+server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+      ///   /get?paramettre=xxxx
     if (request->hasParam("save")) { Serial.println(F("Saving configuration..."));
                           saveConfiguration(filename_conf, config);   
                             }
                           
    if (request->hasParam("hostname")) { request->getParam("hostname")->value().toCharArray(config.hostname,15);  }
    if (request->hasParam("port")) { config.port = request->getParam("port")->value().toInt();}
-   if (request->hasParam("IDX")) { config.IDX = request->getParam("IDX")->value().toInt();}
-   if (request->hasParam("IDXAlarme")) { config.IDXAlarme = request->getParam("IDXAlarme")->value().toInt();}
-   if (request->hasParam("maxtemp")) { config.maxtemp = request->getParam("maxtemp")->value().toInt();}
    if (request->hasParam("Publish")) { request->getParam("Publish")->value().toCharArray(config.Publish,100);}
+   if (request->hasParam("idxtemp")) { config.IDXTemp = request->getParam("idxtemp")->value().toInt();}
+   if (request->hasParam("maxtemp")) { config.maxtemp = request->getParam("maxtemp")->value().toInt();}
+   if (request->hasParam("IDXAlarme")) { config.IDXAlarme = request->getParam("IDXAlarme")->value().toInt();}
+   if (request->hasParam("IDX")) { config.IDX = request->getParam("IDX")->value().toInt();}
+   if (request->hasParam("maxpow")) { config.maxpow = request->getParam("maxpow")->value().toInt();}
+   if (request->hasParam("minpow")) { config.minpow = request->getParam("minpow")->value().toInt();}
+   if (request->hasParam("child")) { request->getParam("child")->value().toCharArray(config.child,15);  }
+   if (request->hasParam("mode")) { request->getParam("mode")->value().toCharArray(config.mode,10);  }
    request->send(200, "text/html", getconfig().c_str());
 
   });
@@ -512,24 +568,34 @@ void loop() {
 
   /// Changement de la puissance (  pb de Exception 9 si call direct ) 
   if ( change == 1  ) {
-
-  dimmer.setPower(puissance); 
-  change = 0; 
+    if (puissance >= config.minpow ) {
+        dimmer_on();
+        if ( puissance > config.maxpow )  dimmer.setPower(config.maxpow); 
+        else dimmer.setPower(puissance);
+        if ( puissance > config.maxpow && strcmp(config.mode,"delester") == 0 ) { child_communication(puissance-config.maxpow ); }
+        if (  strcmp(config.mode,"equal") == 0) { child_communication(puissance); }
+        
+    }
+    else {
+        dimmer_off();
+        child_communication(0);
+    }
+    change = 0; 
   }
 
  ///// dallas présent >> mesure 
   if ( present == 1 ) { 
- refreshcount ++; 
+    refreshcount ++; 
 
-  sensors.requestTemperatures();
-  celsius=CheckTemperature("Inside : ", addr); 
+    sensors.requestTemperatures();
+    celsius=CheckTemperature("Inside : ", addr); 
 
-  if ( refreshcount >= refresh ) {
-    mqtt(String(config.IDX), String(celsius));  
-    refreshcount = 0; 
-  } 
+    if ( refreshcount >= refresh ) {
+      mqtt(String(config.IDX), String(celsius));  
+      refreshcount = 0; 
+    } 
   
-  delay(500); 
+    delay(500); 
   } 
 
     //***********************************
@@ -660,15 +726,26 @@ void mqtt(String idx, String value)
 {
   String nvalue = "0" ; 
   if ( value != "0" ) { nvalue = "2" ; }
-String message = "  { \"idx\" : " + idx +" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
+  String message = "  { \"idx\" : " + idx +" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
 
 //  if (!client.connected()) {
 //    reconnect();
  // }
-client.loop();
+  client.loop();
   client.publish(config.Publish, String(message).c_str(), true);
   
+  String jdompub = String(config.Publish) + "/"+idx ;
+  client.publish(jdompub.c_str() , value.c_str(), true);
+
+
 }
 
 
+void child_communication(int delest_power){
 
+  String baseurl; 
+  baseurl = "/?POWER=" + String(delest_power) ; http.begin(domotic_client,config.child,80,baseurl); 
+  http.GET();
+  http.end(); 
+
+}
