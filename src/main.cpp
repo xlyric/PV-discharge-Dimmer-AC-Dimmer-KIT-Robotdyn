@@ -560,7 +560,7 @@ void loop() {
        security = 0 ;
       }
       else {
-      dimmer.setPower(0); 
+      dimmer_off();
       }
   }
 
