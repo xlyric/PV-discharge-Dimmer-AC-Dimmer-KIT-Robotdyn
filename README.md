@@ -25,7 +25,7 @@ Configure -->> Start : wifi configured
 Start  -->> Run : Open Website and Dim
 ```
 
-# CHANGE POWER
+# CHANGE POWER ( for control )
 for change power use the web site : 
 Control :  http://IP/?POWER=xx
 xx max = 99 
@@ -42,6 +42,8 @@ you can send the command by you domotic server or your pv router
 with actual version of arduino GUI or VS, the librairie not working
 I modify the librairie and is called in the lib_deps variable
 lib_deps = https://github.com/xlyric/RBDDimmer
+
+and called by plateformio.ini file
 
 # Create the Dallas board
 
@@ -63,4 +65,10 @@ you can now connect the board to the main board
 ![Alt text](./images/4.jpg)
 ![Alt text](./images/5.jpg)
 
+# Update
 
+You can update your firmware directly by the url /update 
+it's open OTA web page, and you can push the firmware or filesystem. 
+
+for generating firmware, on Visualstudio/ plateform IO, use the build option 
+the build firmware is stored at .pio\build\d1_mini\firmware.elf folder 
