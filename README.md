@@ -1,5 +1,7 @@
 # # Distant dimmer for discharge PV surplus 
 
+[TOC]
+
 I remaster the distant dimmer with the new ALL in dimmer from Robotdyn ( and support 8A !! ) 
 
 
