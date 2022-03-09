@@ -66,7 +66,7 @@ https://github.com/xlyric/pv-router-esp32
 It use this pv routeur, <br>
 <a href="https://www.helloasso.com/associations/apper/formulaires/4"><img src="https://forum.apper-solaire.org/download/file.php?id=13773" align="down" height="300"  ></a>
 <br>
-The board was sold by a French Association ( APPER ) and a TTGO Tdisplay, A SCT013-30 and AC12 power supply need to be bought separatly 
+<a href="https://www.helloasso.com/associations/apper/formulaires/4">The board was sold by a French Association ( APPER ) </a> and a TTGO Tdisplay, A SCT013-30 and AC12 power supply need to be bought separatly 
 The board is open source and freely for non commercial usage. 
 
 <img src="./images/SchematicTTGO .png" align="down" height="300" >
