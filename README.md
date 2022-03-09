@@ -69,8 +69,6 @@ It use this pv routeur, <br>
 <a href="https://www.helloasso.com/associations/apper/formulaires/4">The board was sold by a French Association ( APPER ) </a> and a TTGO Tdisplay, A SCT013-30 and AC12 power supply need to be bought separatly 
 The board is open source and freely for non commercial usage. 
 
-<img src="./images/SchematicTTGO .png" align="down" height="300" >
-
 ### Chaine dimmer
 You can now chaine multiple dimmers
 2 options : 
