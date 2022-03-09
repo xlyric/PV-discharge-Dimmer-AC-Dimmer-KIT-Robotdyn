@@ -63,12 +63,13 @@ you can send the command by you domotic server or your pv router
 You can control directly the dimmer with this PV router code 
 https://github.com/xlyric/pv-router-esp32
 
-It use this pv routeur, 
-<a href="https://www.helloasso.com/associations/apper/formulaires/4"><img src="https://forum.apper-solaire.org/download/file.php?id=13773" align="left" height="300"  ></a>
+It use this pv routeur, <br>
+<a href="https://www.helloasso.com/associations/apper/formulaires/4"><img src="https://forum.apper-solaire.org/download/file.php?id=13773" align="down" height="300"  ></a>
+<br>
 The board was sold by a French Association ( APPER ) and a TTGO Tdisplay, A SCT013-30 and AC12 power supply need to be bought separatly 
 The board is open source and freely for non commercial usage. 
 
-<img src="./SchematicTTGO .png" align="left" height="300" >
+<img src="./images/SchematicTTGO .png" align="down" height="300" >
 
 ### Chaine dimmer
 You can now chaine multiple dimmers
@@ -84,7 +85,7 @@ the limit temp configuration is on /config.html page.
 if you need a password for connect to your mosquitto (MQTT) serveur, the information of connection is in the file config.h 
 
 ## Note on Robotdyn librairie
-with actual version of arduino GUI or VS, the librairie not working ( mêmory problem ) 
+with actual version of arduino GUI or VS, the librairie not working ( memory problem ) 
 I modify the librairie and is called in the lib_deps variable
 lib_deps = https://github.com/xlyric/RBDDimmer
 
