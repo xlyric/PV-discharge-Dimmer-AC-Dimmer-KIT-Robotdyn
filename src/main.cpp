@@ -71,6 +71,7 @@
 // time librairy   
 //#include <NTPClient.h>
 // Dimmer librairy 
+#include <Arduino.h>
 #include <RBDdimmer.h>   /// the corrected librairy  in RBDDimmer-master-corrected.rar , the original has a bug
 // Web services
 #include <ESP8266WiFi.h>
@@ -90,7 +91,8 @@
 #include <DallasTemperature.h>
 //mqtt
 #include <PubSubClient.h>
-
+/// config
+#include "config.h"
 
 
 
@@ -98,7 +100,7 @@
  * Begin Settings
  **************************/
 
-const String VERSION = "Version 2.4" ;
+const String VERSION = "Version 2.5" ;
 
 /***************************
  * temperature de sécurité
@@ -143,9 +145,6 @@ int timesync_refresh = 120;
 
 //#define USE_SERIAL  SerialUSB //Serial for boards whith USB serial port
 #define USE_SERIAL  Serial
-#define outputPin  D0 
-#define zerocross  D1 // for boards with CHANGEBLE input pins
-
 
 //***********************************
 //************* Dallas
@@ -153,7 +152,7 @@ int timesync_refresh = 120;
 void dallaspresent ();
 float CheckTemperature(String label, byte deviceAddress[12]);
 #define TEMPERATURE_PRECISION 10
-#define ONE_WIRE_BUS D2
+
 
 OneWire  ds(ONE_WIRE_BUS);  //  (a 4.7K resistor is necessary - 5.7K work with 3.3 ans 5V power)
 DallasTemperature sensors(&ds);
@@ -509,6 +508,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     //************* Setup -  demarrage du webserver et affichage de l'oled
     //***********************************
   Serial.println("start server");
+  AsyncElegantOTA.begin(&server);
   server.begin(); 
   
  // Serial.println("start ntp");
@@ -525,7 +525,8 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
   
   dallaspresent();
 
-  client.connect("Dimmer");
+  /// MQTT 
+  client.connect("Dimmer",MQTT_USER, MQTT_PASSWORD);
   client.setServer(config.hostname, 1883);
   
 
@@ -682,10 +683,10 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Create a random client ID
-    String clientId = "ESP8266Client-";
+    String clientId = "Dimmer";
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
-    if (client.connect(clientId.c_str())) {
+    if (client.connect(clientId.c_str(),MQTT_USER, MQTT_PASSWORD)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
       client.publish("outTopic", "hello world");
