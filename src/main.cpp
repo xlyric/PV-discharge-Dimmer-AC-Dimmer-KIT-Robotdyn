@@ -474,6 +474,10 @@ void setup() {
   server.on("/config", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain", getconfig().c_str());
   });
+
+  server.on("/reset", HTTP_ANY, [](AsyncWebServerRequest *request){
+    ESP.restart();
+  });
 /////////////////////////
 ////// mise à jour parametre d'envoie vers domoticz et récupération des modifications de configurations
 /////////////////////////
@@ -508,7 +512,6 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     //************* Setup -  demarrage du webserver et affichage de l'oled
     //***********************************
   Serial.println("start server");
-  AsyncElegantOTA.begin(&server);
   server.begin(); 
   
  // Serial.println("start ntp");
@@ -526,9 +529,9 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
   dallaspresent();
 
   /// MQTT 
-  client.connect("Dimmer",MQTT_USER, MQTT_PASSWORD);
+  client.connect("Dimmer");
   client.setServer(config.hostname, 1883);
-  
+   
 
 }
 
@@ -573,7 +576,7 @@ void loop() {
     celsius=CheckTemperature("Inside : ", addr); 
 
     if ( refreshcount >= refresh ) {
-      mqtt(String(config.IDX), String(celsius));  
+      mqtt(String(config.IDXTemp), String(celsius));  
       refreshcount = 0; 
     } 
   
@@ -706,19 +709,19 @@ void reconnect() {
 
 void mqtt(String idx, String value)
 {
+  reconnect();
   String nvalue = "0" ; 
   if ( value != "0" ) { nvalue = "2" ; }
   String message = "  { \"idx\" : " + idx +" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
 
-//  if (!client.connected()) {
-//    reconnect();
- // }
+
   client.loop();
   client.publish(config.Publish, String(message).c_str(), true);
   
   String jdompub = String(config.Publish) + "/"+idx ;
   client.publish(jdompub.c_str() , value.c_str(), true);
 
+  Serial.println("MQTT SENT");
 
 }
 
