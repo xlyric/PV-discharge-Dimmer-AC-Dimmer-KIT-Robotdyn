@@ -315,17 +315,19 @@ String processor(const String& var){
   } 
   return (VERSION);
 } 
- 
+ /*
 void call_time() {
 	//if ( timesync_refresh >= timesync ) {  timeClient.update(); timesync = 0; }
 	//else {timesync++;} 
 } 
- 
+ */
+/*
 String getTime() {
   String state=""; 
  // state = timeClient.getHours() + ":" + timeClient.getMinutes() ; 
   return String(state);
 }
+*/
 
 String getconfig() {
   String configweb;  
@@ -333,6 +335,9 @@ String getconfig() {
   return String(configweb);
 }
 
+
+
+/// fonction pour mettre en pause ou allumer le dimmer 
 void dimmer_on()
 {
   if (dimmer.getState()==0) {
@@ -388,7 +393,7 @@ void setup() {
     //***********************************
     //************* Setup - Connexion Wifi
     //***********************************
- Serial.print("start Wifiautoconnect");
+  Serial.print("start Wifiautoconnect");
   AsyncWiFiManager wifiManager(&server,&dns);
   wifiManager.autoConnect("dimmer");
   Serial.print("end Wifiautoconnect");
@@ -437,11 +442,11 @@ void setup() {
   server.on("/state", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain", getState().c_str());
   });
-
+/*
   server.on("/time", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain", getTime().c_str());
   });
-
+*/
   server.on("/all.min.css", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send(LittleFS, "/all.min.css", "text/css");
   });
@@ -504,28 +509,16 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
   });
 
 
-
-
-
-
     //***********************************
     //************* Setup -  demarrage du webserver et affichage de l'oled
     //***********************************
   Serial.println("start server");
   server.begin(); 
-  
- // Serial.println("start ntp");
- // timeClient.begin();
- // timeClient.update();
-  
+    
   Serial.println("start 18b20");
   sensors.begin();
-  /*if (!sensors.getAddress(insideThermometer, 0)) Serial.println("Unable to find address for Device 0"); 
-  Serial.print("Device 0 Address: ");
-  printAddress(insideThermometer);
-  sensors.setResolution(insideThermometer, 9);
-*/
-  
+    
+  /// recherche d'une sonde dallas
   dallaspresent();
 
   /// MQTT 
@@ -537,11 +530,13 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
 
 void loop() {
 
+
+  //// si la sécurité température est active 
   if ( security == 1 ) { 
-      Serial.println("Alerte Temp");
-      mqtt(String(config.IDXAlarme), String("Alerte Temp :" + String(celsius) ));  
+      Serial.println("Alert Temp");
+      mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(celsius) ));  ///send alert to MQTT
     //// Trigger
-      if ( celsius <= config.maxtemp - 5 ) { 
+      if ( celsius <= config.maxtemp - 5 ) {  
        security = 0 ;
       }
       else {
@@ -554,15 +549,20 @@ void loop() {
   /// Changement de la puissance (  pb de Exception 9 si call direct ) 
   if ( change == 1  ) {
     if (puissance >= config.minpow ) {
-        dimmer_on();
+        dimmer_on();  // if off, switch on 
         if ( puissance > config.maxpow )  dimmer.setPower(config.maxpow); 
         else dimmer.setPower(puissance);
-        if ( puissance > config.maxpow && strcmp(config.mode,"delester") == 0 ) { child_communication(puissance-config.maxpow ); }
-        if (  strcmp(config.mode,"equal") == 0) { child_communication(puissance); }
+        if ( puissance > config.maxpow && strcmp(config.mode,"delester") == 0 ) { child_communication(puissance-config.maxpow ); } // si mode délest, envoi du surplus
+        if (  strcmp(config.mode,"equal") == 0) { child_communication(puissance); }  //si mode equal envoie de la commande vers la carte fille
         
+      if ( config.IDX != 0 ) {
+      mqtt(String(config.IDX), String(puissance));  // remonté MQTT de la commande
+      } 
+
     }
     else {
-        dimmer_off();
+        //// si la commande est trop faible on coupe tout partout
+        dimmer_off();  
         child_communication(0);
     }
     change = 0; 
@@ -576,10 +576,11 @@ void loop() {
     celsius=CheckTemperature("Inside : ", addr); 
 
     if ( refreshcount >= refresh ) {
-      mqtt(String(config.IDXTemp), String(celsius));  
+      mqtt(String(config.IDXTemp), String(celsius));  /// remonté MQTT de la température
       refreshcount = 0; 
     } 
   
+
     delay(500); 
   } 
 
@@ -597,7 +598,7 @@ if ( celsius >= config.maxtemp ) {
 
  delay(500); 
 }
-
+////fin de loop 
 
 
     //***********************************
@@ -677,9 +678,11 @@ if ( !ds.search(addr)) {
 
 
   return ;
-  
-  
+   
   }
+
+
+//////////// reconnexion MQTT
 
 void reconnect() {
   // Loop until we're reconnected
@@ -706,7 +709,7 @@ void reconnect() {
 }
 
 
-
+//// envoie de commande MQTT 
 void mqtt(String idx, String value)
 {
   reconnect();
@@ -725,6 +728,8 @@ void mqtt(String idx, String value)
 
 }
 
+
+//// communication avec carte fille
 
 void child_communication(int delest_power){
 
