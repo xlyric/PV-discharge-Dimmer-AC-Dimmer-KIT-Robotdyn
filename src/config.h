@@ -32,5 +32,9 @@
 #define ONE_WIRE_BUS D7
 #endif
 
+/// Trigger for temp limit in percent
+#define TRIGGER 10   
+
+
 #endif
 

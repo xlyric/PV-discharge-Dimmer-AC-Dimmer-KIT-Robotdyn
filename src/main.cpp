@@ -536,7 +536,7 @@ void loop() {
       Serial.println("Alert Temp");
       mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(celsius) ));  ///send alert to MQTT
     //// Trigger
-      if ( celsius <= config.maxtemp - 5 ) {  
+      if ( celsius <= config.maxtemp - (config.maxtemp*TRIGGER/100) ) {  
        security = 0 ;
       }
       else {
