@@ -349,6 +349,7 @@ void dimmer_on()
 void dimmer_off()
 {
   if (dimmer.getState()==1) {
+    dimmer.setPower(0);
     dimmer.setState(OFF);
     delay(50);
     }
@@ -562,8 +563,10 @@ void loop() {
     }
     else {
         //// si la commande est trop faible on coupe tout partout
+        
         dimmer_off();  
         child_communication(0);
+        mqtt(String(config.IDX), String(0));
     }
     change = 0; 
   }
