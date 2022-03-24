@@ -549,7 +549,7 @@ void loop() {
 
   /// Changement de la puissance (  pb de Exception 9 si call direct ) 
   if ( change == 1  ) {
-    if (puissance >= config.minpow ) {
+    if (puissance > config.minpow && puissance != 0 ) {
         dimmer_on();  // if off, switch on 
         if ( puissance > config.maxpow )  dimmer.setPower(config.maxpow); 
         else dimmer.setPower(puissance);
@@ -558,12 +558,12 @@ void loop() {
         
       if ( config.IDX != 0 ) {
       mqtt(String(config.IDX), String(puissance));  // remonté MQTT de la commande
-      } 
+      }
 
     }
     else {
         //// si la commande est trop faible on coupe tout partout
-        
+        dimmer.setPower(0);
         dimmer_off();  
         child_communication(0);
         mqtt(String(config.IDX), String(0));
