@@ -8,12 +8,19 @@
 #define MQTT_PASSWORD ""
 
 
-/// default configuration for Dimmer with Power supply and D1 Mini on the board
+/// default configuration for Dimmer with Power supply and D1 Mini on the board ( default : D0 - D1 )
 #ifdef  POWERSUPPLY
 #define outputPin  D0 
 #define zerocross  D1 // for boards with CHANGEBLE input pins
 #endif
 
+/*
+/// default configuration for Dimmer with Power supply and D1 Mini on the board
+#ifdef  POWERSUPPLY
+#define outputPin  D6 
+#define zerocross  D5 // for boards with CHANGEBLE input pins
+#endif
+*/
 
 //// configuration for Standalone boards ( personnalisation )
 #ifdef  STANDALONE
@@ -33,8 +40,11 @@
 #endif
 
 /// Trigger for temp limit in percent
-#define TRIGGER 10   
+#define TRIGGER 10   /// 
 
+//// pins for cooler
+#define COOLER  D5   /// 0 : off  -> 1 : On --> need a dry contact or opto
+#define TIMERDELAY 30 // delay before switch off
 
 #endif
 
