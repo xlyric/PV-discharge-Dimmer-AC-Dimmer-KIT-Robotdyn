@@ -44,7 +44,7 @@
 
 //// pins for cooler
 #define COOLER  D5   /// 0 : off  -> 1 : On --> need a dry contact or opto
-#define TIMERDELAY 30 // delay before switch off
+#define TIMERDELAY 5 // delay before switch off
 
 #endif
 
