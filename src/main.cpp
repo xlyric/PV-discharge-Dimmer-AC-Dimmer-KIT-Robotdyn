@@ -560,7 +560,7 @@ void loop() {
         if ( puissance > config.maxpow && strcmp(config.mode,"delester") == 0 ) { child_communication(puissance-config.maxpow ); } // si mode délest, envoi du surplus
         if (  strcmp(config.mode,"equal") == 0) { child_communication(puissance); }  //si mode equal envoie de la commande vers la carte fille
         /// cooler 
-        digitalWrite(outputPin, HIGH); // start cooler 
+        digitalWrite(COOLER, HIGH); // start cooler 
         Timer_Cooler = millis();
 
         
@@ -575,7 +575,7 @@ void loop() {
         dimmer_off();  
         child_communication(0);
         mqtt(String(config.IDX), String(0));
-        if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(outputPin, LOW); }  // cut cooler 
+        if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
     }
     change = 0; 
   }
