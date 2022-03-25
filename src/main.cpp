@@ -698,7 +698,9 @@ if ( !ds.search(addr)) {
 
 void reconnect() {
   // Loop until we're reconnected
+  int timeout = 0; 
   while (!client.connected()) {
+    
     Serial.print("Attempting MQTT connection...");
     // Create a random client ID
     String clientId = "Dimmer";
@@ -716,6 +718,12 @@ void reconnect() {
       Serial.println(" try again in 5 seconds");
       // Wait 5 seconds before retrying
       delay(5000);
+      timeout++; // after 10s break for apply command 
+      if (timeout > 2) {
+          Serial.println(" try again next time ") ; 
+          break;
+          }
+
     }
   }
 }
