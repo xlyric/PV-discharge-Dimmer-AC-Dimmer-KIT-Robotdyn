@@ -587,7 +587,7 @@ void loop() {
     sensors.requestTemperatures();
     celsius=CheckTemperature("Inside : ", addr); 
 
-    if ( refreshcount >= refresh ) {
+    if ( refreshcount >= refresh && celsius !=-127) { 
       mqtt(String(config.IDXTemp), String(celsius));  /// remonté MQTT de la température
       refreshcount = 0; 
     } 
