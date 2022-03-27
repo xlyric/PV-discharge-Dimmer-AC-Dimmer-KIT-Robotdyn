@@ -541,7 +541,7 @@ void loop() {
       Serial.println("Alert Temp");
       mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(celsius) ));  ///send alert to MQTT
     //// Trigger
-      if ( celsius <= config.maxtemp - (config.maxtemp*TRIGGER/100) ) {  
+      if ( celsius <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
        security = 0 ;
       }
       else {
@@ -553,12 +553,11 @@ void loop() {
 
   /// Changement de la puissance (  pb de Exception 9 si call direct ) 
   if ( change == 1  ) {
-    if (puissance > config.minpow && puissance != 0 ) {
+    if (puissance > config.minpow && puissance != 0 && security == 0) 
+    {
         dimmer_on();  // if off, switch on 
         if ( puissance > config.maxpow )  dimmer.setPower(config.maxpow); 
         else dimmer.setPower(puissance);
-        if ( puissance > config.maxpow && strcmp(config.mode,"delester") == 0 ) { child_communication(puissance-config.maxpow ); } // si mode délest, envoi du surplus
-        if (  strcmp(config.mode,"equal") == 0) { child_communication(puissance); }  //si mode equal envoie de la commande vers la carte fille
         /// cooler 
         digitalWrite(COOLER, HIGH); // start cooler 
         Timer_Cooler = millis();
@@ -568,6 +567,11 @@ void loop() {
       mqtt(String(config.IDX), String(puissance));  // remonté MQTT de la commande
       }
 
+    }
+    else if (puissance > config.minpow && puissance != 0 && security == 1)
+    {
+      if ( puissance > config.maxpow && strcmp(config.mode,"delester") == 0 ) { child_communication(puissance-config.maxpow ); } // si mode délest, envoi du surplus
+      if (  strcmp(config.mode,"equal") == 0) { child_communication(puissance); }  //si mode equal envoie de la commande vers la carte fille
     }
     else {
         //// si la commande est trop faible on coupe tout partout
