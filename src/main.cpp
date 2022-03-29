@@ -292,7 +292,7 @@ dimmerLamp dimmer(outputPin, zerocross); //initialase port for dimmer for ESP826
 int outVal = 0;
 
     //***********************************
-    //************* function web 
+    //************* function web 5
     //***********************************
 const char* PARAM_INPUT_1 = "POWER"; /// paramettre de retour sendmode
 unsigned long Timer_Cooler;
@@ -529,7 +529,12 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
   /// MQTT 
   client.connect("Dimmer");
   client.setServer(config.hostname, 1883);
-   
+  
+  
+  #ifdef  SSR
+  analogWriteFreq(GRIDFREQ) ; 
+  analogWrite(JOTTA, 0);
+  #endif
 
 }
 
@@ -556,8 +561,23 @@ void loop() {
     if (puissance > config.minpow && puissance != 0 && security == 0) 
     {
         dimmer_on();  // if off, switch on 
-        if ( puissance > config.maxpow )  dimmer.setPower(config.maxpow); 
-        else dimmer.setPower(puissance);
+        if ( puissance > config.maxpow )  
+        { 
+          dimmer.setPower(config.maxpow); 
+
+          #ifdef  SSR
+          analogWrite(JOTTA, (config.maxpow*256/100) );
+          #endif
+
+        }
+        else {
+          dimmer.setPower(puissance);
+          
+          #ifdef  SSR
+          analogWrite(JOTTA, (puissance*256/100) );
+          #endif
+        }
+
         /// cooler 
         digitalWrite(COOLER, HIGH); // start cooler 
         Timer_Cooler = millis();
@@ -578,6 +598,11 @@ void loop() {
         dimmer.setPower(0);
         dimmer_off();  
         child_communication(0);
+
+          #ifdef  SSR
+          analogWrite(JOTTA, 0 );
+          #endif
+
         mqtt(String(config.IDX), String(0));
         if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
     }

@@ -28,6 +28,13 @@
 #define zerocross  D6 // for boards with CHANGEBLE input pins
 #endif
 
+#ifdef  SSR
+#define JOTTA  D4 // for boards with CHANGEBLE input pins
+#define ONE_WIRE_BUS D2 // dallas 
+#define GRIDFREQ 90 ///PWM frequency
+#define outputPin  D0 
+#define zerocross  D1
+#endif
 
 //// Dallas Configuration for Dimmer with Power supply and D1 Mini on the board
 #ifdef  POWERSUPPLY
@@ -43,7 +50,7 @@
 #define TRIGGER 10   /// 
 
 //// pins for cooler
-#define COOLER  D5   /// 0 : off  -> 1 : On --> need a dry contact or opto
+#define COOLER  D7   /// 0 : off  -> 1 : On --> need a dry contact or opto
 #define TIMERDELAY 5 // delay before switch off
 
 #endif
