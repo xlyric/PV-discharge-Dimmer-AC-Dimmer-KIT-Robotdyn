@@ -564,6 +564,8 @@ void loop() {
         if ( puissance > config.maxpow )  
         { 
           dimmer.setPower(config.maxpow); 
+          if ( strcmp(config.mode,"delester") == 0 ) { child_communication(puissance-config.maxpow ); } // si mode délest, envoi du surplus
+          if ( strcmp(config.mode,"equal") == 0) { child_communication(puissance); }  //si mode equal envoie de la commande vers la carte fille
 
           #ifdef  SSR
           analogWrite(JOTTA, (config.maxpow*256/100) );
@@ -572,6 +574,7 @@ void loop() {
         }
         else {
           dimmer.setPower(puissance);
+
           
           #ifdef  SSR
           analogWrite(JOTTA, (puissance*256/100) );
@@ -584,7 +587,14 @@ void loop() {
 
         
       if ( config.IDX != 0 ) {
-      mqtt(String(config.IDX), String(puissance));  // remonté MQTT de la commande
+        if ( puissance > config.maxpow )  
+        {
+          mqtt(String(config.IDX), String(config.maxpow));  // remonté MQTT de la commande max
+        }
+        else 
+        {
+          mqtt(String(config.IDX), String(puissance));  // remonté MQTT de la commande réelle
+        }
       }
 
     }
