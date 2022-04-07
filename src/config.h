@@ -28,6 +28,13 @@
 #define zerocross  D6 // for boards with CHANGEBLE input pins
 #endif
 
+//// configuration for Dimmer with Power supply and D1 Mini on the board and need TTL USB ( https://fr.aliexpress.com/item/1005003365062050.html ) 
+#ifdef  POWERSUPPLY2022
+#define outputPin  4 
+#define zerocross  5 // for boards with CHANGEBLE input pins
+#define ONE_WIRE_BUS 14  /// Dallas on pin 14 
+#endif
+
 #ifdef  SSR
 #define JOTTA  D4 // for boards with CHANGEBLE input pins
 #define ONE_WIRE_BUS D2 // dallas 
