@@ -194,6 +194,7 @@ struct Config {
 const char *filename_conf = "/config.json";
 Config config; 
 
+
 //***********************************
 //************* Gestion de la configuration - Lecture du fichier de configuration
 //***********************************
@@ -203,7 +204,7 @@ void loadConfiguration(const char *filename, Config &config) {
   // Open file for reading
   File configFile = LittleFS.open(filename_conf, "r");
 
-  // Allocate a temporary JsonDocument
+   // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/v6/assistant to compute the capacity.
   StaticJsonDocument<1024> doc;
@@ -304,6 +305,10 @@ String getState() {
   return String(state);
 }
 
+String textnofiles() {
+  String state = "Filesystem is missing" ; 
+  return String(state);
+}
 
 String processor(const String& var){
    Serial.println(var);
@@ -427,21 +432,32 @@ void setup() {
     //************* Setup - Web pages
     //***********************************
    
-   server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
+  server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
     
-    if (request->hasParam(PARAM_INPUT_1)) { 
-      puissance = request->getParam(PARAM_INPUT_1)->value().toInt();  
-      change=1; 
-      request->send_P(200, "text/plain", getState().c_str());  
-      
+    if  (LittleFS.exists("/index.html")) {
+      if (request->hasParam(PARAM_INPUT_1)) { 
+        puissance = request->getParam(PARAM_INPUT_1)->value().toInt();  
+        change=1; 
+        request->send_P(200, "text/plain", getState().c_str());  
+        
       }
-    else   request->send(LittleFS, "/index.html", String(), false, processor);
-
+      else   request->send(LittleFS, "/index.html", String(), false, processor);
+    }
+    else
+    { 
+      request->send_P(200, "text/plain", textnofiles().c_str());
+    }
     
   }); 
 
-      server.on("/config.html",HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/config.html", String(), false, processor);
+  server.on("/config.html",HTTP_ANY, [](AsyncWebServerRequest *request){
+    if  (LittleFS.exists("/config.html")) {
+      request->send(LittleFS, "/config.html", String(), false, processor);
+    }
+    else
+    { 
+      request->send_P(200, "text/plain", textnofiles().c_str());
+    }
   });
 
   server.on("/state", HTTP_ANY, [](AsyncWebServerRequest *request){
