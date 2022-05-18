@@ -372,6 +372,9 @@ void setup() {
   pinMode(outputPin, OUTPUT); 
   digitalWrite(outputPin, LOW);
 
+
+
+
   // cooler init
   pinMode(COOLER, OUTPUT); 
   digitalWrite(COOLER, LOW);
@@ -551,6 +554,12 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
   analogWriteFreq(GRIDFREQ) ; 
   analogWrite(JOTTA, 0);
   #endif
+
+  #ifdef POWERSUPPLY2022
+  analogWrite(GND_PIN, 0);
+  analogWrite(POS_PIN, 1);
+  #endif
+
 
 }
 

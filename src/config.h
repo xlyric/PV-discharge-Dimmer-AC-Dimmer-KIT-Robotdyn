@@ -33,6 +33,8 @@
 #define outputPin  4 
 #define zerocross  5 // for boards with CHANGEBLE input pins
 #define ONE_WIRE_BUS 14  /// Dallas on pin 14 
+#define GND_PIN 16
+#define POS_PIN 12
 #endif
 
 #ifdef  SSR
