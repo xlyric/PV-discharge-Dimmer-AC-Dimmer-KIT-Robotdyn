@@ -1,6 +1,6 @@
 # Numeric dimmer
 
-The Online Documentation is [HERE] (https://pvrouteur.apper-solaire.org)
+The Online Documentation is [HERE](https://pvrouteur.apper-solaire.org)
 
 # 01 - Install of  Visual Studio Code
 
