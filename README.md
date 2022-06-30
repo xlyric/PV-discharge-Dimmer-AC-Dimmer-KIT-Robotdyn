@@ -65,12 +65,15 @@ There are different versions available depending on what you are using as a dimm
     the recommended maximum power is 5A (and not 8A as indicated by the manufacturer)  
     ( D0 and D1(zc) are used )  
     the Dallas probe uses D2  
+
     [![image-1651775952029.png](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/scaled-1680-/image-1651775952029.png)](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/image-1651775952029.png)
+
 2. <div><div>**StandAlone** is used to later add a Robotdyn dimmer to your ESP. <div>there are different versions supporting more or less power,  
     on the smallest pod, the maximum recommended power is 5A (and not 8A as indicated by the manufacturer)  
     on the 16A model, I think you should not exceed 12A -&gt; ~2500W (to be tested)  
     ( D5 and D6(zc) are used )  
-    The Dallas probe uses D7</div></div></div>[![image-1651775990428.png](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/scaled-1680-/image-1651775990428.png)](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/image-1651775990428.png)
+    The Dallas probe uses D7</div></div></div>
+    [![image-1651775990428.png](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/scaled-1680-/image-1651775990428.png)](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/image-1651775990428.png)
     
     <div><div><div>  
     </div></div><div>  
@@ -92,7 +95,8 @@ There are different versions available depending on what you are using as a dimm
       
       
       
-    </div></div></div>[![image-1651776030344.png](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/scaled-1680-/image-1651776030344.png)](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/image-1651776030344.png)
+    </div></div></div>
+    [![image-1651776030344.png](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/scaled-1680-/image-1651776030344.png)](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/image-1651776030344.png)
     
     <div><div><div>  
     </div></div><div>  
