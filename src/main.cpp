@@ -399,8 +399,8 @@ void setup() {
   /// correct bug board
   dimmer.setState(ON);
   
-  //pinMode(GND_PIN, OUTPUT);  /// board bug
-  //digitalWrite(GND_PIN, 0);  /// board bug with pin 16 
+  pinMode(GND_PIN, OUTPUT);  /// board bug
+  digitalWrite(GND_PIN, 0);  /// board bug with pin 16 
 
   pinMode(POS_PIN, OUTPUT); 
   digitalWrite(POS_PIN, 1);
