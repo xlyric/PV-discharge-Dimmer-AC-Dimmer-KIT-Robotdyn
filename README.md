@@ -60,51 +60,39 @@ There are different versions available depending on what you are using as a dimm
 
 [![image-1651775770647.png](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/scaled-1680-/image-1651775770647.png)](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/image-1651775770647.png)
 
-<div id="bkmrk-powersupplyacdimmer-">1. **PowerSupplyACdimmer** is used for old version of Robotdyn dimmer,  
+1. PowerSupplyACdimmer is used for old version of Robotdyn dimmer,  
     this is the easiest version to install, it was compatible with the daughterboards supplied with the PV router V1.2 TTGO  
     the recommended maximum power is 5A (and not 8A as indicated by the manufacturer)  
     ( D0 and D1(zc) are used )  
     the Dallas probe uses D2  
-</div>
+
 
     [![image-1651775952029.png](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/scaled-1680-/image-1651775952029.png)](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/image-1651775952029.png)
 
-2. <div><div>**StandAlone** is used to later add a Robotdyn dimmer to your ESP. <div>there are different versions supporting more or less power,  
+2. StandAlone is used to later add a Robotdyn dimmer to your ESP. <div>there are different versions supporting more or less power,  
     on the smallest pod, the maximum recommended power is 5A (and not 8A as indicated by the manufacturer)  
     on the 16A model, I think you should not exceed 12A -&gt; ~2500W (to be tested)  
     ( D5 and D6(zc) are used )  
-    The Dallas probe uses D7</div></div>
+    The Dallas probe uses D7
     [![image-1651775990428.png](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/scaled-1680-/image-1651775990428.png)](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/image-1651775990428.png)
     
-    <div><div><div>  
-    </div></div><div>  
-    </div></div>
-3. <div><div>SSR-JOTTA is used to live control an SSR The - connects to the GND and D4 to the + of the Jotta <div>The Dallas probe uses D2</div></div></div>
+
+3. SSR-JOTTA is used to live control an SSR The - connects to the GND and D4 to the + of the Jotta 
+The Dallas probe uses D2
 [![image-1651776015419.png](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/scaled-1680-/image-1651776015419.png)](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/image-1651776015419.png)
-    
-    <div><div><div>  
-    </div></div><div>  
-    </div></div>
-4. **POWERSUPPLY2022** is for the 2022 version of the Robotdyn dimmer.  
+
+4. POWERSUPPLY2022 is for the 2022 version of the Robotdyn dimmer.  
     it requires a TTL adapter for the 1st programming.  
     the jumper between vdd and 3.3V must be removed during TTL programming  
     then put back when connecting the assembly to the 220V
     
       
     The Dallas probe uses pin 14 - GND at 16 and 3.3v at 12
-    
-    <div><div><div>  
-      
-      
-      
-    </div></div></div>
+
     [![image-1651776030344.png](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/scaled-1680-/image-1651776030344.png)](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/image-1651776030344.png)
     
-    <div><div><div>  
-    </div></div><div>  
-    </div></div>
 
-</div>Once the version has been chosen, thanks to VS you will load the firmware and the HTML pages of the router into the microcontroller
+Once the version has been chosen, thanks to VS you will load the firmware and the HTML pages of the router into the microcontroller
 
 [![image-1648136675716.png](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-03/scaled-1680-/image-1648136675716.png)](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-03/image-1648136675716.png)
 
