@@ -100,7 +100,7 @@
  * Begin Settings
  **************************/
 
-const String VERSION = "Version 2.5" ;
+const String VERSION = "Version 2.6" ;
 
 /***************************
  * temperature de sécurité
@@ -153,6 +153,13 @@ void dallaspresent ();
 float CheckTemperature(String label, byte deviceAddress[12]);
 #define TEMPERATURE_PRECISION 10
 
+////////////////////////////////////
+///     AP MODE 
+/////////////////////////////////
+
+String routeur="PV-ROUTER";
+bool AP = false; 
+
 
 OneWire  ds(ONE_WIRE_BUS);  //  (a 4.7K resistor is necessary - 5.7K work with 3.3 ans 5V power)
 DallasTemperature sensors(&ds);
@@ -194,6 +201,7 @@ struct Config {
 const char *filename_conf = "/config.json";
 Config config; 
 
+AsyncWiFiManager wifiManager(&server,&dns);
 
 //***********************************
 //************* Gestion de la configuration - Lecture du fichier de configuration
@@ -288,7 +296,7 @@ void saveConfiguration(const char *filename, const Config &config) {
  **************************/
 
 dimmerLamp dimmer(outputPin, zerocross); //initialase port for dimmer for ESP8266, ESP32, Arduino due boards
-//dimmerLamp dimmer(outputPin); //initialase port for dimmer for MEGA, Leonardo, UNO, Arduino M0, Arduino Zero
+
 
 int outVal = 0;
 
@@ -301,7 +309,10 @@ unsigned long Timer_Cooler;
 String getState() {
   String state; 
   int pow=dimmer.getPower(); 
-  state = String(pow) + ";" + String(celsius) ; 
+  
+  String routeur="PV-ROUTER";
+
+  state = String(pow) + ";" + String(celsius) + ";" + String(outputPin) + ";" + String(zerocross)+ ";" + String(WiFi.SSID().substring(0,9)) + ";" + routeur.compareTo(WiFi.SSID().substring(0,9)); 
   return String(state);
 }
 
@@ -320,19 +331,7 @@ String processor(const String& var){
   } 
   return (VERSION);
 } 
- /*
-void call_time() {
-	//if ( timesync_refresh >= timesync ) {  timeClient.update(); timesync = 0; }
-	//else {timesync++;} 
-} 
- */
-/*
-String getTime() {
-  String state=""; 
- // state = timeClient.getHours() + ":" + timeClient.getMinutes() ; 
-  return String(state);
-}
-*/
+
 
 String getconfig() {
   String configweb;  
@@ -341,6 +340,13 @@ String getconfig() {
 }
 
 
+
+/*String resetwifi() {
+  wifiManager.resetSettings();
+  String configweb;  
+  configweb = "reset wifi information" ;
+  return String(configweb);
+}*/
 
 /// fonction pour mettre en pause ou allumer le dimmer 
 void dimmer_on()
@@ -359,6 +365,8 @@ void dimmer_off()
     delay(50);
     }
 }
+
+
 
 
     //***********************************
@@ -407,7 +415,7 @@ void setup() {
     //************* Setup - Connexion Wifi
     //***********************************
   Serial.print("start Wifiautoconnect");
-  AsyncWiFiManager wifiManager(&server,&dns);
+
   wifiManager.autoConnect("dimmer");
   Serial.print("end Wifiautoconnect");
 
@@ -425,6 +433,13 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP()); 
   Serial.println(ESP.getResetReason());
+
+  //// AP MODE 
+  if ( routeur.compareTo(WiFi.SSID().substring(0,9)) == 0 ) {
+      AP = true; 
+  }
+
+
 
     //***********************************
     //************* Setup - OTA 
@@ -444,7 +459,14 @@ void setup() {
         request->send_P(200, "text/plain", getState().c_str());  
         
       }
-      else   request->send(LittleFS, "/index.html", String(), false, processor);
+      else  { 
+            if (!AP) {
+              request->send(LittleFS, "/index.html", String(), false, processor);
+            }
+            else {
+              request->send(LittleFS, "/index-AP.html", String(), false, processor);
+            }
+          }
     }
     else
     { 
@@ -455,7 +477,13 @@ void setup() {
 
   server.on("/config.html",HTTP_ANY, [](AsyncWebServerRequest *request){
     if  (LittleFS.exists("/config.html")) {
-      request->send(LittleFS, "/config.html", String(), false, processor);
+        if (!AP) {
+            request->send(LittleFS, "/config.html", String(), false, processor);
+        }
+        else {
+            request->send(LittleFS, "/config-AP.html", String(), false, processor);
+        }
+
     }
     else
     { 
@@ -466,11 +494,12 @@ void setup() {
   server.on("/state", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain", getState().c_str());
   });
-/*
-  server.on("/time", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", getTime().c_str());
+
+  server.on("/resetwifi", HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/plain", "Resetting Wifi and reboot");
+    wifiManager.resetSettings();
   });
-*/
+
   server.on("/all.min.css", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send(LittleFS, "/all.min.css", "text/css");
   });
@@ -505,6 +534,7 @@ void setup() {
   });
 
   server.on("/reset", HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/plain","Restarting");
     ESP.restart();
   });
 /////////////////////////
@@ -546,9 +576,10 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
   dallaspresent();
 
   /// MQTT 
-  client.connect("Dimmer");
-  client.setServer(config.hostname, 1883);
-  
+  if (!AP) {
+    client.connect("Dimmer");
+    client.setServer(config.hostname, 1883);
+  }
   
   #ifdef  SSR
   analogWriteFreq(GRIDFREQ) ; 
@@ -569,7 +600,9 @@ void loop() {
   //// si la sécurité température est active 
   if ( security == 1 ) { 
       Serial.println("Alert Temp");
-      mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(celsius) ));  ///send alert to MQTT
+      if (!AP) {
+          mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(celsius) ));  ///send alert to MQTT
+      }
     //// Trigger
       if ( celsius <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
        security = 0 ;
@@ -796,20 +829,21 @@ void reconnect() {
 //// envoie de commande MQTT 
 void mqtt(String idx, String value)
 {
-  reconnect();
-  String nvalue = "0" ; 
-  if ( value != "0" ) { nvalue = "2" ; }
-  String message = "  { \"idx\" : " + idx +" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
+  if (!AP) {
+    reconnect();
+    String nvalue = "0" ; 
+    if ( value != "0" ) { nvalue = "2" ; }
+    String message = "  { \"idx\" : " + idx +" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
 
 
-  client.loop();
-  client.publish(config.Publish, String(message).c_str(), true);
-  
-  String jdompub = String(config.Publish) + "/"+idx ;
-  client.publish(jdompub.c_str() , value.c_str(), true);
+    client.loop();
+    client.publish(config.Publish, String(message).c_str(), true);
+    
+    String jdompub = String(config.Publish) + "/"+idx ;
+    client.publish(jdompub.c_str() , value.c_str(), true);
 
-  Serial.println("MQTT SENT");
-
+    Serial.println("MQTT SENT");
+  }
 }
 
 
