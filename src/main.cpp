@@ -378,11 +378,9 @@ void setup() {
 
   /// Correction issue full power at start
   pinMode(outputPin, OUTPUT); 
-  digitalWrite(outputPin, LOW);
-
-
-
-
+  //digitalWrite(outputPin, LOW);
+  
+  
   // cooler init
   pinMode(COOLER, OUTPUT); 
   digitalWrite(COOLER, LOW);
@@ -393,7 +391,24 @@ void setup() {
   
   // configuration dimmer
   dimmer.begin(NORMAL_MODE, ON); //dimmer initialisation: name.begin(MODE, STATE) 
+  
+  ///// correction bug nouveau dimmer...  et config
+ 
+  
+  #ifdef POWERSUPPLY2022  
+  /// correct bug board
+  dimmer.setState(ON);
+  
+  //pinMode(GND_PIN, OUTPUT);  /// board bug
+  //digitalWrite(GND_PIN, 0);  /// board bug with pin 16 
+
+  pinMode(POS_PIN, OUTPUT); 
+  digitalWrite(POS_PIN, 1);
+  #endif
+
+    
   dimmer.setPower(outVal); 
+  
   
   USE_SERIAL.println("Dimmer Program is starting...");
 
@@ -586,10 +601,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
   analogWrite(JOTTA, 0);
   #endif
 
-  #ifdef POWERSUPPLY2022
-  analogWrite(GND_PIN, 0);
-  analogWrite(POS_PIN, 1);
-  #endif
+
 
 
 }
