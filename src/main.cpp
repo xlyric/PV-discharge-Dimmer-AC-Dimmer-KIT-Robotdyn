@@ -842,19 +842,22 @@ void reconnect() {
 void mqtt(String idx, String value)
 {
   if (!AP) {
-    reconnect();
-    String nvalue = "0" ; 
-    if ( value != "0" ) { nvalue = "2" ; }
-    String message = "  { \"idx\" : " + idx +" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
+
+    if (MQTT_SEND)  {
+      reconnect();
+      String nvalue = "0" ; 
+      if ( value != "0" ) { nvalue = "2" ; }
+      String message = "  { \"idx\" : " + idx +" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
 
 
-    client.loop();
-    client.publish(config.Publish, String(message).c_str(), true);
-    
-    String jdompub = String(config.Publish) + "/"+idx ;
-    client.publish(jdompub.c_str() , value.c_str(), true);
+      client.loop();
+      client.publish(config.Publish, String(message).c_str(), true);
+      
+      String jdompub = String(config.Publish) + "/"+idx ;
+      client.publish(jdompub.c_str() , value.c_str(), true);
 
-    Serial.println("MQTT SENT");
+      Serial.println("MQTT SENT");
+    }
   }
 }
 

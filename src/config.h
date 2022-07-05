@@ -4,6 +4,9 @@
 /**
  * MQTT credentials
  */
+
+ 
+#define MQTT_SEND true  //// set to false if not MQTT server is present ( automatic false on AP mode )
 #define MQTT_USER ""
 #define MQTT_PASSWORD ""
 
