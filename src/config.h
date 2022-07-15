@@ -15,8 +15,8 @@
 #ifdef  POWERSUPPLY
 #define outputPin  D0 
 #define zerocross  D1 // for boards with CHANGEBLE input pins
-#define outputPin  4
-#define zerocross  5 // for boards with CHANGEBLE input pins
+//#define outputPin  4
+//#define zerocross  5 // for boards with CHANGEBLE input pins
 #endif
 
 /*
@@ -53,7 +53,7 @@
 
 //// Dallas Configuration for Dimmer with Power supply and D1 Mini on the board
 #ifdef  POWERSUPPLY
-#define ONE_WIRE_BUS D2
+#define ONE_WIRE_BUS D2 // previously D2 was not working on old robotdyn card
 #endif
 
 //// Dallas Configuration for Standalone boards ( personnalisation )
