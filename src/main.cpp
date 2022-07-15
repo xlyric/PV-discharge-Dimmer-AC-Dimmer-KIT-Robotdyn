@@ -100,7 +100,7 @@
  * Begin Settings
  **************************/
 
-const String VERSION = "Version 2.6" ;
+const String VERSION = "Version 2.61" ;
 
 /***************************
  * temperature de sécurité
@@ -170,7 +170,8 @@ DeviceAddress insideThermometer;
   byte type_s;
   byte data[12];
   byte addr[8];
-  float celsius = 0.00 ;
+  float celsius = 0.00;
+  float previous_celsius = 0.00;
   byte security = 0;
   int refresh = 30;
   int refreshcount = 0; 
@@ -694,9 +695,15 @@ void loop() {
     refreshcount ++; 
 
     sensors.requestTemperatures();
+    previous_celsius=celsius;
     celsius=CheckTemperature("Inside : ", addr); 
 
-    if ( refreshcount >= refresh && celsius !=-127) { 
+    //gestion des erreurs DS18B20
+    if ( (celsius == -127.00) || (celsius == -255.00) ) {
+      celsius=previous_celsius;
+    }   
+
+    if ( refreshcount >= refresh && celsius !=-127 && celsius !=-255) { 
       mqtt(String(config.IDXTemp), String(celsius));  /// remonté MQTT de la température
       refreshcount = 0; 
     } 
@@ -729,7 +736,7 @@ if ( celsius >= config.maxtemp ) {
 float CheckTemperature(String label, byte deviceAddress[12]){
   float tempC = sensors.getTempC(deviceAddress);
   Serial.print(label);
-  if (tempC == -127.00) {
+  if ( (tempC == -127.00) || (tempC == -255.00) ) {
     Serial.print("Error getting temperature");
   } else {
     Serial.print(" Temp C: ");
