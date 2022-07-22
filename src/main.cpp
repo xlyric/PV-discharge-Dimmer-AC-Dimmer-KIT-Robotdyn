@@ -611,9 +611,9 @@ void loop() {
   byte alerte = 0;
 
   //// si la sécurité température est active 
-  if ( ( security == 1 ) && (alerte == 0) ) { 
+  if ( ( security == 1 ) ) { 
       Serial.println("Sécurité température");
-      if (!AP) {
+      if ( (!AP) && (alerte == 0) ) {
           mqtt(String(config.IDXAlarme), String("Activation sécurité Température :" + String(celsius) ));  ///send alert to MQTT
       }
       
@@ -621,10 +621,9 @@ void loop() {
       if ( celsius <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
        security = 0 ;
        alerte = 0; 
-      if (!AP) {
+        if (!AP) {
           mqtt(String(config.IDXAlarme), String("Désactivation sécurité Température :" + String(celsius) ));  ///send desactivation alerte to MQTT
-      }
-       
+        }
       }
       else {
         dimmer_off();
