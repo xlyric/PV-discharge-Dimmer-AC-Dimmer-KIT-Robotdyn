@@ -608,20 +608,26 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
 }
 
 void loop() {
-
+  byte alerte = 0;
 
   //// si la sécurité température est active 
-  if ( security == 1 ) { 
-      Serial.println("Alert Temp");
+  if ( ( security == 1 ) && (alerte == 0) ) { 
+      Serial.println("Sécurité température");
       if (!AP) {
-          mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(celsius) ));  ///send alert to MQTT
+          mqtt(String(config.IDXAlarme), String("Activation sécurité Température :" + String(celsius) ));  ///send alert to MQTT
       }
-    //// Trigger
+      
+      //// Trigger
       if ( celsius <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
        security = 0 ;
+       alerte = 0; 
+      if (!AP) {
+          mqtt(String(config.IDXAlarme), String("Désactivation sécurité Température :" + String(celsius) ));  ///send desactivation alerte to MQTT
+      }
+       
       }
       else {
-      dimmer_off();
+        dimmer_off();
       }
   }
 
