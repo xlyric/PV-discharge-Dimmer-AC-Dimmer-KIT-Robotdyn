@@ -199,14 +199,57 @@ struct Config {
     
 };
 
+struct Mqtt {
+  char username[50];
+  char password[50];
+};
+
 const char *filename_conf = "/config.json";
 Config config; 
+
+const char *mqtt_conf = "/mqtt.json";
+Mqtt mqtt_config; 
+
 
 AsyncWiFiManager wifiManager(&server,&dns);
 
 //***********************************
 //************* Gestion de la configuration - Lecture du fichier de configuration
 //***********************************
+
+bool loadmqtt(const char *filename, Mqtt &mqtt_config) {
+  // Open file for reading
+  File configFile = LittleFS.open(mqtt_conf, "r");
+
+  // Allocate a temporary JsonDocument
+  // Don't forget to change the capacity to match your requirements.
+  // Use arduinojson.org/v6/assistant to compute the capacity.
+  StaticJsonDocument<512> doc;
+
+  // Deserialize the JSON document
+  DeserializationError error = deserializeJson(doc, configFile);
+  if (error) {
+    Serial.println(F("Failed to read MQTT config "));
+    return false;
+  }
+
+  
+  // Copy values from the JsonDocument to the Config
+  
+  strlcpy(mqtt_config.username,                  // <- destination
+          doc["MQTT_USER"] | "", // <- source
+          sizeof(mqtt_config.username));         // <- destination's capacity
+  
+  strlcpy(mqtt_config.password,                  // <- destination
+          doc["MQTT_PASSWORD"] | "", // <- source
+          sizeof(mqtt_config.password));         // <- destination's capacity
+  configFile.close();
+
+return true;    
+}
+
+
+
 
 // Loads the configuration from a file
 void loadConfiguration(const char *filename, Config &config) {
@@ -425,7 +468,7 @@ void setup() {
   Serial.println(F("Saving configuration..."));
   saveConfiguration(filename_conf, config);
 
-  
+  loadmqtt(mqtt_conf, mqtt_config);
 
     //***********************************
     //************* Setup - Connexion Wifi
@@ -544,6 +587,10 @@ void setup() {
   server.on("/config.json", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send(LittleFS, "/config.json", "application/json");
   });
+  
+  server.on("/mqtt.json", HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->send(LittleFS, "/config.json", "application/json");
+  });
 
   server.on("/config", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain", getconfig().c_str());
@@ -593,8 +640,11 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
 
   /// MQTT 
   if (!AP) {
-    client.connect("Dimmer");
+    Serial.println("Connection MQTT" );
+   // Serial.println(String(mqtt_config.username));
+   // Serial.println(String(mqtt_config.password));
     client.setServer(config.hostname, 1883);
+    client.connect("Dimmer",mqtt_config.username, mqtt_config.password);
   }
   
   #ifdef  SSR
@@ -822,7 +872,7 @@ void reconnect() {
     String clientId = "Dimmer";
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
-    if (client.connect(clientId.c_str(),MQTT_USER, MQTT_PASSWORD)) {
+    if (client.connect(clientId.c_str(),mqtt_config.username, mqtt_config.password)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
       client.publish("outTopic", "hello world");
