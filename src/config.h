@@ -37,8 +37,9 @@
 #ifdef  POWERSUPPLY2022
 #define outputPin  4
 #define zerocross  5 // for boards with CHANGEBLE input pins
-#define ONE_WIRE_BUS 12  /// Dallas on pin 14 
-#define GND_PIN 14 //// not possible, bug on the board.  connect directly to GND
+/// Dallas 
+#define ONE_WIRE_BUS 12  
+#define GND_PIN 14 
 #define POS_PIN 02
 
 #endif
