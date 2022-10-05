@@ -131,6 +131,7 @@ int change = 0;
 void reconnect();
 void child_communication(int delest_power);
 
+
 //***********************************
 //************* Time
 //***********************************
@@ -209,6 +210,8 @@ Config config;
 
 const char *mqtt_conf = "/mqtt.json";
 Mqtt mqtt_config; 
+String getmqtt(); 
+void savemqtt(const char *filename, const Mqtt &mqtt_config);
 
 
 AsyncWiFiManager wifiManager(&server,&dns);
@@ -589,7 +592,15 @@ void setup() {
   });
   
   server.on("/mqtt.json", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/config.json", "application/json");
+    request->send(LittleFS, "/mqtt.json", "application/json");
+  });
+
+    server.on("/mqtt.html", HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->send(LittleFS, "/mqtt.html", "text/html");
+  });
+
+  server.on("/getmqtt", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+    request->send(200, "text/plain",  getmqtt().c_str()); 
   });
 
   server.on("/config", HTTP_ANY, [](AsyncWebServerRequest *request){
@@ -621,6 +632,11 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
    if (request->hasParam("minpow")) { config.minpow = request->getParam("minpow")->value().toInt();}
    if (request->hasParam("child")) { request->getParam("child")->value().toCharArray(config.child,15);  }
    if (request->hasParam("mode")) { request->getParam("mode")->value().toCharArray(config.mode,10);  }
+   if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,15);  }
+   if (request->hasParam("mqttpassword")) { request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,15); 
+   savemqtt(mqtt_conf, mqtt_config); 
+   saveConfiguration(filename_conf, config);
+   }
    request->send(200, "text/html", getconfig().c_str());
 
   });
@@ -928,4 +944,38 @@ void child_communication(int delest_power){
   http.GET();
   http.end(); 
 
+}
+
+String getmqtt() {
+
+    String retour =String(config.hostname) + ";" + String(config.Publish) + ";" + String(mqtt_config.username) + ";" + String(mqtt_config.password)  ;
+    return String(retour) ;
+  }
+
+void savemqtt(const char *filename, const Mqtt &mqtt_config) {
+  
+  // Open file for writing
+   File configFile = LittleFS.open(mqtt_conf, "w");
+  if (!configFile) {
+    Serial.println(F("Failed to open config file for writing in function Save configuration"));
+    return;
+  } 
+
+    // Allocate a temporary JsonDocument
+  // Don't forget to change the capacity to match your requirements.
+  // Use arduinojson.org/assistant to compute the capacity.
+  StaticJsonDocument<1024> doc;
+
+  // Set the values in the document
+  doc["MQTT_USER"] = mqtt_config.username;
+  doc["MQTT_PASSWORD"] = mqtt_config.password;
+  
+  // Serialize JSON to file
+  if (serializeJson(doc, configFile) == 0) {
+    Serial.println(F("Failed to write to file in function Save configuration "));
+    
+  }
+
+  // Close the file
+  configFile.close();
 }
