@@ -128,34 +128,38 @@
 
           <div class="row">
 
-            <!-- Area Chart -->
             <div class="col-xl-3 col-md-6 mb-4">
-              <div class="card shadow mb-4">
-                <!-- Card Header - Dropdown -->
-				<div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Dimmer</h6>
-				  </div>
-					<div class="card-body">
-					<div id='curve_chart2' style=' width: auto; height: 200px;'>
-										
-					</div>
-					</div>
-			</div>
-		</div>
-			
-        		     <div class="col-xl-3 col-md-6 mb-4">
-              <div class="card shadow mb-4">
-                <!-- Card Header - Dropdown -->
-				<div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">temp</h6>
-				  </div>
-					<div class="card-body">
-					<div id='curve_temp' style=' width: auto; height: 200px;'>
-										
-					</div>
-					</div>
-			</div>
-		</div>    
+              <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Puissance</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800"><span id="state">%STATE%</span></div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Earnings (Monthly) Card Example -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Température</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800"><span id="sigma">%SIGMA%</span></div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>  
          
 
 
@@ -166,113 +170,24 @@
 				
 				  <script type='text/javascript'> 
 				  
-	window.onload=function() {
-  horloge('time');
-};			 
-				  
-				  google.charts.load('current', {'packages':['corechart','gauge']}); 
-				  google.charts.setOnLoadCallback(drawChart);
-				  
-				  var chart ;
-				  var options = { title: 'Oscilloscope Mode', curveType: 'function', legend: { position: 'bottom' } };
-				  var data ;
-				  var inc;
-				  
-				  function drawChart() {    
 
-					var optionsGauge = {           
-          redFrom: 75, 
-          redTo: 100,
-           
-          yellowFrom: 50, 
-          yellowTo: 75, 
-           
-          greenFrom: 0, 
-          greenTo: 50, 
-		  	  
-          minorTicks: 4,
-		  
-          min: 0, 
-          max: 100, 
-           
-          
-        };
-       
-	   	   var optionsGaugetemp = {           
-          redFrom: 80, 
-          redTo: 100,
-           
-          yellowFrom: 70, 
-          yellowTo: 80, 
-           
-          greenFrom: 0, 
-          greenTo: 70, 
-		  	  
-          minorTicks: 5,
-		  
-          min: 0, 
-          max: 100, 
-           
-          
-        };
-	
-		<!-- mise à jour de la jauge  --> 	
-		var gaugePA = new google.visualization.Gauge(document.getElementById('curve_chart2'));
-	    dataGaugePA = new google.visualization.DataTable();
-	    dataGaugePA.addColumn('string', 'Puissance');
-		dataGaugePA.addColumn('number', 'Value');
-		dataGaugePA.addRows(1);
-		
-				<!-- mise à jour de la jauge  --> 	
-		var gaugePAtemp = new google.visualization.Gauge(document.getElementById('curve_temp'));
-	    dataGaugePAtemp = new google.visualization.DataTable();
-	    dataGaugePAtemp.addColumn('string', 'Power');
-		dataGaugePAtemp.addColumn('number', 'Value');
-		dataGaugePAtemp.addRows(1);
-
-
-	<!-- <!-- récupération valeur sigma et State --> 	 -->
-	  setInterval(function ( ) {
-
-	var xhttpstate = $.get ({
+  setInterval(function refreshsend( ) {
+    var xhttpstate = $.get ({
 		url : '/state',
 		type : 'GET',
 		dataType: "text",
 		success: function ( result ) { 
 		var config = result.split(";");
-	
-		dataGaugePA.setValue(0, 0, "Power"); 
-		dataGaugePA.setValue(0, 1, config[0]);
-		gaugePA.draw(dataGaugePA,optionsGauge);
 		
-		dataGaugePAtemp.setValue(0, 0, "Temp °C"); 
-		dataGaugePAtemp.setValue(0, 1, config[1]);
-		gaugePAtemp.draw(dataGaugePAtemp,optionsGaugetemp);
+		document.getElementById("state").innerHTML = config[0];
+		document.getElementById("sigma").innerHTML = config[1];
+		
+		
 	
 		},
 		async: true });
-		
-  }, 2000 ) ;	
+  }, 5000 ) ;	
 				  
-	
- 			
-		  
- 
-}
-
-function horloge(el) {
-  if(typeof el=="string") { el = document.getElementById(el); }
-  function actualiser() {
-    var date = new Date();
-    var str = date.getHours();
-    str += ':'+(date.getMinutes()<10?'0':'')+date.getMinutes();
-    str += ':'+(date.getSeconds()<10?'0':'')+date.getSeconds();
-    el.innerHTML = str;
-  }
-  actualiser();
-  setInterval(actualiser,1000);
-}
-</script>
 
 		
 		</script >

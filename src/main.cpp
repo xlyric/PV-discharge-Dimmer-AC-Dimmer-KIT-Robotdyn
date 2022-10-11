@@ -213,6 +213,9 @@ Mqtt mqtt_config;
 String getmqtt(); 
 void savemqtt(const char *filename, const Mqtt &mqtt_config);
 
+String loginit; 
+String logs="197}11}1"; 
+String getlogs(); 
 
 AsyncWiFiManager wifiManager(&server,&dns);
 
@@ -266,9 +269,10 @@ void loadConfiguration(const char *filename, Config &config) {
 
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(doc, configFile);
-  if (error)
+  if (error) {
     Serial.println(F("Failed to read file, using default configuration"));
-
+    loginit +="Failed to read file config File, use default\r\n"; 
+    }
   // Copy values from the JsonDocument to the Config
   
   strlcpy(config.hostname,                  // <- destination
@@ -305,6 +309,8 @@ void saveConfiguration(const char *filename, const Config &config) {
    File configFile = LittleFS.open(filename_conf, "w");
   if (!configFile) {
     Serial.println(F("Failed to open config file for writing"));
+    logs +="Failed to read file config File, use default\r\n"; 
+  
     return;
   }
 
@@ -400,6 +406,7 @@ void dimmer_on()
 {
   if (dimmer.getState()==0) {
     dimmer.setState(ON);
+    logs =+"Dimmer On\r\n"; 
     delay(50);
     }
 }
@@ -409,6 +416,7 @@ void dimmer_off()
   if (dimmer.getState()==1) {
     dimmer.setPower(0);
     dimmer.setState(OFF);
+    logs =+"Dimmer Off\r\n"; 
     delay(50);
     }
 }
@@ -435,7 +443,7 @@ void setup() {
   //démarrage file system
   LittleFS.begin();
   Serial.println("Demarrage file System");
-  
+  loginit =+"start filesystem\r\n"; 
   // configuration dimmer
   dimmer.begin(NORMAL_MODE, ON); //dimmer initialisation: name.begin(MODE, STATE) 
   
@@ -465,10 +473,12 @@ void setup() {
   
   // Should load default config if run for the first time
   Serial.println(F("Loading configuration..."));
+  loginit +="load config\r\n"; 
   loadConfiguration(filename_conf, config);
 
   // Create configuration file
   Serial.println(F("Saving configuration..."));
+  loginit +="apply config\r\n"; 
   saveConfiguration(filename_conf, config);
 
   loadmqtt(mqtt_conf, mqtt_config);
@@ -477,7 +487,7 @@ void setup() {
     //************* Setup - Connexion Wifi
     //***********************************
   Serial.print("start Wifiautoconnect");
-
+  loginit +="start Wifiautoconnect\r\n"; 
   wifiManager.autoConnect("dimmer");
   Serial.print("end Wifiautoconnect");
 
@@ -493,7 +503,9 @@ void setup() {
   Serial.print("Connection ok sur le reseau :  ");
  
   Serial.print("IP address: ");
+
   Serial.println(WiFi.localIP()); 
+
   Serial.println(ESP.getResetReason());
 
   //// AP MODE 
@@ -599,6 +611,10 @@ void setup() {
     request->send(LittleFS, "/mqtt.html", "text/html");
   });
 
+    server.on("/log.html", HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->send(LittleFS, "/log.html", "text/html");
+  });
+
   server.on("/getmqtt", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     request->send(200, "text/plain",  getmqtt().c_str()); 
   });
@@ -610,6 +626,11 @@ void setup() {
   server.on("/reset", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain","Restarting");
     ESP.restart();
+  });
+
+    server.on("/cs", HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/plain", getlogs().c_str());
+    logs="197}11}1";
   });
 /////////////////////////
 ////// mise à jour parametre d'envoie vers domoticz et récupération des modifications de configurations
@@ -657,6 +678,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
   /// MQTT 
   if (!AP) {
     Serial.println("Connection MQTT" );
+    loginit =+"MQTT connexion\r\n"; 
    // Serial.println(String(mqtt_config.username));
    // Serial.println(String(mqtt_config.password));
     client.setServer(config.hostname, 1883);
@@ -682,6 +704,7 @@ void loop() {
   if ( security == 1 ) { 
       if (!alerte){
         Serial.println("Alert Temp");
+        logs += "Alert Temp\r\n";
         alerte=true; 
       
         if (!AP) {
@@ -721,7 +744,7 @@ void loop() {
         }
         else {
           dimmer.setPower(puissance);
-
+          logs += "dimmer at " + String(puissance) + "\r\n";
           
           #ifdef  SSR
           analogWrite(JOTTA, (puissance*256/100) );
@@ -731,6 +754,7 @@ void loop() {
         /// cooler 
         digitalWrite(COOLER, HIGH); // start cooler 
         Timer_Cooler = millis();
+        logs += "Start Cooler\r\n";
 
         
       if ( config.IDX != 0 ) {
@@ -814,9 +838,11 @@ float CheckTemperature(String label, byte deviceAddress[12]){
   Serial.print(label);
   if ( (tempC == -127.00) || (tempC == -255.00) ) {
     Serial.print("Error getting temperature");
+    logs += "Dallas on error\r\n";
   } else {
     Serial.print(" Temp C: ");
     Serial.println(tempC);
+    logs += "Dallas temp : "+ String(tempC) +"\r\n";
     return (tempC); 
    
     
@@ -833,6 +859,7 @@ void dallaspresent () {
 
 if ( !ds.search(addr)) {
     Serial.println("Dallas not connected");
+    loginit += "Dallas not connected\r\n";
     Serial.println();
     ds.reset_search();
     delay(250);
@@ -868,6 +895,7 @@ if ( !ds.search(addr)) {
 
   ds.reset();
   ds.select(addr);
+
   ds.write(0x44, 1);        // start conversion, with parasite power on at the end
   
   delay(1000);     // maybe 750ms is enough, maybe not
@@ -879,7 +907,7 @@ if ( !ds.search(addr)) {
 
   Serial.print("  present = ");
   Serial.println(present, HEX);
-
+  loginit += "Dallas present at "+ String(present, HEX) + "\r\n";
 
   return ;
    
@@ -894,18 +922,21 @@ void reconnect() {
   while (!client.connected()) {
     
     Serial.print("Attempting MQTT connection...");
+    logs += "Reconnect MQTT\r\n";
     // Create a random client ID
     String clientId = "Dimmer";
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
     if (client.connect(clientId.c_str(),mqtt_config.username, mqtt_config.password)) {
       Serial.println("connected");
+      logs += "Connected\r\n";
       // Once connected, publish an announcement...
-      client.publish("outTopic", "hello world");
+      //client.publish("outTopic", "hello world");
       // ... and resubscribe
       client.subscribe("inTopic");
     } else {
       Serial.print("failed, rc=");
+      logs += "Fail and retry\r\n";
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
       // Wait 5 seconds before retrying
@@ -913,6 +944,7 @@ void reconnect() {
       timeout++; // after 10s break for apply command 
       if (timeout > 2) {
           Serial.println(" try again next time ") ; 
+          logs += "retry later\r\n";
           break;
           }
 
@@ -983,9 +1015,17 @@ void savemqtt(const char *filename, const Mqtt &mqtt_config) {
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {
     Serial.println(F("Failed to write to file in function Save configuration "));
-    
+    logs += "Failed to write MQTT config\r\n";
   }
 
   // Close the file
   configFile.close();
 }
+
+/// affichage de logs 
+String getlogs(){
+    logs = logs + loginit + "}1"; 
+    loginit = "";
+  
+    return logs ; 
+} 
