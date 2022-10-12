@@ -370,7 +370,7 @@ String getState() {
 }
 
 String textnofiles() {
-  String state = "Filesystem is missing" ; 
+  String state = "<html><body>Filesystem is not present. <a href='https://ota.apper-solaire.org/firmware/littlefs-dimmer.bin'>download it here</a> <br>and after  <a href='/update'>upload on the ESP here </a></body></html>" ; 
   return String(state);
 }
 
@@ -544,7 +544,7 @@ void setup() {
     }
     else
     { 
-      request->send_P(200, "text/plain", textnofiles().c_str());
+      request->send_P(200, "text/html", textnofiles().c_str());
     }
     
   }); 
