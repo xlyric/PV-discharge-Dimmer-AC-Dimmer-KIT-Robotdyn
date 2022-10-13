@@ -2,6 +2,14 @@
 
 The Online Documentation is [HERE](https://pvrouteur.apper-solaire.org)
 
+# Easyest Methode  
+
+Use Web OTA for upload the code https://ota.apper-solaire.org/ and select your installation.
+
+after upload, connect to AP Wifi "dimmer" and connect to your own network
+
+# Methode for Advanced users ( VS Code)
+
 # 01 - Install of  Visual Studio Code
 
 To transfer the code to the microcontroller (ESP8266 or Robotdyn) it is necessary to install[ Visual Studio Code](https://code.visualstudio.com/).
