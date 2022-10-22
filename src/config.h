@@ -69,7 +69,8 @@
 #define COOLER  D7   /// 0 : off  -> 1 : On --> need a dry contact or opto
 #define TIMERDELAY 5 // delay before switch off
 
-
+#define RELAY1 D3  // Spécial pour relay commandé 
+#define RELAY2 D8  //  
 
 
 #endif

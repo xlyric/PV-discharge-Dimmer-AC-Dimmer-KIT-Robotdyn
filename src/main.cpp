@@ -435,7 +435,12 @@ void setup() {
   pinMode(outputPin, OUTPUT); 
   //digitalWrite(outputPin, LOW);
   
-  
+  // relay
+  pinMode(RELAY1, OUTPUT);
+  pinMode(RELAY2, OUTPUT);
+  digitalWrite(RELAY1, LOW);
+  digitalWrite(RELAY2, LOW);
+
   // cooler init
   pinMode(COOLER, OUTPUT); 
   digitalWrite(COOLER, LOW);
@@ -658,10 +663,20 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
    savemqtt(mqtt_conf, mqtt_config); 
    saveConfiguration(filename_conf, config);
    }
+   if (request->hasParam("relay1")) { int relay = request->getParam("relay1")->value().toInt(); 
+        if ( relay == 0) { digitalWrite(RELAY1 , LOW); }
+        else { digitalWrite(RELAY1 , HIGH); } 
+    }
+    if (request->hasParam("relay2")) { int relay = request->getParam("relay2")->value().toInt(); 
+        if ( relay == 0) { digitalWrite(RELAY2 , LOW); }
+        else { digitalWrite(RELAY2 , HIGH); } 
+    }
+
+
    request->send(200, "text/html", getconfig().c_str());
 
   });
-
+  
 
     //***********************************
     //************* Setup -  demarrage du webserver et affichage de l'oled
