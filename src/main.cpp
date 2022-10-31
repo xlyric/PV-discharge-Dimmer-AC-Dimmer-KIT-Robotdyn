@@ -201,6 +201,7 @@ struct Config {
 };
 
 struct Mqtt {
+  bool mqtt;
   char username[50];
   char password[50];
 };
@@ -212,6 +213,8 @@ const char *mqtt_conf = "/mqtt.json";
 Mqtt mqtt_config; 
 String getmqtt(); 
 void savemqtt(const char *filename, const Mqtt &mqtt_config);
+String stringbool(bool mybool);
+String getServermode(String Servermode);
 
 String loginit; 
 String logs="197}11}1"; 
@@ -249,6 +252,7 @@ bool loadmqtt(const char *filename, Mqtt &mqtt_config) {
   strlcpy(mqtt_config.password,                  // <- destination
           doc["MQTT_PASSWORD"] | "", // <- source
           sizeof(mqtt_config.password));         // <- destination's capacity
+  mqtt_config.mqtt = doc["mqtt"] | true;
   configFile.close();
 
 return true;    
@@ -663,6 +667,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
    savemqtt(mqtt_conf, mqtt_config); 
    saveConfiguration(filename_conf, config);
    }
+  //Ajout des relais
    if (request->hasParam("relay1")) { int relay = request->getParam("relay1")->value().toInt(); 
         if ( relay == 0) { digitalWrite(RELAY1 , LOW); }
         else { digitalWrite(RELAY1 , HIGH); } 
@@ -672,6 +677,13 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
         else { digitalWrite(RELAY2 , HIGH); } 
     }
 
+   //// for check boxs in web pages  
+   if (request->hasParam("servermode")) {String inputMessage = request->getParam("servermode")->value();
+                                            getServermode(inputMessage);
+                                            request->send(200, "text/html", getconfig().c_str());
+                                            saveConfiguration(filename_conf, config);
+                                            savemqtt(mqtt_conf, mqtt_config); 
+                                        }
 
    request->send(200, "text/html", getconfig().c_str());
 
@@ -973,7 +985,7 @@ void mqtt(String idx, String value)
 {
   if (!AP) {
 
-    if (MQTT_SEND)  {
+    if (mqtt_config.mqtt)  {
       reconnect();
       String nvalue = "0" ; 
       if ( value != "0" ) { nvalue = "2" ; }
@@ -1005,8 +1017,14 @@ void child_communication(int delest_power){
 
 String getmqtt() {
 
-    String retour =String(config.hostname) + ";" + String(config.Publish) + ";" + String(mqtt_config.username) + ";" + String(mqtt_config.password)  ;
+    String retour =String(config.hostname) + ";" + String(config.Publish) + ";" + String(mqtt_config.username) + ";" + String(mqtt_config.password) + ";" + stringbool(mqtt_config.mqtt) ;
     return String(retour) ;
+  }
+
+String stringbool(bool mybool){
+  String truefalse = "true";
+  if (mybool == false ) {truefalse = "";}
+  return String(truefalse);
   }
 
 void savemqtt(const char *filename, const Mqtt &mqtt_config) {
@@ -1026,7 +1044,7 @@ void savemqtt(const char *filename, const Mqtt &mqtt_config) {
   // Set the values in the document
   doc["MQTT_USER"] = mqtt_config.username;
   doc["MQTT_PASSWORD"] = mqtt_config.password;
-  
+  doc["mqtt"] = mqtt_config.mqtt;
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {
     Serial.println(F("Failed to write to file in function Save configuration "));
@@ -1044,3 +1062,8 @@ String getlogs(){
   
     return logs ; 
 } 
+
+String getServermode(String Servermode) {
+  if ( Servermode == "MQTT" ) {   mqtt_config.mqtt = !mqtt_config.mqtt; }
+return String(Servermode);
+}

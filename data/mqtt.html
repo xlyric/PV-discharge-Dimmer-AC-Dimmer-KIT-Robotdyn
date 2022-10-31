@@ -162,7 +162,13 @@
 
           <form class="user" id="formulaire" method="post" action=""  >
 			  
-          
+            <div class="col-sm-3">
+              <div class="custom-control custom-checkbox small">
+                <input type="checkbox" class="custom-control-input" id="MQTT">
+                <label class="custom-control-label" for="MQTT" onclick="sendservermode(this.innerHTML);" >MQTT</label>
+              </div>
+            </div>
+
             <div class="form-group">
               Serveur  :<input type="text" class="form-control form-control-user" id="server" placeholder="%SERVER%">
             </div>
@@ -220,6 +226,17 @@ function save () {
 
 }
 
+function sendservermode (mode) {
+
+$.get( "/get", { servermode: mode } )
+.done(function(data) { 
+$( "#saveform" ).text( "Configuration appliqué" ).show().fadeOut( 5000 );
+var config = data.split(";");
+document.getElementById("MQTT").value = config[16];
+}); 
+
+
+}
 		
 		</script >
            
@@ -276,7 +293,10 @@ var recupconfig = $.get ({
       i++;  
       document.getElementById("user").value = config[i];
       i++;
-      document.getElementById("password").value = config[i];	
+      document.getElementById("password").value = config[i];
+      i++;
+      document.getElementById("MQTT").checked = config[i];
+		  document.getElementById("MQTT").value = config[i];
 </script>
 				  
                 </div>

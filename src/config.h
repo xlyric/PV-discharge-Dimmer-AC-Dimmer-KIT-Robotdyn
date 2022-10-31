@@ -6,9 +6,9 @@
  */
 
  
-#define MQTT_SEND true  //// set to false if not MQTT server is present ( automatic false on AP mode )
-#define MQTT_USER ""   //// not used, use mqtt.json file 
-#define MQTT_PASSWORD ""  //// not used, use mqtt.json file 
+// #define MQTT_SEND true  //// set to false if not MQTT server is present ( automatic false on AP mode )---> configuration in web page --> to delete 01/23
+//#define MQTT_USER ""   //// not used, use mqtt.json file  --> to delete 01/23
+//#define MQTT_PASSWORD ""  //// not used, use mqtt.json file --> to delete 01/23
 
 
 /// default configuration for Dimmer with Power supply and D1 Mini on the board ( default : D0 - D1 )
