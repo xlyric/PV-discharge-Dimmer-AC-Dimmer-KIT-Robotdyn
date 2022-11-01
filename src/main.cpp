@@ -119,6 +119,7 @@ WiFiClient domotic_client;
 void mqtt(String idx, String value);
 PubSubClient client(domotic_client);
 
+
 AsyncWebServer server(80);
 DNSServer dns;
 HTTPClient http;
@@ -129,7 +130,9 @@ int puissance = 0 ;
 int change = 0; 
 
 void reconnect();
+void Mqtt_HA_hello();
 void child_communication(int delest_power);
+void mqtt_HA(String sensor_temp, String sensor_dimmer);
 
 
 //***********************************
@@ -434,7 +437,7 @@ void dimmer_off()
 
 void setup() {
   Serial.begin(115200);
-
+   
   /// Correction issue full power at start
   pinMode(outputPin, OUTPUT); 
   //digitalWrite(outputPin, LOW);
@@ -710,6 +713,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
    // Serial.println(String(mqtt_config.password));
     client.setServer(config.hostname, 1883);
     client.connect("Dimmer",mqtt_config.username, mqtt_config.password);
+    Mqtt_HA_hello(); 
   }
   
   #ifdef  SSR
@@ -788,11 +792,14 @@ void loop() {
         if ( puissance > config.maxpow )  
         {
           mqtt(String(config.IDX), String(config.maxpow));  // remonté MQTT de la commande max
+          mqtt_HA (String(celsius),String(config.maxpow));
         }
         else 
         {
           mqtt(String(config.IDX), String(puissance));  // remonté MQTT de la commande réelle
+          mqtt_HA (String(celsius),String(puissance));
         }
+        
       }
 
     }
@@ -812,6 +819,7 @@ void loop() {
           #endif
 
         mqtt(String(config.IDX), String(0));
+        mqtt_HA (String(celsius),String(puissance));
         if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
     }
     change = 0; 
@@ -832,6 +840,7 @@ void loop() {
 
     if ( refreshcount >= refresh && celsius !=-127 && celsius !=-255) { 
       mqtt(String(config.IDXTemp), String(celsius));  /// remonté MQTT de la température
+      mqtt_HA (String(celsius),String(puissance));
       refreshcount = 0; 
     } 
   
@@ -1066,4 +1075,60 @@ String getlogs(){
 String getServermode(String Servermode) {
   if ( Servermode == "MQTT" ) {   mqtt_config.mqtt = !mqtt_config.mqtt; }
 return String(Servermode);
+}
+
+void Mqtt_HA_hello() {
+String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
+String node_id = String("dimmer-") + node_mac; 
+
+String topic = "homeassistant/sensor/"+ node_id +"/";
+String topic_temp = topic + "device_temperature/config";
+client.setBufferSize(512);
+
+String device_temperature = "{ \"dev_cla\": \"temperature\","
+        "\"unit_of_meas\": \"°C\","
+        "\"stat_cla\": \"measurement\"," 
+        "\"name\": \"Temperature "+ node_mac + "\"," 
+        "\"state_topic\": \"homeassistant/sensor/"+ node_id +"/state\", "
+        "\"value_template\": \"{{ value_json.temperature}}\" "
+      "}"; 
+
+
+
+String topic_dimmer = topic + "device_power/config";
+String device_dimmer = "{ \"dev_cla\": \"power\","
+        "\"unit_of_meas\": \"%\","
+        "\"stat_cla\": \"measurement\"," 
+        "\"name\": \"ECS Power "+ node_mac + "\"," 
+        "\"state_topic\": \"homeassistant/sensor/"+ node_id +"/state\","
+        "\"value_template\": \"{{ value_json.power }}\" "
+      "}";
+
+      
+     client.publish(topic_dimmer.c_str() , device_dimmer.c_str() , true);
+     client.publish(topic_temp.c_str() , device_temperature.c_str(), true);
+
+   Serial.println(device_temperature.c_str());
+   Serial.println(device_dimmer.c_str());  
+
+}
+
+void mqtt_HA(String sensor_temp, String sensor_dimmer)
+{
+  if (!AP) {
+
+    if (mqtt_config.mqtt)  {
+      String node_id = String("dimmer-") + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17); 
+      String topic = "homeassistant/sensor/"+ node_id +"/state";
+
+      reconnect();
+
+      String message = "  { \"temperature\" : " + sensor_temp +" ,   \"power\" : \"" + sensor_dimmer + "\"  } ";
+
+      client.loop();
+      client.publish(topic.c_str() , message.c_str(), true);
+
+      Serial.println("MQTT HA SENT");
+    }
+  }
 }
