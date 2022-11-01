@@ -100,7 +100,7 @@
  * Begin Settings
  **************************/
 
-const String VERSION = "Version 2.61" ;
+const String VERSION = "Version 2022-11-01" ;
 
 /***************************
  * temperature de sécurité
@@ -1079,18 +1079,32 @@ return String(Servermode);
 
 void Mqtt_HA_hello() {
 String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
+String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
 String node_id = String("dimmer-") + node_mac; 
 
 String topic = "homeassistant/sensor/"+ node_id +"/";
 String topic_temp = topic + "device_temperature/config";
-client.setBufferSize(512);
+client.setBufferSize(1024);
+
+String device_declare =         "\"dev\": {"
+          "\"ids\": \""+ node_ids + "\","
+          "\"name\": \""+ node_id + "\","
+          "\"sw\": \"Dimmer "+ VERSION +"\","
+          "\"mdl\": \"ESP8266\","
+          "\"mf\": \"Cyril Poissonnier\""
+        "}"; 
+
 
 String device_temperature = "{ \"dev_cla\": \"temperature\","
         "\"unit_of_meas\": \"°C\","
         "\"stat_cla\": \"measurement\"," 
         "\"name\": \"Temperature "+ node_mac + "\"," 
-        "\"state_topic\": \"homeassistant/sensor/"+ node_id +"/state\", "
-        "\"value_template\": \"{{ value_json.temperature}}\" "
+        "\"state_topic\": \""+ topic +"state\", "
+        "\"stat_t\": \""+ topic +"state\", "
+        "\"avty_t\": \""+ topic +"status\","
+        "\"uniq_id\": \""+ node_mac + "-dimmer\", "
+        "\"value_template\": \"{{ value_json.temperature}}\","
+        + device_declare + 
       "}"; 
 
 
@@ -1100,15 +1114,34 @@ String device_dimmer = "{ \"dev_cla\": \"power\","
         "\"unit_of_meas\": \"%\","
         "\"stat_cla\": \"measurement\"," 
         "\"name\": \"ECS Power "+ node_mac + "\"," 
-        "\"state_topic\": \"homeassistant/sensor/"+ node_id +"/state\","
-        "\"value_template\": \"{{ value_json.power }}\" "
+        "\"state_topic\": \""+ topic +"state\","
+        "\"stat_t\": \""+ topic +"state\","
+        "\"avty_t\": \""+ topic +"status\","
+        "\"uniq_id\": \""+ node_mac + "-power\", "
+        "\"value_template\": \"{{ value_json.power }}\", "
+        + device_declare + 
       "}";
 
-      
-     client.publish(topic_dimmer.c_str() , device_dimmer.c_str() , true);
-     client.publish(topic_temp.c_str() , device_temperature.c_str(), true);
+String topic_IP = topic + "adress_ip/config";
+String device_IP = "{ \"name\": \"Adress_IP\"," 
+        "\"entity_category\": \"diagnostic\","
+        "\"stat_t\": \""+ topic +"adress_ip/state\","
+        "\"avty_t\": \""+ topic +"status\","
+        "\"state_topic\": \""+ topic +"adress_ip/state\","
+        "\"uniq_id\": \""+ node_mac + "-wifiinfo-ip\", "
+        + device_declare + 
+      "}";
 
-   Serial.println(device_temperature.c_str());
+String IPaddress =   WiFi.localIP().toString() ;
+      
+     client.publish(topic_dimmer.c_str() , device_dimmer.c_str() , true); // déclaration autoconf dimmer
+     client.publish(topic_temp.c_str() , device_temperature.c_str(), true); // déclaration autoconf temp
+     client.publish(topic_IP.c_str() , device_IP.c_str(), true); /// declaration autoconf IP
+
+     client.publish(String(topic+"status").c_str() , "online", true); // status Online
+     client.publish(String(topic+"adress_ip/state").c_str() , IPaddress.c_str() , true); // status IP
+
+   Serial.println(device_IP.c_str());
    Serial.println(device_dimmer.c_str());  
 
 }
@@ -1120,7 +1153,7 @@ void mqtt_HA(String sensor_temp, String sensor_dimmer)
     if (mqtt_config.mqtt)  {
       String node_id = String("dimmer-") + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17); 
       String topic = "homeassistant/sensor/"+ node_id +"/state";
-
+      
       reconnect();
 
       String message = "  { \"temperature\" : " + sensor_temp +" ,   \"power\" : \"" + sensor_dimmer + "\"  } ";
