@@ -811,7 +811,6 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     client.connect("Dimmer",mqtt_config.username, mqtt_config.password);
     //Mqtt_HA_hello(); 
     client.setBufferSize(1024);
-    device_dimmer.sendIP();
     device_dimmer.discovery();
     device_temp.discovery();
     device_temp.send("0");
