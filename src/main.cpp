@@ -93,7 +93,7 @@
 #include <PubSubClient.h>
 /// config
 #include "config.h"
-#include "HA.h"
+
 #include "enums.h"
 
 
@@ -239,7 +239,7 @@ struct HA
       client.publish(String(topic+"status").c_str() , "online", true); // status Online
     } 
 
-    public:void sendIP(){
+ /*   public:void sendIP(){
       IPaddress =   WiFi.localIP().toString() ;
       
       String device_IP = "{ \"name\": \"Adress_IP\"," 
@@ -253,7 +253,7 @@ struct HA
       Serial.println(device_IP.c_str());
       online();
       client.publish(String(topic+"stateIP").c_str() , IPaddress.c_str() , true); // status IP
-    }
+    }*/
 
     public:void discovery(){
       IPaddress =   WiFi.localIP().toString() ;
@@ -266,6 +266,9 @@ struct HA
             "\"avty_t\": \""+ topic +"status\","
             "\"uniq_id\": \""+ node_mac + "-" + name +"\", "
             "\"value_template\": \"{{ value_json."+name +" }}\", "
+            "\"cmd_t\": \""+ topic +"command\","
+            "\"cmd_tpl\": \"{{ value_json."+name +" }}\", "
+            
             + device_declare() + 
           "}";
           if (dev_cla =="" ) { dev_cla = name; }
