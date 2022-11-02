@@ -93,14 +93,15 @@
 #include <PubSubClient.h>
 /// config
 #include "config.h"
-
+#include "HA.h"
+#include "enums.h"
 
 
 /***************************
  * Begin Settings
  **************************/
 
-const String VERSION = "Version 2022-11-01" ;
+
 
 /***************************
  * temperature de sécurité
@@ -188,25 +189,97 @@ DeviceAddress insideThermometer;
 //************* Gestion de la configuration
 //***********************************
 
-struct Config {
-  char hostname[15];
-  int port;
-  char Publish[100];
-  int IDXTemp;
-  int maxtemp;
-  int IDXAlarme;
-  int IDX;
-  int maxpow;
-  char child[15];
-  char mode[10];
-  int minpow;
-    
-};
 
-struct Mqtt {
-  bool mqtt;
-  char username[50];
-  char password[50];
+
+struct HA
+{
+      /* HA */
+    private:String name; 
+    public:void Set_name(String setter) {name=setter; }
+
+    private:String dev_cla; 
+    public:void Set_dev_cla(String setter) {dev_cla=setter; }
+
+    private:String unit_of_meas; 
+    public:void Set_unit_of_meas(String setter) {unit_of_meas=setter; }
+
+    private:String stat_cla; 
+    public:void Set_stat_cla(String setter) {stat_cla=setter; }
+
+    private:String entity_category; 
+    public:void Set_entity_category(String setter) {entity_category=setter; }
+
+    bool cmd_t; 
+
+    private:String IPaddress;
+    private:String state_topic; 
+    private:String stat_t; 
+    private:String avty_t;
+
+    
+    private:String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
+    private:String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
+    private:String node_id = String("dimmer-") + node_mac; 
+    private:String topic = "homeassistant/sensor/"+ node_id +"/";
+    private:String device_declare() { 
+              String info =         "\"dev\": {"
+              "\"ids\": \""+ node_id + "\","
+              "\"name\": \""+ node_id + "\","
+              "\"sw\": \"Dimmer "+ String(VERSION) +"\","
+              "\"mdl\": \"ESP8266 " + IPaddress + "\","
+              "\"mf\": \"Cyril Poissonnier\""
+            "}"; 
+            return info;
+            }
+    private:String uniq_id; 
+    private:String value_template; 
+
+
+    private:void online(){
+      client.publish(String(topic+"status").c_str() , "online", true); // status Online
+    } 
+
+    public:void sendIP(){
+      IPaddress =   WiFi.localIP().toString() ;
+      
+      String device_IP = "{ \"name\": \"Adress_IP\"," 
+        "\"entity_category\": \"diagnostic\","
+        "\"stat_t\": \""+ topic +"stateIP\","
+        "\"avty_t\": \""+ topic +"status\","
+        "\"uniq_id\": \""+ node_mac + "-wifiinfo-ip\", "
+        + device_declare() + 
+      "}";
+      client.publish((topic+"adress_ip/config").c_str() , device_IP.c_str() , true);
+      Serial.println(device_IP.c_str());
+      online();
+      client.publish(String(topic+"stateIP").c_str() , IPaddress.c_str() , true); // status IP
+    }
+
+    public:void discovery(){
+      IPaddress =   WiFi.localIP().toString() ;
+      String device= "{ \"dev_cla\": \""+dev_cla+"\","
+            "\"unit_of_meas\": \""+unit_of_meas+"\","
+            "\"stat_cla\": \""+stat_cla+"\"," 
+            "\"name\": \""+ name +"-"+ node_mac + "\"," 
+            "\"state_topic\": \""+ topic +"state\","
+            "\"stat_t\": \""+ topic +"state\","
+            "\"avty_t\": \""+ topic +"status\","
+            "\"uniq_id\": \""+ node_mac + "-" + name +"\", "
+            "\"value_template\": \"{{ value_json."+name +" }}\", "
+            + device_declare() + 
+          "}";
+          if (dev_cla =="" ) { dev_cla = name; }
+          client.publish((topic+dev_cla+"/config").c_str() , device.c_str() , true); // déclaration autoconf dimmer
+          Serial.println(device.c_str());
+          online();
+          
+    }
+
+    public:void send(String value){
+       String message = "  { \""+name+"\" : \"" + value.c_str() + "\"  } ";
+       client.publish((topic+"state").c_str() , message.c_str(), true);
+    }
+ 
 };
 
 const char *filename_conf = "/config.json";
@@ -224,6 +297,12 @@ String logs="197}11}1";
 String getlogs(); 
 
 AsyncWiFiManager wifiManager(&server,&dns);
+
+/// création des sensors
+HA device_dimmer; 
+HA device_temp; 
+
+
 
 //***********************************
 //************* Gestion de la configuration - Lecture du fichier de configuration
@@ -690,6 +769,10 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
 
    request->send(200, "text/html", getconfig().c_str());
 
+
+
+
+
   });
   
 
@@ -705,6 +788,19 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
   /// recherche d'une sonde dallas
   dallaspresent();
 
+  /// création des sensors
+  device_dimmer.Set_name("power");
+  device_dimmer.Set_unit_of_meas("%");
+  device_dimmer.Set_stat_cla("measurement");
+  device_dimmer.Set_dev_cla("power");
+  device_dimmer.cmd_t=true;
+
+  device_temp.Set_name("temperature");
+  device_temp.Set_unit_of_meas("°C");
+  device_temp.Set_stat_cla("measurement");
+  device_temp.Set_dev_cla("temperature");
+  
+  //Serial.println(device_temp.name);
   /// MQTT 
   if (!AP) {
     Serial.println("Connection MQTT" );
@@ -713,7 +809,15 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
    // Serial.println(String(mqtt_config.password));
     client.setServer(config.hostname, 1883);
     client.connect("Dimmer",mqtt_config.username, mqtt_config.password);
-    Mqtt_HA_hello(); 
+    //Mqtt_HA_hello(); 
+    client.setBufferSize(1024);
+    device_dimmer.sendIP();
+    device_dimmer.discovery();
+    device_temp.discovery();
+    device_temp.send("0");
+    device_dimmer.send("0");
+
+
   }
   
   #ifdef  SSR
@@ -792,12 +896,14 @@ void loop() {
         if ( puissance > config.maxpow )  
         {
           mqtt(String(config.IDX), String(config.maxpow));  // remonté MQTT de la commande max
-          mqtt_HA (String(celsius),String(config.maxpow));
+          //mqtt_HA (String(celsius),String(config.maxpow));
+          device_dimmer.send(String(puissance));
         }
         else 
         {
           mqtt(String(config.IDX), String(puissance));  // remonté MQTT de la commande réelle
-          mqtt_HA (String(celsius),String(puissance));
+          //mqtt_HA (String(celsius),String(puissance));
+          device_dimmer.send(String(puissance));
         }
         
       }
@@ -819,7 +925,8 @@ void loop() {
           #endif
 
         mqtt(String(config.IDX), String(0));
-        mqtt_HA (String(celsius),String(puissance));
+        //mqtt_HA (String(celsius),String(puissance));
+        device_dimmer.send(String(puissance));
         if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
     }
     change = 0; 
@@ -840,7 +947,8 @@ void loop() {
 
     if ( refreshcount >= refresh && celsius !=-127 && celsius !=-255) { 
       mqtt(String(config.IDXTemp), String(celsius));  /// remonté MQTT de la température
-      mqtt_HA (String(celsius),String(puissance));
+      //mqtt_HA (String(celsius),String(puissance));
+      device_temp.send(String(celsius));
       refreshcount = 0; 
     } 
   
@@ -1165,3 +1273,8 @@ void mqtt_HA(String sensor_temp, String sensor_dimmer)
     }
   }
 }
+
+
+
+
+
