@@ -495,7 +495,7 @@ void dimmer_on()
 {
   if (dimmer.getState()==0) {
     dimmer.setState(ON);
-    logs =+"Dimmer On\r\n"; 
+    logs +="Dimmer On\r\n"; 
     delay(50);
     }
 }
@@ -505,7 +505,7 @@ void dimmer_off()
   if (dimmer.getState()==1) {
     dimmer.setPower(0);
     dimmer.setState(OFF);
-    logs =+"Dimmer Off\r\n"; 
+    logs +="Dimmer Off\r\n"; 
     delay(50);
     }
 }
@@ -537,7 +537,7 @@ void setup() {
   //démarrage file system
   LittleFS.begin();
   Serial.println("Demarrage file System");
-  loginit =+"start filesystem\r\n"; 
+  loginit +="start filesystem\r\n"; 
   // configuration dimmer
   dimmer.begin(NORMAL_MODE, ON); //dimmer initialisation: name.begin(MODE, STATE) 
   
@@ -807,7 +807,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
   /// MQTT 
   if (!AP) {
     Serial.println("Connection MQTT" );
-    loginit =+"MQTT connexion\r\n"; 
+    loginit +="MQTT connexion\r\n"; 
    // Serial.println(String(mqtt_config.username));
    // Serial.println(String(mqtt_config.password));
     client.setServer(config.hostname, 1883);
@@ -1176,7 +1176,7 @@ void savemqtt(const char *filename, const Mqtt &mqtt_config) {
 
 /// affichage de logs 
 String getlogs(){
-    logs = logs + loginit + "}1"; 
+    logs = logs + loginit + "\r\n}1"; 
     loginit = "";
   
     return logs ; 
