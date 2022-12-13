@@ -1176,7 +1176,7 @@ void savemqtt(const char *filename, const Mqtt &mqtt_config) {
 
 /// affichage de logs 
 String getlogs(){
-    logs = logs + loginit + "\r\n}1"; 
+    logs = logs + loginit + "}1"; 
     loginit = "";
   
     return logs ; 
