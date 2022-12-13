@@ -525,10 +525,12 @@ void setup() {
   //digitalWrite(outputPin, LOW);
   
   // relay
+  #ifdef STANDALONE
   pinMode(RELAY1, OUTPUT);
   pinMode(RELAY2, OUTPUT);
   digitalWrite(RELAY1, LOW);
   digitalWrite(RELAY2, LOW);
+  #endif
 
   // cooler init
   pinMode(COOLER, OUTPUT); 
@@ -753,6 +755,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
    saveConfiguration(filename_conf, config);
    }
   //Ajout des relais
+  #ifdef STANDALONE
    if (request->hasParam("relay1")) { int relay = request->getParam("relay1")->value().toInt(); 
         if ( relay == 0) { digitalWrite(RELAY1 , LOW); }
         else { digitalWrite(RELAY1 , HIGH); } 
@@ -761,6 +764,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
         if ( relay == 0) { digitalWrite(RELAY2 , LOW); }
         else { digitalWrite(RELAY2 , HIGH); } 
     }
+  #endif 
 
    //// for check boxs in web pages  
    if (request->hasParam("servermode")) {String inputMessage = request->getParam("servermode")->value();
