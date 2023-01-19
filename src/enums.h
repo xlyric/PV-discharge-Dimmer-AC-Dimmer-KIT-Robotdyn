@@ -2,6 +2,8 @@
 #define ENUMS
 
 #include <Arduino.h>
+#include <ESP8266WiFi.h>
+
 
 struct Config {
   char hostname[15];
@@ -23,8 +25,6 @@ struct Mqtt {
   char username[50];
   char password[50];
 };
-
-
 
 
 
