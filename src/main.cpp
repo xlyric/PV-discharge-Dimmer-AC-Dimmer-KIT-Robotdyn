@@ -887,6 +887,8 @@ void loop() {
           dimmer.setPower(puissance);
           logs += "dimmer at " + String(puissance) + "\r\n";
           
+          if ( strcmp(config.mode,"equal") == 0) { child_communication(puissance); }  //si mode equal envoie de la commande vers la carte fille
+
           #ifdef  SSR
           analogWrite(JOTTA, (puissance*256/100) );
           #endif
@@ -919,6 +921,9 @@ void loop() {
     {
       if ( puissance > config.maxpow && strcmp(config.mode,"delester") == 0 ) { child_communication(puissance-config.maxpow ); } // si mode délest, envoi du surplus
       if (  strcmp(config.mode,"equal") == 0) { child_communication(puissance); }  //si mode equal envoie de la commande vers la carte fille
+     
+      // Pourquoi pas rajouter une option sur la page de config pour envoyer 0 en mode equal, dans le cas ou 2 dimmeurs sont reliés au même équipement ?
+     
     }
     else {
         //// si la commande est trop faible on coupe tout partout
@@ -1135,6 +1140,7 @@ void child_communication(int delest_power){
   baseurl = "/?POWER=" + String(delest_power) ; http.begin(domotic_client,config.child,80,baseurl); 
   http.GET();
   http.end(); 
+  logs += "child at " + String(delest_power) + "\r\n";
 
 }
 
