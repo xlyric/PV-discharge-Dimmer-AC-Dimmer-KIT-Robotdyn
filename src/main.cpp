@@ -134,7 +134,7 @@ void reconnect();
 void Mqtt_HA_hello();
 void child_communication(int delest_power);
 void mqtt_HA(String sensor_temp, String sensor_dimmer);
-
+void callback(char* Subscribedtopic, byte* message, unsigned int length) ;
 
 //***********************************
 //************* Time
@@ -383,6 +383,12 @@ void loadConfiguration(const char *filename, Config &config) {
   strlcpy(config.mode,                  
           doc["mode"] | "off", 
           sizeof(config.mode));
+  strlcpy(config.SubscribePV,                 
+        doc["SubscribePV"] | "homeassistant/sensor/PvRouter-7988/statedimmer", 
+        sizeof(config.SubscribePV));    
+  strlcpy(config.SubscribeTEMP,                 
+        doc["SubscribeTEMP"] | "homeassistant/sensor/dimmer-2F0F/state", 
+        sizeof(config.SubscribeTEMP));
   configFile.close();
   
       
@@ -420,8 +426,8 @@ void saveConfiguration(const char *filename, const Config &config) {
   doc["minpow"] = config.minpow;
   doc["child"] = config.child;
   doc["mode"] = config.mode;
-  
-
+  doc["SubscribePV"] = config.SubscribePV;
+  doc["SubscribeTEMP"] = config.SubscribeTEMP;
 
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {
@@ -477,7 +483,7 @@ String processor(const String& var){
 
 String getconfig() {
   String configweb;  
-  configweb = String(config.hostname) + ";" +  config.port+";"+ config.Publish +";"+ config.IDXTemp +";"+ config.maxtemp+ ";"  +  config.IDXAlarme + ";"  + config.IDX + ";"  +  config.maxpow+ ";"  +  config.minpow+ ";" +  config.child+ ";"  +  config.mode ;
+  configweb = String(config.hostname) + ";" +  config.port+";"+ config.Publish +";"+ config.IDXTemp +";"+ config.maxtemp+ ";"  +  config.IDXAlarme + ";"  + config.IDX + ";"  +  config.maxpow+ ";"  +  config.minpow+ ";" +  config.child+ ";"  +  config.mode + ";" + config.SubscribePV + ";" + config.SubscribeTEMP ;
   return String(configweb);
 }
 
@@ -624,7 +630,8 @@ void setup() {
     
     if  (LittleFS.exists("/index.html")) {
       if (request->hasParam(PARAM_INPUT_1)) { 
-        puissance = request->getParam(PARAM_INPUT_1)->value().toInt();  
+        puissance = request->getParam(PARAM_INPUT_1)->value().toInt(); 
+        logs += "HTTP power at " + String(puissance) + "\r\n"; 
         change=1; 
         request->send_P(200, "text/plain", getState().c_str());  
         
@@ -749,6 +756,8 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
    if (request->hasParam("minpow")) { config.minpow = request->getParam("minpow")->value().toInt();}
    if (request->hasParam("child")) { request->getParam("child")->value().toCharArray(config.child,15);  }
    if (request->hasParam("mode")) { request->getParam("mode")->value().toCharArray(config.mode,10);  }
+   if (request->hasParam("SubscribePV")) { request->getParam("SubscribePV")->value().toCharArray(config.SubscribePV,100);}
+   if (request->hasParam("SubscribeTEMP")) { request->getParam("SubscribeTEMP")->value().toCharArray(config.SubscribeTEMP,100);}
    if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,15);  }
    if (request->hasParam("mqttpassword")) { request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,15); 
    savemqtt(mqtt_conf, mqtt_config); 
@@ -815,14 +824,17 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
    // Serial.println(String(mqtt_config.username));
    // Serial.println(String(mqtt_config.password));
     client.setServer(config.hostname, 1883);
+    client.setCallback(callback);
+
     client.connect("Dimmer",mqtt_config.username, mqtt_config.password);
+    if (strcmp( config.SubscribePV, "none") != 0 ) {client.subscribe(config.SubscribePV);}
+    if (strcmp( config.SubscribeTEMP, "none") != 0 ) {client.subscribe(config.SubscribeTEMP);}
     //Mqtt_HA_hello(); 
     client.setBufferSize(1024);
     device_dimmer.discovery();
     device_temp.discovery();
     device_temp.send("0");
     device_dimmer.send("0");
-
 
   }
   
@@ -838,8 +850,38 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
 
 bool alerte=false;
 
+
+
+
+void callback(char* Subscribedtopic, byte* message, unsigned int length) {
+  StaticJsonDocument<64> doc2;
+  deserializeJson(doc2, message);
+  if (strcmp( Subscribedtopic, config.SubscribePV ) == 0 ) {
+      int puissancemqtt = doc2["dimmer"]; 
+      if (puissance != puissancemqtt ) {
+        puissance = puissancemqtt;
+        logs += "MQTT power at " + String(puissance) + "\r\n";
+        change=1; 
+      }
+  }
+  if (strcmp( Subscribedtopic, config.SubscribeTEMP ) == 0 ) {
+    int temperaturemqtt = doc2["temperature"]; 
+    if (celsius != temperaturemqtt ) {
+      celsius = temperaturemqtt;
+      logs += "MQTT temp at " + String(celsius) + "\r\n";
+    }
+  }
+}
+
+
+
+
 void loop() {
 
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
 
   //// si la sécurité température est active 
   if ( security == 1 ) { 
@@ -886,9 +928,8 @@ void loop() {
         else {
           dimmer.setPower(puissance);
           logs += "dimmer at " + String(puissance) + "\r\n";
-          
+          // rajouté par rémi
           if ( strcmp(config.mode,"equal") == 0) { child_communication(puissance); }  //si mode equal envoie de la commande vers la carte fille
-
           #ifdef  SSR
           analogWrite(JOTTA, (puissance*256/100) );
           #endif
@@ -921,9 +962,6 @@ void loop() {
     {
       if ( puissance > config.maxpow && strcmp(config.mode,"delester") == 0 ) { child_communication(puissance-config.maxpow ); } // si mode délest, envoi du surplus
       if (  strcmp(config.mode,"equal") == 0) { child_communication(puissance); }  //si mode equal envoie de la commande vers la carte fille
-     
-      // Pourquoi pas rajouter une option sur la page de config pour envoyer 0 en mode equal, dans le cas ou 2 dimmeurs sont reliés au même équipement ?
-     
     }
     else {
         //// si la commande est trop faible on coupe tout partout
@@ -1085,10 +1123,10 @@ void reconnect() {
     if (client.connect(clientId.c_str(),mqtt_config.username, mqtt_config.password)) {
       Serial.println("connected");
       logs += "Connected\r\n";
-      // Once connected, publish an announcement...
-      //client.publish("outTopic", "hello world");
-      // ... and resubscribe
-      client.subscribe("inTopic");
+
+      if (strcmp( config.SubscribePV, "none") != 0 ) {client.subscribe(config.SubscribePV);}
+      if (strcmp( config.SubscribeTEMP, "none") != 0 ) {client.subscribe(config.SubscribeTEMP);}
+
     } else {
       Serial.print("failed, rc=");
       logs += "Fail and retry\r\n";
@@ -1114,7 +1152,9 @@ void mqtt(String idx, String value)
   if (!AP) {
 
     if (mqtt_config.mqtt)  {
-      reconnect();
+      if (!client.connected()) {
+        reconnect();
+      }
       String nvalue = "0" ; 
       if ( value != "0" ) { nvalue = "2" ; }
       String message = "  { \"idx\" : " + idx +" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
@@ -1274,7 +1314,9 @@ void mqtt_HA(String sensor_temp, String sensor_dimmer)
       String node_id = String("dimmer-") + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17); 
       String topic = "homeassistant/sensor/"+ node_id +"/state";
       
-      reconnect();
+      if (!client.connected()) {
+        reconnect();
+      }
 
       String message = "  { \"temperature\" : " + sensor_temp +" ,   \"power\" : \"" + sensor_dimmer + "\"  } ";
 

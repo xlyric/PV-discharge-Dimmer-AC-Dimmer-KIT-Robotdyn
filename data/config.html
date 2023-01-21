@@ -326,7 +326,22 @@
             </div>
           </div>
 
+          <div class="form-group row">
+            <div class="col-sm-6" >MQTT state dimmer subscription (or : none)</div>
+            <div class="col-sm-6" >MQTT dimmer temp subscription (or : none)</div>
 
+          </div>
+    
+          <div class="form-group row">
+            <div class="col-sm-6">
+              <input type="text" class="form-control form-control-user" id="SubscribePV" placeholder="%SUBSCRIBEPV%">
+            </div>
+            <div class="col-sm-6">
+              <input type="text" class="form-control form-control-user" id="SubscribeTEMP" placeholder="%SUBSCRIBETEMP%">
+            </div>
+          </div>
+  
+  
 </div>
 
 	<!--  fin du formumaire et envoie -->
@@ -432,7 +447,7 @@ $( "#save" ).click(function() {
 
 $( "#formulaire" ).submit(function() {
 
-	 var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(), 'idxtemp':$('#idxtemp').val(), 'maxtemp':$('#maxtemp').val(), 'IDXAlarme':$('#IDXAlarme').val(), 'IDX':$('#IDX').val(),	 'maxpow':$('#maxpow').val(),	 'minpow':$('#minpow').val(), 'child':$('#child').val()	 } 
+	 var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(), 'idxtemp':$('#idxtemp').val(), 'maxtemp':$('#maxtemp').val(), 'IDXAlarme':$('#IDXAlarme').val(), 'IDX':$('#IDX').val(),	 'maxpow':$('#maxpow').val(),	 'minpow':$('#minpow').val(), 'child':$('#child').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val() } 
 
 
 		
@@ -480,9 +495,12 @@ var recupconfig = $.get ({
     document.getElementById("minpow").value = config[i];
     i++;		
 		document.getElementById("child").value = config[i];
-    i++;		
+    i++;
     $("input[name=delester][value=" + config[i] + "]").prop('checked', true);
-    
+    i++;		
+		document.getElementById("SubscribePV").value = config[i];
+    i++;		
+		document.getElementById("SubscribeTEMP").value = config[i];
     
   
  
