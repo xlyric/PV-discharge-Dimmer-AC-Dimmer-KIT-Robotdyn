@@ -375,8 +375,9 @@ void loadConfiguration(const char *filename, Config &config) {
   config.maxtemp = doc["maxtemp"] | 60; 
   config.IDXAlarme = doc["IDXAlarme"] | 202; 
   config.IDX = doc["IDX"] | 201; 
-  config.maxpow = doc["maxpow"] | 50; 
+  config.startingpow = doc["startingpow"] | 0; 
   config.minpow = doc["minpow"] | 5;
+  config.maxpow = doc["maxpow"] | 50; 
   strlcpy(config.child,                  
           doc["child"] | "192.168.1.20", 
           sizeof(config.child));         
@@ -422,8 +423,9 @@ void saveConfiguration(const char *filename, const Config &config) {
   doc["maxtemp"] = config.maxtemp;
   doc["IDXAlarme"] = config.IDXAlarme;
   doc["IDX"] = config.IDX;  
-  doc["maxpow"] = config.maxpow;
+  doc["startingpow"] = config.startingpow;
   doc["minpow"] = config.minpow;
+  doc["maxpow"] = config.maxpow;
   doc["child"] = config.child;
   doc["mode"] = config.mode;
   doc["SubscribePV"] = config.SubscribePV;
@@ -483,7 +485,7 @@ String processor(const String& var){
 
 String getconfig() {
   String configweb;  
-  configweb = String(config.hostname) + ";" +  config.port+";"+ config.Publish +";"+ config.IDXTemp +";"+ config.maxtemp+ ";"  +  config.IDXAlarme + ";"  + config.IDX + ";"  +  config.maxpow+ ";"  +  config.minpow+ ";" +  config.child+ ";"  +  config.mode + ";" + config.SubscribePV + ";" + config.SubscribeTEMP ;
+  configweb = String(config.hostname) + ";" +  config.port+";"+ config.Publish +";"+ config.IDXTemp +";"+ config.maxtemp+ ";"  +  config.IDXAlarme + ";"  + config.IDX + ";"  +  config.startingpow+ ";"  +  config.minpow+ ";" +  config.maxpow+ ";"  +  config.child+ ";"  +  config.mode + ";" + config.SubscribePV + ";" + config.SubscribeTEMP ;
   return String(configweb);
 }
 
@@ -752,8 +754,9 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
    if (request->hasParam("maxtemp")) { config.maxtemp = request->getParam("maxtemp")->value().toInt();}
    if (request->hasParam("IDXAlarme")) { config.IDXAlarme = request->getParam("IDXAlarme")->value().toInt();}
    if (request->hasParam("IDX")) { config.IDX = request->getParam("IDX")->value().toInt();}
-   if (request->hasParam("maxpow")) { config.maxpow = request->getParam("maxpow")->value().toInt();}
+   if (request->hasParam("startingpow")) { config.startingpow = request->getParam("startingpow")->value().toInt();}
    if (request->hasParam("minpow")) { config.minpow = request->getParam("minpow")->value().toInt();}
+   if (request->hasParam("maxpow")) { config.maxpow = request->getParam("maxpow")->value().toInt();}
    if (request->hasParam("child")) { request->getParam("child")->value().toCharArray(config.child,15);  }
    if (request->hasParam("mode")) { request->getParam("mode")->value().toCharArray(config.mode,10);  }
    if (request->hasParam("SubscribePV")) { request->getParam("SubscribePV")->value().toCharArray(config.SubscribePV,100);}
@@ -858,6 +861,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
   deserializeJson(doc2, message);
   if (strcmp( Subscribedtopic, config.SubscribePV ) == 0 ) {
       int puissancemqtt = doc2["dimmer"]; 
+      puissancemqtt = puissancemqtt - config.startingpow;
       if (puissance != puissancemqtt ) {
         puissance = puissancemqtt;
         logs += "MQTT power at " + String(puissance) + "\r\n";

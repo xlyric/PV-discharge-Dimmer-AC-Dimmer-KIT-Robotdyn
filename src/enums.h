@@ -15,6 +15,7 @@ struct Config {
   char child[15];
   char mode[10];
   int minpow;
+  int startingpow;
   char SubscribePV[100];
   char SubscribeTEMP[100];
 
