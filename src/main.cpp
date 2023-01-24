@@ -961,7 +961,7 @@ void loop() {
     } 
   
 
-    delay(500); 
+    // delay(500);  /// suppression 24/01/2023 pour plus de rapidité
   } 
 
     //***********************************
@@ -976,7 +976,7 @@ if ( celsius >= config.maxtemp ) {
 
 
 
- delay(500); 
+ delay(100);  // 24/01/2023 changement 500 à 100ms pour plus de réactivité
 }
 ////fin de loop 
 
@@ -1090,11 +1090,11 @@ void reconnect() {
       Serial.print("failed, rc=");
       logs += "Fail and retry\r\n";
       Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
+      Serial.println(" try again in 2 seconds");
       // Wait 5 seconds before retrying
-      delay(5000);
+      delay(2000);   // 24/01/2023 passage de 5 a 2s
       timeout++; // after 10s break for apply command 
-      if (timeout > 2) {
+      if (timeout > 5) {
           Serial.println(" try again next time ") ; 
           logs += "retry later\r\n";
           break;
