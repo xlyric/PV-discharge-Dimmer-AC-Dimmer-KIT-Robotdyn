@@ -63,7 +63,7 @@
 #define ONE_WIRE_BUS D7
 #define RELAY1 D3  // Spécial pour relay commandé 
 #define RELAY2 D2  //
-#define COOLER  D8   /// 0 : off  -> 1 : On --> need a dry contact or opto
+#define COOLER  D5   /// 0 : off  -> 1 : On --> need a dry contact or opto
 //// pins for cooler
 #else
 #define COOLER  D7   /// 0 : off  -> 1 : On --> need a dry contact or opto
