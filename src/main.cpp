@@ -738,7 +738,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
                           saveConfiguration(filename_conf, config);   
                             }
                           
-   if (request->hasParam("hostname")) { request->getParam("hostname")->value().toCharArray(config.hostname,15);  }
+   if (request->hasParam("hostname")) { request->getParam("hostname")->value().toCharArray(config.hostname,16);  }
    if (request->hasParam("port")) { config.port = request->getParam("port")->value().toInt();}
    if (request->hasParam("Publish")) { request->getParam("Publish")->value().toCharArray(config.Publish,100);}
    if (request->hasParam("idxtemp")) { config.IDXTemp = request->getParam("idxtemp")->value().toInt();}
@@ -747,10 +747,10 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
    if (request->hasParam("IDX")) { config.IDX = request->getParam("IDX")->value().toInt();}
    if (request->hasParam("maxpow")) { config.maxpow = request->getParam("maxpow")->value().toInt();}
    if (request->hasParam("minpow")) { config.minpow = request->getParam("minpow")->value().toInt();}
-   if (request->hasParam("child")) { request->getParam("child")->value().toCharArray(config.child,15);  }
+   if (request->hasParam("child")) { request->getParam("child")->value().toCharArray(config.child,16);  }
    if (request->hasParam("mode")) { request->getParam("mode")->value().toCharArray(config.mode,10);  }
-   if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,15);  }
-   if (request->hasParam("mqttpassword")) { request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,15); 
+   if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,50);  }
+   if (request->hasParam("mqttpassword")) { request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,50); 
    savemqtt(mqtt_conf, mqtt_config); 
    saveConfiguration(filename_conf, config);
    }

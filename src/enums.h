@@ -6,7 +6,7 @@
 
 
 struct Config {
-  char hostname[15];
+  char hostname[16];
   int port;
   char Publish[100];
   int IDXTemp;
@@ -14,7 +14,7 @@ struct Config {
   int IDXAlarme;
   int IDX;
   int maxpow;
-  char child[15];
+  char child[16];
   char mode[10];
   int minpow;
     
