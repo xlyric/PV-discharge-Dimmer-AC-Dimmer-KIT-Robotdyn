@@ -10,7 +10,7 @@
 //#define MQTT_USER ""   //// not used, use mqtt.json file  --> to delete 01/23
 //#define MQTT_PASSWORD ""  //// not used, use mqtt.json file --> to delete 01/23
 
-#define VERSION "Version 2022-11-02" 
+#define VERSION "Version 20230119" 
 
 /// default configuration for Dimmer with Power supply and D1 Mini on the board ( default : D0 - D1 )
 #ifdef  POWERSUPPLY
@@ -61,18 +61,17 @@
 //// Dallas Configuration for Standalone boards ( personnalisation )
 #ifdef  STANDALONE
 #define ONE_WIRE_BUS D7
+#define RELAY1 D3  // Spécial pour relay commandé 
+#define RELAY2 D2  //
+#define COOLER  D8   /// 0 : off  -> 1 : On --> need a dry contact or opto
+//// pins for cooler
+#else
+#define COOLER  D7   /// 0 : off  -> 1 : On --> need a dry contact or opto
 #endif
 
 /// Trigger for temp limit in percent
 #define TRIGGER 10   /// 
-
-//// pins for cooler
-#define COOLER  D7   /// 0 : off  -> 1 : On --> need a dry contact or opto
 #define TIMERDELAY 5 // delay before switch off
-
-#define RELAY1 D3  // Spécial pour relay commandé 
-#define RELAY2 D8  //  
-
 
 #endif
 
