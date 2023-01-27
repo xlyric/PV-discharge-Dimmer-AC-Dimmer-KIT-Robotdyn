@@ -763,7 +763,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
                           saveConfiguration(filename_conf, config);   
                             }
                           
-   if (request->hasParam("hostname")) { request->getParam("hostname")->value().toCharArray(config.hostname,15);  }
+   if (request->hasParam("hostname")) { request->getParam("hostname")->value().toCharArray(config.hostname,16);  }
    if (request->hasParam("port")) { config.port = request->getParam("port")->value().toInt();}
    if (request->hasParam("Publish")) { request->getParam("Publish")->value().toCharArray(config.Publish,100);}
    if (request->hasParam("idxtemp")) { config.IDXTemp = request->getParam("idxtemp")->value().toInt();}
@@ -1036,7 +1036,7 @@ void loop() {
     } 
   
 
-    delay(500); 
+    // delay(500);  /// suppression 24/01/2023 pour plus de rapidité
   } 
 
     //***********************************
@@ -1051,7 +1051,7 @@ if ( celsius >= config.maxtemp ) {
 
 
 
- delay(500); 
+ delay(100);  // 24/01/2023 changement 500 à 100ms pour plus de réactivité
 }
 ////fin de loop 
 
@@ -1172,11 +1172,11 @@ void reconnect() {
       Serial.print("failed, rc=");
       logs += "Fail and retry\r\n";
       Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
+      Serial.println(" try again in 2 seconds");
+      // Wait 2 seconds before retrying
+      delay(2000);   // 24/01/2023 passage de 5 a 2s
       timeout++; // after 10s break for apply command 
-      if (timeout > 2) {
+      if (timeout > 5) {
           Serial.println(" try again next time ") ; 
           logs += "retry later\r\n";
           break;
@@ -1219,7 +1219,6 @@ void child_communication(int delest_power){
   http.GET();
   http.end(); 
   logs += "child at " + String(delest_power) + "\r\n";
-
 }
 
 String getmqtt() {
