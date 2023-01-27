@@ -18,6 +18,7 @@ struct Config {
   int startingpow;
   char SubscribePV[100];
   char SubscribeTEMP[100];
+  bool restart;
 
     
 };
