@@ -870,7 +870,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
    // Serial.println(String(mqtt_config.username));
    // Serial.println(String(mqtt_config.password));
 
-    client.setServer(config.hostname, mqtt_config.password);
+    client.setServer(config.hostname, config.port);
     client.setCallback(callback);
     reconnect();
 
