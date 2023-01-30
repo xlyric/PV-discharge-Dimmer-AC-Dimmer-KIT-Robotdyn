@@ -17,7 +17,8 @@ struct Config {
   char child[16];
   char mode[10];
   int minpow;
-    
+  int startingpow;
+  bool restart;
 };
 
 struct Mqtt {

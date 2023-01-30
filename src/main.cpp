@@ -131,9 +131,9 @@ int puissance = 0 ;
 int change = 0; 
 
 void reconnect();
-void Mqtt_HA_hello();
+//void Mqtt_HA_hello();
 void child_communication(int delest_power);
-void mqtt_HA(String sensor_temp, String sensor_dimmer);
+//void mqtt_HA(String sensor_temp, String sensor_dimmer);
 
 
 //***********************************
@@ -209,6 +209,9 @@ struct HA
     private:String entity_category; 
     public:void Set_entity_category(String setter) {entity_category=setter; }
 
+    private:String icon; 
+    public:void Set_icon(String setter) {icon="\"ic\": \""+ setter +"\", "; }
+
     bool cmd_t; 
 
     private:String IPaddress;
@@ -227,7 +230,8 @@ struct HA
               "\"name\": \""+ node_id + "\","
               "\"sw\": \"Dimmer "+ String(VERSION) +"\","
               "\"mdl\": \"ESP8266 " + IPaddress + "\","
-              "\"mf\": \"Cyril Poissonnier\""
+              "\"mf\": \"Cyril Poissonnier\","
+              "\"cu\": \"http://"+ IPaddress +"\""
             "}"; 
             return info;
             }
@@ -268,7 +272,7 @@ struct HA
             "\"value_template\": \"{{ value_json."+name +" }}\", "
             "\"cmd_t\": \""+ topic +"command\","
             "\"cmd_tpl\": \"{{ value_json."+name +" }}\", "
-            
+            + icon
             + device_declare() + 
           "}";
           if (dev_cla =="" ) { dev_cla = name; }
@@ -446,6 +450,7 @@ int outVal = 0;
     //************* function web 5
     //***********************************
 const char* PARAM_INPUT_1 = "POWER"; /// paramettre de retour sendmode
+const char* PARAM_INPUT_2 = "OFFSET"; /// paramettre de retour sendmode
 unsigned long Timer_Cooler;
 
 String getState() {
@@ -464,7 +469,7 @@ String textnofiles() {
 }
 
 String processor(const String& var){
-   Serial.println(var);
+   //Serial.println(var);  // sort trop de logs sans interet
   if (var == "STATE"){
     return getState();
   } 
@@ -629,6 +634,12 @@ void setup() {
         request->send_P(200, "text/plain", getState().c_str());  
         
       }
+      else if (request->hasParam(PARAM_INPUT_2)) { 
+        config.startingpow = request->getParam(PARAM_INPUT_2)->value().toInt(); 
+        logs += "HTTP power at " + String(config.startingpow) + "\r\n"; 
+        change=1; 
+        request->send_P(200, "text/plain", getState().c_str());
+      }
       else  { 
             if (!AP) {
               request->send(LittleFS, "/index.html", String(), false, processor);
@@ -728,6 +739,13 @@ void setup() {
     request->send_P(200, "text/plain", getlogs().c_str());
     logs="197}11}1";
   });
+
+    server.on("/reboot", HTTP_ANY, [](AsyncWebServerRequest *request){
+   // request->send_P(200, "text/plain","Restarting");
+    request->redirect("/");
+    config.restart = true;
+  });
+
 /////////////////////////
 ////// mise à jour parametre d'envoie vers domoticz et récupération des modifications de configurations
 /////////////////////////
@@ -799,7 +817,9 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
   device_dimmer.Set_name("power");
   device_dimmer.Set_unit_of_meas("%");
   device_dimmer.Set_stat_cla("measurement");
-  device_dimmer.Set_dev_cla("power");
+    //device_dimmer.Set_dev_cla("power");
+  device_dimmer.Set_dev_cla("power_factor"); // Correct : is using native unit of measurement '%' which is not a valid unit for the device class ('power') it is using
+  device_dimmer.Set_icon("mdi:percent");
   device_dimmer.cmd_t=true;
 
   device_temp.Set_name("temperature");
@@ -840,7 +860,18 @@ bool alerte=false;
 
 void loop() {
 
+  /// @brief / à Vérifier le comportement en fonctionnement. 
 
+  if (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print("NO WIFI - Restarting Dimmer");
+    ESP.restart();
+  }
+  if (config.restart) {
+    delay(5000);
+    Serial.print("Restarting Dimmer");
+    ESP.restart();
+  }
   //// si la sécurité température est active 
   if ( security == 1 ) { 
       if (!alerte){
@@ -922,7 +953,7 @@ void loop() {
     else if (puissance > config.minpow && puissance != 0 && security == 1)
     {
       if ( puissance > config.maxpow && strcmp(config.mode,"delester") == 0 ) { child_communication(puissance-config.maxpow ); } // si mode délest, envoi du surplus
-      if (  strcmp(config.mode,"equal") == 0) { child_communication(puissance); }  //si mode equal envoie de la commande vers la carte fille
+      if ( strcmp(config.mode,"equal") == 0) { child_communication(puissance); }  //si mode equal envoie de la commande vers la carte fille
     }
     else {
         //// si la commande est trop faible on coupe tout partout
