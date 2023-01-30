@@ -239,9 +239,9 @@ struct HA
     private:String value_template; 
 
 
-    private:void online(){
-      client.publish(String(topic+"status").c_str() , "online", true); // status Online
-    } 
+    //private:void online(){
+    //  client.publish(String(topic+"status").c_str() , "online", true); // status Online
+    //} 
 
  /*   public:void sendIP(){
       IPaddress =   WiFi.localIP().toString() ;
@@ -278,7 +278,7 @@ struct HA
           if (dev_cla =="" ) { dev_cla = name; }
           client.publish((topic+dev_cla+"/config").c_str() , device.c_str() , true); // déclaration autoconf dimmer
           Serial.println(device.c_str());
-          online();
+          
           
     }
 
@@ -469,7 +469,7 @@ String textnofiles() {
 }
 
 String processor(const String& var){
-   //Serial.println(var);  // sort trop de logs sans interet
+  // Serial.println(var);
   if (var == "STATE"){
     return getState();
   } 
@@ -834,7 +834,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     loginit +="MQTT connexion\r\n"; 
    // Serial.println(String(mqtt_config.username));
    // Serial.println(String(mqtt_config.password));
-    client.setServer(config.hostname, 1883);
+    client.setServer(config.hostname, config.port);
     client.connect("Dimmer",mqtt_config.username, mqtt_config.password);
     //Mqtt_HA_hello(); 
     client.setBufferSize(1024);
@@ -860,13 +860,8 @@ bool alerte=false;
 
 void loop() {
 
-  /// @brief / à Vérifier le comportement en fonctionnement. 
+  /// @brief / à Vérifier le comportement dans la vrai
 
-  if (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print("NO WIFI - Restarting Dimmer");
-    ESP.restart();
-  }
   if (config.restart) {
     delay(5000);
     Serial.print("Restarting Dimmer");
