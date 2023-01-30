@@ -88,6 +88,7 @@
                     <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
                         <!-- Sidebar Toggle (Topbar) -->
                         <!--       <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+
             <i class="fa fa-bars"></i>
           </button>
 
@@ -375,8 +376,10 @@
                     </div>
                 </div>
             </div>
+
             <!-- Content Row -->
             <script type="text/javascript"> 
+
 setInterval(function refreshsend( ) {
 var xhttpstate = $.get ({
 		url : '/state',
@@ -454,7 +457,9 @@ $( "#save" ).click(function() {
 
 $( "#formulaire" ).submit(function() {
 
+
 	 var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(), 'idxtemp':$('#idxtemp').val(), 'maxtemp':$('#maxtemp').val(), 'IDXAlarme':$('#IDXAlarme').val(), 'IDX':$('#IDX').val(), 'startingpow':$('#startingpow').val(), 'minpow':$('#minpow').val(), 'maxpow':$('#maxpow').val(), 'child':$('#child').val(), 'mode':$('#delester').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val() } 
+
 
 
 		
@@ -507,10 +512,12 @@ var recupconfig = $.get ({
     i++;
         document.getElementById("delester").value = config[i];
     i++;		
+
 		document.getElementById("SubscribePV").value = config[i];
     i++;		
 		document.getElementById("SubscribeTEMP").value = config[i];
             </script>
+
         </div>
     </div>
 </div>

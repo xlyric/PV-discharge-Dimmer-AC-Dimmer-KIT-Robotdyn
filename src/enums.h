@@ -22,7 +22,6 @@ struct Config {
   char SubscribeTEMP[100];
   bool restart;
 
-    
 };
 
 struct Mqtt {
