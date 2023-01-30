@@ -846,11 +846,13 @@ void loop() {
       if (!alerte){
         Serial.println("Alert Temp");
         logs += "Alert Temp\r\n";
-        alerte=true; 
+         
       
-        if (!AP) {
+        if (!AP && (alerte == 0)) {
             mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(celsius) ));  ///send alert to MQTT
         }
+        alerte=true;
+
       }
     //// Trigger
       if ( celsius <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
