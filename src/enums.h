@@ -18,9 +18,9 @@ struct Config {
   char mode[10];
   int minpow;
   int startingpow;
-  bool restart;
   char SubscribePV[100];
   char SubscribeTEMP[100];
+  bool restart;
 };
 
 struct Mqtt {

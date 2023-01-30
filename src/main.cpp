@@ -133,8 +133,8 @@ int change = 0;
 void reconnect();
 //void Mqtt_HA_hello();
 void child_communication(int delest_power);
-//void mqtt_HA(String sensor_temp, String sensor_dimmer);
-
+void mqtt_HA(String sensor_temp, String sensor_dimmer);
+void callback(char* Subscribedtopic, byte* message, unsigned int length) ;
 
 //***********************************
 //************* Time
@@ -387,6 +387,12 @@ void loadConfiguration(const char *filename, Config &config) {
   strlcpy(config.mode,                  
           doc["mode"] | "off", 
           sizeof(config.mode));
+  strlcpy(config.SubscribePV,                 
+        doc["SubscribePV"] | "homeassistant/sensor/PvRouter-xxxx/statedimmer", 
+        sizeof(config.SubscribePV));    
+  strlcpy(config.SubscribeTEMP,                 
+        doc["SubscribeTEMP"] | "homeassistant/sensor/dimmer-xxxx/state", 
+        sizeof(config.SubscribeTEMP));
   configFile.close();
   
       
@@ -424,7 +430,8 @@ void saveConfiguration(const char *filename, const Config &config) {
   doc["minpow"] = config.minpow;
   doc["child"] = config.child;
   doc["mode"] = config.mode;
-  
+  doc["SubscribePV"] = config.SubscribePV;
+  doc["SubscribeTEMP"] = config.SubscribeTEMP;
 
 
   // Serialize JSON to file
@@ -482,7 +489,7 @@ String processor(const String& var){
 
 String getconfig() {
   String configweb;  
-  configweb = String(config.hostname) + ";" +  config.port+";"+ config.Publish +";"+ config.IDXTemp +";"+ config.maxtemp+ ";"  +  config.IDXAlarme + ";"  + config.IDX + ";"  +  config.maxpow+ ";"  +  config.minpow+ ";" +  config.child+ ";"  +  config.mode ;
+  configweb = String(config.hostname) + ";" +  config.port+";"+ config.Publish +";"+ config.IDXTemp +";"+ config.maxtemp+ ";"  +  config.IDXAlarme + ";"  + config.IDX + ";"  +  config.maxpow+ ";"  +  config.minpow+ ";" +  config.child+ ";"  +  config.mode + ";" + config.SubscribePV + ";" + config.SubscribeTEMP;
   return String(configweb);
 }
 
@@ -630,6 +637,7 @@ void setup() {
     if  (LittleFS.exists("/index.html")) {
       if (request->hasParam(PARAM_INPUT_1)) { 
         puissance = request->getParam(PARAM_INPUT_1)->value().toInt();  
+        logs += "HTTP power at " + String(puissance) + "\r\n"; 
         change=1; 
         request->send_P(200, "text/plain", getState().c_str());  
         
@@ -769,6 +777,8 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
    if (request->hasParam("mode")) { request->getParam("mode")->value().toCharArray(config.mode,10);  }
    if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,50);  }
    if (request->hasParam("mqttpassword")) { request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,50); 
+   if (request->hasParam("SubscribePV")) { request->getParam("SubscribePV")->value().toCharArray(config.SubscribePV,100);}
+   if (request->hasParam("SubscribeTEMP")) { request->getParam("SubscribeTEMP")->value().toCharArray(config.SubscribeTEMP,100);}
    savemqtt(mqtt_conf, mqtt_config); 
    saveConfiguration(filename_conf, config);
    }
@@ -793,13 +803,12 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
                                         }
 
    request->send(200, "text/html", getconfig().c_str());
-
-
-
-
-
   });
   
+
+
+
+
 
     //***********************************
     //************* Setup -  demarrage du webserver et affichage de l'oled
@@ -857,6 +866,30 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
 }
 
 bool alerte=false;
+
+
+
+void callback(char* Subscribedtopic, byte* message, unsigned int length) {
+  StaticJsonDocument<64> doc2;
+  deserializeJson(doc2, message);
+  if (strcmp( Subscribedtopic, config.SubscribePV ) == 0 ) {
+      int puissancemqtt = doc2["dimmer"]; 
+      if (puissance != puissancemqtt ) {
+        puissance = puissancemqtt;
+        logs += "MQTT power at " + String(puissance) + "\r\n";
+        change=1; 
+      }
+  }
+  if (strcmp( Subscribedtopic, config.SubscribeTEMP ) == 0 ) {
+    int temperaturemqtt = doc2["temperature"]; 
+    if (celsius != temperaturemqtt ) {
+      celsius = temperaturemqtt;
+      logs += "MQTT temp at " + String(celsius) + "\r\n";
+    }
+  }
+}
+
+
 
 void loop() {
 
