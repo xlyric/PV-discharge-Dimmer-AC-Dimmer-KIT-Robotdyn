@@ -32,7 +32,7 @@
                         <i class="fas fa-fw fa-tachometer-alt"></i>
                         <span>Dashboard</span>
                         <br>
-                        <span id="version">%Domoticz%</span>
+                        <span id="version">%VERSION%</span>
                     </a>
                 </li>
                 <!-- Divider -->
@@ -176,7 +176,6 @@
                         </div>
                         <!-- Content Row -->
                         <div class="row">
-                            <!-- Earnings (Monthly) Card Example -->
                             <div class="col-xl-3 col-md-6 mb-4">
                                 <div class="card border-left-primary shadow h-100 py-2">
                                     <div class="card-body">
@@ -207,173 +206,179 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="col-lg-12">
-                                        <div class="p-5">
                                             <form
                                                 class="user"
                                                 id="formulaire"
                                                 method="post"
                                                 action=""
                                             >
-                                                <div class="form-group row">
-                                                    <div class="col-sm-6">Server MQTT</div>
-                                                    <div class="col-sm-3">Port</div>
-                                                </div>
-                                                <div class="form-group row">
-                                                    <div class="col-sm-6">
-                                                        <input
-                                                            type="text"
-                                                            class="form-control form-control-user"
-                                                            id="hostname"
-                                                            placeholder="%HOSTNAME%"
-                                                        >
+
+                                                <div class="card position-relative">
+                                                    <div class="card-header py-3">
+                                                    <h6 class="m-0 font-weight-bold text-primary">Use</h6>
+                                                        <span id="saveform"></span>
                                                     </div>
-                                                    <div class="col-sm-3">
-                                                        <input
-                                                            type="text"
-                                                            class="form-control form-control-user"
-                                                            id="port"
-                                                            placeholder="%PORT%"
-                                                        >
-                                                    </div>
-                                                </div>
-                                                <div class="form-group row">
-                                                    <div class="col-sm-6">MQTT publish</div>
-                                                </div>
-                                                <div class="form-group row">
-                                                    <div class="col-sm-6">
-                                                        <input
-                                                            type="text"
-                                                            class="form-control form-control-user"
-                                                            id="Publish"
-                                                            placeholder="%PUBLISH%"
-                                                        >
-                                                    </div>
-                                                </div>
-                                                <div class="form-group row">
-                                                    <div class="col-sm-3">IDX temp</div>
-                                                    <div class="col-sm-3">max temp</div>
-                                                    <div class="col-sm-3">IDX alarme</div>
-                                                </div>
-                                                <div class="form-group row">
-                                                    <div class="col-sm-3">
-                                                        <input
-                                                            type="text"
-                                                            class="form-control form-control-user"
-                                                            id="idxtemp"
-                                                            placeholder="%IDXTEMP%"
-                                                        >
-                                                    </div>
-                                                    <div class="col-sm-3">
-                                                        <input
-                                                            type="text"
-                                                            class="form-control form-control-user"
-                                                            id="maxtemp"
-                                                            placeholder="%MAXTEMP%"
-                                                        >
-                                                    </div>
-                                                    <div class="col-sm-3">
-                                                        <input
-                                                            type="text"
-                                                            class="form-control form-control-user"
-                                                            id="IDXAlarme"
-                                                            placeholder="%IDXALARME%"
-                                                        >
+                                                    <div class="card-body">
+                                                        <div class="form-group row">
+                                                            <div class="col-sm-3">Max Temp</div>
+                                                            <div class="col-sm-3">Min Power</div>
+                                                            <div class="col-sm-3">Max Power</div>
+                                                        </div>
+                                                        <div class="form-group row">
+                                                            <div class="col-sm-3">
+                                                                <input
+                                                                    type="text"
+                                                                    class="form-control form-control-user"
+                                                                    id="minpow"
+                                                                    placeholder="%MINPOW%"
+                                                                >
+                                                            </div>
+                                                            <div class="col-sm-3">
+                                                                <input
+                                                                    type="text"
+                                                                    class="form-control form-control-user"
+                                                                    id="maxpow"
+                                                                    placeholder="%MAXPOW%"
+                                                                >
+                                                            </div>
+                                                            <div class="col-sm-3">
+                                                                <input
+                                                                    type="text"
+                                                                    class="form-control form-control-user"
+                                                                    id="maxtemp"
+                                                                    placeholder="%MAXTEMP%"
+                                                                >
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div class="form-group row">
-                                                    <div class="col-sm-3">IDX pow</div>
-                                                    <div class="col-sm-3">Ignore under pow</div>
-                                                    <div class="col-sm-3">Min pow</div>
-                                                    <div class="col-sm-3">Max pow</div>
-                                                </div>
-                                                <div class="form-group row">
-                                                    <div class="col-sm-3">
-                                                        <input
-                                                            type="text"
-                                                            class="form-control form-control-user"
-                                                            id="IDX"
-                                                            placeholder="%IDX%"
-                                                        >
+                                                <br>
+                                                <div class="card position-relative">
+                                                    <div class="card-header py-3">
+                                                    <h6 class="m-0 font-weight-bold text-primary">Domoticz</h6>
+                                                        <span id="saveform"></span>
                                                     </div>
-                                                    <div class="col-sm-3">
-                                                        <input
-                                                            type="text"
-                                                            class="form-control form-control-user"
-                                                            id="startingpow"
-                                                            placeholder="%STARTINGPOW%"
-                                                        >
-                                                    </div>
-                                                    <div class="col-sm-3">
-                                                        <input
-                                                            type="text"
-                                                            class="form-control form-control-user"
-                                                            id="minpow"
-                                                            placeholder="%MINPOW%"
-                                                        >
-                                                    </div>
-                                                    <div class="col-sm-3">
-                                                        <input
-                                                            type="text"
-                                                            class="form-control form-control-user"
-                                                            id="maxpow"
-                                                            placeholder="%MAXPOW%"
-                                                        >
-                                                    </div>
-                                                </div>
-                                                <div class="form-group row">
-                                                    <div class="col-sm-6">Child Dimmer IP</div>
-                                                    <div class="col-sm-4">Child Dimmer Mode</div>
-                                                </div>
-                                                <div class="form-group row">
-                                                    <div class="col-sm-6">
-                                                        <input
-                                                            type="text"
-                                                            class="form-control form-control-user"
-                                                            id="child"
-                                                            placeholder="%CHILD%"
-                                                        >
-                                                    </div>
-                                                    <div class="col-sm-4">
-                                                        <select id="delester" class="form-control form-control-user">
-                                                            <option value="off">off</option>
-                                                            <option value="delester">delester</option>
-                                                            <option value="equal">equal</option>
-                                                        </select>
+                                                    <div class="card-body">
+                                                        <div class="form-group row">
+                                                            <div class="col-sm-3">IDX temp</div>
+                                                            <div class="col-sm-3">IDX pow</div>
+                                                            <div class="col-sm-3">IDX alarme</div>
+                                                        </div>
+                                                        <div class="form-group row">
+                                                            <div class="col-sm-3">
+                                                                <input
+                                                                    type="text"
+                                                                    class="form-control form-control-user"
+                                                                    id="idxtemp"
+                                                                    placeholder="%IDXTEMP%"
+                                                                >
+                                                            </div>
+                                                            <div class="col-sm-3">
+                                                                <input
+                                                                    type="text"
+                                                                    class="form-control form-control-user"
+                                                                    id="IDX"
+                                                                    placeholder="%IDX%"
+                                                                >
+                                                            </div>
+                                                            <div class="col-sm-3">
+                                                                <input
+                                                                    type="text"
+                                                                    class="form-control form-control-user"
+                                                                    id="IDXAlarme"
+                                                                    placeholder="%IDXALARME%"
+                                                                >
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div class="form-group row">
-                                                    <div class="col-sm-6">MQTT state dimmer subscription (or : none)</div>
-                                                    <div class="col-sm-6">MQTT dimmer temp subscription (or : none)</div>
-                                                </div>
-                                                <div class="form-group row">
-                                                    <div class="col-sm-6">
-                                                        <input
-                                                            type="text"
-                                                            class="form-control form-control-user"
-                                                            id="SubscribePV"
-                                                            placeholder="%SUBSCRIBEPV%"
-                                                        >
+                                                <br>
+                                                <div class="card position-relative">
+                                                    <div class="card-header py-3">
+                                                    <h6 class="m-0 font-weight-bold text-primary">Child</h6>
+                                                        <span id="saveform"></span>
                                                     </div>
-                                                    <div class="col-sm-6">
-                                                        <input
-                                                            type="text"
-                                                            class="form-control form-control-user"
-                                                            id="SubscribeTEMP"
-                                                            placeholder="%SUBSCRIBETEMP%"
-                                                        >
+                                                    <div class="card-body">
+                                                        <div class="form-group row">
+                                                            <div class="col-sm-6">Child Dimmer IP</div>
+                                                            <div class="col-sm-4">Child Dimmer Mode</div>
+                                                        </div>
+                                                        <div class="form-group row">
+                                                            <div class="col-sm-6">
+                                                                <input
+                                                                    type="text"
+                                                                    class="form-control form-control-user"
+                                                                    id="child"
+                                                                    placeholder="%CHILD%"
+                                                                >
+                                                            </div>
+                                                            <div class="col-sm-4">
+                                                                <select id="delester" class="form-control form-control-user">
+                                                                    <option value="off">off</option>
+                                                                    <option value="delester">delester</option>
+                                                                    <option value="equal">equal</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
+                                                <br>
+                                                <div class="card position-relative">
+                                                    <div class="card-header py-3">
+                                                    <h6 class="m-0 font-weight-bold text-primary">MQTT Pilote</h6>
+                                                        <span id="saveform"></span>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="form-group row">
+                                                            <div class="col-sm-6">MQTT state dimmer subscription (or : none)</div>
+                                                            <div class="col-sm-6">MQTT dimmer temp subscription (or : none)</div>
+                                                        </div>
+                                                        <div class="form-group row">
+                                                            <div class="col-sm-6">
+                                                                <input
+                                                                    type="text"
+                                                                    class="form-control form-control-user"
+                                                                    id="SubscribePV"
+                                                                    placeholder="%SUBSCRIBEPV%"
+                                                                >
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <input
+                                                                    type="text"
+                                                                    class="form-control form-control-user"
+                                                                    id="SubscribeTEMP"
+                                                                    placeholder="%SUBSCRIBETEMP%"
+                                                                >
+                                                            </div>
+                                                        </div>   
+                                                        <div class="form-group row">
+                                                            <div class="col-sm-6">Ignore under pow</div>
+                                                        </div>
+                                                        <div class="form-group row">
+                                                            <div class="col-sm-6">
+                                                                <input
+                                                                    type="text"
+                                                                    class="form-control form-control-user"
+                                                                    id="startingpow"
+                                                                    placeholder="%STARTINGPOW%"
+                                                                >
+                                                            </div>
+                                                        </div>     
+                                                    </div>
+                                                </div>
+                                     
                                             </div>
                                         </div>
                                     </div>
                                     <!--  fin du formumaire et envoie -->
                                     <input type="submit" value=" Application des parametres" class="btn btn-primary btn-user btn-block">
+                                    
                                     <hr>
-                                </form>
+                                </div>
                                 <hr>
                             </div>
                         </div>
-                    </div>
+
                 </div>
             </div>
 
@@ -457,14 +462,9 @@ $( "#save" ).click(function() {
 
 $( "#formulaire" ).submit(function() {
 
+	 var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(), 'idxtemp':$('#idxtemp').val(), 'maxtemp':$('#maxtemp').val(), 'IDXAlarme':$('#IDXAlarme').val(), 'IDX':$('#IDX').val(), 'startingpow':$('#startingpow').val(), 'minpow':$('#minpow').val(), 'maxpow':$('#maxpow').val(), 'child':$('#child').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val(), 'mode':$('#delester').val() } 
 
-	 var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(), 'idxtemp':$('#idxtemp').val(), 'maxtemp':$('#maxtemp').val(), 'IDXAlarme':$('#IDXAlarme').val(), 'IDX':$('#IDX').val(), 'startingpow':$('#startingpow').val(), 'minpow':$('#minpow').val(), 'maxpow':$('#maxpow').val(), 'child':$('#child').val(), 'mode':$('#delester').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val() } 
-
-
-
-		
-		
-        $.ajax({
+     $.ajax({
             type: "GET",
             data: data,
             url: "get",
@@ -488,11 +488,11 @@ var recupconfig = $.get ({
 				  
         var config = recupconfig.split(";");
     i=0;
-		document.getElementById("hostname").value = config[i];
+		
     i++;
-		document.getElementById("port").value = config[i];	  
+	
     i++;
-		document.getElementById("Publish").value = config[i];
+		
     i++;
 		document.getElementById("idxtemp").value = config[i];
     i++;
@@ -512,7 +512,6 @@ var recupconfig = $.get ({
     i++;
         document.getElementById("delester").value = config[i];
     i++;		
-
 		document.getElementById("SubscribePV").value = config[i];
     i++;		
 		document.getElementById("SubscribeTEMP").value = config[i];

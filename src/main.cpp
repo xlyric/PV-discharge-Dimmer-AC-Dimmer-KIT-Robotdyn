@@ -130,6 +130,8 @@ HTTPClient http;
 int puissance = 0 ;
 int change = 0; 
 
+
+
 void reconnect();
 //void Mqtt_HA_hello();
 void child_communication(int delest_power);
@@ -180,7 +182,7 @@ DeviceAddress insideThermometer;
   float celsius = 0.00;
   float previous_celsius = 0.00;
   byte security = 0;
-  int refresh = 30;
+  int refresh = 60;
   int refreshcount = 0; 
 
 /***************************
@@ -269,9 +271,9 @@ struct HA
             "\"unit_of_meas\": \""+unit_of_meas+"\","
             "\"stat_cla\": \""+stat_cla+"\"," 
             "\"name\": \""+ name +"-"+ node_mac + "\"," 
-            "\"state_topic\": \""+ topic +"state\","
-            "\"stat_t\": \""+ topic +"state\","
-            "\"avty_t\": \""+ topic +"status\","
+            "\"state_topic\": \""+ topic +  "state\","
+            "\"stat_t\": \""+ topic  + "state\","
+            "\"avty_t\": \""+ topic + "status\","
             "\"uniq_id\": \""+ node_mac + "-" + name +"\", "
             "\"value_template\": \"{{ value_json."+name +" }}\", "
             "\"cmd_t\": \""+ topic +"command\","
@@ -286,9 +288,14 @@ struct HA
           
     }
 
-    public:void send(String value){
+   /* public:void send(String value){
        String message = "  { \""+name+"\" : \"" + value.c_str() + "\"  } ";
-       client.publish((topic+"state").c_str() , message.c_str(), true);
+       client.publish((topic + name + "/state").c_str() , message.c_str(), true);
+    }*/
+
+    public:void send2(String value){
+       //String message = "  { \""+name+"\" : \"" + value.c_str() + "\"  } ";
+       client.publish((topic + "state").c_str() , value.c_str(), true);
     }
  
 };
@@ -362,7 +369,7 @@ void loadConfiguration(const char *filename, Config &config) {
    // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/v6/assistant to compute the capacity.
-  StaticJsonDocument<1024> doc;
+  StaticJsonDocument<2048> doc;
 
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(doc, configFile);
@@ -373,7 +380,7 @@ void loadConfiguration(const char *filename, Config &config) {
   // Copy values from the JsonDocument to the Config
   
   strlcpy(config.hostname,                  // <- destination
-          doc["hostname"] | "192.168.1.20", // <- source
+          doc["hostname"] | "192.168.1.22", // <- source
           sizeof(config.hostname));         // <- destination's capacity
   config.port = doc["port"] | 1883;
   strlcpy(config.Publish,                 
@@ -489,7 +496,7 @@ String processor(const String& var){
   if (var == "VERSION"){
     return (VERSION);
   } 
-  return (VERSION);
+  return ("N/A");
 } 
 
 
@@ -683,6 +690,7 @@ void setup() {
     if  (LittleFS.exists("/config.html")) {
         if (!AP) {
             request->send(LittleFS, "/config.html", String(), false, processor);
+            //request->send(LittleFS, "/config.html", "text/html");
         }
         else {
             request->send(LittleFS, "/config-AP.html", String(), false, processor);
@@ -798,11 +806,11 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
    if (request->hasParam("child")) { request->getParam("child")->value().toCharArray(config.child,15);  }
    if (request->hasParam("mode")) { request->getParam("mode")->value().toCharArray(config.mode,10);  }
 
-   if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,50);  }
-   if (request->hasParam("mqttpassword")) { request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,50); 
    if (request->hasParam("SubscribePV")) { request->getParam("SubscribePV")->value().toCharArray(config.SubscribePV,100);}
    if (request->hasParam("SubscribeTEMP")) { request->getParam("SubscribeTEMP")->value().toCharArray(config.SubscribeTEMP,100);}
 
+   if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,50);  }
+   if (request->hasParam("mqttpassword")) { request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,50);
    savemqtt(mqtt_conf, mqtt_config); 
    saveConfiguration(filename_conf, config);
    }
@@ -877,8 +885,8 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     client.setBufferSize(1024);
     device_dimmer.discovery();
     device_temp.discovery();
-    device_temp.send("0");
-    device_dimmer.send("0");
+  //device_temp.send("0");
+  //  device_dimmer.send2("{'puissance':'0'}");
 
 
   }
@@ -921,7 +929,6 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
     }
   }
 }
-
 
 
 
@@ -1023,7 +1030,7 @@ void loop() {
         }
         
       }
-      device_dimmer.send(String(puissance));
+      //device_dimmer.send(String(puissance));
 
 
     }
@@ -1044,7 +1051,8 @@ void loop() {
 
           if ( config.IDX != 0 ) { mqtt(String(config.IDX), String(0)); }
         //mqtt_HA (String(celsius),String(puissance));
-        device_dimmer.send(String(puissance));
+        //device_dimmer.send(String(puissance));
+        mqtt(String(config.IDX), String(puissance));
         if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
     }
   }
@@ -1053,9 +1061,14 @@ void loop() {
   if ( present == 1 ) { 
     refreshcount ++; 
 
+        
+    
+    
+
+    if (refreshcount == 1 ) {
     sensors.requestTemperatures();
-    previous_celsius=celsius;
     celsius=CheckTemperature("Inside : ", addr); 
+    }
 
     //gestion des erreurs DS18B20
     if ( (celsius == -127.00) || (celsius == -255.00) ) {
@@ -1063,13 +1076,15 @@ void loop() {
     }   
 
     if ( refreshcount >= refresh && celsius !=-127 && celsius !=-255) { 
-      if ( config.IDXTemp != 0 ) { mqtt(String(config.IDXTemp), String(celsius));}  /// remonté MQTT de la température
+      
+
+       if (!AP) {  mqtt(String(config.IDXTemp), String(celsius));}  /// remonté MQTT de la température
       //mqtt_HA (String(celsius),String(puissance));
-      device_temp.send(String(celsius));
+      //device_temp.send(String(celsius));
       refreshcount = 0; 
     } 
   
-
+    previous_celsius=celsius;
     // delay(500);  /// suppression 24/01/2023 pour plus de rapidité
   } 
 
@@ -1224,7 +1239,16 @@ void reconnect() {
 //// envoie de commande MQTT 
 void mqtt(String idx, String value)
 {
+
   if (!AP) {
+
+    StaticJsonDocument<256> infojson;
+    infojson["power"] = String(puissance);
+    infojson["temperature"] = String(celsius);
+    char json_string[256];
+    serializeJson(infojson, json_string);
+    device_dimmer.send2(json_string);
+    
 
     if (mqtt_config.mqtt)  {
       String nvalue = "0" ; 
