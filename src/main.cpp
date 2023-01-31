@@ -922,7 +922,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
 
   }
   if (strcmp( Subscribedtopic, config.SubscribeTEMP ) == 0 ) {
-    int temperaturemqtt = doc2["temperature"]; 
+    float temperaturemqtt = doc2["temperature"]; 
     if (celsius != temperaturemqtt ) {
       celsius = temperaturemqtt;
       logs += "MQTT temp at " + String(celsius) + "\r\n";
