@@ -872,7 +872,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
   
   //Serial.println(device_temp.name);
   /// MQTT 
-  if (!AP) {
+  if (!AP && mqtt_config.mqtt) {
     Serial.println("Connection MQTT" );
     loginit +="MQTT connexion\r\n"; 
    // Serial.println(String(mqtt_config.username));
@@ -960,7 +960,7 @@ void loop() {
          
       
 
-        if (!AP) {
+        if (!AP ) {
           if (config.IDXAlarme != 0 ) {
             mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(celsius) ));  ///send alert to MQTT
           }
@@ -1247,10 +1247,9 @@ void mqtt(String idx, String value)
     infojson["temperature"] = String(celsius);
     char json_string[256];
     serializeJson(infojson, json_string);
-    device_dimmer.send2(json_string);
-    
-
+  
     if (mqtt_config.mqtt)  {
+      device_dimmer.send2(json_string);
       String nvalue = "0" ; 
       if ( value != "0" ) { nvalue = "2" ; }
       String message = "  { \"idx\" : " + idx +" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
@@ -1262,7 +1261,7 @@ void mqtt(String idx, String value)
       String jdompub = String(config.Publish) + "/"+idx ;
       client.publish(jdompub.c_str() , value.c_str(), true);
 
-      Serial.println("MQTT SENT");
+      Serial.println("MQTT/HTTP SENT");
     }
   }
 }
