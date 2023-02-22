@@ -21,6 +21,7 @@ struct Config {
   char SubscribePV[100];
   char SubscribeTEMP[100];
   bool restart;
+  int dimmer_on_off;
 
 };
 
@@ -30,7 +31,16 @@ struct Mqtt {
   char password[50];
 };
 
+///variables globales 
+struct System {
 
+float celsius=0.00; 
+int puissance; 
+int change=0; 
+String loginit;
+String logs="197}11}1";
+
+};
 
 
 #endif
