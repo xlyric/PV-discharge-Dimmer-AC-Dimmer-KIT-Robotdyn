@@ -21,10 +21,8 @@ const char *filename_conf = "/config.json";
 extern Config config; 
 extern String loginit;
 extern String logs; 
-
-
-String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-String node_id = String("sauvegarde/dimmer-") + node_mac;
+extern String node_mac;
+extern String node_id; 
 
 // Loads the configuration from a file
 void loadConfiguration(const char *filename, Config &config) {
@@ -119,8 +117,9 @@ void saveConfiguration(const char *filename, const Config &config) {
     Serial.println(F("Failed to write to file"));
   }
   
+  /// Publish on MQTT 
   char buffer[1024];
-  size_t n = serializeJson(doc, buffer);
+  serializeJson(doc, buffer);
   client.publish((node_id).c_str() ,buffer,  true);
 
   // Close the file
