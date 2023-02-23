@@ -702,8 +702,7 @@ void loop() {
     }   
 
     if ( refreshcount >= refresh && sysvar.celsius !=-127 && sysvar.celsius !=-255) { 
-      
-
+         
        if (!AP) {  mqtt(String(config.IDXTemp), String(sysvar.celsius));}  /// remonté MQTT de la température
       //mqtt_HA (String(sysvar.celsius),String(sysvar.puissance));
       //device_temp.send(String(sysvar.celsius));
