@@ -74,14 +74,14 @@
 #include <Arduino.h>
 #include <RBDdimmer.h>   /// the corrected librairy  in RBDDimmer-master-corrected.rar , the original has a bug
 // Web services
-#include <ESP8266WiFi.h>
+// #include <ESP8266WiFi.h> // décalé avec la condition ESP32
 #include <ESPAsyncWiFiManager.h>    
-#include <ESPAsyncTCP.h>
+// #include <ESPAsyncTCP.h> // décalé avec la condition ESP32
 #include <ESPAsyncWebServer.h>
-#include <ESP8266HTTPClient.h> 
+// #include <ESP8266HTTPClient.h> // décalé avec la condition ESP32
 // File System
 //#include <fs.h>
-#include <LittleFS.h>
+// #include <LittleFS.h> // décalé avec la condition ESP32
 #include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
 #include <ArduinoJson.h> // ArduinoJson : https://github.com/bblanchon/ArduinoJson
 // ota mise à jour sans fil
@@ -96,9 +96,27 @@
 #include "config/enums.h"
 #include "function/web.h"
 #include "function/ha.h"
-#include "function/littlefs.h"
+#include "function/littlefs.h" 
 #include "function/mqtt.h"
 
+
+#ifdef ESP32
+// Web services
+  #include "WiFi.h"
+  #include <AsyncTCP.h>
+  #include "HTTPClient.h"
+// File System
+  #include <FS.h>
+  #include "SPIFFS.h"
+  #define LittleFS SPIFFS // Fonctionne, mais est-ce correct? 
+#else
+// Web services
+  #include <ESP8266WiFi.h>
+  #include <ESPAsyncTCP.h>
+  #include <ESP8266HTTPClient.h> 
+// File System
+  #include <LittleFS.h>
+#endif
 
 /***************************
  * Begin Settings
@@ -234,7 +252,10 @@ HA device_dimmer_alarm_temp; // pas encore testé
  * init Dimmer5
  **************************/
 
-dimmerLamp dimmer(outputPin, zerocross); //initialase port for dimmer for ESP8266, ESP32, Arduino due boards
+dimmerLamp dimmer(outputPin, zerocross); //initialise port for dimmer for ESP8266, ESP32, Arduino due boards
+#ifdef outputPin2
+ dimmerLamp dimmer2(outputPin2, zerocross); //initialise port for dimmer2 for ESP8266, ESP32, Arduino due boards
+#endif
 
 
 int outVal = 0;
@@ -264,6 +285,13 @@ void dimmer_on()
     logs +="Dimmer On\r\n"; 
     delay(50);
     }
+  #ifdef outputPin2
+    if (dimmer2.getState()==0) {
+      dimmer2.setState(ON);
+      logs +="Dimmer2 On\r\n"; 
+      delay(50);
+    }  
+  #endif
 }
 
 void dimmer_off()
@@ -274,6 +302,14 @@ void dimmer_off()
     logs +="Dimmer Off\r\n"; 
     delay(50);
     }
+  #ifdef outputPin2
+    if (dimmer2.getState()==1 ) {
+      dimmer2.setPower(0);
+      dimmer2.setState(OFF);
+      logs +="Dimmer2 Off\r\n"; 
+      delay(50);
+    }
+  #endif
 }
 
 
@@ -288,15 +324,28 @@ void setup() {
    
   /// Correction issue full power at start
   pinMode(outputPin, OUTPUT); 
+  #ifdef outputPin2
+    pinMode(outputPin2, OUTPUT); 
+  #endif
+
   //digitalWrite(outputPin, LOW);
   
   // relay
-  #ifdef STANDALONE
-  pinMode(RELAY1, OUTPUT);
-  pinMode(RELAY2, OUTPUT);
-  digitalWrite(RELAY1, LOW);
-  digitalWrite(RELAY2, LOW);
+  // #ifdef STANDALONE
+  // pinMode(RELAY1, OUTPUT);
+  // pinMode(RELAY2, OUTPUT);
+  // digitalWrite(RELAY1, LOW);
+  // digitalWrite(RELAY2, LOW);
+  // #endif
+  #ifdef RELAY1 // permet de rajouter les relais en ne modifiant que config.h, et pas seulement en STANDALONE
+    pinMode(RELAY1, OUTPUT);
+    digitalWrite(RELAY1, LOW);
   #endif
+  #ifdef RELAY2 // permet de rajouter les relais en ne modifiant que config.h
+    pinMode(RELAY2, OUTPUT);
+    digitalWrite(RELAY2, LOW);
+  #endif
+
 
   // cooler init
   pinMode(COOLER, OUTPUT); 
@@ -324,7 +373,10 @@ void setup() {
   #endif
 
     
-  dimmer.setPower(outVal); 
+  dimmer.setPower(outVal); // Pourquoi créer outVal alors qu'on utilise "puissance" ailleurs? 
+  #ifdef outputPin2
+    dimmer2.setPower(outVal); 
+  #endif
   
   
   USE_SERIAL.println("Dimmer Program is starting...");
@@ -332,7 +384,9 @@ void setup() {
       //***********************************
     //************* Setup -  récupération du fichier de configuration
     //***********************************
-  ESP.getResetReason();
+  #ifndef ESP32
+    ESP.getResetReason();
+  #endif
   // Should load default config if run for the first time
   Serial.println(F("Loading configuration..."));
   loginit +="load config\r\n"; 
@@ -368,9 +422,9 @@ void setup() {
   Serial.print("IP address: ");
 
   Serial.println(WiFi.localIP()); 
-
-  Serial.println(ESP.getResetReason());
-
+  #ifndef ESP32
+    Serial.println(ESP.getResetReason());
+  #endif
   //// AP MODE 
   if ( routeur.compareTo(WiFi.SSID().substring(0,9)) == 0 ) {
       AP = true; 
@@ -408,7 +462,7 @@ void setup() {
   dallaspresent();
 
   /// création des sensors
-device_dimmer.Set_name("Puissance Dimmer");
+  device_dimmer.Set_name("Puissance Dimmer");
   device_dimmer.Set_object_id("power");
   device_dimmer.Set_unit_of_meas("%");
   device_dimmer.Set_stat_cla("measurement");
@@ -423,7 +477,7 @@ device_dimmer.Set_name("Puissance Dimmer");
   device_temp.Set_dev_cla("temperature");
   device_temp.Set_entity_type("sensor");
   
-      /// création des switch
+  /// création des switch
   device_relay1.Set_name("Relais 1");
   device_relay1.Set_object_id("relay1");
   device_relay1.Set_entity_type("switch");
@@ -440,13 +494,13 @@ device_dimmer.Set_name("Puissance Dimmer");
   device_cooler.Set_object_id("cooler");
   device_cooler.Set_entity_type("switch");
  
-   /// création des button
+  /// création des button
   device_dimmer_save.Set_name("Sauvegarder");
   device_dimmer_save.Set_object_id("save");
   device_dimmer_save.Set_entity_type("button");
   device_dimmer_save.Set_entity_category("config");
 
-    /// création des number
+  /// création des number
   device_starting_pow.Set_name("Puissance de démarrage Dimmer");
   device_starting_pow.Set_object_id("starting_power");
   device_starting_pow.Set_entity_type("number");
@@ -478,18 +532,18 @@ device_dimmer.Set_name("Puissance Dimmer");
   device_dimmer_maxtemp.Set_entity_valuemin("0");
   device_dimmer_maxtemp.Set_entity_valuemax("75"); // trop? pas assez? TODO : test sans valeur max?
   device_dimmer_maxtemp.Set_entity_valuestep("1");
-    /// création des select
+  /// création des select
   device_dimmer_child_mode.Set_name("Mode du dimmer");
   device_dimmer_child_mode.Set_object_id("child_mode");
   device_dimmer_child_mode.Set_entity_type("select");
   device_dimmer_child_mode.Set_entity_category("config");
   device_dimmer_child_mode.Set_entity_option("\"off\",\"delester\",\"equal\"");
 
-    // création des binary_sensor
+  // création des binary_sensor
   device_dimmer_alarm_temp.Set_name("Alerte température atteinte");
   device_dimmer_alarm_temp.Set_object_id("alarm_temp");
   device_dimmer_alarm_temp.Set_entity_type("binary_sensor");
-  device_dimmer_alarm_temp.Set_stat_cla("problem");
+  device_dimmer_alarm_temp.Set_dev_cla("problem");
 
 
   //Serial.println(device_temp.name);
@@ -506,29 +560,31 @@ device_dimmer.Set_name("Puissance Dimmer");
 
     client.setBufferSize(1024);
     device_dimmer_on_off.discovery();
-    device_dimmer_on_off.send(String(config.dimmer_on_off),false);
+    device_dimmer_on_off.send(String(config.dimmer_on_off),true);
 
     device_dimmer.discovery();
     device_dimmer.send(String(sysvar.puissance),false);
 
 //  device_temp.discovery(); // discovery fait à la 1ere réception sonde ou mqtt.
-    device_relay1.discovery();
-    device_relay1.send(String(0),false);
-
-    device_relay2.discovery();
-    device_relay2.send(String(0),false);
-
+    #ifdef RELAY1
+      device_relay1.discovery();
+      device_relay1.send(String(0),true);
+    #endif
+    #ifdef RELAY2
+      device_relay2.discovery();
+      device_relay2.send(String(0),true);
+    #endif
     device_starting_pow.discovery();
-    device_starting_pow.send(String(config.startingpow),false);
+    device_starting_pow.send(String(config.startingpow),true);
 
     device_dimmer_minpow.discovery();
-    device_dimmer_minpow.send(String(config.minpow),false);
+    device_dimmer_minpow.send(String(config.minpow),true);
 
     device_dimmer_maxpow.discovery();
-    device_dimmer_maxpow.send(String(config.maxpow),false);
+    device_dimmer_maxpow.send(String(config.maxpow),true);
 
     device_dimmer_child_mode.discovery();
-    device_dimmer_child_mode.send(String(config.mode),false);
+    device_dimmer_child_mode.send(String(config.mode),true);
 
     device_dimmer_save.discovery();
 
@@ -584,9 +640,9 @@ void loop() {
       
 
         if (!AP ) {
-          if (config.IDXAlarme != 0 ) {
+          // if (config.IDXAlarme != 0 ) {
             mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(sysvar.celsius) ));  ///send alert to MQTT
-          }
+          // }
         }
         alerte=true;
 
@@ -609,12 +665,21 @@ void loop() {
   /// Changement de la puissance (  pb de Exception 9 si call direct ) 
   if ( sysvar.change == 1  ) {
     sysvar.change = 0; 
+    if (config.dimmer_on_off == 0){
+      dimmer_off();  
+    }
     if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && security == 0) 
     {
-        dimmer_on();  // if off, switch on 
+        if (config.dimmer_on_off == 1){dimmer_on();}  // if off, switch on 
+
         if ( sysvar.puissance > config.maxpow )  
         { 
-          dimmer.setPower(config.maxpow); 
+          if (config.dimmer_on_off == 1){
+            dimmer.setPower(config.maxpow);
+            #ifdef outputPin2
+              dimmer2.setPower(config.maxpow);
+            #endif
+          }
           if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance-config.maxpow ); } // si mode délest, envoi du surplus
           if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); }  //si mode equal envoie de la commande vers la carte fille
 
@@ -624,7 +689,12 @@ void loop() {
 
         }
         else {
+        if (config.dimmer_on_off == 1){
           dimmer.setPower(sysvar.puissance);
+          #ifdef outputPin2
+            dimmer2.setPower(sysvar.puissance);
+          #endif
+        }
           logs += "dimmer at " + String(sysvar.puissance) + "\r\n";
           if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); }  //si mode equal envoie de la commande vers la carte fille
           #ifdef  SSR
@@ -633,28 +703,45 @@ void loop() {
         }
 
         /// cooler 
-        digitalWrite(COOLER, HIGH); // start cooler 
-        Timer_Cooler = millis();
-        logs += "Start Cooler\r\n";
-
+        if (config.dimmer_on_off == 1){
+          digitalWrite(COOLER, HIGH); // start cooler 
+          Timer_Cooler = millis();
+          logs += "Start Cooler\r\n";
+        }
         
-      if ( config.IDX != 0 ) {
-        if ( sysvar.puissance > config.maxpow )  
-        {
+      // if ( config.IDX != 0 ) {
+      //   if ( sysvar.puissance > config.maxpow )  
+      //   {
+      //     mqtt(String(config.IDX), String(config.maxpow));  // remonté MQTT de la commande max
+      //     //mqtt_HA (String(sysvar.celsius),String(config.maxpow));
+      //     //device_dimmer.send(String(sysvar.puissance));
+      //   }
+      //   else 
+      //   {
+      //     mqtt(String(config.IDX), String(sysvar.puissance));  // remonté MQTT de la commande réelle
+      //     //mqtt_HA (String(sysvar.celsius),String(sysvar.puissance));
+      //     //device_dimmer.send(String(sysvar.puissance));
+      //   }
+        
+      // }
+      // //device_dimmer.send(String(puissance));
+
+
+      if (!AP && mqtt_config.mqtt) { 
+        if (config.dimmer_on_off == 0){
+          mqtt(String(config.IDX), String("0"));  // remonté MQTT de la commande 0
+          device_dimmer.send(String("0"),false);  // remonté MQTT HA de la commande 0
+        }
+        else if ( sysvar.puissance > config.maxpow ) {
           mqtt(String(config.IDX), String(config.maxpow));  // remonté MQTT de la commande max
-          //mqtt_HA (String(sysvar.celsius),String(config.maxpow));
-          //device_dimmer.send(String(sysvar.puissance));
+          device_dimmer.send(String(config.maxpow),false);  // remonté MQTT HA de la commande max
         }
-        else 
-        {
-          mqtt(String(config.IDX), String(sysvar.puissance));  // remonté MQTT de la commande réelle
-          //mqtt_HA (String(sysvar.celsius),String(sysvar.puissance));
-          //device_dimmer.send(String(sysvar.puissance));
+        else {
+          mqtt(String(config.IDX), String(sysvar.puissance)); // remonté MQTT de la commande réelle
+          device_dimmer.send(String(sysvar.puissance),false); // remonté MQTT HA de la commande réelle
         }
-        
       }
-      //device_dimmer.send(String(puissance));
-
+    
 
     }
     else if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && security == 1)
@@ -664,7 +751,7 @@ void loop() {
     }
     else {
         //// si la commande est trop faible on coupe tout partout
-        dimmer.setPower(0);
+        //dimmer.setPower(0);
         dimmer_off();  
         if ( strcmp(config.mode,"off") != 0) { child_communication(0); }
 
@@ -672,13 +759,20 @@ void loop() {
           analogWrite(JOTTA, 0 );
           #endif
 
-          if ( config.IDX != 0 ) { mqtt(String(config.IDX), String(0)); }
-        //mqtt_HA (String(sysvar.celsius),String(sysvar.puissance));
-        //device_dimmer.send(String(sysvar.puissance));
+        //   if ( config.IDX != 0 ) { mqtt(String(config.IDX), String(0)); }
+        // //mqtt_HA (String(sysvar.celsius),String(sysvar.puissance));
+        // //device_dimmer.send(String(sysvar.puissance));
+        // mqtt(String(config.IDX), String(sysvar.puissance));
+    
+
+      if (!AP && mqtt_config.Mqtt::mqtt) {
         mqtt(String(config.IDX), String(sysvar.puissance));
-        if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
+        device_dimmer.send(String(sysvar.puissance),false);
+        // if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
+      }
     }
   }
+if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
 
  ///// dallas présent >> mesure 
   if ( present == 1 ) { 
@@ -702,10 +796,24 @@ void loop() {
     }   
 
     if ( refreshcount >= refresh && sysvar.celsius !=-127 && sysvar.celsius !=-255) { 
-         
-       if (!AP) {  mqtt(String(config.IDXTemp), String(sysvar.celsius));}  /// remonté MQTT de la température
+      
+    if (!AP && mqtt_config.mqtt) {
+
+       mqtt(String(config.IDXTemp), String(sysvar.celsius));  /// remonté MQTT de la température
       //mqtt_HA (String(sysvar.celsius),String(sysvar.puissance));
       //device_temp.send(String(sysvar.celsius));
+      if (!discovery_temp) {
+        discovery_temp = true;
+        device_dimmer_alarm_temp.discovery();
+        device_temp.discovery();
+        device_dimmer_maxtemp.discovery();
+        device_dimmer_alarm_temp.send(stringbool(alerte),true);
+        device_dimmer_maxtemp.send(String(config.maxtemp),true);
+        
+      }
+      device_temp.send(String(sysvar.celsius),false);
+
+    }
       refreshcount = 0; 
     } 
   

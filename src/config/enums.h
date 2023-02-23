@@ -2,9 +2,12 @@
 #define ENUMS
 
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
-#include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
-#include <ArduinoJson.h> // ArduinoJson : https://github.com/bblanchon/ArduinoJson
+#ifdef ESP32
+  #include "WiFi.h"
+#else
+  #include <ESP8266WiFi.h>
+#endif
+>>>>>>> a83b391e3320e100ac75c3bda70cdd5f64a6f23d
 
 extern String logs;
 

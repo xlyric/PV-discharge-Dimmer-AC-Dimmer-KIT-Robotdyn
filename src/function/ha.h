@@ -87,8 +87,8 @@ struct HA
       } 
       else if (entity_type == "binary_sensor") { 
               info =         "\"dev_cla\": \""+dev_cla+"\","
-            "\"pl_on\": \"{ \\\""+object_id+"\\\" : \\\"true\\\"  } \","
-            "\"pl_off\": \"{ \\\""+object_id+"\\\" : \\\"false\\\"  } \","
+            "\"pl_on\": \"{ \\\""+object_id+"\\\" :  \\\"true\\\" } \","
+            "\"pl_off\": \"{ \\\""+object_id+"\\\" : \\\"false\\\" } \","
             "\"avty_t\": \"homeassistant/sensor/"+ node_id +"/" + "status\",";
       }
       else if (entity_type == "button") { 
