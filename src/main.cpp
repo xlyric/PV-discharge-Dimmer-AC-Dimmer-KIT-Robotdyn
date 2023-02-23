@@ -127,7 +127,7 @@ void child_communication(int delest_power);
 
 //void mqtt_HA(String sensor_temp, String sensor_dimmer);
 
-void callback(char* Subscribedtopic, byte* message, unsigned int length) ;
+//void callback(char* Subscribedtopic, byte* message, unsigned int length) ;
 
 //***********************************
 //************* Time
@@ -198,6 +198,8 @@ String switchstate(int state);
 String loginit; 
 String logs="197}11}1"; 
 String getlogs(); 
+
+char buffer[1024];
 
 //AsyncWiFiManager wifiManager(&server,&dns);
 
@@ -342,6 +344,7 @@ void setup() {
   saveConfiguration(filename_conf, config);
 
   loadmqtt(mqtt_conf, mqtt_config);
+ 
   
     //***********************************
     //************* Setup - Connexion Wifi

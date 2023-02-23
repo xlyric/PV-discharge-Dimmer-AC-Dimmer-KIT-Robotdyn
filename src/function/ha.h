@@ -162,7 +162,7 @@ struct HA
             "}";
 
       client.publish((topic+object_id+"/config").c_str() , device.c_str(), true); // déclaration autoconf dimmer
-      Serial.println(device.c_str());
+     // Serial.println(device.c_str());   /// sérial pour debug
     }
 
    /* public:void discovery_switch(){
@@ -198,6 +198,7 @@ struct HA
       String message = "  { \""+object_id+"\" : \"" + value.c_str() + "\"  } ";
       client.publish((topic + object_id + "/state").c_str() , message.c_str(), retain);
     } 
+
 
 };
 

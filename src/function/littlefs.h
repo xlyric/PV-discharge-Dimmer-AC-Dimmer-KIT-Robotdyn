@@ -5,12 +5,17 @@
 
 #include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
 #include <ArduinoJson.h> // ArduinoJson : https://github.com/bblanchon/ArduinoJson
+#include "function/ha.h"
 
 const char *mqtt_conf = "/mqtt.json";
 const char *filename_conf = "/config.json";
 extern Config config; 
 extern String loginit;
 extern String logs; 
+
+
+String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
+String node_id = String("sauvegarde/dimmer-") + node_mac;
 
 // Loads the configuration from a file
 void loadConfiguration(const char *filename, Config &config) {
@@ -101,11 +106,14 @@ void saveConfiguration(const char *filename, const Config &config) {
   if (serializeJson(doc, configFile) == 0) {
     Serial.println(F("Failed to write to file"));
   }
+  
+  char buffer[1024];
+  size_t n = serializeJson(doc, buffer);
+  client.publish((node_id).c_str() ,buffer,  true);
 
   // Close the file
   configFile.close();
 }
-
 
 //***********************************
 //************* Gestion de la configuration - Lecture du fichier de configuration

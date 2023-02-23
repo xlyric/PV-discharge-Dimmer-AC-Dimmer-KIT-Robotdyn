@@ -26,7 +26,8 @@ extern HA device_dimmer_alarm_temp;
 
 extern bool discovery_temp; 
 extern bool alerte; 
-
+extern String logs; 
+extern char buffer[1024];
 
 
 /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remonté par MQTT
@@ -41,8 +42,9 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
   String number_command = String("homeassistant/number/"+ node_id + "/command");
   String select_command = String("homeassistant/select/"+ node_id + "/command");
   String button_command = String("homeassistant/button/"+ node_id + "/command");
-
-  StaticJsonDocument<64> doc2;
+  String save_command = String("sauvegarde/"+ node_id );
+  Serial.println(Subscribedtopic);
+  StaticJsonDocument<1024> doc2;
   deserializeJson(doc2, message);
   if (strcmp( Subscribedtopic, config.SubscribePV ) == 0 && doc2.containsKey("dimmer")) { 
     int puissancemqtt = doc2["dimmer"]; 
@@ -78,7 +80,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
   }
     //   logs += "Subscribedtopic : " + String(Subscribedtopic)+ "\r\n";
     // logs += "switchcommand : " + String(switch_command)+ "\r\n";
-
+#ifdef  STANDALONE
   if (strcmp( Subscribedtopic, switch_command.c_str() ) == 0) { 
     if (doc2.containsKey("relay1")) { 
         int relay = doc2["relay1"]; 
@@ -94,6 +96,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
         logs += "RELAY2 at " + String(relay) + "\r\n"; 
         device_relay2.send(String(relay),false);      
     }
+
     if (doc2.containsKey("on_off")) { 
         config.dimmer_on_off = doc2["on_off"]; 
         logs += "Dimmer ON_OFF at " + String(config.dimmer_on_off) + "\r\n"; 
@@ -101,6 +104,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
         sysvar.change=1; 
     }
   } 
+#endif
   if (strcmp( Subscribedtopic, number_command.c_str() ) == 0) { 
     if (doc2.containsKey("starting_power")) { 
       int startingpow = doc2["starting_power"]; 
@@ -159,6 +163,29 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
       }
     }
   }
+  if (strcmp( Subscribedtopic, save_command.c_str() ) == 0) { 
+        strlcpy(config.hostname , doc2["hostname"], sizeof(config.hostname));
+        config.port = doc2["port"];
+        strlcpy(config.Publish , doc2["Publish"], sizeof(config.Publish));
+        config.IDXTemp = doc2["IDXTemp"];
+        config.maxtemp = doc2["maxtemp"];
+        config.IDXAlarme = doc2["IDXAlarme"];
+        config.IDX = doc2["IDX"];  
+        config.startingpow = doc2["startingpow"];
+        config.minpow = doc2["minpow"];
+        config.maxpow = doc2["maxpow"];
+        strlcpy(config.child , doc2["child"], sizeof(config.child)) ;
+        strlcpy(config.mode , doc2["mode"], sizeof(config.mode)) ;
+        strlcpy(config.SubscribePV , doc2["SubscribePV"], sizeof(config.SubscribePV));
+        strlcpy(config.SubscribeTEMP , doc2["SubscribeTEMP"], sizeof(config.SubscribeTEMP));
+        //saveConfiguration(filename_conf, config);  
+        Serial.println("sauvegarde conf mqtt ");
+        serializeJson(doc2, buffer);
+        Serial.println(config.hostname);
+        Serial.println(buffer);
+        
+      }
+
 
 }
 
@@ -240,7 +267,11 @@ void reconnect() {
         if (strcmp( config.SubscribePV, "none") != 0 ) {client.subscribe(config.SubscribePV);}
         if (strcmp( config.SubscribeTEMP, "none") != 0 ) {client.subscribe(config.SubscribeTEMP);}
         client.publish(String(topic).c_str() , "online", true); // status Online
-
+        
+        String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
+        String node_id = String("dimmer-") + node_mac; 
+        String save_command = String("sauvegarde/"+ node_id );
+        //client.subscribe(save_command.c_str());
 
       } else {
         Serial.print("failed, rc=");
@@ -260,5 +291,8 @@ void reconnect() {
     }
   } else {  Serial.println(" Filesystem not present "); delay(5000); }
    
+
+
+  
 }
 #endif

@@ -32,6 +32,7 @@ extern HA device_cooler;
 const char* PARAM_INPUT_1 = "POWER"; /// paramettre de retour sendmode
 const char* PARAM_INPUT_2 = "OFFSET"; /// paramettre de retour sendmode
 
+extern char buffer[1024];
 
 String getmqtt(); 
 String getconfig(); 
@@ -41,7 +42,7 @@ String processor(const String& var);
 String getServermode(String Servermode);
 String stringbool(bool mybool);
 String switchstate(int state);
-
+String readmqttsave();
 extern String getlogs(); 
 
 
@@ -208,6 +209,10 @@ void call_pages() {
       request->send(LittleFS, "/config.json", String(), true);
   });
 
+  server.on("/readmqtt", HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/html", readmqttsave().c_str());
+    });
+
 
 /////////////////////////
 ////// mise à jour parametre d'envoie vers domoticz et récupération des modifications de configurations
@@ -325,6 +330,14 @@ String getmqtt() {
     String retour =String(config.hostname) + ";" + String(config.Publish) + ";" + String(mqtt_config.username) + ";" + String(mqtt_config.password) + ";" + stringbool(mqtt_config.mqtt)+ ";" + String(config.port) ;
     return String(retour) ;
   }
+
+String readmqttsave(){
+        String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
+        String node_id = String("dimmer-") + node_mac; 
+        String save_command = String("sauvegarde/"+ node_id );
+        client.subscribe(save_command.c_str());
+        return String("<html><head><meta http-equiv='refresh' content='5;url=config.html' /></head><body><h1>config restauree, retour au setup dans 5 secondes, pensez a sauvegarder sur la flash </h1></body></html>");
+}
 
 String getServermode(String Servermode) {
   if ( Servermode == "MQTT" ) {   mqtt_config.mqtt = !mqtt_config.mqtt; }
