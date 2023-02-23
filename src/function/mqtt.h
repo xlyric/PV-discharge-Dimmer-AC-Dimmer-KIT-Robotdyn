@@ -95,7 +95,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
   }
     //   logs += "Subscribedtopic : " + String(Subscribedtopic)+ "\r\n";
     // logs += "switchcommand : " + String(switch_command)+ "\r\n";
-#ifdef  STANDALONE
+//#ifdef  STANDALONE // désactivé sinon ne fonctionne pas avec ESP32
   if (strcmp( Subscribedtopic, switch_command.c_str() ) == 0) { 
     #ifdef RELAY1
       if (doc2.containsKey("relay1")) { 
@@ -122,7 +122,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
         sysvar.change=1; 
     }
   } 
-#endif
+//#endif
   if (strcmp( Subscribedtopic, number_command.c_str() ) == 0) { 
     if (doc2.containsKey("starting_power")) { 
       int startingpow = doc2["starting_power"]; 

@@ -74,14 +74,14 @@
 #include <Arduino.h>
 #include <RBDdimmer.h>   /// the corrected librairy  in RBDDimmer-master-corrected.rar , the original has a bug
 // Web services
-#include <ESP8266WiFi.h>
+// #include <ESP8266WiFi.h> // décalé avec la condition ESP32
 #include <ESPAsyncWiFiManager.h>    
-#include <ESPAsyncTCP.h>
+// #include <ESPAsyncTCP.h> // décalé avec la condition ESP32
 #include <ESPAsyncWebServer.h>
-#include <ESP8266HTTPClient.h> 
+// #include <ESP8266HTTPClient.h> // décalé avec la condition ESP32
 // File System
 //#include <fs.h>
-#include <LittleFS.h>
+// #include <LittleFS.h> // décalé avec la condition ESP32
 #include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
 #include <ArduinoJson.h> // ArduinoJson : https://github.com/bblanchon/ArduinoJson
 // ota mise à jour sans fil
@@ -92,21 +92,35 @@
 //mqtt
 #include <PubSubClient.h>
 /// config
-#include "config.h"
+#include "config/config.h"
+#include "config/enums.h"
+#include "function/web.h"
+#include "function/ha.h"
+#include "function/littlefs.h" 
+#include "function/mqtt.h"
 
-#include "enums.h"
 
+#ifdef ESP32
+// Web services
+  #include "WiFi.h"
+  #include <AsyncTCP.h>
+  #include "HTTPClient.h"
+// File System
+  #include <FS.h>
+  #include "SPIFFS.h"
+  #define LittleFS SPIFFS // Fonctionne, mais est-ce correct? 
+#else
+// Web services
+  #include <ESP8266WiFi.h>
+  #include <ESPAsyncTCP.h>
+  #include <ESP8266HTTPClient.h> 
+// File System
+  #include <LittleFS.h>
+#endif
 
 /***************************
  * Begin Settings
  **************************/
-
-
-
-/***************************
- * temperature de sécurité
- **************************/
-//#define MAXTEMP 75
 
 // WIFI
 // At first launch, create wifi network 'dimmer'  ( pwd : dimmer ) 
@@ -121,21 +135,17 @@ void mqtt(String idx, String value);
 PubSubClient client(domotic_client);
 
 
-AsyncWebServer server(80);
+//AsyncWebServer server(80);
 DNSServer dns;
 HTTPClient http;
 
-//////////
-
-int puissance = 0 ;
-int change = 0; 
-bool discovery_temp;
-int MQTT_INTERVAL = 60;
-
-
 void reconnect();
+//void Mqtt_HA_hello();
 void child_communication(int delest_power);
-void callback(char* Subscribedtopic, byte* message, unsigned int length);
+
+//void mqtt_HA(String sensor_temp, String sensor_dimmer);
+
+void callback(char* Subscribedtopic, byte* message, unsigned int length) ;
 
 //***********************************
 //************* Time
@@ -158,6 +168,8 @@ int timesync_refresh = 120;
 void dallaspresent ();
 float CheckTemperature(String label, byte deviceAddress[12]);
 #define TEMPERATURE_PRECISION 10
+void dallaspresent ();
+float CheckTemperature(String label, byte deviceAddress[12]);
 
 ////////////////////////////////////
 ///     AP MODE 
@@ -165,6 +177,7 @@ float CheckTemperature(String label, byte deviceAddress[12]);
 
 String routeur="PV-ROUTER";
 bool AP = false; 
+bool discovery_temp;
 
 
 OneWire  ds(ONE_WIRE_BUS);  //  (a 4.7K resistor is necessary - 5.7K work with 3.3 ans 5V power)
@@ -176,7 +189,7 @@ DeviceAddress insideThermometer;
   byte type_s;
   byte data[12];
   byte addr[8];
-  float celsius = 0.00;
+  //float celsius = 0.00;
   float previous_celsius = 0.00;
   byte security = 0;
   int refresh = 60;
@@ -190,320 +203,70 @@ DeviceAddress insideThermometer;
 //************* Gestion de la configuration
 //***********************************
 
-
-
-struct HA
-{
-      /* HA */
-    private:String name; 
-    public:void Set_name(String setter) {name=setter; }
-
-    private:String dev_cla; 
-    public:void Set_dev_cla(String setter) {dev_cla=setter; }
-
-    private:String unit_of_meas; 
-    public:void Set_unit_of_meas(String setter) {unit_of_meas=setter; }
-
-    private:String stat_cla; 
-    public:void Set_stat_cla(String setter) {stat_cla=setter; }
-
-    private:String entity_category; 
-    public:void Set_entity_category(String setter) {entity_category=setter; }
-
-    private:String icon; 
-    public:void Set_icon(String setter) {icon="\"ic\": \""+ setter +"\", "; }
-
-    // bool cmd_t; 
-
-    private:String IPaddress;
-    // private:String state_topic; 
-    // private:String stat_t; 
-    // private:String avty_t;
-    
-    private:String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-    // private:String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-    private:String node_id = String("dimmer-") + node_mac; 
-    private:String topic = "homeassistant/sensor/"+ node_id +"/";
-    private:String device_declare() { 
-              String info =         "\"dev\": {"
-              "\"ids\": \""+ node_id + "\","
-              "\"name\": \""+ node_id + "\","
-              "\"sw\": \"Dimmer "+ String(VERSION) +"\","
-              "\"mdl\": \"ESP8266 " + IPaddress + "\","
-              "\"mf\": \"Cyril Poissonnier\","
-              "\"cu\": \"http://"+ IPaddress +"\""
-            "}"; 
-            return info;
-            }
-    // private:String uniq_id; 
-    // private:String value_template; 
-
-
-
-    // private:void online(){
-    //   client.publish(String(topic+"status").c_str() , "online", true); // status Online
-    // } 
-
-
- /*   public:void sendIP(){
-      IPaddress =   WiFi.localIP().toString();
-      
-      String device_IP = "{ \"name\": \"Adress_IP\"," 
-        "\"entity_category\": \"diagnostic\","
-        "\"stat_t\": \""+ topic +"stateIP\","
-        "\"avty_t\": \""+ topic +"status\","
-        "\"uniq_id\": \""+ node_mac + "-wifiinfo-ip\", "
-        + device_declare() + 
-      "}";
-      client.publish((topic+"adress_ip/config").c_str() , device_IP.c_str() , true);
-      Serial.println(device_IP.c_str());
-      online();
-      client.publish(String(topic+"stateIP").c_str() , IPaddress.c_str() , true); // status IP
-    }*/
-
-    public:void discovery(){
-      IPaddress =   WiFi.localIP().toString();
-      String device= "{ \"dev_cla\": \""+dev_cla+"\","
-            "\"unit_of_meas\": \""+unit_of_meas+"\","
-            "\"stat_cla\": \""+stat_cla+"\"," 
-            "\"name\": \""+ name +"-"+ node_mac + "\"," 
-            "\"stat_t\": \""+ topic + name + "/state\"," 
-            "\"avty_t\": \""+ topic + "status\","
-            "\"uniq_id\": \""+ node_mac + "-" + name +"\","
-            "\"value_template\": \"{{ value_json."+name +" }}\","
-            "\"exp_aft\": \""+ MQTT_INTERVAL +"\","
-            + icon
-            + device_declare() + 
-            "}";
-
-            // "\"cmd_t\": \""+ topic +"command\","
-            // "\"cmd_tpl\": \"{{ value_json."+name +" }}\", 
-
-      // if (dev_cla =="" ) { dev_cla = name; }
-      client.publish((topic+name+"/config").c_str() , device.c_str(), true); // déclaration autoconf dimmer
-      Serial.println(device.c_str());
-    }
-        
-
-    public:void send(String value){
-      String message = "  { \""+name+"\" : \"" + value.c_str() + "\"  } ";
-      client.publish((topic + name + "/state").c_str() , message.c_str(), false);
-    } 
-
-    // public:void send2(String value){
-    //    //String message = "  { \""+name+"\" : \"" + value.c_str() + "\"  } ";
-    //    client.publish((topic + "state").c_str() , value.c_str(), true);
-    // }
- 
-};
-
-const char *filename_conf = "/config.json";
 Config config; 
-
-const char *mqtt_conf = "/mqtt.json";
 Mqtt mqtt_config; 
+System sysvar;
+
 String getmqtt(); 
 void savemqtt(const char *filename, const Mqtt &mqtt_config);
 String stringbool(bool mybool);
 String getServermode(String Servermode);
+String switchstate(int state);
 
 String loginit; 
 String logs="197}11}1"; 
 String getlogs(); 
 
-AsyncWiFiManager wifiManager(&server,&dns);
+char buffer[1024];
+
+//AsyncWiFiManager wifiManager(&server,&dns);
 
 /// création des sensors
 HA device_dimmer; 
 HA device_temp; 
 
+/// création des switchs
+HA device_relay1;
+HA device_relay2;
+HA device_cooler;
+HA device_dimmer_on_off;
+
+/// création des button
+HA device_dimmer_save;
+
+/// création number
+HA device_starting_pow; 
+HA device_dimmer_maxtemp;
+HA device_dimmer_minpow;
+HA device_dimmer_maxpow;
+
+/// création select
+HA device_dimmer_child_mode;
+
+/// création binary_sensor
+HA device_dimmer_alarm_temp; // pas encore testé
 
 
-//***********************************
-//************* Gestion de la configuration - Lecture du fichier de configuration
-//***********************************
-
-bool loadmqtt(const char *filename, Mqtt &mqtt_config) {
-  // Open file for reading
-  File configFile = LittleFS.open(mqtt_conf, "r");
-
-  // Allocate a temporary JsonDocument
-  // Don't forget to change the capacity to match your requirements.
-  // Use arduinojson.org/v6/assistant to compute the capacity.
-  StaticJsonDocument<512> doc;
-
-  // Deserialize the JSON document
-  DeserializationError error = deserializeJson(doc, configFile);
-  if (error) {
-    Serial.println(F("Failed to read MQTT config "));
-    return false;
-  }
-
-  
-  // Copy values from the JsonDocument to the Config
-  
-  strlcpy(mqtt_config.username,                  // <- destination
-          doc["MQTT_USER"] | "", // <- source
-          sizeof(mqtt_config.username));         // <- destination's capacity
-  
-  strlcpy(mqtt_config.password,                  // <- destination
-          doc["MQTT_PASSWORD"] | "", // <- source
-          sizeof(mqtt_config.password));         // <- destination's capacity
-  mqtt_config.mqtt = doc["mqtt"] | true;
-  configFile.close();
-
-return true;    
-}
-
-
-
-
-// Loads the configuration from a file
-void loadConfiguration(const char *filename, Config &config) {
-  // Open file for reading
-  File configFile = LittleFS.open(filename_conf, "r");
-
-   // Allocate a temporary JsonDocument
-  // Don't forget to change the capacity to match your requirements.
-  // Use arduinojson.org/v6/assistant to compute the capacity.
-  StaticJsonDocument<2048> doc;
-
-  // Deserialize the JSON document
-  DeserializationError error = deserializeJson(doc, configFile);
-  if (error) {
-    Serial.println(F("Failed to read file, using default configuration"));
-    loginit +="Failed to read file config File, use default\r\n"; 
-    }
-  // Copy values from the JsonDocument to the Config
-  
-  strlcpy(config.hostname,                  // <- destination
-          doc["hostname"] | "192.168.1.22", // <- source
-          sizeof(config.hostname));         // <- destination's capacity
-  config.port = doc["port"] | 1883;
-  strlcpy(config.Publish,                 
-          doc["Publish"] | "domoticz/in", 
-          sizeof(config.Publish));        
-  config.IDXTemp = doc["IDXTemp"] | 200; 
-  config.maxtemp = doc["maxtemp"] | 60; 
-  config.IDXAlarme = doc["IDXAlarme"] | 202; 
-  config.IDX = doc["IDX"] | 201; 
-  config.startingpow = doc["startingpow"] | 0; 
-  config.minpow = doc["minpow"] | 5;
-  config.maxpow = doc["maxpow"] | 50; 
-  strlcpy(config.child,                  
-          doc["child"] | "192.168.1.20", 
-          sizeof(config.child));         
-  strlcpy(config.mode,                  
-          doc["mode"] | "off", 
-          sizeof(config.mode));
-  strlcpy(config.SubscribePV,                 
-        doc["SubscribePV"] | "homeassistant/sensor/PvRouter-xxxx/statedimmer", 
-        sizeof(config.SubscribePV));    
-  strlcpy(config.SubscribeTEMP,                 
-        doc["SubscribeTEMP"] | "homeassistant/sensor/dimmer-xxxx/temperature/state", 
-        sizeof(config.SubscribeTEMP));
-  configFile.close();
-  
-      
-}
-
-//***********************************
-//************* Gestion de la configuration - sauvegarde du fichier de configuration
-//***********************************
-
-void saveConfiguration(const char *filename, const Config &config) {
-  
-  // Open file for writing
-   File configFile = LittleFS.open(filename_conf, "w");
-  if (!configFile) {
-    Serial.println(F("Failed to open config file for writing"));
-    logs +="Failed to read file config File, use default\r\n"; 
-  
-    return;
-  }
-
-  // Allocate a temporary JsonDocument
-  // Don't forget to change the capacity to match your requirements.
-  // Use arduinojson.org/assistant to compute the capacity.
-  StaticJsonDocument<1024> doc;
-
-  // Set the values in the document
-  doc["hostname"] = config.hostname;
-  doc["port"] = config.port;
-  doc["Publish"] = config.Publish;
-  doc["IDXTemp"] = config.IDXTemp;
-  doc["maxtemp"] = config.maxtemp;
-  doc["IDXAlarme"] = config.IDXAlarme;
-  doc["IDX"] = config.IDX;  
-  doc["startingpow"] = config.startingpow;
-  doc["minpow"] = config.minpow;
-  doc["maxpow"] = config.maxpow;
-  doc["child"] = config.child;
-  doc["mode"] = config.mode;
-  doc["SubscribePV"] = config.SubscribePV;
-  doc["SubscribeTEMP"] = config.SubscribeTEMP;
-
-  // Serialize JSON to file
-  if (serializeJson(doc, configFile) == 0) {
-    Serial.println(F("Failed to write to file"));
-  }
-
-  // Close the file
-  configFile.close();
-}
- 
 
 /***************************
- * init Dimmer
+ * init Dimmer5
  **************************/
 
-dimmerLamp dimmer(outputPin, zerocross); //initialase port for dimmer for ESP8266, ESP32, Arduino due boards
+dimmerLamp dimmer(outputPin, zerocross); //initialise port for dimmer for ESP8266, ESP32, Arduino due boards
+#ifdef outputPin2
+ dimmerLamp dimmer2(outputPin2, zerocross); //initialise port for dimmer2 for ESP8266, ESP32, Arduino due boards
+#endif
 
 
-// int outVal = 0;
+int outVal = 0;
 
     //***********************************
     //************* function web 5
     //***********************************
-const char* PARAM_INPUT_1 = "POWER"; /// paramettre de retour sendmode
-const char* PARAM_INPUT_2 = "OFFSET"; /// paramettre de retour sendmode
+
 
 unsigned long Timer_Cooler;
 
-String getState() {
-  String state; 
-  int pow=dimmer.getPower(); 
-  
-  String routeur="PV-ROUTER";
-
-  state = String(pow) + ";" + String(celsius) + ";" + String(outputPin) + ";" + String(zerocross)+ ";" + String(WiFi.SSID().substring(0,9)) + ";" + routeur.compareTo(WiFi.SSID().substring(0,9)); 
-  return String(state);
-}
-
-String textnofiles() {
-  String state = "<html><body>Filesystem is not present. <a href='https://ota.apper-solaire.org/firmware/littlefs-dimmer.bin'>download it here</a> <br>and after  <a href='/update'>upload on the ESP here </a></body></html>" ; 
-  return String(state);
-}
-
-String processor(const String& var){
-  // Serial.println(var);
-  if (var == "STATE"){
-    return getState();
-  } 
-  if (var == "VERSION"){
-    return (VERSION);
-  } 
-  return ("N/A");
-} 
-
-
-String getconfig() {
-  String configweb;  
-
-  configweb = String(config.hostname) + ";" +  config.port+";"+ config.Publish +";"+ config.IDXTemp +";"+ config.maxtemp+ ";"  +  config.IDXAlarme + ";"  + config.IDX + ";"  +  config.startingpow+ ";"  +  config.minpow+ ";" +  config.maxpow+ ";"  +  config.child+ ";"  +  config.mode + ";" + config.SubscribePV + ";" + config.SubscribeTEMP ;
-
-  return String(configweb);
-}
 
 
 
@@ -515,22 +278,41 @@ String getconfig() {
 }*/
 
 /// fonction pour mettre en pause ou allumer le dimmer 
-void dimmer_on() {
+void dimmer_on()
+{
   if (dimmer.getState()==0) {
     dimmer.setState(ON);
     logs +="Dimmer On\r\n"; 
     delay(50);
-  }
+    }
+  #ifdef outputPin2
+    if (dimmer2.getState()==0) {
+      dimmer2.setState(ON);
+      logs +="Dimmer2 On\r\n"; 
+      delay(50);
+    }  
+  #endif
 }
 
-void dimmer_off() {
+void dimmer_off()
+{
   if (dimmer.getState()==1) {
     dimmer.setPower(0);
     dimmer.setState(OFF);
     logs +="Dimmer Off\r\n"; 
     delay(50);
-  }
+    }
+  #ifdef outputPin2
+    if (dimmer2.getState()==1 ) {
+      dimmer2.setPower(0);
+      dimmer2.setState(OFF);
+      logs +="Dimmer2 Off\r\n"; 
+      delay(50);
+    }
+  #endif
 }
+
+
 
 
     //***********************************
@@ -542,15 +324,28 @@ void setup() {
    
   /// Correction issue full power at start
   pinMode(outputPin, OUTPUT); 
+  #ifdef outputPin2
+    pinMode(outputPin2, OUTPUT); 
+  #endif
+
   //digitalWrite(outputPin, LOW);
   
   // relay
-  #ifdef STANDALONE
-  pinMode(RELAY1, OUTPUT);
-  pinMode(RELAY2, OUTPUT);
-  digitalWrite(RELAY1, LOW);
-  digitalWrite(RELAY2, LOW);
+  // #ifdef STANDALONE
+  // pinMode(RELAY1, OUTPUT);
+  // pinMode(RELAY2, OUTPUT);
+  // digitalWrite(RELAY1, LOW);
+  // digitalWrite(RELAY2, LOW);
+  // #endif
+  #ifdef RELAY1 // permet de rajouter les relais en ne modifiant que config.h, et pas seulement en STANDALONE
+    pinMode(RELAY1, OUTPUT);
+    digitalWrite(RELAY1, LOW);
   #endif
+  #ifdef RELAY2 // permet de rajouter les relais en ne modifiant que config.h
+    pinMode(RELAY2, OUTPUT);
+    digitalWrite(RELAY2, LOW);
+  #endif
+
 
   // cooler init
   pinMode(COOLER, OUTPUT); 
@@ -578,7 +373,10 @@ void setup() {
   #endif
 
     
-  dimmer.setPower(puissance); 
+  dimmer.setPower(outVal); // Pourquoi créer outVal alors qu'on utilise "puissance" ailleurs? 
+  #ifdef outputPin2
+    dimmer2.setPower(outVal); 
+  #endif
   
   
   USE_SERIAL.println("Dimmer Program is starting...");
@@ -586,7 +384,9 @@ void setup() {
       //***********************************
     //************* Setup -  récupération du fichier de configuration
     //***********************************
-  
+  #ifndef ESP32
+    ESP.getResetReason();
+  #endif
   // Should load default config if run for the first time
   Serial.println(F("Loading configuration..."));
   loginit +="load config\r\n"; 
@@ -598,7 +398,8 @@ void setup() {
   saveConfiguration(filename_conf, config);
 
   loadmqtt(mqtt_conf, mqtt_config);
-
+ 
+  
     //***********************************
     //************* Setup - Connexion Wifi
     //***********************************
@@ -621,9 +422,9 @@ void setup() {
   Serial.print("IP address: ");
 
   Serial.println(WiFi.localIP()); 
-
-  Serial.println(ESP.getResetReason());
-
+  #ifndef ESP32
+    Serial.println(ESP.getResetReason());
+  #endif
   //// AP MODE 
   if ( routeur.compareTo(WiFi.SSID().substring(0,9)) == 0 ) {
       AP = true; 
@@ -639,182 +440,11 @@ void setup() {
     //***********************************
     //************* Setup - Web pages
     //***********************************
-   
-  server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
-    
-    if  (LittleFS.exists("/index.html")) {
-      if (request->hasParam(PARAM_INPUT_1)) { 
+  //server.serveStatic("/css/", LittleFS, "/css/");
+  //.setAuthentication("user", "pass");
 
-        puissance = request->getParam(PARAM_INPUT_1)->value().toInt(); 
-        logs += "HTTP power at " + String(puissance) + "\r\n"; 
-        change=1; 
-        request->send_P(200, "text/plain", getState().c_str());  
-      }
-      else if (request->hasParam(PARAM_INPUT_2)) { 
-        config.startingpow = request->getParam(PARAM_INPUT_2)->value().toInt(); 
-        logs += "HTTP power at " + String(config.startingpow) + "\r\n"; 
-
-        change=1; 
-        request->send_P(200, "text/plain", getState().c_str());  
-      }
-      else  { 
-            if (!AP) {
-              request->send(LittleFS, "/index.html", String(), false, processor);
-            }
-            else {
-              request->send(LittleFS, "/index-AP.html", String(), false, processor);
-            }
-          }
-    }
-    else { 
-      request->send_P(200, "text/html", textnofiles().c_str());
-    }
-    
-  }); 
-
-  server.on("/config.html",HTTP_ANY, [](AsyncWebServerRequest *request){
-    if  (LittleFS.exists("/config.html")) {
-      if (!AP) {
-          request->send(LittleFS, "/config.html", String(), false, processor);
-          //request->send(LittleFS, "/config.html", "text/html");
-      }
-      else {
-          request->send(LittleFS, "/config-AP.html", String(), false, processor);
-      }
-
-    }
-    else { 
-      request->send_P(200, "text/plain", textnofiles().c_str());
-    }
-  });
-
-  server.on("/state", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", getState().c_str());
-  });
-
-  server.on("/resetwifi", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", "Resetting Wifi and reboot");
-    wifiManager.resetSettings();
-  });
-
-  server.on("/all.min.css", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/all.min.css", "text/css");
-  });
-
-    server.on("/favicon.ico", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/favicon.ico", "image/png");
-  });
-
-  server.on("/fa-solid-900.woff2", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/fa-solid-900.woff2", "text/css");
-  });
-  
-    server.on("/sb-admin-2.js", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/sb-admin-2.js", "text/javascript");
-  });
-
-  server.on("/sb-admin-2.min.css", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/sb-admin-2.min.css", "text/css");
-  });
-  
-  server.on("/jquery.easing.min.js", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/jquery.easing.min.js", "text/javascript");
-  });
-
-  server.on("/config.json", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/config.json", "application/json");
-  });
-  
-  server.on("/mqtt.json", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/mqtt.json", "application/json");
-  });
-
-    server.on("/mqtt.html", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/mqtt.html", "text/html");
-  });
-
-    server.on("/log.html", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/log.html", "text/html");
-  });
-
-  server.on("/getmqtt", HTTP_ANY, [] (AsyncWebServerRequest *request) {
-    request->send(200, "text/plain",  getmqtt().c_str()); 
-  });
-
-  server.on("/config", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", getconfig().c_str());
-  });
-
-  server.on("/reset", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain","Restarting");
-    ESP.restart();
-  });
-
-    server.on("/cs", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", getlogs().c_str());
-    logs="197}11}1";
-  });
-
-    server.on("/reboot", HTTP_ANY, [](AsyncWebServerRequest *request){
-   // request->send_P(200, "text/plain","Restarting");
-    request->redirect("/");
-    config.restart = true;
-  });
-
-/////////////////////////
-////// mise à jour parametre d'envoie vers domoticz et récupération des modifications de configurations
-/////////////////////////
-
-server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
-      ///   /get?paramettre=xxxx
-    if (request->hasParam("save")) { Serial.println(F("Saving configuration..."));
-                          saveConfiguration(filename_conf, config);   
-    }
-   if (request->hasParam("hostname")) { request->getParam("hostname")->value().toCharArray(config.hostname,16);  }
-   if (request->hasParam("port")) { config.port = request->getParam("port")->value().toInt();}
-   if (request->hasParam("Publish")) { request->getParam("Publish")->value().toCharArray(config.Publish,100);}
-   if (request->hasParam("idxtemp")) { config.IDXTemp = request->getParam("idxtemp")->value().toInt();}
-   if (request->hasParam("maxtemp")) { config.maxtemp = request->getParam("maxtemp")->value().toInt();}
-   if (request->hasParam("IDXAlarme")) { config.IDXAlarme = request->getParam("IDXAlarme")->value().toInt();}
-   if (request->hasParam("IDX")) { config.IDX = request->getParam("IDX")->value().toInt();}
-   if (request->hasParam("startingpow")) { config.startingpow = request->getParam("startingpow")->value().toInt();}
-   if (request->hasParam("minpow")) { config.minpow = request->getParam("minpow")->value().toInt();}
-   if (request->hasParam("maxpow")) { config.maxpow = request->getParam("maxpow")->value().toInt();}
-   if (request->hasParam("child")) { request->getParam("child")->value().toCharArray(config.child,15);  }
-   if (request->hasParam("mode")) { request->getParam("mode")->value().toCharArray(config.mode,10);  }
-
-   if (request->hasParam("SubscribePV")) { request->getParam("SubscribePV")->value().toCharArray(config.SubscribePV,100);}
-   if (request->hasParam("SubscribeTEMP")) { request->getParam("SubscribeTEMP")->value().toCharArray(config.SubscribeTEMP,100);}
-
-   if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,50);  }
-   if (request->hasParam("mqttpassword")) { request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,50);
-   savemqtt(mqtt_conf, mqtt_config); 
-   saveConfiguration(filename_conf, config);
-   }
-  //Ajout des relais
-  #ifdef STANDALONE
-   if (request->hasParam("relay1")) { int relay = request->getParam("relay1")->value().toInt(); 
-        if ( relay == 0) { digitalWrite(RELAY1 , LOW); }
-        else { digitalWrite(RELAY1 , HIGH); } 
-    }
-    if (request->hasParam("relay2")) { int relay = request->getParam("relay2")->value().toInt(); 
-        if ( relay == 0) { digitalWrite(RELAY2 , LOW); }
-        else { digitalWrite(RELAY2 , HIGH); } 
-    }
-  #endif 
-
-   //// for check boxs in web pages  
-   if (request->hasParam("servermode")) {String inputMessage = request->getParam("servermode")->value();
-                                            getServermode(inputMessage);
-                                            request->send(200, "text/html", getconfig().c_str());
-                                            saveConfiguration(filename_conf, config);
-                                            savemqtt(mqtt_conf, mqtt_config); 
-                                        }
-
-   request->send(200, "text/html", getconfig().c_str());
-  });
-  
-
+  //chargement des url des pages
+  call_pages();
 
 
 
@@ -832,19 +462,90 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
   dallaspresent();
 
   /// création des sensors
-  device_dimmer.Set_name("power");
+  device_dimmer.Set_name("Puissance Dimmer");
+  device_dimmer.Set_object_id("power");
   device_dimmer.Set_unit_of_meas("%");
   device_dimmer.Set_stat_cla("measurement");
-  //device_dimmer.Set_dev_cla("power");
   device_dimmer.Set_dev_cla("power_factor"); // fix is using native unit of measurement '%' which is not a valid unit for the device class ('power') it is using
   device_dimmer.Set_icon("mdi:percent");
-  // device_dimmer.cmd_t=true;
+  device_dimmer.Set_entity_type("sensor");
 
-  device_temp.Set_name("temperature");
+  device_temp.Set_name("Température");
+  device_temp.Set_object_id("temperature");
   device_temp.Set_unit_of_meas("°C");
   device_temp.Set_stat_cla("measurement");
   device_temp.Set_dev_cla("temperature");
+  device_temp.Set_entity_type("sensor");
   
+  /// création des switch
+  device_relay1.Set_name("Relais 1");
+  device_relay1.Set_object_id("relay1");
+  device_relay1.Set_entity_type("switch");
+
+  device_relay2.Set_name("Relais 2");
+  device_relay2.Set_object_id("relay2");
+  device_relay2.Set_entity_type("switch");
+
+  device_dimmer_on_off.Set_name("Dimmer");
+  device_dimmer_on_off.Set_object_id("on_off");
+  device_dimmer_on_off.Set_entity_type("switch");
+
+  device_cooler.Set_name("cooler");
+  device_cooler.Set_object_id("cooler");
+  device_cooler.Set_entity_type("switch");
+ 
+  /// création des button
+  device_dimmer_save.Set_name("Sauvegarder");
+  device_dimmer_save.Set_object_id("save");
+  device_dimmer_save.Set_entity_type("button");
+  device_dimmer_save.Set_entity_category("config");
+
+  /// création des number
+  device_starting_pow.Set_name("Puissance de démarrage Dimmer");
+  device_starting_pow.Set_object_id("starting_power");
+  device_starting_pow.Set_entity_type("number");
+  device_starting_pow.Set_entity_category("config");
+  device_starting_pow.Set_entity_valuemin("-100");
+  device_starting_pow.Set_entity_valuemax("500"); // trop? pas assez? TODO : test sans valeur max?
+  device_starting_pow.Set_entity_valuestep("1");
+
+  device_dimmer_minpow.Set_name("Puissance mini Dimmer");
+  device_dimmer_minpow.Set_object_id("minpow");
+  device_dimmer_minpow.Set_entity_type("number");
+  device_dimmer_minpow.Set_entity_category("config");
+  device_dimmer_minpow.Set_entity_valuemin("0");
+  device_dimmer_minpow.Set_entity_valuemax("100"); // trop? pas assez? TODO : test sans valeur max?
+  device_dimmer_minpow.Set_entity_valuestep("1");
+
+  device_dimmer_maxpow.Set_name("Puissance maxi Dimmer");
+  device_dimmer_maxpow.Set_object_id("maxpow");
+  device_dimmer_maxpow.Set_entity_type("number");
+  device_dimmer_maxpow.Set_entity_category("config");
+  device_dimmer_maxpow.Set_entity_valuemin("0");
+  device_dimmer_maxpow.Set_entity_valuemax("100"); // trop? pas assez? TODO : test sans valeur max?
+  device_dimmer_maxpow.Set_entity_valuestep("1");
+
+  device_dimmer_maxtemp.Set_name("Température maxi Dimmer");
+  device_dimmer_maxtemp.Set_object_id("maxtemp");
+  device_dimmer_maxtemp.Set_entity_type("number");
+  device_dimmer_maxtemp.Set_entity_category("config");
+  device_dimmer_maxtemp.Set_entity_valuemin("0");
+  device_dimmer_maxtemp.Set_entity_valuemax("75"); // trop? pas assez? TODO : test sans valeur max?
+  device_dimmer_maxtemp.Set_entity_valuestep("1");
+  /// création des select
+  device_dimmer_child_mode.Set_name("Mode du dimmer");
+  device_dimmer_child_mode.Set_object_id("child_mode");
+  device_dimmer_child_mode.Set_entity_type("select");
+  device_dimmer_child_mode.Set_entity_category("config");
+  device_dimmer_child_mode.Set_entity_option("\"off\",\"delester\",\"equal\"");
+
+  // création des binary_sensor
+  device_dimmer_alarm_temp.Set_name("Alerte température atteinte");
+  device_dimmer_alarm_temp.Set_object_id("alarm_temp");
+  device_dimmer_alarm_temp.Set_entity_type("binary_sensor");
+  device_dimmer_alarm_temp.Set_dev_cla("problem");
+
+
   //Serial.println(device_temp.name);
   /// MQTT 
   if (!AP && mqtt_config.mqtt) {
@@ -858,17 +559,47 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     reconnect();
 
     client.setBufferSize(1024);
-    device_dimmer.discovery();
-    device_dimmer.send(String(puissance));
-  //  device_temp.discovery(); // discovery fait à la 1ere réception sonde ou mqtt.
-  //device_temp.send("0");
-  //  device_dimmer.send2("{'puissance':'0'}");
+    device_dimmer_on_off.discovery();
+    device_dimmer_on_off.send(String(config.dimmer_on_off),true);
 
+    device_dimmer.discovery();
+    device_dimmer.send(String(sysvar.puissance),false);
+
+//  device_temp.discovery(); // discovery fait à la 1ere réception sonde ou mqtt.
+    #ifdef RELAY1
+      device_relay1.discovery();
+      device_relay1.send(String(0),true);
+    #endif
+    #ifdef RELAY2
+      device_relay2.discovery();
+      device_relay2.send(String(0),true);
+    #endif
+    device_starting_pow.discovery();
+    device_starting_pow.send(String(config.startingpow),true);
+
+    device_dimmer_minpow.discovery();
+    device_dimmer_minpow.send(String(config.minpow),true);
+
+    device_dimmer_maxpow.discovery();
+    device_dimmer_maxpow.send(String(config.maxpow),true);
+
+    device_dimmer_child_mode.discovery();
+    device_dimmer_child_mode.send(String(config.mode),true);
+
+    device_dimmer_save.discovery();
+
+    //device_relay1.discovery_switch();
+    //device_relay2.discovery_switch();
+    //device_cooler.discovery_switch();
+
+    //device_relay1.switch_send("OFF");
+    //device_relay2.switch_send("OFF");
+    //device_cooler.switch_send("OFF");
 
   }
   
   #ifdef  SSR
-  analogWriteFreq(GRIDFREQ); 
+  analogWriteFreq(GRIDFREQ) ; 
   analogWrite(JOTTA, 0);
   #endif
 
@@ -879,41 +610,8 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
 
 bool alerte=false;
 
-
-
-
-void callback(char* Subscribedtopic, byte* message, unsigned int length) {
-  StaticJsonDocument<64> doc2;
-  deserializeJson(doc2, message);
-  if (strcmp( Subscribedtopic, config.SubscribePV ) == 0 && doc2.containsKey("dimmer")) { 
-    int puissancemqtt = doc2["dimmer"]; 
-    puissancemqtt = puissancemqtt - config.startingpow;
-    if (puissance != puissancemqtt ) {
-      puissance = puissancemqtt;
-      logs += "MQTT power at " + String(puissance) + "\r\n";
-      change=1; 
-    }
-    else {
-      device_dimmer.send(String(puissance));
-    }
-  }
-  if (strcmp( Subscribedtopic, config.SubscribeTEMP ) == 0  && doc2.containsKey("temperature")) { 
-    float temperaturemqtt = doc2["temperature"]; 
-    if (!discovery_temp) {
-      discovery_temp = true;
-      device_temp.discovery();
-    }
-    device_temp.send(String(temperaturemqtt));
-    if (celsius != temperaturemqtt ) {
-      celsius = temperaturemqtt;
-      logs += "MQTT temp at " + String(celsius) + "\r\n";
-    }
-  }
-}
-
-
-
-
+/// LOOP 
+///
 void loop() {
 
   if (WiFi.status() != WL_CONNECTED) {
@@ -935,128 +633,200 @@ void loop() {
   }
   //// si la sécurité température est active 
   if ( security == 1 ) { 
-    if (!alerte){
-      Serial.println("Alert Temp");
-      logs += "Alert Temp\r\n";
-      if (!AP && mqtt_config.Mqtt::mqtt) { mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(celsius) ));}  ///send alert to MQTT
+      if (!alerte){
+        Serial.println("Alert Temp");
+        logs += "Alert Temp\r\n";
+         
+      
 
-      alerte=true;
+        if (!AP ) {
+          // if (config.IDXAlarme != 0 ) {
+            mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(sysvar.celsius) ));  ///send alert to MQTT
+          // }
+        }
+        alerte=true;
 
-    }
-  //// Trigger
-    if ( celsius <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
-      security = 0 ;
-    }
-    else {
-    dimmer_off();
-    }
+      }
+    //// Trigger
+      if ( sysvar.celsius <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
+       security = 0 ;
+      }
+      else {
+      dimmer_off();
+      }
   }
-  else {
+  else 
+  {
     alerte=false;
   }
 
 
 
   /// Changement de la puissance (  pb de Exception 9 si call direct ) 
-  if ( change == 1  ) {
-    change = 0; 
-    if (puissance > config.minpow && puissance != 0 && security == 0) {
-      dimmer_on();  // if off, switch on 
-      if ( puissance > config.maxpow ) { 
-        dimmer.setPower(config.maxpow); 
-        if ( strcmp(config.mode,"delester") == 0 ) { child_communication(puissance-config.maxpow ); } // si mode délest, envoi du surplus
-        if ( strcmp(config.mode,"equal") == 0) { child_communication(puissance); }  //si mode equal envoie de la commande vers la carte fille
+  if ( sysvar.change == 1  ) {
+    sysvar.change = 0; 
+    if (config.dimmer_on_off == 0){
+      dimmer_off();  
+    }
+    if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && security == 0) 
+    {
+        if (config.dimmer_on_off == 1){dimmer_on();}  // if off, switch on 
 
-        #ifdef  SSR
-        analogWrite(JOTTA, (config.maxpow*256/100) );
-        #endif
+        if ( sysvar.puissance > config.maxpow )  
+        { 
+          if (config.dimmer_on_off == 1){
+            dimmer.setPower(config.maxpow);
+            #ifdef outputPin2
+              dimmer2.setPower(config.maxpow);
+            #endif
+          }
+          if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance-config.maxpow ); } // si mode délest, envoi du surplus
+          if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); }  //si mode equal envoie de la commande vers la carte fille
 
-      }
-      else { // si minpow < puissance < maxpow
-        dimmer.setPower(puissance);
-        logs += "dimmer at " + String(puissance) + "\r\n";
-        if ( strcmp(config.mode,"equal") == 0) { child_communication(puissance); }  //si mode equal envoie de la commande vers la carte fille
-        #ifdef  SSR
-        analogWrite(JOTTA, (puissance*256/100) );
-        #endif
-      }
+          #ifdef  SSR
+          analogWrite(JOTTA, (config.maxpow*256/100) );
+          #endif
 
-      /// cooler 
-      digitalWrite(COOLER, HIGH); // start cooler 
-      Timer_Cooler = millis();
-      logs += "Start Cooler\r\n";
-      if (!AP && mqtt_config.mqtt) { 
-        if ( puissance > config.maxpow ) {
-          mqtt(String(config.IDX), String(config.maxpow));  // remonté MQTT de la commande max
-          device_dimmer.send(String(config.maxpow));  // remonté MQTT HA de la commande max
         }
         else {
-          mqtt(String(config.IDX), String(puissance)); // remonté MQTT de la commande réelle
-          device_dimmer.send(String(puissance)); // remonté MQTT HA de la commande réelle
+        if (config.dimmer_on_off == 1){
+          dimmer.setPower(sysvar.puissance);
+          #ifdef outputPin2
+            dimmer2.setPower(sysvar.puissance);
+          #endif
+        }
+          logs += "dimmer at " + String(sysvar.puissance) + "\r\n";
+          if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); }  //si mode equal envoie de la commande vers la carte fille
+          #ifdef  SSR
+          analogWrite(JOTTA, (sysvar.puissance*256/100) );
+          #endif
+        }
+
+        /// cooler 
+        if (config.dimmer_on_off == 1){
+          digitalWrite(COOLER, HIGH); // start cooler 
+          Timer_Cooler = millis();
+          logs += "Start Cooler\r\n";
+        }
+        
+      // if ( config.IDX != 0 ) {
+      //   if ( sysvar.puissance > config.maxpow )  
+      //   {
+      //     mqtt(String(config.IDX), String(config.maxpow));  // remonté MQTT de la commande max
+      //     //mqtt_HA (String(sysvar.celsius),String(config.maxpow));
+      //     //device_dimmer.send(String(sysvar.puissance));
+      //   }
+      //   else 
+      //   {
+      //     mqtt(String(config.IDX), String(sysvar.puissance));  // remonté MQTT de la commande réelle
+      //     //mqtt_HA (String(sysvar.celsius),String(sysvar.puissance));
+      //     //device_dimmer.send(String(sysvar.puissance));
+      //   }
+        
+      // }
+      // //device_dimmer.send(String(puissance));
+
+
+      if (!AP && mqtt_config.mqtt) { 
+        if (config.dimmer_on_off == 0){
+          mqtt(String(config.IDX), String("0"));  // remonté MQTT de la commande 0
+          device_dimmer.send(String("0"),false);  // remonté MQTT HA de la commande 0
+        }
+        else if ( sysvar.puissance > config.maxpow ) {
+          mqtt(String(config.IDX), String(config.maxpow));  // remonté MQTT de la commande max
+          device_dimmer.send(String(config.maxpow),false);  // remonté MQTT HA de la commande max
+        }
+        else {
+          mqtt(String(config.IDX), String(sysvar.puissance)); // remonté MQTT de la commande réelle
+          device_dimmer.send(String(sysvar.puissance),false); // remonté MQTT HA de la commande réelle
         }
       }
-    }
     
-    else if (puissance > config.minpow && puissance != 0 && security == 1) { // security == 1, pas de commande du dimmer mais uniquement du child
-      if ( puissance > config.maxpow && strcmp(config.mode,"delester") == 0 ) { child_communication(puissance-config.maxpow ); } // si mode délest, envoi du surplus
-      if ( strcmp(config.mode,"equal") == 0) { child_communication(puissance); }  //si mode equal envoie de la commande vers la carte fille
+
+    }
+    else if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && security == 1)
+    {
+      if ( sysvar.puissance > config.maxpow && strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance-config.maxpow ); } // si mode délest, envoi du surplus
+      if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); }  //si mode equal envoie de la commande vers la carte fille
     }
     else {
-      //// si la commande est trop faible on coupe tout partout
-      dimmer.setPower(0);
-      dimmer_off();  
-      if ( strcmp(config.mode,"off") != 0) { child_communication(0); }
+        //// si la commande est trop faible on coupe tout partout
+        //dimmer.setPower(0);
+        dimmer_off();  
+        if ( strcmp(config.mode,"off") != 0) { child_communication(0); }
 
-        #ifdef  SSR
-        analogWrite(JOTTA, 0 );
-        #endif
+          #ifdef  SSR
+          analogWrite(JOTTA, 0 );
+          #endif
+
+        //   if ( config.IDX != 0 ) { mqtt(String(config.IDX), String(0)); }
+        // //mqtt_HA (String(sysvar.celsius),String(sysvar.puissance));
+        // //device_dimmer.send(String(sysvar.puissance));
+        // mqtt(String(config.IDX), String(sysvar.puissance));
+    
+
       if (!AP && mqtt_config.Mqtt::mqtt) {
-        mqtt(String(config.IDX), String(puissance));
-        device_dimmer.send(String(puissance));
+        mqtt(String(config.IDX), String(sysvar.puissance));
+        device_dimmer.send(String(sysvar.puissance),false);
+        // if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
       }
     }
-    if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
   }
-  
+if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
 
  ///// dallas présent >> mesure 
   if ( present == 1 ) { 
-    refreshcount ++;
+    refreshcount ++; 
+
+        
+    
+    
 
     if (refreshcount == 1 ) {
     sensors.requestTemperatures();
-    celsius=CheckTemperature("Inside : ", addr); 
+    sysvar.celsius=CheckTemperature("Inside : ", addr); 
     }
 
     //gestion des erreurs DS18B20
-    if ( (celsius == -127.00) || (celsius == -255.00) ) {
-      celsius=previous_celsius;
+    if ( (sysvar.celsius == -127.00) || (sysvar.celsius == -255.00) ) {
+      sysvar.celsius=previous_celsius;
+    }
+    else {
+      sysvar.celsius=int(floor(10*sysvar.celsius+0.5))/10; // arrondi 1 décimale
     }   
 
-    if ( refreshcount >= refresh && celsius !=-127 && celsius !=-255) { 
+    if ( refreshcount >= refresh && sysvar.celsius !=-127 && sysvar.celsius !=-255) { 
       
-      if (!AP && mqtt_config.mqtt) {
-        mqtt(String(config.IDXTemp), String(celsius));  /// remonté MQTT de la température
-      //mqtt_HA (String(celsius),String(puissance));
-        if (!discovery_temp) {
-          discovery_temp = true;
-          device_temp.discovery();
-        }
-        device_temp.send(String(celsius));
+    if (!AP && mqtt_config.mqtt) {
+
+       mqtt(String(config.IDXTemp), String(sysvar.celsius));  /// remonté MQTT de la température
+      //mqtt_HA (String(sysvar.celsius),String(sysvar.puissance));
+      //device_temp.send(String(sysvar.celsius));
+      if (!discovery_temp) {
+        discovery_temp = true;
+        device_dimmer_alarm_temp.discovery();
+        device_temp.discovery();
+        device_dimmer_maxtemp.discovery();
+        device_dimmer_alarm_temp.send(stringbool(alerte),true);
+        device_dimmer_maxtemp.send(String(config.maxtemp),true);
+        
       }
+      device_temp.send(String(sysvar.celsius),false);
+
+    }
       refreshcount = 0; 
     } 
   
-    previous_celsius=celsius;
+    previous_celsius=sysvar.celsius;
     // delay(500);  /// suppression 24/01/2023 pour plus de rapidité
   } 
 
     //***********************************
     //************* LOOP - Activation de la sécurité
     //***********************************
-  if ( celsius >= config.maxtemp ) {
-    security = 1 ; 
-  }
+if ( sysvar.celsius >= config.maxtemp ) {
+  security = 1 ; 
+}
 
 ///  changement de la puissance
 
@@ -1065,7 +835,10 @@ void loop() {
 
  delay(100);  // 24/01/2023 changement 500 à 100ms pour plus de réactivité
 }
+
+///////////////
 ////fin de loop 
+//////////////
 
 
     //***********************************
@@ -1078,8 +851,7 @@ float CheckTemperature(String label, byte deviceAddress[12]){
   if ( (tempC == -127.00) || (tempC == -255.00) ) {
     Serial.print("Error getting temperature");
     logs += "Dallas on error\r\n";
-  } 
-  else {
+  } else {
     Serial.print(" Temp C: ");
     Serial.println(tempC);
     logs += "Dallas temp : "+ String(tempC) +"\r\n";
@@ -1151,150 +923,34 @@ if ( !ds.search(addr)) {
 
   return ;
    
-}
-
-
-//////////// reconnexion MQTT
-
-void reconnect() {
-  String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-  String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-  String node_id = String("dimmer-") + node_mac; 
-  String topic = "homeassistant/sensor/"+ node_id +"/status";  
-
-  // Loop until we're reconnected
-  int timeout = 0; 
-  while (!client.connected()) {
-  
-    Serial.print("Attempting MQTT connection...");
-    logs += "(Re)connect MQTT\r\n";
-    // Create a random client ID
-    // String clientId = "Dimmer";
-    // clientId += String(random(0xffff), HEX);
-    // Attempt to connect
-    if (client.connect(node_id.c_str(),mqtt_config.username, mqtt_config.password, topic.c_str(), 2, true, "offline")) {       //Connect to MQTT server
-  // if (client.connect(clientId.c_str(),mqtt_config.username, mqtt_config.password)) {
-      Serial.println("connected");
-      logs += "Connected\r\n";
-      if (strcmp( config.SubscribePV, "none") != 0 ) {client.subscribe(config.SubscribePV);}
-      if (strcmp( config.SubscribeTEMP, "none") != 0 ) {client.subscribe(config.SubscribeTEMP);}
-      client.publish(String(topic).c_str() , "online", true); // status Online
-
-
-    } 
-    else {
-      Serial.print("failed, rc=");
-      logs += "Fail and retry\r\n";
-      Serial.print(client.state());
-      Serial.println(" try again in 2 seconds");
-      // Wait 2 seconds before retrying
-      delay(2000);   // 24/01/2023 passage de 5 a 2s
-      timeout++; // after 10s break for apply command 
-      if (timeout > 5) {
-          Serial.println(" try again next time "); 
-          logs += "retry later\r\n";
-          break;
-      }
-
-    }
   }
-}
-
-
-//// envoie de commande MQTT 
-void mqtt(String idx, String value) {
-
-  if (idx != 0) { // Autant vérifier qu'une seule fois?
-    
-  // Grace a l'ajout de "exp_aft" sur le discovery, 
-  // je préfère envoyer power et temp séparément, à chaque changement de valeur.
-  // MQTT_INTERVAL à affiner, mais OK selon mes tests.
-  // Si pas de valeur publiée dans ce délai, la valeur sur HA passe en indisponible.
-  // Permet de détecter un problème
-
-    // StaticJsonDocument<256> infojson;
-    // infojson["power"] = String(puissance);
-    // infojson["temperature"] = String(celsius);
-    // char json_string[256];
-    // serializeJson(infojson, json_string);
-    // device_dimmer.send2(json_string);
-    String nvalue = "0" ; 
-    if ( value != "0" ) { nvalue = "2" ; }
-    String message = "  { \"idx\" : " + idx +" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
-
-
-    client.loop();
-    client.publish(config.Publish, String(message).c_str(), true);      
-
-    String jdompub = String(config.Publish) + "/"+idx ;
-    client.publish(jdompub.c_str() , value.c_str(), true);
-
-    Serial.println("MQTT SENT");
-  }
-}
-
-
-//// communication avec carte fille
-
-void child_communication(int delest_power){
-
-  String baseurl; 
-  baseurl = "/?POWER=" + String(delest_power); 
-  http.begin(domotic_client,config.child,80,baseurl); 
-  http.GET();
-  http.end(); 
-  logs += "child at " + String(delest_power) + "\r\n";
-}
-
-String getmqtt() {
-
-  String retour =String(config.hostname) + ";" + String(config.Publish) + ";" + String(mqtt_config.username) + ";" + String(mqtt_config.password) + ";" + stringbool(mqtt_config.mqtt)+ ";" + String(config.port);
-  return String(retour);
-}
-
-String stringbool(bool mybool){
-  String truefalse = "true";
-  if (mybool == false ) {truefalse = "";}
-  return String(truefalse);
-}
-
-void savemqtt(const char *filename, const Mqtt &mqtt_config) {
-  
-  // Open file for writing
-   File configFile = LittleFS.open(mqtt_conf, "w");
-  if (!configFile) {
-    Serial.println(F("Failed to open config file for writing in function Save configuration"));
-    return;
-  } 
-
-  // Allocate a temporary JsonDocument
-  // Don't forget to change the capacity to match your requirements.
-  // Use arduinojson.org/assistant to compute the capacity.
-  StaticJsonDocument<1024> doc;
-
-  // Set the values in the document
-  doc["MQTT_USER"] = mqtt_config.username;
-  doc["MQTT_PASSWORD"] = mqtt_config.password;
-  doc["mqtt"] = mqtt_config.mqtt;
-  // Serialize JSON to file
-  if (serializeJson(doc, configFile) == 0) {
-    Serial.println(F("Failed to write to file in function Save configuration "));
-    logs += "Failed to write MQTT config\r\n";
-  }
-
-  // Close the file
-  configFile.close();
-}
 
 /// affichage de logs 
 String getlogs(){
-  logs = logs + loginit + "}1"; 
-  loginit = "";
-
-  return logs ; 
+    logs = logs + loginit + "}1"; 
+    loginit = "";
+  
+    return logs ; 
 } 
 
-String getServermode(String Servermode) {
-  if ( Servermode == "MQTT" ) {   mqtt_config.mqtt = !mqtt_config.mqtt; }
-  return String(Servermode);
+
+/// @brief beta 
+void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
+  if(!index){
+    Serial.printf("UploadStart: %s\n", filename.c_str());
+  }
+  for(size_t i=0; i<len; i++){
+    Serial.write(data[i]);
+  }
+  if(final){
+    Serial.printf("UploadEnd: %s, %u B\n", filename.c_str(), index+len);
+  }
+}
+
+void merge(JsonObject dest, JsonObjectConst src)
+{
+   for (JsonPairConst kvp : src)
+   {
+     dest[kvp.key()] = kvp.value();
+   }
 }
