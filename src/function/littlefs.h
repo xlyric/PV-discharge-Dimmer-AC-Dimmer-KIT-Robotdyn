@@ -6,6 +6,15 @@
 #include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
 #include <ArduinoJson.h> // ArduinoJson : https://github.com/bblanchon/ArduinoJson
 
+
+#ifdef ESP32
+  #include <FS.h>
+  #include "SPIFFS.h"
+  #define LittleFS SPIFFS // Fonctionne, mais est-ce correct? 
+#else
+  #include <LittleFS.h>
+#endif
+
 const char *mqtt_conf = "/mqtt.json";
 const char *filename_conf = "/config.json";
 extern Config config; 
@@ -56,6 +65,8 @@ void loadConfiguration(const char *filename, Config &config) {
   strlcpy(config.SubscribeTEMP,                 
         doc["SubscribeTEMP"] | "homeassistant/sensor/dimmer-xxxx/state", 
         sizeof(config.SubscribeTEMP));
+  config.dimmer_on_off = doc["dimmer_on_off"] | 1; 
+
   configFile.close();
   
       
@@ -96,6 +107,7 @@ void saveConfiguration(const char *filename, const Config &config) {
   doc["mode"] = config.mode;
   doc["SubscribePV"] = config.SubscribePV;
   doc["SubscribeTEMP"] = config.SubscribeTEMP;
+  doc["dimmer_on_off"] = config.dimmer_on_off;
 
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {

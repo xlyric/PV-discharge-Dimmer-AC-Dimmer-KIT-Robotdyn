@@ -2,12 +2,25 @@
 #define MQTT_FUNCTIONS
 
 // Web services
-#include <ESP8266WiFi.h>
-#include <ESPAsyncTCP.h>
+// #include <ESP8266WiFi.h>
+// #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <ESP8266HTTPClient.h> 
+//#include <ESP8266HTTPClient.h> 
 #include <ArduinoJson.h> 
 #include "config/config.h"
+
+
+#ifdef ESP32
+// Web services
+  #include "WiFi.h"
+  #include <AsyncTCP.h>
+  #include "HTTPClient.h"
+#else
+// Web services
+  #include <ESP8266WiFi.h>
+  #include <ESPAsyncTCP.h>
+  #include <ESP8266HTTPClient.h> 
+#endif
 
 extern Config config; 
 extern System sysvar;
@@ -27,21 +40,21 @@ extern HA device_dimmer_alarm_temp;
 extern bool discovery_temp; 
 extern bool alerte; 
 
+  /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remonté par MQTT
+  /// @param Subscribedtopic 
+  /// @param message 
+  /// @param length 
 
-
-/// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remonté par MQTT
-/// @param Subscribedtopic 
-/// @param message 
-/// @param length 
-void callback(char* Subscribedtopic, byte* message, unsigned int length) {
   String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-  String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
+  // String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17); // non utilisé
   String node_id = String("dimmer-") + node_mac; 
   String switch_command = String("homeassistant/switch/"+ node_id + "/command");
   String number_command = String("homeassistant/number/"+ node_id + "/command");
   String select_command = String("homeassistant/select/"+ node_id + "/command");
   String button_command = String("homeassistant/button/"+ node_id + "/command");
+  String topic = "homeassistant/sensor/"+ node_id +"/status";  
 
+void callback(char* Subscribedtopic, byte* message, unsigned int length) {
   StaticJsonDocument<64> doc2;
   deserializeJson(doc2, message);
   if (strcmp( Subscribedtopic, config.SubscribePV ) == 0 && doc2.containsKey("dimmer")) { 
@@ -65,10 +78,11 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
       device_dimmer_alarm_temp.discovery();
       device_temp.discovery();
       device_dimmer_maxtemp.discovery();
+      device_dimmer_alarm_temp.send(stringbool(alerte),true);
+      device_dimmer_maxtemp.send(String(config.maxtemp),true);
     }
     device_temp.send(String(sysvar.celsius),false);
-    device_dimmer_alarm_temp.send(stringbool(alerte),false);
-    device_dimmer_maxtemp.send(String(config.maxtemp),false);
+
 
 
     if (sysvar.celsius != temperaturemqtt ) {
@@ -80,24 +94,28 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
     // logs += "switchcommand : " + String(switch_command)+ "\r\n";
 
   if (strcmp( Subscribedtopic, switch_command.c_str() ) == 0) { 
-    if (doc2.containsKey("relay1")) { 
-        int relay = doc2["relay1"]; 
-        if ( relay == 0) { digitalWrite(RELAY1 , LOW); }
-        else { digitalWrite(RELAY1 , HIGH); } 
-        logs += "RELAY1 at " + String(relay) + "\r\n"; 
-        device_relay1.send(String(relay),false);
-    }
-    if (doc2.containsKey("relay2")) { 
-        int relay = doc2["relay2"]; 
-        if ( relay == 0) { digitalWrite(RELAY2 , LOW); }
-        else { digitalWrite(RELAY2 , HIGH); } 
-        logs += "RELAY2 at " + String(relay) + "\r\n"; 
-        device_relay2.send(String(relay),false);      
-    }
+    #ifdef RELAY1
+      if (doc2.containsKey("relay1")) { 
+          int relay = doc2["relay1"]; 
+          if ( relay == 0) { digitalWrite(RELAY1 , LOW); }
+          else { digitalWrite(RELAY1 , HIGH); } 
+          logs += "RELAY1 at " + String(relay) + "\r\n"; 
+          device_relay1.send(String(relay),true);
+      }
+    #endif
+    #ifdef RELAY2
+      if (doc2.containsKey("relay2")) { 
+          int relay = doc2["relay2"]; 
+          if ( relay == 0) { digitalWrite(RELAY2 , LOW); }
+          else { digitalWrite(RELAY2 , HIGH); } 
+          logs += "RELAY2 at " + String(relay) + "\r\n"; 
+          device_relay2.send(String(relay),true);      
+      }
+    #endif
     if (doc2.containsKey("on_off")) { 
         config.dimmer_on_off = doc2["on_off"]; 
         logs += "Dimmer ON_OFF at " + String(config.dimmer_on_off) + "\r\n"; 
-        device_dimmer_on_off.send(String(config.dimmer_on_off),false);      
+        device_dimmer_on_off.send(String(config.dimmer_on_off),true);      
         sysvar.change=1; 
     }
   } 
@@ -107,7 +125,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
       if (config.startingpow != startingpow ) {
         config.startingpow = startingpow;
         logs += "MQTT starting_pow at " + String(startingpow) + "\r\n";
-        device_starting_pow.send(String(startingpow),false);
+        device_starting_pow.send(String(startingpow),true);
         sysvar.change=1; 
       }
     }
@@ -116,7 +134,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
       if (config.minpow != minpow ) {
         config.minpow = minpow;
         logs += "MQTT minpow at " + String(minpow) + "\r\n";
-        device_dimmer_minpow.send(String(minpow),false);
+        device_dimmer_minpow.send(String(minpow),true);
         sysvar.change=1; 
       }
     }
@@ -125,7 +143,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
       if (config.maxpow != maxpow ) {
         config.maxpow = maxpow;
         logs += "MQTT maxpow at " + String(maxpow) + "\r\n";
-        device_dimmer_maxpow.send(String(maxpow),false);
+        device_dimmer_maxpow.send(String(maxpow),true);
         sysvar.change=1; 
       }
     }
@@ -134,7 +152,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
       if (config.maxtemp != maxtemp ) {
         config.maxtemp = maxtemp;
         logs += "MQTT maxtemp at " + String(maxtemp) + "\r\n";
-        device_dimmer_maxtemp.send(String(maxtemp),false);
+        device_dimmer_maxtemp.send(String(maxtemp),true);
         sysvar.change=1; 
       }
     }
@@ -154,7 +172,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
       String childmode = doc2["child_mode"]; 
       if (config.mode != doc2["child_mode"] ) {
         strlcpy(config.mode, doc2["child_mode"], sizeof(config.mode));
-        device_dimmer_child_mode.send(String(config.mode),false);
+        device_dimmer_child_mode.send(String(config.mode),true);
         logs += "MQTT child mode at " + String(childmode) + "\r\n";
       }
     }
@@ -216,10 +234,10 @@ void child_communication(int delest_power){
 //////////// reconnexion MQTT
 
 void reconnect() {
-  String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-  String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-  String node_id = String("dimmer-") + node_mac; 
-  String topic = "homeassistant/sensor/"+ node_id +"/status";  
+  // String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
+  // String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
+  // String node_id = String("dimmer-") + node_mac; 
+  // String topic = "homeassistant/sensor/"+ node_id +"/status";  
 
   // Loop until we're reconnected
   int timeout = 0; 
@@ -239,6 +257,11 @@ void reconnect() {
         logs += "Connected\r\n";
         if (strcmp( config.SubscribePV, "none") != 0 ) {client.subscribe(config.SubscribePV);}
         if (strcmp( config.SubscribeTEMP, "none") != 0 ) {client.subscribe(config.SubscribeTEMP);}
+        client.subscribe(switch_command.c_str());
+        client.subscribe(number_command.c_str());
+        client.subscribe(select_command.c_str());
+        client.subscribe(button_command.c_str());
+
         client.publish(String(topic).c_str() , "online", true); // status Online
 
 
@@ -259,6 +282,5 @@ void reconnect() {
       }
     }
   } else {  Serial.println(" Filesystem not present "); delay(5000); }
-   
 }
 #endif

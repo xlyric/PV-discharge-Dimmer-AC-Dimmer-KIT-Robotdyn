@@ -1,14 +1,26 @@
 #ifndef WEB_FUNCTIONS
 #define WEB_FUNCTIONS
 
-#include <ESP8266WiFi.h>
+// #include <ESP8266WiFi.h>
 #include <ESPAsyncWiFiManager.h>    
-#include <ESPAsyncTCP.h>
+// #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <ESP8266HTTPClient.h> 
+// #include <ESP8266HTTPClient.h> 
 #include "config/config.h"
 #include "function/littlefs.h"
 #include "function/ha.h"
+
+#ifdef ESP32
+// Web services
+  #include "WiFi.h"
+  #include <AsyncTCP.h>
+  #include "HTTPClient.h"
+#else
+// Web services
+  #include <ESP8266WiFi.h>
+  #include <ESPAsyncTCP.h>
+  #include <ESP8266HTTPClient.h> 
+#endif
 
 extern Mqtt mqtt_config; 
 extern Config config; 
@@ -19,7 +31,7 @@ extern DNSServer dns;
 
 AsyncWebServer server(80);
 
-extern AsyncWiFiManager wifiManager(&server,&dns);
+AsyncWiFiManager wifiManager(&server,&dns);
 
 extern bool AP; 
 
@@ -28,6 +40,7 @@ extern HA device_temp;
 extern HA device_relay1;
 extern HA device_relay2;
 extern HA device_cooler;
+extern HA device_dimmer_on_off;
 
 const char* PARAM_INPUT_1 = "POWER"; /// paramettre de retour sendmode
 const char* PARAM_INPUT_2 = "OFFSET"; /// paramettre de retour sendmode
@@ -234,15 +247,18 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
 
    if (request->hasParam("SubscribePV")) { request->getParam("SubscribePV")->value().toCharArray(config.SubscribePV,100);}
    if (request->hasParam("SubscribeTEMP")) { request->getParam("SubscribeTEMP")->value().toCharArray(config.SubscribeTEMP,100);}
-
+   if (request->hasParam("dimmer_on_off")) { 
+    config.dimmer_on_off = request->getParam("dimmer_on_off")->value().toInt();
+    device_dimmer_on_off.send(String(config.dimmer_on_off),true);
+  }
    if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,50);  }
    if (request->hasParam("mqttpassword")) { request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,50);
    savemqtt(mqtt_conf, mqtt_config); 
    saveConfiguration(filename_conf, config);
    }
   //Ajout des relais
-  #ifdef STANDALONE
-  
+  // #ifdef STANDALONE
+  #ifdef RELAY1
    if (request->hasParam("relay1")) { int relay = request->getParam("relay1")->value().toInt(); 
 
         if ( relay == 0) { digitalWrite(RELAY1 , LOW); }
@@ -252,8 +268,10 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
         char str[8];
         itoa( relaystate, str, 10 );
         request->send(200, "text/html", str );
-        device_relay1.send(String(relaystate),false);
+        device_relay1.send(String(relaystate),true);
     }
+  #endif
+  #ifdef RELAY2
     if (request->hasParam("relay2")) { int relay = request->getParam("relay2")->value().toInt(); 
 
         if ( relay == 0) { digitalWrite(RELAY2 , LOW); }
@@ -263,7 +281,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
         char str[8];
         itoa( relaystate, str, 10 );
         request->send(200, "text/html", str );
-        device_relay2.send(String(relaystate),false);
+        device_relay2.send(String(relaystate),true);
     }
   #endif 
 
@@ -315,7 +333,7 @@ String processor(const String& var){
 String getconfig() {
   String configweb;  
 
-  configweb = String(config.hostname) + ";" +  config.port+";"+ config.Publish +";"+ config.IDXTemp +";"+ config.maxtemp+ ";"  +  config.IDXAlarme + ";"  + config.IDX + ";"  +  config.startingpow+ ";"  +  config.minpow+ ";" +  config.maxpow+ ";"  +  config.child+ ";"  +  config.mode + ";" + config.SubscribePV + ";" + config.SubscribeTEMP ;
+  configweb = String(config.hostname) + ";" +  config.port+";"+ config.Publish +";"+ config.IDXTemp +";"+ config.maxtemp+ ";"  +  config.IDXAlarme + ";"  + config.IDX + ";"  +  config.startingpow+ ";"  +  config.minpow+ ";" +  config.maxpow+ ";"  +  config.child+ ";"  +  config.mode + ";" + config.SubscribePV + ";" + config.SubscribeTEMP + ";" + config.dimmer_on_off ;
 
   return String(configweb);
 }
@@ -333,7 +351,7 @@ return String(Servermode);
 
 String stringbool(bool mybool){
   String truefalse = "true";
-  if (mybool == false ) {truefalse = "";}
+  if (mybool == false ) {truefalse = "false";}
   return String(truefalse);
   }
 

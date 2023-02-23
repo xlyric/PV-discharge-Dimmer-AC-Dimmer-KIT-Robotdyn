@@ -2,7 +2,13 @@
 #define ENUMS
 
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
+//#include <ESP8266WiFi.h>
+
+#ifdef ESP32
+  #include "WiFi.h"
+#else
+  #include <ESP8266WiFi.h>
+#endif
 
 
 struct Config {

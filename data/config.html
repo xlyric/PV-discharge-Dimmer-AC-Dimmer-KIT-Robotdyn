@@ -353,6 +353,7 @@
                                                         </div>   
                                                         <div class="form-group row">
                                                             <div class="col-sm-6">Ignore under pow</div>
+                                                            <div class="col-sm-6">Etat au démarrage</div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <div class="col-sm-6">
@@ -363,7 +364,13 @@
                                                                     placeholder="%STARTINGPOW%"
                                                                 >
                                                             </div>
-                                                        </div>     
+                                                            <div class="col-sm-3">
+                                                                <select id="dimmer_on_off" class="form-control form-control-user">
+                                                                    <option value="1">on</option>
+                                                                    <option value="0">off</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>    
                                                     </div>
                                                 </div>
                                      
@@ -515,6 +522,9 @@ var recupconfig = $.get ({
 		document.getElementById("SubscribePV").value = config[i];
     i++;		
 		document.getElementById("SubscribeTEMP").value = config[i];
+    i++;		
+        document.getElementById("dimmer_on_off").checked = config[i];
+		document.getElementById("dimmer_on_off").value = config[i];
             </script>
 
         </div>
