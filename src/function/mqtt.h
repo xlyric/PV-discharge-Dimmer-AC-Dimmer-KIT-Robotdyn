@@ -216,7 +216,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
 void mqtt(String idx, String value)
 {
 
-  if (idx != 0) { // Autant vérifier qu'une seule fois?
+  if (idx != "0") { // Autant vérifier qu'une seule fois?
     
   // Grace a l'ajout de "exp_aft" sur le discovery, 
   // je préfère envoyer power et temp séparément, à chaque changement de valeur.
