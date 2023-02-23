@@ -696,6 +696,9 @@ void loop() {
     //gestion des erreurs DS18B20
     if ( (sysvar.celsius == -127.00) || (sysvar.celsius == -255.00) ) {
       sysvar.celsius=previous_celsius;
+    }
+    else {
+      sysvar.celsius=int(floor(10*sysvar.celsius+0.5))/10; // arrondi 1 décimale
     }   
 
     if ( refreshcount >= refresh && sysvar.celsius !=-127 && sysvar.celsius !=-255) { 
