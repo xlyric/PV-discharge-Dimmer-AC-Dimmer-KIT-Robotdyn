@@ -145,7 +145,7 @@ void child_communication(int delest_power);
 
 //void mqtt_HA(String sensor_temp, String sensor_dimmer);
 
-// void callback(char* Subscribedtopic, byte* message, unsigned int length) ;
+void callback(char* Subscribedtopic, byte* message, unsigned int length) ;
 
 //***********************************
 //************* Time
@@ -301,12 +301,10 @@ void dimmer_off()
     delay(50);
     }
   #ifdef outputPin2
-    if (dimmer2.getState()==1 ) {
-      dimmer2.setPower(0);
-      dimmer2.setState(OFF);
-      logs +="Dimmer2 Off\r\n"; 
-      delay(50);
-    }
+    dimmer2.setPower(0);
+    dimmer2.setState(OFF);
+    logs +="Dimmer2 Off\r\n"; 
+    delay(50);
   #endif
 }
 
@@ -764,7 +762,10 @@ void loop() {
     }
     else {
         //// si la commande est trop faible on coupe tout partout
-        //dimmer.setPower(0);
+        dimmer.setPower(0);
+        #ifdef outputPin2
+          dimmer2.setPower(0);
+        #endif
         dimmer_off();  
         if ( strcmp(config.mode,"off") != 0) { child_communication(0); }
 
@@ -789,7 +790,7 @@ void loop() {
 }
     }
   }
-if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance = 0)) {   // cut cooler 
+if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < config.minpow)) {   // cut cooler 
   digitalWrite(COOLER, LOW); 
   if (!AP && mqtt_config.mqtt) { device_cooler.send(stringbool(false));}
 }
