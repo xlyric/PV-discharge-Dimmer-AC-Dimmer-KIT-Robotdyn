@@ -79,7 +79,7 @@
 
 /// Trigger for temp limit in percent
 #define TRIGGER 10   /// 
-#define TIMERDELAY 30 // delay before switch off
+#define TIMERDELAY 5 // delay before switch off
 
 #endif
 
