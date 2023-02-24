@@ -46,6 +46,13 @@ struct HA
     private:String entity_option; 
     public:void Set_entity_option(String setter) {entity_option=setter; }
 
+    private:bool retain_flag; 
+    public:void Set_retain_flag(bool setter) {retain_flag=setter; }
+
+    private:String expire_after; 
+    public:void Set_expire_after(bool setter) {
+      if (setter) {expire_after="\"exp_aft\": \""+ String(MQTT_INTERVAL) +"\", "; }
+    }
     private:String sensor_type() {
       String topic = "homeassistant/"+ entity_type +"/"+ node_id +"/";
       String info;
@@ -54,8 +61,7 @@ struct HA
             "\"unit_of_meas\": \""+unit_of_meas+"\","
             "\"stat_cla\": \""+stat_cla+"\"," 
             "\"avty_t\": \""+ topic + "status\","
-            "\"value_template\": \"{{ value_json."+ object_id +" }}\","
-            "\"exp_aft\": \""+ MQTT_INTERVAL +"\","; 
+            "\"value_template\": \"{{ value_json."+ object_id +" }}\","; 
       }
       else if (entity_type == "switch") { 
               info =         "\"val_tpl\": \"{{ value_json."+ object_id +" }}\","
@@ -87,8 +93,9 @@ struct HA
       } 
       else if (entity_type == "binary_sensor") { 
               info =         "\"dev_cla\": \""+dev_cla+"\","
-            "\"pl_on\": \"{ \\\""+object_id+"\\\" :  \\\"true\\\" } \","
-            "\"pl_off\": \"{ \\\""+object_id+"\\\" : \\\"false\\\" } \","
+            "\"pl_on\":\"true\","
+            "\"pl_off\":\"false\","
+            "\"val_tpl\": \"{{ value_json."+ object_id +" }}\","
             "\"avty_t\": \"homeassistant/sensor/"+ node_id +"/" + "status\",";
       }
       else if (entity_type == "button") { 
@@ -158,6 +165,7 @@ struct HA
             "\"stat_t\": \""+ topic + object_id + "/state\"," 
             + sensor_type()
             + icon
+            + expire_after
             + device_declare() + 
             "}";
 
@@ -193,10 +201,10 @@ struct HA
        client.publish((topic_switch_state + name + "_" + node_mac + "/state").c_str() , value.c_str(), true);
     }*/
  
-    public:void send(String value, bool retain){
+    public:void send(String value){
       String topic = "homeassistant/"+ entity_type +"/"+ node_id +"/";
       String message = "  { \""+object_id+"\" : \"" + value.c_str() + "\"  } ";
-      client.publish((topic + object_id + "/state").c_str() , message.c_str(), retain);
+      client.publish((topic + object_id + "/state").c_str() , message.c_str(), retain_flag);
     } 
 
 
