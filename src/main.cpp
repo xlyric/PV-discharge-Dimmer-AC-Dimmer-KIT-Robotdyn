@@ -468,8 +468,8 @@ void setup() {
   device_dimmer.Set_dev_cla("power_factor"); // fix is using native unit of measurement '%' which is not a valid unit for the device class ('power') it is using
   device_dimmer.Set_icon("mdi:percent");
   device_dimmer.Set_entity_type("sensor");
-  device_dimmer.Set_retain_flag(false);
-  device_dimmer.Set_expire_after(true);
+  device_dimmer.Set_retain_flag(true);
+  // device_dimmer.Set_expire_after(true);
 
   device_temp.Set_name("Température");
   device_temp.Set_object_id("temperature");
@@ -477,8 +477,8 @@ void setup() {
   device_temp.Set_stat_cla("measurement");
   device_temp.Set_dev_cla("temperature");
   device_temp.Set_entity_type("sensor");
-  device_temp.Set_retain_flag(false);
-  device_dimmer.Set_expire_after(true);
+  device_temp.Set_retain_flag(true);
+  // device_dimmer.Set_expire_after(true);
 
   
   /// création des switch
@@ -783,9 +783,13 @@ void loop() {
         device_dimmer.send(String(sysvar.puissance));
         // if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
       }
+      if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) {   // cut cooler 
+        digitalWrite(COOLER, LOW); 
+        if (!AP && mqtt_config.mqtt) { device_cooler.send(stringbool(false));}
+}
     }
   }
-if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) {   // cut cooler 
+if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance = 0)) {   // cut cooler 
   digitalWrite(COOLER, LOW); 
   if (!AP && mqtt_config.mqtt) { device_cooler.send(stringbool(false));}
 }
