@@ -8,7 +8,6 @@
   #include <ESP8266WiFi.h>
 #endif
 
-
 extern String logs;
 
 struct Config {
