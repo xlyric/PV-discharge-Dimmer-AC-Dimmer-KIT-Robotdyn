@@ -145,7 +145,7 @@ void child_communication(int delest_power);
 
 //void mqtt_HA(String sensor_temp, String sensor_dimmer);
 
-void callback(char* Subscribedtopic, byte* message, unsigned int length) ;
+// void callback(char* Subscribedtopic, byte* message, unsigned int length) ;
 
 //***********************************
 //************* Time
