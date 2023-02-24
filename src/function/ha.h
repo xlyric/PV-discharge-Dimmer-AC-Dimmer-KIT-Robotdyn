@@ -5,10 +5,10 @@
 
 extern PubSubClient client;
 
-int MQTT_INTERVAL = 60;
 
 struct HA
 {
+    private:int MQTT_INTERVAL = 60;
       /* HA */
     private:String name; 
     public:void Set_name(String setter) {name=setter; }
@@ -109,7 +109,8 @@ struct HA
 
     //bool cmd_t; 
 
-    private:String IPaddress;
+    private:String IPaddress = WiFi.localIP().toString();
+
     //private:String state_topic; 
     //private:String stat_t; 
     //private:String avty_t;
@@ -157,7 +158,6 @@ struct HA
     }*/
 
     public:void discovery(){
-      IPaddress =   WiFi.localIP().toString();
       String topic = "homeassistant/"+ entity_type +"/"+ node_id +"/";
       String device= "{\"name\": \""+ name + "\"," 
             "\"obj_id\": \"dimmer-"+ object_id +"-"+ node_mac + "\"," 
