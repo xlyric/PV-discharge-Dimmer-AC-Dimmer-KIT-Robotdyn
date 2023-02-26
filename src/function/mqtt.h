@@ -32,7 +32,7 @@ extern HA device_dimmer_child_mode;
 extern HA device_dimmer_maxtemp;
 extern HA device_dimmer_maxpow;
 extern HA device_dimmer_minpow;
-extern HA device_starting_pow;
+extern HA device_dimmer_starting_pow;
 extern HA device_dimmer_maxtemp;
 extern HA device_dimmer_on_off;
 extern HA device_dimmer_alarm_temp;
@@ -71,7 +71,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
       sysvar.change=1; 
     }
     else {
-      device_dimmer.send(String(sysvar.puissance),false);
+      device_dimmer.send(String(sysvar.puissance));
     }
   }
   if (strcmp( Subscribedtopic, config.SubscribeTEMP ) == 0  && doc2.containsKey("temperature")) { 
@@ -81,10 +81,10 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
       device_dimmer_alarm_temp.discovery();
       device_temp.discovery();
       device_dimmer_maxtemp.discovery();
-      device_dimmer_alarm_temp.send(stringbool(alerte),true);
-      device_dimmer_maxtemp.send(String(config.maxtemp),true);
+      device_dimmer_alarm_temp.send(stringbool(false));
+      device_dimmer_maxtemp.send(String(config.maxtemp));
     }
-    device_temp.send(String(sysvar.celsius),false);
+    device_temp.send(String(sysvar.celsius));
 
 
 
@@ -95,7 +95,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
   }
     //   logs += "Subscribedtopic : " + String(Subscribedtopic)+ "\r\n";
     // logs += "switchcommand : " + String(switch_command)+ "\r\n";
-#ifdef  STANDALONE
+//#ifdef  STANDALONE // désactivé sinon ne fonctionne pas avec ESP32
   if (strcmp( Subscribedtopic, switch_command.c_str() ) == 0) { 
     #ifdef RELAY1
       if (doc2.containsKey("relay1")) { 
@@ -103,7 +103,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
           if ( relay == 0) { digitalWrite(RELAY1 , LOW); }
           else { digitalWrite(RELAY1 , HIGH); } 
           logs += "RELAY1 at " + String(relay) + "\r\n"; 
-          device_relay1.send(String(relay),true);
+          device_relay1.send(String(relay));
       }
     #endif
     #ifdef RELAY2
@@ -112,24 +112,24 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
           if ( relay == 0) { digitalWrite(RELAY2 , LOW); }
           else { digitalWrite(RELAY2 , HIGH); } 
           logs += "RELAY2 at " + String(relay) + "\r\n"; 
-          device_relay2.send(String(relay),true);      
+          device_relay2.send(String(relay));      
       }
     #endif
     if (doc2.containsKey("on_off")) { 
         config.dimmer_on_off = doc2["on_off"]; 
         logs += "Dimmer ON_OFF at " + String(config.dimmer_on_off) + "\r\n"; 
-        device_dimmer_on_off.send(String(config.dimmer_on_off),true);      
+        device_dimmer_on_off.send(String(config.dimmer_on_off));      
         sysvar.change=1; 
     }
   } 
-#endif
+//#endif
   if (strcmp( Subscribedtopic, number_command.c_str() ) == 0) { 
     if (doc2.containsKey("starting_power")) { 
       int startingpow = doc2["starting_power"]; 
       if (config.startingpow != startingpow ) {
         config.startingpow = startingpow;
         logs += "MQTT starting_pow at " + String(startingpow) + "\r\n";
-        device_starting_pow.send(String(startingpow),true);
+        device_dimmer_starting_pow.send(String(startingpow));
         sysvar.change=1; 
       }
     }
@@ -138,7 +138,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
       if (config.minpow != minpow ) {
         config.minpow = minpow;
         logs += "MQTT minpow at " + String(minpow) + "\r\n";
-        device_dimmer_minpow.send(String(minpow),true);
+        device_dimmer_minpow.send(String(minpow));
         sysvar.change=1; 
       }
     }
@@ -147,7 +147,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
       if (config.maxpow != maxpow ) {
         config.maxpow = maxpow;
         logs += "MQTT maxpow at " + String(maxpow) + "\r\n";
-        device_dimmer_maxpow.send(String(maxpow),true);
+        device_dimmer_maxpow.send(String(maxpow));
         sysvar.change=1; 
       }
     }
@@ -156,7 +156,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
       if (config.maxtemp != maxtemp ) {
         config.maxtemp = maxtemp;
         logs += "MQTT maxtemp at " + String(maxtemp) + "\r\n";
-        device_dimmer_maxtemp.send(String(maxtemp),true);
+        device_dimmer_maxtemp.send(String(maxtemp));
         sysvar.change=1; 
       }
     }
@@ -176,7 +176,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
       String childmode = doc2["child_mode"]; 
       if (config.mode != doc2["child_mode"] ) {
         strlcpy(config.mode, doc2["child_mode"], sizeof(config.mode));
-        device_dimmer_child_mode.send(String(config.mode),true);
+        device_dimmer_child_mode.send(String(config.mode));
         logs += "MQTT child mode at " + String(childmode) + "\r\n";
       }
     }

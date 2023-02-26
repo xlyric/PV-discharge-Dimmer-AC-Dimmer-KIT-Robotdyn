@@ -39,8 +39,18 @@ extern HA device_dimmer;
 extern HA device_temp; 
 extern HA device_relay1;
 extern HA device_relay2;
-extern HA device_cooler;
+// extern HA device_cooler;
 extern HA device_dimmer_on_off;
+extern HA device_dimmer_child_mode;
+extern HA device_dimmer_maxpow;
+extern HA device_dimmer_minpow;
+extern HA device_dimmer_starting_pow;
+extern HA device_dimmer_maxtemp;
+
+
+
+
+
 
 const char* PARAM_INPUT_1 = "POWER"; /// paramettre de retour sendmode
 const char* PARAM_INPUT_2 = "OFFSET"; /// paramettre de retour sendmode
@@ -241,21 +251,35 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
    if (request->hasParam("port")) { config.port = request->getParam("port")->value().toInt();}
    if (request->hasParam("Publish")) { request->getParam("Publish")->value().toCharArray(config.Publish,100);}
    if (request->hasParam("idxtemp")) { config.IDXTemp = request->getParam("idxtemp")->value().toInt();}
-   if (request->hasParam("maxtemp")) { config.maxtemp = request->getParam("maxtemp")->value().toInt();}
+   if (request->hasParam("maxtemp")) { 
+    config.maxtemp = request->getParam("maxtemp")->value().toInt();
+    if (!AP && mqtt_config.mqtt) { device_dimmer_maxtemp.send(String(config.maxtemp));}
+   }
    if (request->hasParam("IDXAlarme")) { config.IDXAlarme = request->getParam("IDXAlarme")->value().toInt();}
    if (request->hasParam("IDX")) { config.IDX = request->getParam("IDX")->value().toInt();}
-   if (request->hasParam("startingpow")) { config.startingpow = request->getParam("startingpow")->value().toInt();}
-   if (request->hasParam("minpow")) { config.minpow = request->getParam("minpow")->value().toInt();}
-   if (request->hasParam("maxpow")) { config.maxpow = request->getParam("maxpow")->value().toInt();}
+   if (request->hasParam("startingpow")) { config.startingpow = request->getParam("startingpow")->value().toInt();
+    if (!AP && mqtt_config.mqtt) { device_dimmer_starting_pow.send(String(config.startingpow));}
+   }
+   if (request->hasParam("minpow")) { 
+    config.minpow = request->getParam("minpow")->value().toInt();
+    if (!AP && mqtt_config.mqtt) { device_dimmer_minpow.send(String(config.minpow));}
+   }
+   if (request->hasParam("maxpow")) { 
+    config.maxpow = request->getParam("maxpow")->value().toInt();
+    if (!AP && mqtt_config.mqtt) { device_dimmer_maxpow.send(String(config.maxpow));}
+   }
    if (request->hasParam("child")) { request->getParam("child")->value().toCharArray(config.child,15);  }
-   if (request->hasParam("mode")) { request->getParam("mode")->value().toCharArray(config.mode,10);  }
+   if (request->hasParam("mode")) { 
+    request->getParam("mode")->value().toCharArray(config.mode,10);  
+    if (!AP && mqtt_config.mqtt) { device_dimmer_child_mode.send(String(config.mode));}
+   }
 
    if (request->hasParam("SubscribePV")) { request->getParam("SubscribePV")->value().toCharArray(config.SubscribePV,100);}
    if (request->hasParam("SubscribeTEMP")) { request->getParam("SubscribeTEMP")->value().toCharArray(config.SubscribeTEMP,100);}
    if (request->hasParam("dimmer_on_off")) { 
     config.dimmer_on_off = request->getParam("dimmer_on_off")->value().toInt();
-    device_dimmer_on_off.send(String(config.dimmer_on_off),true);
-  }
+    if (!AP && mqtt_config.mqtt) { device_dimmer_on_off.send(String(config.dimmer_on_off));}
+   }
    if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,50);  }
    if (request->hasParam("mqttpassword")) { request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,50);
    savemqtt(mqtt_conf, mqtt_config); 
@@ -273,7 +297,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
         char str[8];
         itoa( relaystate, str, 10 );
         request->send(200, "text/html", str );
-        device_relay1.send(String(relaystate),true);
+        if (!AP && mqtt_config.mqtt) { device_relay1.send(String(relaystate));}
     }
   #endif
   #ifdef RELAY2
@@ -286,7 +310,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
         char str[8];
         itoa( relaystate, str, 10 );
         request->send(200, "text/html", str );
-        device_relay2.send(String(relaystate),true);
+        if (!AP && mqtt_config.mqtt) { device_relay2.send(String(relaystate));}
     }
   #endif 
 
@@ -368,10 +392,10 @@ String stringbool(bool mybool){
   return String(truefalse);
   }
 
-String switchstate(int state){
-  String statestring ="OFF";
-  if (state==1) statestring ="ON";
-  return (statestring);
-}
+// String switchstate(int state){
+//   String statestring ="OFF";
+//   if (state==1) statestring ="ON";
+//   return (statestring);
+// }
 
 #endif
