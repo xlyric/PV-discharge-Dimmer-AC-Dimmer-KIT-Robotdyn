@@ -178,7 +178,7 @@ float CheckTemperature(String label, byte deviceAddress[12]);
 String routeur="PV-ROUTER";
 bool AP = false; 
 bool discovery_temp;
-
+String dimmername ="";
 
 OneWire  ds(ONE_WIRE_BUS);  //  (a 4.7K resistor is necessary - 5.7K work with 3.3 ans 5V power)
 DallasTemperature sensors(&ds);
@@ -443,7 +443,7 @@ void setup() {
   //chargement des url des pages
   call_pages();
 
-
+  dimmername = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17); 
 
 
     //***********************************
@@ -616,7 +616,7 @@ void setup() {
 
 
 
-
+Serial.println(ESP.getFreeHeap());
 }
 
 bool alerte=false;
@@ -659,7 +659,7 @@ void loop() {
       if ( sysvar.celsius <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
         security = 0 ;
                 if (!AP && mqtt_config.mqtt) { device_dimmer_alarm_temp.send(stringbool(security)); }
-
+        sysvar.change = 1 ;
       }
       else {
       dimmer_off();
@@ -757,7 +757,7 @@ void loop() {
     }
     else if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && security == 1)
     {
-      if ( sysvar.puissance > config.maxpow && strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance-config.maxpow ); } // si mode délest, envoi du surplus
+      if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance ); } // si mode délest, envoi du surplus
       if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); }  //si mode equal envoie de la commande vers la carte fille
     }
     else {
@@ -841,8 +841,9 @@ if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < c
     //***********************************
     //************* LOOP - Activation de la sécurité
     //***********************************
-if ( sysvar.celsius >= config.maxtemp ) {
+if ( sysvar.celsius >= config.maxtemp && security == 0 ) {
   security = 1 ; 
+  if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance ); } // si mode délest, envoi du surplus
   if (!AP && mqtt_config.mqtt) { device_dimmer_alarm_temp.send(stringbool(security)); }
 }
 

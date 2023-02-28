@@ -214,6 +214,7 @@
                 </div>
             </div>
             <!-- Content Row -->
+            <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
             <script type="text/javascript"> 
 	
 
@@ -238,11 +239,7 @@ document.getElementById("MQTT").value = config[16];
 }
 		
 		</script >
-           
 
-
-<script src="https://code.jquery.com/jquery-3.4.1.js">
-            </script>
             <script>
 
 <!-- sauvegarde de la configuration --> 
@@ -295,7 +292,7 @@ var recupconfig = $.get ({
       document.getElementById("password").value = config[i];
       i++;
       document.getElementById("MQTT").checked = config[i];
-		  document.getElementById("MQTT").value = config[i];
+	  document.getElementById("MQTT").value = config[i];
       i++;
       document.getElementById("port").value = config[i];
             </script>
