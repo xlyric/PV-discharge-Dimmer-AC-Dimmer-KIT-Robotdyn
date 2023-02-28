@@ -53,6 +53,7 @@ struct HA
     public:void Set_expire_after(bool setter) {
       if (setter) {expire_after="\"exp_aft\": \""+ String(MQTT_INTERVAL) +"\", "; }
     }
+
     private:String sensor_type() {
       String topic = "homeassistant/"+ entity_type +"/"+ node_id +"/";
       String info;
@@ -109,7 +110,7 @@ struct HA
 
     //bool cmd_t; 
 
-    private:String IPaddress = WiFi.localIP().toString();
+
 
     //private:String state_topic; 
     //private:String stat_t; 
@@ -123,6 +124,7 @@ struct HA
     private:String topic_switch = "homeassistant/switch/"+ node_id +"/";
     private:String topic_switch_state = "homeassistant/switch/";
     private:String device_declare() { 
+              String IPaddress = WiFi.localIP().toString();
               String info =         "\"dev\": {"
               "\"ids\": \""+ node_id + "\","
               "\"name\": \""+ node_id + "\","
