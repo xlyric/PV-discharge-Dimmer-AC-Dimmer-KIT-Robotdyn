@@ -784,13 +784,13 @@ void loop() {
         device_dimmer.send(String(sysvar.puissance));
         // if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
       }
-      if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) {   // cut cooler 
+      if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) && digitalRead(COOLER) == HIGH ) {   // cut cooler 
         digitalWrite(COOLER, LOW); 
         if (!AP && mqtt_config.mqtt) { device_cooler.send(stringbool(false));}
 }
     }
   }
-if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < config.minpow)) {   // cut cooler 
+if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < config.minpow) && digitalRead(COOLER) == HIGH ) {   // cut cooler 
   digitalWrite(COOLER, LOW); 
   if (!AP && mqtt_config.mqtt) { device_cooler.send(stringbool(false));}
 }
