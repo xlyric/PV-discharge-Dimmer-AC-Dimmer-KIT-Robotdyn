@@ -68,7 +68,10 @@ void loadConfiguration(const char *filename, Config &config) {
   strlcpy(config.SubscribeTEMP,                 
         doc["SubscribeTEMP"] | "homeassistant/sensor/Dimmer-xxxx/state", 
         sizeof(config.SubscribeTEMP));
-  config.dimmer_on_off = doc["dimmer_on_off"] | 1; 
+  //config.dimmer_on_off = doc["dimmer_on_off"] | 1; 
+  config.HA = doc["HA"] | true; 
+  config.JEEDOM = doc["JEEDOM"] | true; 
+  config.DOMOTICZ = doc["DOMOTICZ"] | true; 
 
   configFile.close();
   
@@ -110,7 +113,10 @@ void saveConfiguration(const char *filename, const Config &config) {
   doc["mode"] = config.mode;
   doc["SubscribePV"] = config.SubscribePV;
   doc["SubscribeTEMP"] = config.SubscribeTEMP;
-  doc["dimmer_on_off"] = config.dimmer_on_off;
+//  doc["dimmer_on_off"] = config.dimmer_on_off;
+  doc["HA"] = config.HA;
+  doc["JEEDOM"] = config.JEEDOM;
+  doc["DOMOTICZ"] = config.DOMOTICZ;
 
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {

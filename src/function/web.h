@@ -361,21 +361,21 @@ String processor(const String& var){
 String getconfig() {
   String configweb;  
 
-  configweb = String(config.hostname) + ";" +  config.port+";"+ config.Publish +";"+ config.IDXTemp +";"+ config.maxtemp+ ";"  +  config.IDXAlarme + ";"  + config.IDX + ";"  +  config.startingpow+ ";"  +  config.minpow+ ";" +  config.maxpow+ ";"  +  config.child+ ";"  +  config.mode + ";" + config.SubscribePV + ";" + config.SubscribeTEMP + ";" + config.dimmer_on_off ;
+  configweb = String(config.hostname) + ";" +  config.port+";"+ config.Publish +";"+ config.IDXTemp +";"+ config.maxtemp+ ";"  +  config.IDXAlarme + ";"  + config.IDX + ";"  +  config.startingpow+ ";"  +  config.minpow+ ";" +  config.maxpow+ ";"  +  config.child+ ";"  +  config.mode + ";" + config.SubscribePV + ";" + config.SubscribeTEMP + ";" + stringbool(config.HA) + ";" + stringbool(config.JEEDOM) + ";" + stringbool(config.DOMOTICZ);
 
   return String(configweb);
 }
 
 String getmqtt() {
 
-    String retour =String(config.hostname) + ";" + String(config.Publish) + ";" + String(mqtt_config.username) + ";" + String(mqtt_config.password) + ";" + stringbool(mqtt_config.mqtt)+ ";" + String(config.port)+";"+stringbool(config.HA)+";"+stringbool(config.JEEDOM)+";"+stringbool(config.DOMOTICZ) ;
+    String retour =String(config.hostname) + ";" + String(config.Publish) + ";" + String(mqtt_config.username) + ";" + String(mqtt_config.password) + ";" + stringbool(mqtt_config.mqtt)+ ";" + String(config.port);
     return String(retour) ;
   }
 
 String readmqttsave(){
         String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
         String node_id = String("Dimmer-") + node_mac; 
-        String save_command = String("sauvegarde/"+ node_id );
+        String save_command = String("Xlyric/sauvegarde/"+ node_id );
         client.subscribe(save_command.c_str());
         return String("<html><head><meta http-equiv='refresh' content='5;url=config.html' /></head><body><h1>config restauree, retour au setup dans 5 secondes, pensez a sauvegarder sur la flash </h1></body></html>");
 }
@@ -391,7 +391,7 @@ return String(Servermode);
 
 String stringbool(bool mybool){
   String truefalse = "true";
-  if (mybool == false ) {truefalse = "false";}
+  if (mybool == false ) {truefalse = "";}
   return String(truefalse);
   }
 

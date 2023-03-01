@@ -375,7 +375,7 @@ void setup() {
   #ifdef outputPin2
     dimmer2.setPower(outVal); 
   #endif
-  
+
   
   USE_SERIAL.println("Dimmer Program is starting...");
 
@@ -600,7 +600,7 @@ void setup() {
     if (config.HA || config.JEEDOM) {
     // device_dimmer_on_off.send(String(config.dimmer_on_off));
     device_dimmer.send(String(sysvar.puissance));
-    device_cooler.send(stringbool(false));
+    device_cooler.send(stringboolMQTT(false));
     device_dimmer_starting_pow.send(String(config.startingpow));
     device_dimmer_minpow.send(String(config.minpow));
     device_dimmer_maxpow.send(String(config.maxpow));
@@ -659,7 +659,7 @@ void loop() {
     //// Trigger
       if ( sysvar.celsius <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
         security = 0 ;
-                if (!AP && mqtt_config.mqtt) { device_dimmer_alarm_temp.send(stringbool(security)); }
+                if (!AP && mqtt_config.mqtt) { device_dimmer_alarm_temp.send(stringboolMQTT(security)); }
         sysvar.change = 1 ;
       }
       else {
@@ -715,9 +715,9 @@ void loop() {
 
         /// cooler 
         if (config.dimmer_on_off == 1){
+          if (!AP && mqtt_config.mqtt && digitalRead(COOLER) == LOW ) {device_cooler.send(stringboolMQTT(true));}
           digitalWrite(COOLER, HIGH); // start cooler 
           Timer_Cooler = millis();
-          if (!AP && mqtt_config.mqtt) {device_cooler.send(stringbool(true));}
           logs += "Start Cooler\r\n";
         }
         
@@ -787,13 +787,13 @@ void loop() {
       }
       if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) && digitalRead(COOLER) == HIGH ) {   // cut cooler 
         digitalWrite(COOLER, LOW); 
-        if (!AP && mqtt_config.mqtt) { device_cooler.send(stringbool(false));}
+        if (!AP && mqtt_config.mqtt) { device_cooler.send(stringboolMQTT(false));}
 }
     }
   }
 if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < config.minpow) && digitalRead(COOLER) == HIGH ) {   // cut cooler 
   digitalWrite(COOLER, LOW); 
-  if (!AP && mqtt_config.mqtt) { device_cooler.send(stringbool(false));}
+  if (!AP && mqtt_config.mqtt) { device_cooler.send(stringboolMQTT(false));}
 }
 
  ///// dallas présent >> mesure 
@@ -825,7 +825,7 @@ if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < c
         device_dimmer_alarm_temp.HA_discovery();
         device_temp.HA_discovery();
         device_dimmer_maxtemp.HA_discovery();
-        device_dimmer_alarm_temp.send(stringbool(security));
+        device_dimmer_alarm_temp.send(stringboolMQTT(security));
         device_dimmer_maxtemp.send(String(config.maxtemp));
         
       }
@@ -845,7 +845,7 @@ if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < c
 if ( sysvar.celsius >= config.maxtemp && security == 0 ) {
   security = 1 ; 
   if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance ); } // si mode délest, envoi du surplus
-  if (!AP && mqtt_config.mqtt) { device_dimmer_alarm_temp.send(stringbool(security)); }
+  if (!AP && mqtt_config.mqtt) { device_dimmer_alarm_temp.send(stringboolMQTT(security)); }
 }
 
  delay(100);  // 24/01/2023 changement 500 à 100ms pour plus de réactivité

@@ -26,8 +26,7 @@ struct Config {
   char SubscribePV[100];
   char SubscribeTEMP[100];
   bool restart;
-  int dimmer_on_off;
-  bool MQTT;
+  int dimmer_on_off = 1 ;
   bool HA;
   bool JEEDOM;
   bool DOMOTICZ;

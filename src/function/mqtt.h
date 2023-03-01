@@ -42,6 +42,8 @@ extern bool alerte;
 extern String logs; 
 extern char buffer[1024];
 
+String stringboolMQTT(bool mybool);
+
   /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remonté par MQTT
   /// @param Subscribedtopic 
   /// @param message 
@@ -64,7 +66,7 @@ extern char buffer[1024];
 void callback(char* Subscribedtopic, byte* message, unsigned int length) {
   StaticJsonDocument<1024> doc2;
   deserializeJson(doc2, message);
-  if (strcmp( Subscribedtopic, config.SubscribePV ) == 0 && doc2.containsKey("dimmer")) { 
+  if (strcmp( Subscribedtopic, config.SubscribePV ) == 0 && doc2.containsKey("dimmer") && config.dimmer_on_off == 1) { 
     int puissancemqtt = doc2["dimmer"]; 
     puissancemqtt = puissancemqtt - config.startingpow;
     if (puissancemqtt < 0) puissancemqtt = 0;
@@ -85,7 +87,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
       device_dimmer_alarm_temp.HA_discovery();
       device_temp.HA_discovery();
       device_dimmer_maxtemp.HA_discovery();
-      device_dimmer_alarm_temp.send(stringbool(false));
+      device_dimmer_alarm_temp.send(stringboolMQTT(false));
       device_dimmer_maxtemp.send(String(config.maxtemp));
     }
     device_temp.send(String(sysvar.celsius));
@@ -299,4 +301,10 @@ void reconnect() {
     }
   } else {  Serial.println(" Filesystem not present "); delay(5000); }
 }
+
+String stringboolMQTT(bool mybool){
+  String truefalse = "true";
+  if (mybool == false ) {truefalse = "false";}
+  return String(truefalse);
+  }
 #endif

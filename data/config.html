@@ -354,7 +354,6 @@
                                                         </div>   
                                                         <div class="form-group row">
                                                             <div class="col-sm-6">Puissance de démarrage</div>
-                                                            <div class="col-sm-6">Etat au démarrage</div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <div class="col-sm-6">
@@ -365,16 +364,43 @@
                                                                     placeholder="%STARTINGPOW%"
                                                                 >
                                                             </div>
-                                                            <div class="col-sm-3">
-                                                                <select id="dimmer_on_off" class="form-control form-control-user">
-                                                                    <option value="1">on</option>
-                                                                    <option value="0">off</option>
-                                                                </select>
-                                                            </div>
                                                         </div>    
                                                     </div>
                                                 </div>
-                                     
+                                                <div class="card position-relative">
+                                                    <div class="card-header py-3">
+                                                        <h6 class="m-0 font-weight-bold text-primary">Transmission MQTT</h6>
+                                                        <span id="saveform"></span>
+                                                    </div>
+                                                    <div class="card-body">
+                                        
+                                                        <div class="form-group row">
+                                                        <div class="col-sm-3">
+                                                            <div class="custom-control custom-checkbox small">
+                                                            MQTT
+                                                            <br>
+                                                            <input type="checkbox" class="custom-control-input" id="HA">
+                                                            <label class="custom-control-label" for="HA" onclick="sendservermode(this.innerHTML);" >HA</label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-3">
+                                                            <div class="custom-control custom-checkbox small">
+                                                            MQTT
+                                                            <br>
+                                                            <input type="checkbox" class="custom-control-input" id="JEEDOM">
+                                                            <label class="custom-control-label" for="JEEDOM" onclick="sendservermode(this.innerHTML);" >JEEDOM</label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-3">
+                                                            <div class="custom-control custom-checkbox small">
+                                                            MQTT
+                                                            <br>
+                                                            <input type="checkbox" class="custom-control-input" id="DOMOTICZ">
+                                                            <label class="custom-control-label" for="DOMOTICZ" onclick="sendservermode(this.innerHTML);" >DOMOTICZ</label>
+                                                            </div>
+                                                        </div>
+                                                </div>
+
                                             </div>
                                         </div>
                                     </div>
@@ -423,6 +449,21 @@ function sendmode (mode) {
 
 }
 
+
+
+
+function sendservermode (mode) {
+
+$.get( "/get", { servermode: mode } )
+.done(function(data) { 
+$( "#saveform" ).text( "Configuration appliqué" ).show().fadeOut( 5000 );
+var config = data.split(";");
+document.getElementById("HA").value = config[14];
+document.getElementById("JEEDOM").value = config[15];
+document.getElementById("DOMOTICZ").value = config[16];
+
+}); 
+}
 // function sendservermode (mode) {
 
 // 		$.get( "/get", { mode: mode } )
@@ -523,9 +564,15 @@ var recupconfig = $.get ({
 		document.getElementById("SubscribePV").value = config[i];
     i++;		
 		document.getElementById("SubscribeTEMP").value = config[i];
-    i++;		
-        document.getElementById("dimmer_on_off").checked = config[i];
-		document.getElementById("dimmer_on_off").value = config[i];
+    i++;
+        document.getElementById("HA").checked = config[i]; //14
+        document.getElementById("HA").value = config[i];
+    i++;
+        document.getElementById("JEEDOM").checked = config[i];
+        document.getElementById("JEEDOM").value = config[i];
+    i++;
+        document.getElementById("DOMOTICZ").checked = config[i];
+        document.getElementById("DOMOTICZ").value = config[i];
             </script>
 
         </div>
