@@ -27,15 +27,15 @@ extern System sysvar;
 extern HTTPClient http;
 extern WiFiClient domotic_client;
 
-extern HA device_dimmer_child_mode;
+extern MQTT device_dimmer_child_mode;
 
-extern HA device_dimmer_maxtemp;
-extern HA device_dimmer_maxpow;
-extern HA device_dimmer_minpow;
-extern HA device_dimmer_starting_pow;
-extern HA device_dimmer_maxtemp;
-extern HA device_dimmer_on_off;
-extern HA device_dimmer_alarm_temp;
+extern MQTT device_dimmer_maxtemp;
+extern MQTT device_dimmer_maxpow;
+extern MQTT device_dimmer_minpow;
+extern MQTT device_dimmer_starting_pow;
+extern MQTT device_dimmer_maxtemp;
+extern MQTT device_dimmer_on_off;
+extern MQTT device_dimmer_alarm_temp;
 
 extern bool discovery_temp; 
 extern bool alerte; 
@@ -47,15 +47,19 @@ extern char buffer[1024];
   /// @param message 
   /// @param length 
 
+
+
   String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-  // String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17); // non utilisé
-  String node_id = String("dimmer-") + node_mac; 
-  String switch_command = String("homeassistant/switch/"+ node_id + "/command");
-  String number_command = String("homeassistant/number/"+ node_id + "/command");
-  String select_command = String("homeassistant/select/"+ node_id + "/command");
-  String button_command = String("homeassistant/button/"+ node_id + "/command");
-  String save_command = String("sauvegarde/"+ node_id );
+  // String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
+  String node_id = String("Dimmer-") + node_mac; 
   String topic = "homeassistant/sensor/"+ node_id +"/status";  
+  String topic_Xlyric = "Xlyric/"+ node_id +"/";
+
+  String command_switch = String(topic_Xlyric + "switch/command");
+  String command_number = String(topic_Xlyric + "number/command");
+  String command_select = String(topic_Xlyric + "select/command");
+  String command_button = String(topic_Xlyric + "button/command");
+  String command_save = String("Xlyric/sauvegarde/"+ node_id );
 
 void callback(char* Subscribedtopic, byte* message, unsigned int length) {
   StaticJsonDocument<1024> doc2;
@@ -78,9 +82,9 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
     float temperaturemqtt = doc2["temperature"]; 
     if (!discovery_temp) {
       discovery_temp = true;
-      device_dimmer_alarm_temp.discovery();
-      device_temp.discovery();
-      device_dimmer_maxtemp.discovery();
+      device_dimmer_alarm_temp.HA_discovery();
+      device_temp.HA_discovery();
+      device_dimmer_maxtemp.HA_discovery();
       device_dimmer_alarm_temp.send(stringbool(false));
       device_dimmer_maxtemp.send(String(config.maxtemp));
     }
@@ -96,7 +100,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
     //   logs += "Subscribedtopic : " + String(Subscribedtopic)+ "\r\n";
     // logs += "switchcommand : " + String(switch_command)+ "\r\n";
 //#ifdef  STANDALONE // désactivé sinon ne fonctionne pas avec ESP32
-  if (strcmp( Subscribedtopic, switch_command.c_str() ) == 0) { 
+  if (strcmp( Subscribedtopic, command_switch.c_str() ) == 0) { 
     #ifdef RELAY1
       if (doc2.containsKey("relay1")) { 
           int relay = doc2["relay1"]; 
@@ -123,7 +127,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
     }
   } 
 //#endif
-  if (strcmp( Subscribedtopic, number_command.c_str() ) == 0) { 
+  if (strcmp( Subscribedtopic, command_number.c_str() ) == 0) { 
     if (doc2.containsKey("starting_power")) { 
       int startingpow = doc2["starting_power"]; 
       if (config.startingpow != startingpow ) {
@@ -162,7 +166,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
     }
   }
 //save
-  if (strcmp( Subscribedtopic, button_command.c_str() ) == 0) { 
+  if (strcmp( Subscribedtopic, command_button.c_str() ) == 0) { 
     if (doc2.containsKey("save")) { 
       if (doc2["save"] == "1" ) {
         logs += "MQTT save command \r\n";
@@ -171,7 +175,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
     }
   }
 //child mode
-  if (strcmp( Subscribedtopic, select_command.c_str() ) == 0) { 
+  if (strcmp( Subscribedtopic, command_select.c_str() ) == 0) { 
     if (doc2.containsKey("child_mode")) { 
       String childmode = doc2["child_mode"]; 
       if (config.mode != doc2["child_mode"] ) {
@@ -181,7 +185,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
       }
     }
   }
-  if (strcmp( Subscribedtopic, save_command.c_str() ) == 0) { 
+  if (strcmp( Subscribedtopic, command_save.c_str() ) == 0) { 
         strlcpy(config.hostname , doc2["hostname"], sizeof(config.hostname));
         config.port = doc2["port"];
         strlcpy(config.Publish , doc2["Publish"], sizeof(config.Publish));
@@ -213,23 +217,9 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
 
 
 //// envoie de commande MQTT 
-void mqtt(String idx, String value)
+void Mqtt_send_DOMOTICZ(String idx, String value)
 {
-
-  if (idx != "0") { // Autant vérifier qu'une seule fois?
-    
-  // Grace a l'ajout de "exp_aft" sur le discovery, 
-  // je préfère envoyer power et temp séparément, à chaque changement de valeur.
-  // MQTT_INTERVAL à affiner, mais OK selon mes tests.
-  // Si pas de valeur publiée dans ce délai, la valeur sur HA passe en indisponible.
-  // Permet de détecter un problème
-
-    // StaticJsonDocument<256> infojson;
-    // infojson["power"] = String(puissance);
-    // infojson["temperature"] = String(celsius);
-    // char json_string[256];
-    // serializeJson(infojson, json_string);
-    // device_dimmer.send2(json_string);
+  if (config.DOMOTICZ) {
     String nvalue = "0" ; 
     if ( value != "0" ) { nvalue = "2" ; }
     String message = "  { \"idx\" : " + idx +" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
@@ -238,8 +228,8 @@ void mqtt(String idx, String value)
     client.loop();
     client.publish(config.Publish, String(message).c_str(), true);      
 
-    String jdompub = String(config.Publish) + "/"+idx ;
-    client.publish(jdompub.c_str() , value.c_str(), true);
+    // String jdompub = String(config.Publish) + "/"+idx ;
+    // client.publish(jdompub.c_str() , value.c_str(), true);
 
     Serial.println("MQTT SENT");
   }
@@ -261,11 +251,6 @@ void child_communication(int delest_power){
 //////////// reconnexion MQTT
 
 void reconnect() {
-  // String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-  // String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-  // String node_id = String("dimmer-") + node_mac; 
-  // String topic = "homeassistant/sensor/"+ node_id +"/status";  
-
   // Loop until we're reconnected
   int timeout = 0; 
   if  (LittleFS.exists("/mqtt.json"))
@@ -278,22 +263,22 @@ void reconnect() {
       // String clientId = "Dimmer";
       // clientId += String(random(0xffff), HEX);
       // Attempt to connect
-      if (client.connect(node_id.c_str(),mqtt_config.username, mqtt_config.password, topic.c_str(), 2, true, "offline")) {       //Connect to MQTT server
+      if (client.connect(node_id.c_str(),mqtt_config.username, mqtt_config.password, String(topic_Xlyric +"status").c_str(), 2, true, "offline")) {       //Connect to MQTT server
     // if (client.connect(clientId.c_str(),mqtt_config.username, mqtt_config.password)) {
         Serial.println("connected");
         logs += "Connected\r\n";
         if (strcmp( config.SubscribePV, "none") != 0 ) {client.subscribe(config.SubscribePV);}
         if (strcmp( config.SubscribeTEMP, "none") != 0 ) {client.subscribe(config.SubscribeTEMP);}
-        client.subscribe(switch_command.c_str());
-        client.subscribe(number_command.c_str());
-        client.subscribe(select_command.c_str());
-        client.subscribe(button_command.c_str());
+        client.subscribe(command_button.c_str());
+        client.subscribe(command_number.c_str());
+        client.subscribe(command_select.c_str());
+        client.subscribe(command_switch.c_str());
 
-        client.publish(String(topic).c_str() , "online", true); // status Online
+        client.publish(String(topic_Xlyric +"status").c_str() , "online", true); // status Online
         
         String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-        String node_id = String("dimmer-") + node_mac; 
-        String save_command = String("sauvegarde/"+ node_id );
+        String node_id = String("Dimmer-") + node_mac; 
+        String save_command = String("Xlyric/sauvegarde/"+ node_id );
         //client.subscribe(save_command.c_str());
 
       } else {

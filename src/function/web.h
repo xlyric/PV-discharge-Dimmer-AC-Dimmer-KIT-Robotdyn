@@ -35,17 +35,17 @@ AsyncWiFiManager wifiManager(&server,&dns);
 
 extern bool AP; 
 
-extern HA device_dimmer; 
-extern HA device_temp; 
-extern HA device_relay1;
-extern HA device_relay2;
-// extern HA device_cooler;
-extern HA device_dimmer_on_off;
-extern HA device_dimmer_child_mode;
-extern HA device_dimmer_maxpow;
-extern HA device_dimmer_minpow;
-extern HA device_dimmer_starting_pow;
-extern HA device_dimmer_maxtemp;
+extern MQTT device_dimmer; 
+extern MQTT device_temp; 
+extern MQTT device_relay1;
+extern MQTT device_relay2;
+// extern MQTT device_cooler;
+extern MQTT device_dimmer_on_off;
+extern MQTT device_dimmer_child_mode;
+extern MQTT device_dimmer_maxpow;
+extern MQTT device_dimmer_minpow;
+extern MQTT device_dimmer_starting_pow;
+extern MQTT device_dimmer_maxtemp;
 
 
 
@@ -369,13 +369,13 @@ String getconfig() {
 
 String getmqtt() {
 
-    String retour =String(config.hostname) + ";" + String(config.Publish) + ";" + String(mqtt_config.username) + ";" + String(mqtt_config.password) + ";" + stringbool(mqtt_config.mqtt)+ ";" + String(config.port) ;
+    String retour =String(config.hostname) + ";" + String(config.Publish) + ";" + String(mqtt_config.username) + ";" + String(mqtt_config.password) + ";" + stringbool(mqtt_config.mqtt)+ ";" + String(config.port)+";"+stringbool(config.HA)+";"+stringbool(config.JEEDOM)+";"+stringbool(config.DOMOTICZ) ;
     return String(retour) ;
   }
 
 String readmqttsave(){
         String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-        String node_id = String("dimmer-") + node_mac; 
+        String node_id = String("Dimmer-") + node_mac; 
         String save_command = String("sauvegarde/"+ node_id );
         client.subscribe(save_command.c_str());
         return String("<html><head><meta http-equiv='refresh' content='5;url=config.html' /></head><body><h1>config restauree, retour au setup dans 5 secondes, pensez a sauvegarder sur la flash </h1></body></html>");
@@ -383,6 +383,10 @@ String readmqttsave(){
 
 String getServermode(String Servermode) {
   if ( Servermode == "MQTT" ) {   mqtt_config.mqtt = !mqtt_config.mqtt; }
+  if ( Servermode == "HA" ) {   config.HA = !config.HA; }
+  if ( Servermode == "JEEDOM" ) {   config.JEEDOM = !config.JEEDOM; }
+  if ( Servermode == "DOMOTICZ" ) {   config.DOMOTICZ = !config.DOMOTICZ; }
+
 return String(Servermode);
 }
 
