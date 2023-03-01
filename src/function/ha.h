@@ -123,6 +123,7 @@ struct MQTT
   private:String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
   private:String node_id = String("Dimmer-") + node_mac; 
   private:String HA_device_declare() { 
+              String IPaddress = WiFi.localIP().toString();
               String info =         "\"dev\": {"
             "\"ids\": \""+ node_id + "\","
             "\"name\": \""+ node_id + "\","
