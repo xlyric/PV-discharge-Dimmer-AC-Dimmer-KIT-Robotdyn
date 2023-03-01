@@ -46,7 +46,7 @@ extern HA device_dimmer_maxpow;
 extern HA device_dimmer_minpow;
 extern HA device_dimmer_starting_pow;
 extern HA device_dimmer_maxtemp;
-
+extern String dimmername;
 
 
 
@@ -222,11 +222,7 @@ void call_pages() {
     logs="197}11}1";
   });
 
-  server.on("/reboot", HTTP_ANY, [](AsyncWebServerRequest *request){
-   // request->send_P(200, "text/plain","Restarting");
-    request->redirect("/");
-    config.restart = true;
-  });
+
 
   server.on("/save", HTTP_ANY, [](AsyncWebServerRequest *request){
       request->send(LittleFS, "/config.json", String(), true);
@@ -354,6 +350,9 @@ String processor(const String& var){
   } 
   if (var == "VERSION"){
     return (VERSION);
+  } 
+  if (var == "NAME"){
+    return (dimmername);
   } 
   return ("N/A");
 } 

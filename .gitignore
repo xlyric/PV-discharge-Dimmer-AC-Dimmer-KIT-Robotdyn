@@ -6,3 +6,5 @@
 lib/README
 test/README
 include/README
+.vscode
+.vscode/extensions.json
