@@ -246,7 +246,7 @@ void mqtt(String idx, String value)
 }
 
 
-//// communication avec carte fille
+//// communication avec carte fille ( HTTP )
 
 void child_communication(int delest_power){
 

@@ -631,10 +631,12 @@ void loop() {
     ESP.restart();
   }
 
-  if (!client.connected()) {
-    reconnect();
+  if ( mqtt_config.mqtt) {
+    if (!client.connected() ) {
+      reconnect();
+    }
+    client.loop();
   }
-  client.loop();
 
 
   if (config.restart) {
