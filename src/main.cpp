@@ -192,7 +192,7 @@ DeviceAddress insideThermometer;
   //float celsius = 0.00;
   float previous_celsius = 0.00;
   byte security = 0;
-  int refresh = 60;
+  int refresh = 600; // de 60 à 600, environ 1 fois / minute
   int refreshcount = 0; 
 
 /***************************
@@ -579,7 +579,7 @@ void setup() {
     client.setCallback(callback);
     reconnect();
 
-    client.setBufferSize(1024);
+    client.setBufferSize(512); // test bug MQTT
     if (config.HA) {
       device_dimmer_on_off.HA_discovery();
       device_dimmer.HA_discovery();
@@ -869,7 +869,7 @@ float CheckTemperature(String label, byte deviceAddress[12]){
   } else {
     Serial.print(" Temp C: ");
     Serial.println(tempC);
-    logs += "Dallas temp : "+ String(tempC) +"\r\n";
+    // logs += "Dallas temp : "+ String(tempC) +"\r\n";
     return (tempC); 
    
     
