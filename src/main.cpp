@@ -168,8 +168,7 @@ int timesync_refresh = 120;
 void dallaspresent ();
 float CheckTemperature(String label, byte deviceAddress[12]);
 #define TEMPERATURE_PRECISION 10
-void dallaspresent ();
-float CheckTemperature(String label, byte deviceAddress[12]);
+
 
 ////////////////////////////////////
 ///     AP MODE 
@@ -574,39 +573,40 @@ void setup() {
     client.setCallback(callback);
     reconnect();
 
-    client.setBufferSize(1024);
-    device_dimmer_on_off.discovery();
-    device_dimmer_on_off.send(String(config.dimmer_on_off));
+    client.setBufferSize(768); // 1024 -> 768 
+        if (mqtt_config.HA){
+        device_dimmer_on_off.discovery();
+        device_dimmer_on_off.send(String(config.dimmer_on_off));
 
-    device_dimmer.discovery();
-    device_dimmer.send(String(sysvar.puissance));
+        device_dimmer.discovery();
+        device_dimmer.send(String(sysvar.puissance));
 
-    device_cooler.discovery();
-    device_cooler.send(stringbool(false));
+        device_cooler.discovery();
+        device_cooler.send(stringbool(false));
 
-//  device_temp.discovery(); // discovery fait à la 1ere réception sonde ou mqtt.
-    #ifdef RELAY1
-      device_relay1.discovery();
-      device_relay1.send(String(0));
-    #endif
-    #ifdef RELAY2
-      device_relay2.discovery();
-      device_relay2.send(String(0));
-    #endif
-    device_dimmer_starting_pow.discovery();
-    device_dimmer_starting_pow.send(String(config.startingpow));
+    //  device_temp.discovery(); // discovery fait à la 1ere réception sonde ou mqtt.
+        #ifdef RELAY1
+          device_relay1.discovery();
+          device_relay1.send(String(0));
+        #endif
+        #ifdef RELAY2
+          device_relay2.discovery();
+          device_relay2.send(String(0));
+        #endif
+        device_dimmer_starting_pow.discovery();
+        device_dimmer_starting_pow.send(String(config.startingpow));
 
-    device_dimmer_minpow.discovery();
-    device_dimmer_minpow.send(String(config.minpow));
+        device_dimmer_minpow.discovery();
+        device_dimmer_minpow.send(String(config.minpow));
 
-    device_dimmer_maxpow.discovery();
-    device_dimmer_maxpow.send(String(config.maxpow));
+        device_dimmer_maxpow.discovery();
+        device_dimmer_maxpow.send(String(config.maxpow));
 
-    device_dimmer_child_mode.discovery();
-    device_dimmer_child_mode.send(String(config.mode));
+        device_dimmer_child_mode.discovery();
+        device_dimmer_child_mode.send(String(config.mode));
 
-    device_dimmer_save.discovery();
-
+        device_dimmer_save.discovery();
+        }
   }
   
   #ifdef  SSR
@@ -660,7 +660,7 @@ void loop() {
     //// Trigger
       if ( sysvar.celsius <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
         security = 0 ;
-                if (!AP && mqtt_config.mqtt) { device_dimmer_alarm_temp.send(stringbool(security)); }
+                if (!AP && mqtt_config.mqtt && mqtt_config.HA) { device_dimmer_alarm_temp.send(stringbool(security)); }
         sysvar.change = 1 ;
       }
       else {
@@ -718,40 +718,22 @@ void loop() {
         if (config.dimmer_on_off == 1){
           digitalWrite(COOLER, HIGH); // start cooler 
           Timer_Cooler = millis();
-          if (!AP && mqtt_config.mqtt) {device_cooler.send(stringbool(true));}
+          if (!AP && mqtt_config.mqtt && mqtt_config.HA) {device_cooler.send(stringbool(true));}
           logs += "Start Cooler\r\n";
         }
         
-      // if ( config.IDX != 0 ) {
-      //   if ( sysvar.puissance > config.maxpow )  
-      //   {
-      //     mqtt(String(config.IDX), String(config.maxpow));  // remonté MQTT de la commande max
-      //     //mqtt_HA (String(sysvar.celsius),String(config.maxpow));
-      //     //device_dimmer.send(String(sysvar.puissance));
-      //   }
-      //   else 
-      //   {
-      //     mqtt(String(config.IDX), String(sysvar.puissance));  // remonté MQTT de la commande réelle
-      //     //mqtt_HA (String(sysvar.celsius),String(sysvar.puissance));
-      //     //device_dimmer.send(String(sysvar.puissance));
-      //   }
-        
-      // }
-      // //device_dimmer.send(String(puissance));
-
-
       if (!AP && mqtt_config.mqtt) { 
         if (config.dimmer_on_off == 0){
           mqtt(String(config.IDX), String("0"));  // remonté MQTT de la commande 0
-          device_dimmer.send(String("0"));  // remonté MQTT HA de la commande 0
+          if (mqtt_config.HA) {device_dimmer.send(String("0")); }  // remonté MQTT HA de la commande 0 
         }
         else if ( sysvar.puissance > config.maxpow ) {
           mqtt(String(config.IDX), String(config.maxpow));  // remonté MQTT de la commande max
-          device_dimmer.send(String(config.maxpow));  // remonté MQTT HA de la commande max
+          if (mqtt_config.HA) {device_dimmer.send(String(config.maxpow));}  // remonté MQTT HA de la commande max
         }
         else {
           mqtt(String(config.IDX), String(sysvar.puissance)); // remonté MQTT de la commande réelle
-          device_dimmer.send(String(sysvar.puissance)); // remonté MQTT HA de la commande réelle
+          if (mqtt_config.HA) {device_dimmer.send(String(sysvar.puissance));} // remonté MQTT HA de la commande réelle
         }
       }
     
@@ -803,6 +785,7 @@ if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < c
 
     if (refreshcount == 1 ) {
     sensors.requestTemperatures();
+  
     sysvar.celsius=CheckTemperature("Inside : ", addr); 
     }
 
@@ -821,7 +804,7 @@ if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < c
        mqtt(String(config.IDXTemp), String(sysvar.celsius));  /// remonté MQTT de la température
       //mqtt_HA (String(sysvar.celsius),String(sysvar.puissance));
       //device_temp.send(String(sysvar.celsius));
-      if (!discovery_temp) {
+      if (!discovery_temp && mqtt_config.HA) {
         discovery_temp = true;
         device_dimmer_alarm_temp.discovery();
         device_temp.discovery();
@@ -830,7 +813,7 @@ if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < c
         device_dimmer_maxtemp.send(String(config.maxtemp));
         
       }
-      device_temp.send(String(sysvar.celsius));
+      if ( mqtt_config.HA ) { device_temp.send(String(sysvar.celsius)); }
 
     }
       refreshcount = 0; 
@@ -846,7 +829,7 @@ if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < c
 if ( sysvar.celsius >= config.maxtemp && security == 0 ) {
   security = 1 ; 
   if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance ); } // si mode délest, envoi du surplus
-  if (!AP && mqtt_config.mqtt) { device_dimmer_alarm_temp.send(stringbool(security)); }
+  if (!AP && mqtt_config.mqtt && mqtt_config.HA ) { device_dimmer_alarm_temp.send(stringbool(security)); }
 }
 
  delay(100);  // 24/01/2023 changement 500 à 100ms pour plus de réactivité
@@ -865,8 +848,14 @@ float CheckTemperature(String label, byte deviceAddress[12]){
   float tempC = sensors.getTempC(deviceAddress);
   Serial.print(label);
   if ( (tempC == -127.00) || (tempC == -255.00) ) {
-    Serial.print("Error getting temperature");
-    logs += "Dallas on error\r\n";
+    
+    //// cas d'une sonde trop longue à préparer les valeurs 
+    delay(187); /// attente de 187ms ( temps de réponse de la sonde )
+    tempC = sensors.getTempC(deviceAddress);
+      if ( (tempC == -127.00) || (tempC == -255.00) ) {
+      Serial.print("Error getting temperature");
+      logs += "Dallas on error\r\n";
+      }
   } else {
     Serial.print(" Temp C: ");
     Serial.println(tempC);

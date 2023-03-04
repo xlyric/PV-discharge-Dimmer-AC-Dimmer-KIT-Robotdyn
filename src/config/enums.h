@@ -32,6 +32,9 @@ struct Config {
 
 struct Mqtt {
   public:bool mqtt;
+  public:bool HA;
+  public:bool jeedom;
+  public:bool domoticz;
   public:char username[50];
   public:char password[50];
 };

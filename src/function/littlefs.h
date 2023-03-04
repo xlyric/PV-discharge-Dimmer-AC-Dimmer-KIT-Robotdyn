@@ -161,6 +161,10 @@ bool loadmqtt(const char *filename, Mqtt &mqtt_config) {
           doc["MQTT_PASSWORD"] | "", // <- source
           sizeof(mqtt_config.password));         // <- destination's capacity
   mqtt_config.mqtt = doc["mqtt"] | true;
+  mqtt_config.HA = doc["HA"] | true;
+  mqtt_config.domoticz = doc["domoticz"] | true;
+  mqtt_config.jeedom = doc["jeedom"] | true;
+
   configFile.close();
 
 return true;    
@@ -184,6 +188,9 @@ void savemqtt(const char *filename, const Mqtt &mqtt_config) {
   doc["MQTT_USER"] = mqtt_config.username;
   doc["MQTT_PASSWORD"] = mqtt_config.password;
   doc["mqtt"] = mqtt_config.mqtt;
+  doc["domoticz"] = mqtt_config.domoticz;
+  doc["HA"] = mqtt_config.HA;
+  doc["jeedom"] = mqtt_config.jeedom;
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {
     Serial.println(F("Failed to write to file in function Save configuration "));

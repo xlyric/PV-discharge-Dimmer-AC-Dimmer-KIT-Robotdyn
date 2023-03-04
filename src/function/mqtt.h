@@ -230,17 +230,19 @@ void mqtt(String idx, String value)
     // char json_string[256];
     // serializeJson(infojson, json_string);
     // device_dimmer.send2(json_string);
-    String nvalue = "0" ; 
-    if ( value != "0" ) { nvalue = "2" ; }
-    String message = "  { \"idx\" : " + idx +" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
+    
+    if (mqtt_config.domoticz){
+      String nvalue = "0" ; 
+      if ( value != "0" ) { nvalue = "2" ; }
+      String message = "  { \"idx\" : " + idx +" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
+      client.loop();
+      client.publish(config.Publish, String(message).c_str(), true);      
+    }
 
-
-    client.loop();
-    client.publish(config.Publish, String(message).c_str(), true);      
-
-    String jdompub = String(config.Publish) + "/"+idx ;
-    client.publish(jdompub.c_str() , value.c_str(), true);
-
+    if (mqtt_config.jeedom){
+      String jdompub = String(config.Publish) + "/"+idx ;
+      client.publish(jdompub.c_str() , value.c_str(), true);
+    }
     Serial.println("MQTT SENT");
   }
 }
