@@ -402,9 +402,27 @@ void setup() {
     //***********************************
   Serial.print("start Wifiautoconnect");
   loginit +="start Wifiautoconnect\r\n"; 
+
+  /// préparation configuration IP fixe 
+  /*char IP_Address[16] ="";
+  char mask[16] ="";
+  char gateway[16] ="";
+  AsyncWiFiManagerParameter custom_IP_Address("server", "IP", IP_Address, 16);
+  wifiManager.addParameter(&custom_IP_Address);
+  AsyncWiFiManagerParameter custom_IP_mask("mask", "mask", mask, 16);
+  wifiManager.addParameter(&custom_IP_mask);
+  AsyncWiFiManagerParameter custom_IP_gateway("gateway", "gateway", gateway, 16);
+  wifiManager.addParameter(&custom_IP_gateway);
+  
+ */
   wifiManager.autoConnect("dimmer");
   Serial.print("end Wifiautoconnect");
-
+/*
+  strcpy(IP_Address, custom_IP_Address.getValue());
+  strcpy(mask, custom_IP_mask.getValue());
+  strcpy(gateway, custom_IP_gateway.getValue());
+*/
+  Serial.print("static adress: " + String(IP_Address) + " mask: " + String(mask) + " GW: " + String(gateway));
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -624,6 +642,11 @@ bool alerte=false;
 /// LOOP 
 ///
 void loop() {
+
+  if (logs.length() > LOG_MAX_STRING_LENGTH ) { 
+   logs="197}11}1";
+  }
+
 
   if (WiFi.status() != WL_CONNECTED) {
     delay(500);

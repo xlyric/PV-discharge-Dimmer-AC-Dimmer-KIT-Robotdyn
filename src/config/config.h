@@ -10,7 +10,7 @@
 //#define MQTT_USER ""   //// not used, use mqtt.json file  --> to delete 01/23
 //#define MQTT_PASSWORD ""  //// not used, use mqtt.json file --> to delete 01/23
 
-#define VERSION "Version 20230302" 
+#define VERSION "Version 20230305" 
 
 /// default configuration for Dimmer with Power supply and D1 Mini on the board ( default : D0 - D1 )
 #ifdef  POWERSUPPLY
@@ -81,5 +81,6 @@
 #define TRIGGER 10   /// 
 #define TIMERDELAY 5 // delay before switch off
 
+#define LOG_MAX_STRING_LENGTH 254 // taille max des logs stockées
 #endif
 
