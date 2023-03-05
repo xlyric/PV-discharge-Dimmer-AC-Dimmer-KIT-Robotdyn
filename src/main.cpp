@@ -421,8 +421,10 @@ void setup() {
   strcpy(IP_Address, custom_IP_Address.getValue());
   strcpy(mask, custom_IP_mask.getValue());
   strcpy(gateway, custom_IP_gateway.getValue());
-*/
+
   Serial.print("static adress: " + String(IP_Address) + " mask: " + String(mask) + " GW: " + String(gateway));
+  */
+ 
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
