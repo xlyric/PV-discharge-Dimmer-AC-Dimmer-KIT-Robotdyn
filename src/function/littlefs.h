@@ -18,11 +18,23 @@
 
 const char *mqtt_conf = "/mqtt.json";
 const char *filename_conf = "/config.json";
+const char *wifi_conf = "/wifi.json";
+
 extern Config config; 
 extern String loginit;
 extern String logs; 
 extern String node_mac;
 extern String node_id; 
+extern Wifi_struct  wifi_config_fixe; 
+
+//flag for saving data
+extern bool shouldSaveConfig ;
+
+//callback notifying us of the need to save config
+void saveConfigCallback () {
+  Serial.println("Should save config");
+  shouldSaveConfig = true;
+}
 
 // Loads the configuration from a file
 void loadConfiguration(const char *filename, Config &config) {
@@ -32,12 +44,13 @@ void loadConfiguration(const char *filename, Config &config) {
    // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/v6/assistant to compute the capacity.
-  StaticJsonDocument<2048> doc;
+  //StaticJsonDocument<1024> doc;
+  DynamicJsonDocument doc(2048);
 
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(doc, configFile);
   if (error) {
-    Serial.println(F("Failed to read file, using default configuration"));
+    Serial.println(F("Failed to read configuration file, using default configuration"));
     loginit +="Failed to read file config File, use default\r\n"; 
     }
   // Copy values from the JsonDocument to the Config
@@ -93,7 +106,8 @@ void saveConfiguration(const char *filename, const Config &config) {
   // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/assistant to compute the capacity.
-  StaticJsonDocument<1024> doc;
+  //StaticJsonDocument<1024> doc;
+  DynamicJsonDocument doc(2048);
 
   // Set the values in the document
   doc["hostname"] = config.hostname;
@@ -141,7 +155,7 @@ bool loadmqtt(const char *filename, Mqtt &mqtt_config) {
   // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/v6/assistant to compute the capacity.
-  StaticJsonDocument<512> doc;
+  DynamicJsonDocument doc(512);
 
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(doc, configFile);
@@ -182,7 +196,7 @@ void savemqtt(const char *filename, const Mqtt &mqtt_config) {
     // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/assistant to compute the capacity.
-  StaticJsonDocument<1024> doc;
+  DynamicJsonDocument doc(512);
 
   // Set the values in the document
   doc["MQTT_USER"] = mqtt_config.username;
@@ -195,6 +209,74 @@ void savemqtt(const char *filename, const Mqtt &mqtt_config) {
   if (serializeJson(doc, configFile) == 0) {
     Serial.println(F("Failed to write to file in function Save configuration "));
     logs += "Failed to write MQTT config\r\n";
+  }
+
+  // Close the file
+  configFile.close();
+}
+
+
+//////////////wifi ip fixe 
+
+bool loadwifiIP(const char *wifi_conf, Wifi_struct &wifi_config_fixe) {
+  // Open file for reading
+  File configFile = LittleFS.open(wifi_conf, "r");
+
+      // Allocate a temporary JsonDocument
+      // Don't forget to change the capacity to match your requirements.
+      // Use arduinojson.org/v6/assistant to compute the capacity.
+      DynamicJsonDocument doc(256);
+
+      // Deserialize the JSON document
+      DeserializationError error = deserializeJson(doc, configFile);
+      if (error) {
+        Serial.println(F("Failed to read wifi config"));
+       // return false;
+      }
+
+      
+      // Copy values from the JsonDocument to the Config
+      
+      strlcpy(wifi_config_fixe.static_ip,                  // <- destination
+              doc["IP"] | "", // <- source
+              sizeof(wifi_config_fixe.static_ip));         // <- destination's capacity
+      
+      strlcpy(wifi_config_fixe.static_sn,                  // <- destination
+              doc["mask"] | "255.255.255.0", // <- source
+              sizeof(wifi_config_fixe.static_sn));         // <- destination's capacity
+
+      strlcpy(wifi_config_fixe.static_gw,                  // <- destination
+              doc["gateway"] | "192.168.1.254", // <- source
+              sizeof(wifi_config_fixe.static_gw));         // <- destination's capacity
+
+      configFile.close();
+
+return true;    
+}
+
+void savewifiIP(const char *wifi_conf, Wifi_struct &wifi_config_fixe) {
+  
+  // Open file for writing
+   File configFile = LittleFS.open(wifi_conf, "w");
+  if (!configFile) {
+    Serial.println(F("Failed to open config file for writing in function Save configuration"));
+    return;
+  } 
+
+    // Allocate a temporary JsonDocument
+  // Don't forget to change the capacity to match your requirements.
+  // Use arduinojson.org/assistant to compute the capacity.
+  DynamicJsonDocument doc(256);
+
+  // Set the values in the document
+  doc["IP"] = wifi_config_fixe.static_ip;
+  doc["mask"] = wifi_config_fixe.static_sn;
+  doc["gateway"] = wifi_config_fixe.static_gw;
+
+  // Serialize JSON to file
+  if (serializeJson(doc, configFile) == 0) {
+    Serial.println(F("Failed to write to file in function Save configuration "));
+    logs += "Failed to write wifi config\r\n";
   }
 
   // Close the file

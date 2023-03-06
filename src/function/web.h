@@ -189,6 +189,10 @@ void call_pages() {
     request->send(LittleFS, "/mqtt.json", "application/json");
   });
 
+  server.on("/wifi.json", HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->send(LittleFS, "/wifi.json", "application/json");
+  });
+
 //// compressé
   server.on("/mqtt.html", HTTP_ANY, [](AsyncWebServerRequest *request){
     AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/mqtt.html.gz", "text/html");
