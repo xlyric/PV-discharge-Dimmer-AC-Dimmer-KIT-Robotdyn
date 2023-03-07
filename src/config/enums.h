@@ -35,8 +35,17 @@ struct Config {
 
 struct Mqtt {
   public:bool mqtt;
+  // public:bool HA;
+  // public:bool jeedom;
+  // public:bool domoticz;
   public:char username[50];
   public:char password[50];
+};
+
+struct Wifi_struct {
+  public:char static_ip[16];
+  public:char static_sn[16];
+  public:char static_gw[16];
 };
 
 ///variables globales 

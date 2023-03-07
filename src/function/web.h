@@ -2,7 +2,8 @@
 #define WEB_FUNCTIONS
 
 // #include <ESP8266WiFi.h>
-#include <ESPAsyncWiFiManager.h>    
+#include <ESPAsyncWiFiManager.h>  
+
 // #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 // #include <ESP8266HTTPClient.h> 
@@ -186,6 +187,10 @@ void call_pages() {
   
   server.on("/mqtt.json", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send(LittleFS, "/mqtt.json", "application/json");
+  });
+
+  server.on("/wifi.json", HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->send(LittleFS, "/wifi.json", "application/json");
   });
 
 //// compressé

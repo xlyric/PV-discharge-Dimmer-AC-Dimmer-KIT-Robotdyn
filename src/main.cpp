@@ -138,6 +138,8 @@ PubSubClient client(domotic_client);
 //AsyncWebServer server(80);
 DNSServer dns;
 HTTPClient http;
+bool shouldSaveConfig = false;
+Wifi_struct wifi_config_fixe; 
 
 void reconnect();
 //void Mqtt_HA_hello();
@@ -168,6 +170,7 @@ int timesync_refresh = 120;
 void dallaspresent ();
 float CheckTemperature(String label, byte deviceAddress[12]);
 #define TEMPERATURE_PRECISION 10
+
 
 ////////////////////////////////////
 ///     AP MODE 
@@ -265,14 +268,6 @@ int outVal = 0;
 
 unsigned long Timer_Cooler;
 
-
-/*String resetwifi() {
-  wifiManager.resetSettings();
-  String configweb;  
-  configweb = "reset wifi information" ;
-  return String(configweb);
-}*/
-
 /// fonction pour mettre en pause ou allumer le dimmer 
 void dimmer_on()
 {
@@ -306,7 +301,7 @@ void dimmer_off()
   #endif
 }
 
-
+IPAddress _ip,_gw,_sn;
 
 
     //***********************************
@@ -393,7 +388,10 @@ void setup() {
   loginit +="apply config\r\n"; 
   saveConfiguration(filename_conf, config);
 
+  Serial.println(F("Loading mqtt_conf configuration..."));
   loadmqtt(mqtt_conf, mqtt_config);
+  Serial.println(F("Loading wifi configuration..."));
+  loadwifiIP(wifi_conf, wifi_config_fixe);
  
   
     //***********************************
@@ -401,8 +399,39 @@ void setup() {
     //***********************************
   Serial.print("start Wifiautoconnect");
   loginit +="start Wifiautoconnect\r\n"; 
+
+   // préparation  configuration IP fixe 
+
+  AsyncWiFiManagerParameter custom_IP_Address("server", "IP", wifi_config_fixe.static_ip, 16);
+  wifiManager.addParameter(&custom_IP_Address);
+  AsyncWiFiManagerParameter custom_IP_gateway("gateway", "gateway", wifi_config_fixe.static_gw, 16);
+  wifiManager.addParameter(&custom_IP_gateway);
+  AsyncWiFiManagerParameter custom_IP_mask("mask", "mask", wifi_config_fixe.static_sn, 16);
+  wifiManager.addParameter(&custom_IP_mask);
+
+    _ip.fromString(wifi_config_fixe.static_ip);
+    _gw.fromString(wifi_config_fixe.static_gw);
+    _sn.fromString(wifi_config_fixe.static_sn);
+
+    if ( !strcmp(wifi_config_fixe.static_ip, "") == 0) {
+          //set static ip
+            
+          wifiManager.setSTAStaticIPConfig(_ip, _gw, _sn);
+          Serial.print(String(wifi_config_fixe.static_ip));
+  }
+
   wifiManager.autoConnect("dimmer");
   Serial.print("end Wifiautoconnect");
+  wifiManager.setSaveConfigCallback(saveConfigCallback);
+
+      strcpy(wifi_config_fixe.static_ip, custom_IP_Address.getValue());
+      strcpy(wifi_config_fixe.static_sn, custom_IP_mask.getValue());
+      strcpy(wifi_config_fixe.static_gw, custom_IP_gateway.getValue());
+
+        Serial.println("static adress: " + String(wifi_config_fixe.static_ip) + " mask: " + String(wifi_config_fixe.static_sn) + " GW: " + String(wifi_config_fixe.static_gw));
+
+      savewifiIP(wifi_conf, wifi_config_fixe);
+  
 
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
@@ -410,7 +439,20 @@ void setup() {
     Serial.print(".");
   }
 
+ 
+   /// restart si la configuration OP static est différente ip affectée suite changement ip Autoconf
+  if ( !strcmp(wifi_config_fixe.static_ip, "" ) == 0 )  {
+         char IP[] = "xxx.xxx.xxx.xxx"; 
+         IPAddress ip = WiFi.localIP();
+         ip.toString().toCharArray(IP, 16);
+        if (!strcmp(wifi_config_fixe.static_ip,IP) == 0) {
+      Serial.println(wifi_config_fixe.static_ip);
+      Serial.println(WiFi.localIP());
 
+      Serial.print("Application de la nouvelle configuration Ip   ");
+      ESP.restart();
+      }
+  }
   //Si connexion affichage info dans console
   Serial.println("");
   Serial.print("Connection ok sur le reseau :  ");
@@ -623,9 +665,11 @@ bool alerte=false;
 /// LOOP 
 ///
 void loop() {
+
   if (logs.length() > LOG_MAX_STRING_LENGTH ) { 
    logs="197}11}1";
   }
+
 
   if (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -806,6 +850,7 @@ if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance <= 
 
     if (refreshcount == 1 ) {
     sensors.requestTemperatures();
+  
     sysvar.celsius=CheckTemperature("Inside : ", addr); 
     }
 
@@ -868,8 +913,14 @@ float CheckTemperature(String label, byte deviceAddress[12]){
   float tempC = sensors.getTempC(deviceAddress);
   Serial.print(label);
   if ( (tempC == -127.00) || (tempC == -255.00) ) {
-    Serial.print("Error getting temperature");
-    logs += "Dallas on error\r\n";
+    
+    //// cas d'une sonde trop longue à préparer les valeurs 
+    delay(187); /// attente de 187ms ( temps de réponse de la sonde )
+    tempC = sensors.getTempC(deviceAddress);
+      if ( (tempC == -127.00) || (tempC == -255.00) ) {
+      Serial.print("Error getting temperature");
+      logs += "Dallas on error\r\n";
+      }
   } else {
     Serial.print(" Temp C: ");
     Serial.println(tempC);
