@@ -1,13 +1,8 @@
-# SCRIPT TO GZIP CRITICAL FILES FOR ACCELERATED WEBSERVING
-# see also https://community.platformio.org/t/question-esp32-compress-files-in-data-to-gzip-before-upload-possible-to-spiffs/6274/10
-#
-
-Import( 'env', 'projenv' )
-
+Import('env', 'projenv')
 
 env.Replace(
-    PROJECT_DATA_DIR='data',
-    PROJECTDATA_DIR="$PROJECT_DATA_DIR",  # legacy for dev/platform
+    PROJECTDATA_DIR='data',
+#     PROJECT_DIR='data_src',
 )
 
 import os
@@ -15,77 +10,71 @@ import gzip
 import shutil
 import glob
 
-# HELPER TO GZIP A FILE
 def gzip_file( src_path, dst_path ):
     with open( src_path, 'rb' ) as src, gzip.open( dst_path, 'wb' ) as dst:
         for chunk in iter( lambda: src.read(4096), b"" ):
             dst.write( chunk )
 
-# GZIP DEFINED FILES FROM 'data' DIR to 'data/gzip/' DIR
-def gzip_webfiles( source, target, env ):
-    
-    # FILETYPES / SUFFIXES WHICh NEED TO BE GZIPPED
+
+def prepare_www_files(source, target, env):
+    #WARNING -  this script will DELETE your 'data' dir and recreate an empty one to copy/gzip files from 'data_src'
+    #           so make sure to edit your files in 'data_src' folder as changes madt to files in 'data' woll be LOST
+    #           
+    #           If 'data_src' dir doesn't exist, and 'data' dir is found, the script will autimatically
+    #           rename 'data' to 'data_src
+
+
+    #add filetypes (extensions only) to be gzipped before uploading. Everything else will be copied directly
+    filetypes_to_gzip = ['js', 'html']
     source_file_prefix = '_'
-    filetypes_to_gzip = [ 'css', 'html' ]
-
-    print( '\nGZIP: INITIATED GZIP FOR SPIFFS...\n' )
-    GZIP_DIR_NAME = 'gzip'
 
 
-    data_dir_path = 'data' 
-    #gzip_dir_path = os.path.join( data_dir_path, GZIP_DIR_NAME )
-
-    # CHECK DATA DIR
-    if not os.path.exists( data_dir_path ):
-        print( 'GZIP: DATA DIRECTORY MISSING AT PATH: ' + data_dir_path )
-        print( 'GZIP: PLEASE CREATE THE DIRECTORY FIRST (ABORTING)' )
-        print( 'GZIP: FAILURE / ABORTED' )
-        return
     
-    # CHECK GZIP DIR
-    # if not os.path.exists( gzip_dir_path ):
-    #     print( 'GZIP: GZIP DIRECTORY MISSING AT PATH: ' + gzip_dir_path )
-    #     print( 'GZIP: TRYING TO CREATE IT...' )
-    #     try:
-    #         os.mkdir( gzip_dir_path )
-    #     except Exception as e:
-    #         print( 'GZIP: FAILED TO CREATE DIRECTORY: ' + gzip_dir_path )
-    #         # print( 'GZIP: EXCEPTION... ' + str( e ) )
-    #         print( 'GZIP: PLEASE CREATE THE DIRECTORY FIRST (ABORTING)' )
-    #         print( 'GZIP: FAILURE / ABORTED' )
-    #         return
+    print('[COPY/GZIP DATA FILES]')
 
-    # DETERMINE FILES TO COMPRESS
+    data_dir = env.get('PROJECTDATA_DIR')
+    data_src_dir = os.path.join(env.get('PROJECT_DIR'), 'data_src')
+
+    if(os.path.exists(data_dir) and not os.path.exists(data_src_dir) ):
+        print('  "data" dir exists, "data_src" not found.')
+        print('  renaming "' + data_dir + '" to "' + data_src_dir + '"')
+        os.rename(data_dir, data_src_dir)
+
+    if(os.path.exists(data_dir)):
+        print('  Deleting data dir ' + data_dir)
+        shutil.rmtree(data_dir)
+
+    print('  Re-creating empty data dir ' + data_dir)
+    os.mkdir(data_dir)
+
     files_to_gzip = []
     for extension in filetypes_to_gzip:
-        match_str = source_file_prefix + '*.'
-        files_to_gzip.extend( glob.glob( os.path.join( data_dir_path, match_str + extension ) ) )
+        files_to_gzip.extend(glob.glob(os.path.join(data_src_dir, '**', source_file_prefix + '*.' + extension), recursive=True))
     
-    # print( 'GZIP: GZIPPING FILES... {}\n'.format( files_to_gzip ) )
+    print('  files to gzip: ' + str(files_to_gzip))
 
-    # COMPRESS AND MOVE FILES
-    was_error = False
-    try:
-        for source_file_path in files_to_gzip:
-            print( 'GZIP: ZIPPING... ' + source_file_path )
-            base_file_path = source_file_path.replace( source_file_prefix, '' )
-            target_file_path = os.path.join( data_dir_path, os.path.basename( base_file_path ) + '.gz' )
-            # CHECK IF FILE ALREADY EXISTS
-            if os.path.exists( target_file_path ):
-                print( 'GZIP: REMOVING... ' + target_file_path )
-                os.remove( target_file_path )
+    all_files = glob.glob(os.path.join(data_src_dir, '**', '*.*'), recursive=True)
+    files_to_copy = list(set(all_files) - set(files_to_gzip))
 
-            # print( 'GZIP: GZIPPING FILE...\n' + source_file_path + ' TO...\n' + target_file_path + "\n\n" )
-            print( 'GZIP: GZIPPED... ' + target_file_path + "\n" )
-            gzip_file( source_file_path, target_file_path )
-    except IOError as e:
-        was_error = True
-        print( 'GZIP: FAILED TO COMPRESS FILE: ' + source_file_path )
-        # print( 'GZIP: EXCEPTION... {}'.format( e ) )
-    if was_error:
-        print( 'GZIP: FAILURE/INCOMPLETE.\n' )
-    else:
-        print( 'GZIP: SUCCESS/COMPRESSED.\n' )
+    print('  files to copy: ' + str(files_to_copy))
 
-# IMPORTANT, this needs to be added to call the routine
-env.AddPreAction( '$BUILD_DIR/spiffs.bin', gzip_webfiles )
+    for file in files_to_copy:
+        print('  Copying file: ' + file + ' to data dir')
+        base_file_path = file.replace( data_src_dir, data_dir)
+        os.makedirs(os.path.dirname(base_file_path), exist_ok=True)
+        shutil.copy(file, base_file_path)
+    
+    for file in files_to_gzip:
+        print('  GZipping file: ' + file + ' to data dir')
+
+        base_file_path = file.replace( source_file_prefix, '' )
+        base_file_path = base_file_path.replace( data_src_dir, data_dir)
+        target_file_path = os.path.join( data_dir, os.path.basename( base_file_path ) + '.gz' )
+        gzip_file( file, target_file_path )
+
+        # with open(file) as src, gzip.open(os.path.join(data_dir, os.path.basename(file.replace( source_file_prefix, '' )) + '.gz'), 'wb') as dst:        
+        #     dst.writelines(src)
+
+    print('[/COPY/GZIP DATA FILES]')
+    
+env.AddPreAction('$BUILD_DIR/spiffs.bin', prepare_www_files)

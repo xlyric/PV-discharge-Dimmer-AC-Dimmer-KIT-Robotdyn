@@ -168,8 +168,6 @@ int timesync_refresh = 120;
 void dallaspresent ();
 float CheckTemperature(String label, byte deviceAddress[12]);
 #define TEMPERATURE_PRECISION 10
-void dallaspresent ();
-float CheckTemperature(String label, byte deviceAddress[12]);
 
 ////////////////////////////////////
 ///     AP MODE 
@@ -579,7 +577,7 @@ void setup() {
     client.setCallback(callback);
     reconnect();
 
-    client.setBufferSize(512); // test bug MQTT
+    client.setBufferSize(768); // test bug MQTT
     if (config.HA) {
       device_dimmer_on_off.HA_discovery();
       device_dimmer.HA_discovery();
@@ -625,6 +623,9 @@ bool alerte=false;
 /// LOOP 
 ///
 void loop() {
+  if (logs.length() > LOG_MAX_STRING_LENGTH ) { 
+   logs="197}11}1";
+  }
 
   if (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -632,10 +633,13 @@ void loop() {
     ESP.restart();
   }
 
-  if (!client.connected()) {
-    reconnect();
+  if ( mqtt_config.mqtt) {
+    if (!client.connected() ) {
+      reconnect();
+    }
+    client.loop();
+    // delay(10);  // <- fixes some issues with WiFi stability
   }
-  client.loop();
 
 
   if (config.restart) {
@@ -791,7 +795,7 @@ void loop() {
 }
     }
   }
-if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < config.minpow) && digitalRead(COOLER) == HIGH ) {   // cut cooler 
+if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance <= config.minpow) && digitalRead(COOLER) == HIGH ) {   // cut cooler 
   digitalWrite(COOLER, LOW); 
   if (!AP && mqtt_config.mqtt) { device_cooler.send(stringboolMQTT(false));}
 }

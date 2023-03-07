@@ -1,1 +1,0 @@
-{"hostname":"192.168.1.22","port":1883,"Publish":"domoticz/in","IDXTemp":200,"maxtemp":60,"IDXAlarme":202,"IDX":201,"startingpow":0,"minpow":5,"maxpow":50,"child":"192.168.1.20","mode":"off","SubscribePV":"homeassistant/sensor/PvRouter-aaaa/statedimmer","SubscribeTEMP":"homeassistant/sensor/dimmer-aaaa/state"}

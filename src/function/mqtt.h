@@ -228,6 +228,8 @@ void Mqtt_send_DOMOTICZ(String idx, String value)
 
 
     client.loop();
+    // delay(10);  // <- fixes some issues with WiFi stability
+
     client.publish(config.Publish, String(message).c_str(), true);      
 
     // String jdompub = String(config.Publish) + "/"+idx ;
@@ -238,7 +240,7 @@ void Mqtt_send_DOMOTICZ(String idx, String value)
 }
 
 
-//// communication avec carte fille
+//// communication avec carte fille ( HTTP )
 
 void child_communication(int delest_power){
 
