@@ -85,6 +85,7 @@ void loadConfiguration(const char *filename, Config &config) {
   config.HA = doc["HA"] | true; 
   config.JEEDOM = doc["JEEDOM"] | true; 
   config.DOMOTICZ = doc["DOMOTICZ"] | true; 
+  config.PVROUTER = doc["PVROUTER"] | "mqtt"; 
 
   configFile.close();
   
@@ -131,6 +132,8 @@ void saveConfiguration(const char *filename, const Config &config) {
   doc["HA"] = config.HA;
   doc["JEEDOM"] = config.JEEDOM;
   doc["DOMOTICZ"] = config.DOMOTICZ;
+  doc["PVROUTER"] = config.PVROUTER;
+
 
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {
@@ -141,7 +144,7 @@ void saveConfiguration(const char *filename, const Config &config) {
   char buffer[1024];
   serializeJson(doc, buffer);
   client.publish(("Xlyric/sauvegarde/"+ node_id).c_str() ,buffer,  true);
-
+  yield();
   // Close the file
   configFile.close();
 }

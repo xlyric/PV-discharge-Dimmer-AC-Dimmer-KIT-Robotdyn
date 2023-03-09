@@ -366,7 +366,7 @@ String processor(const String& var){
 String getconfig() {
   String configweb;  
 
-  configweb = String(config.hostname) + ";" +  config.port+";"+ config.Publish +";"+ config.IDXTemp +";"+ config.maxtemp+ ";"  +  config.IDXAlarme + ";"  + config.IDX + ";"  +  config.startingpow+ ";"  +  config.minpow+ ";" +  config.maxpow+ ";"  +  config.child+ ";"  +  config.mode + ";" + config.SubscribePV + ";" + config.SubscribeTEMP + ";" + stringbool(config.HA) + ";" + stringbool(config.JEEDOM) + ";" + stringbool(config.DOMOTICZ);
+  configweb = String(config.hostname) + ";" +  config.port+";"+ config.Publish +";"+ config.IDXTemp +";"+ config.maxtemp+ ";"  +  config.IDXAlarme + ";"  + config.IDX + ";"  +  config.startingpow+ ";"  +  config.minpow+ ";" +  config.maxpow+ ";"  +  config.child+ ";"  +  config.mode + ";" + config.SubscribePV + ";" + config.SubscribeTEMP + ";" + stringbool(config.HA) + ";" + stringbool(config.JEEDOM) + ";" + stringbool(config.DOMOTICZ) + ";" + config.PVROUTER ;
 
   return String(configweb);
 }
