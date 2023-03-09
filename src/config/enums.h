@@ -30,7 +30,7 @@ struct Config {
   bool HA;
   bool JEEDOM;
   bool DOMOTICZ;
-  char PVROUTER;
+  char PVROUTER[6];
 
 };
 

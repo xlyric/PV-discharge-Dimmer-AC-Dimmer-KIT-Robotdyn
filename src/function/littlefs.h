@@ -85,7 +85,9 @@ void loadConfiguration(const char *filename, Config &config) {
   config.HA = doc["HA"] | true; 
   config.JEEDOM = doc["JEEDOM"] | true; 
   config.DOMOTICZ = doc["DOMOTICZ"] | true; 
-  config.PVROUTER = doc["PVROUTER"] | "mqtt"; 
+  strlcpy(config.PVROUTER,
+        doc["PVROUTER"] | "mqtt", 
+        sizeof(config.PVROUTER)); 
 
   configFile.close();
   

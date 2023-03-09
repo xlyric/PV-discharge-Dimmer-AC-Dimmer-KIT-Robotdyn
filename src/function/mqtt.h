@@ -271,8 +271,8 @@ void reconnect() {
     // if (client.connect(clientId.c_str(),mqtt_config.username, mqtt_config.password)) {
         Serial.println("connected");
         logs += "Connected\r\n";
-        if (strcmp( config.PVROUTER, "mqtt") == 0  && client.subscribe(config.SubscribePV) != NULL ) {client.subscribe(config.SubscribePV);}
-        if (strcmp( config.PVROUTER, "mqtt") == 0  && client.subscribe(config.SubscribeTEMP) != NULL ) {client.subscribe(config.SubscribeTEMP);}
+        if (strcmp(config.PVROUTER, "mqtt") == 0 && config.SubscribePV != NULL ) {client.subscribe(config.SubscribePV);}
+        if (strcmp(config.PVROUTER, "mqtt") == 0 && config.SubscribeTEMP != NULL ) {client.subscribe(config.SubscribeTEMP);}
         client.subscribe(command_button.c_str());
         client.subscribe(command_number.c_str());
         client.subscribe(command_select.c_str());
