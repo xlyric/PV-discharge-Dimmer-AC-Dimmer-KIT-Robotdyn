@@ -221,12 +221,11 @@
                                                     </div>
                                                     <div class="card-body">
                                                         <div class="form-group row">
-                                                            <div class="col-sm-3">Max Temp</div>
-                                                            <div class="col-sm-3">Min Power</div>
-                                                            <div class="col-sm-3">Max Power</div>
+                                                            <div class="col-sm-6">Max Temp</div>
+                                                            <div class="col-sm-6">Start Power</div>
                                                         </div>
                                                         <div class="form-group row">
-                                                            <div class="col-sm-3">
+                                                            <div class="col-sm-6">
                                                                 <input
                                                                     type="text"
                                                                     class="form-control form-control-user"
@@ -234,7 +233,22 @@
                                                                     placeholder="%MAXTEMP%"
                                                                 >
                                                             </div>
-                                                            <div class="col-sm-3">
+                                                            <div class="col-sm-6">
+                                                                <input
+                                                                    type="text"
+                                                                    class="form-control form-control-user"
+                                                                    id="startingpow"
+                                                                    placeholder="%STARTINGPOW%"
+                                                                >
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-group row">
+                                                            <div class="col-sm-6">Min Power</div>
+                                                            <div class="col-sm-6">Max Power</div>
+                                                        </div>
+                                                        <div class="form-group row">
+                                                            <div class="col-sm-6">
                                                                 <input
                                                                     type="text"
                                                                     class="form-control form-control-user"
@@ -242,7 +256,7 @@
                                                                     placeholder="%MINPOW%"
                                                                 >
                                                             </div>
-                                                            <div class="col-sm-3">
+                                                            <div class="col-sm-6">
                                                                 <input
                                                                     type="text"
                                                                     class="form-control form-control-user"
@@ -250,9 +264,45 @@
                                                                     placeholder="%MAXPOW%"
                                                                 >
                                                             </div>
+      
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <br>
+                                                <div class="card position-relative">
+                                                    <div class="card-header py-3">
+                                                        <h6 class="m-0 font-weight-bold text-primary">Transmission MQTT</h6>
+                                                        <span id="saveform"></span>
+                                                    </div>
+                                                    <div class="card-body">
+                                        
+                                                        <div class="form-group row">
+                                                        <div class="col-sm-3">
+                                                            <div class="custom-control custom-checkbox small">
+                                                            MQTT
+                                                            <br>
+                                                            <input type="checkbox" class="custom-control-input" id="HA">
+                                                            <label class="custom-control-label" for="HA" onclick="sendservermode(this.innerHTML);" >HA</label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-3">
+                                                            <div class="custom-control custom-checkbox small">
+                                                            MQTT
+                                                            <br>
+                                                            <input type="checkbox" class="custom-control-input" id="JEEDOM">
+                                                            <label class="custom-control-label" for="JEEDOM" onclick="sendservermode(this.innerHTML);" >JEEDOM</label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-3">
+                                                            <div class="custom-control custom-checkbox small">
+                                                            MQTT
+                                                            <br>
+                                                            <input type="checkbox" class="custom-control-input" id="DOMOTICZ">
+                                                            <label class="custom-control-label" for="DOMOTICZ" onclick="sendservermode(this.innerHTML);" >DOMOTICZ</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <!-- </div> -->
                                                 <br>
                                                 <div class="card position-relative"  id="IDXview" style="display: none">
                                                     <div class="card-header py-3">
@@ -293,6 +343,9 @@
                                                         </div>
                                                     </div>
                                                 </div>
+                                            </div>
+                                        </div>
+
                                                 <br>
                                                 <div class="card position-relative">
                                                     <div class="card-header py-3">
@@ -324,15 +377,35 @@
                                                     </div>
                                                 </div>
                                                 <br>
-                                                <div class="card position-relative">  <!-- id="MQTTview" style="display: none"> -->
+                                                <div class="card position-relative">
+                                                    <div class="card-header py-3">
+                                                        <h6 class="m-0 font-weight-bold text-primary">Liaison ROUTER / DIMMER</h6>
+                                                        <span id="saveform"></span>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="form-group row">
+                                                            <div class="col-sm-6">Consigne du routeur</div>
+                                                        </div>
+                                                        <div class="form-group row">
+                                                            <div class="col-sm-6">
+                                                                <select id="PVROUTER" class="form-control" >
+                                                                    <option value="http">HTTP</option>
+                                                                    <option value="mqtt">MQTT</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>        
+                                                    <!-- </div>         -->
+
+                                                <br>
+                                                <div class="card position-relative"  id="PV_MQTT" style="display: none">
                                                     <div class="card-header py-3">
                                                     <h6 class="m-0 font-weight-bold text-primary">MQTT Pilote</h6>
                                                         <span id="saveform"></span>
                                                     </div>
                                                     <div class="card-body">
                                                         <div class="form-group row">
-                                                            <div class="col-sm-6">MQTT state dimmer subscription (or : none)</div>
-                                                            <div class="col-sm-6">MQTT dimmer temp subscription (or : none)</div>
+                                                            <div class="col-sm-6">MQTT state dimmer subscription</div>
+                                                            <div class="col-sm-6">MQTT dimmer temp subscription</div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <div class="col-sm-6">
@@ -352,7 +425,7 @@
                                                                 >
                                                             </div>
                                                         </div>   
-                                                        <div class="form-group row">
+                                                        <!-- <div class="form-group row">
                                                             <div class="col-sm-6">Puissance de démarrage</div>
                                                         </div>
                                                         <div class="form-group row">
@@ -364,70 +437,12 @@
                                                                     placeholder="%STARTINGPOW%"
                                                                 >
                                                             </div>
-                                                        </div>    
+                                                        </div>     -->
+                                                    </div>
+
                                                     </div>
                                                 </div>
-                                                <div class="card position-relative">
-                                                    <div class="card-header py-3">
-                                                        <h6 class="m-0 font-weight-bold text-primary">Transmission MQTT</h6>
-                                                        <span id="saveform"></span>
-                                                    </div>
-                                                    <div class="card-body">
-                                        
-                                                        <div class="form-group row">
-                                                        <div class="col-sm-3">
-                                                            <div class="custom-control custom-checkbox small">
-                                                            MQTT
-                                                            <br>
-                                                            <input type="checkbox" class="custom-control-input" id="HA">
-                                                            <label class="custom-control-label" for="HA" onclick="sendservermode(this.innerHTML);" >HA</label>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-sm-3">
-                                                            <div class="custom-control custom-checkbox small">
-                                                            MQTT
-                                                            <br>
-                                                            <input type="checkbox" class="custom-control-input" id="JEEDOM">
-                                                            <label class="custom-control-label" for="JEEDOM" onclick="sendservermode(this.innerHTML);" >JEEDOM</label>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-sm-3">
-                                                            <div class="custom-control custom-checkbox small">
-                                                            MQTT
-                                                            <br>
-                                                            <input type="checkbox" class="custom-control-input" id="DOMOTICZ">
-                                                            <label class="custom-control-label" for="DOMOTICZ" onclick="sendservermode(this.innerHTML);" >DOMOTICZ</label>
-                                                            </div>
-                                                        </div>
 
-                                                        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-                                                        <script type="text/javascript">
-                                                            $(function () {
-                                                                // $("#HA").click(function () {
-                                                                //     if ($(this).is(":checked")) {
-                                                                //         $("#HAview").show();
-                                                                //     } else {
-                                                                //         $("#HAview").hide();
-                                                                //     }
-                                                                // });
-                                                                // $("#JEEDOM").click(function () {
-                                                                //     if ($(this).is(":checked") || $(DOMOTICZ).is(":checked") ) {
-                                                                //         $("#IDXview").show();
-                                                                //     } else {
-                                                                //         $("#IDXview").hide();
-                                                                //     }
-                                                                // });
-                                                                $("#DOMOTICZ").click(function () {
-                                                                    if ($(this).is(":checked")) {
-                                                                        $("#IDXview").show();
-                                                                    } else {
-                                                                        $("#IDXview").hide();
-                                                                    }
-                                                                });
-                                                            });
-                                                        </script>
-
-                                                </div>
 
                                             </div>
                                         </div>
@@ -539,7 +554,7 @@ $( "#save" ).click(function() {
 
 $( "#formulaire" ).submit(function() {
 
-	 var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(), 'idxtemp':$('#idxtemp').val(), 'maxtemp':$('#maxtemp').val(), 'IDXAlarme':$('#IDXAlarme').val(), 'IDX':$('#IDX').val(), 'startingpow':$('#startingpow').val(), 'minpow':$('#minpow').val(), 'maxpow':$('#maxpow').val(), 'child':$('#child').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val(), 'mode':$('#delester').val() } 
+	 var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(), 'idxtemp':$('#idxtemp').val(), 'maxtemp':$('#maxtemp').val(), 'IDXAlarme':$('#IDXAlarme').val(), 'IDX':$('#IDX').val(), 'startingpow':$('#startingpow').val(), 'minpow':$('#minpow').val(), 'maxpow':$('#maxpow').val(), 'child':$('#child').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val(), 'mode':$('#delester').val(), 'pvrouter':$('#pvrouter').val() } 
 
      $.ajax({
             type: "GET",
@@ -554,7 +569,25 @@ $( "#formulaire" ).submit(function() {
   return false;
 });
 
+$("#DOMOTICZ").click(function () {
+    if ($(this).is(":checked")) {
+        $("#IDXview").show();
+    } else {
+        $("#IDXview").hide();
+    }
+});
 
+
+$("#PVROUTER").change(function() {
+    if ($(this).val() == "http") {
+        // $('#PV_HTTP').show();
+        $('#PV_MQTT').hide();
+    } else {
+        // $('#PV_HTTP').hide();
+        $('#PV_MQTT').show();
+    }
+});
+$("#PVROUTER").trigger("change");
 
 
 var recupconfig = $.get ({
@@ -601,6 +634,8 @@ var recupconfig = $.get ({
     i++;
         document.getElementById("DOMOTICZ").checked = config[i];
         document.getElementById("DOMOTICZ").value = config[i];
+    i++;
+        document.getElementById("PVROUTER").value = config[i];
             </script>
 
         </div>

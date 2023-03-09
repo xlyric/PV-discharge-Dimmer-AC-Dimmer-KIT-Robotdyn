@@ -275,14 +275,12 @@ void dimmer_on()
     dimmer.setState(ON);
     logs +="Dimmer On\r\n"; 
     delay(50);
-    }
-  #ifdef outputPin2
-    if (dimmer2.getState()==0) {
+    #ifdef outputPin2
       dimmer2.setState(ON);
       logs +="Dimmer2 On\r\n"; 
       delay(50);
+    #endif
     }  
-  #endif
 }
 
 void dimmer_off()
@@ -292,13 +290,13 @@ void dimmer_off()
     dimmer.setState(OFF);
     logs +="Dimmer Off\r\n"; 
     delay(50);
-    }
-  #ifdef outputPin2
-    dimmer2.setPower(0);
-    dimmer2.setState(OFF);
-    logs +="Dimmer2 Off\r\n"; 
-    delay(50);
-  #endif
+    #ifdef outputPin2
+      dimmer2.setPower(0);
+      dimmer2.setState(OFF);
+      logs +="Dimmer2 Off\r\n"; 
+      delay(50);
+    #endif
+  }
 }
 
 IPAddress _ip,_gw,_sn;
@@ -924,7 +922,7 @@ float CheckTemperature(String label, byte deviceAddress[12]){
   } else {
     Serial.print(" Temp C: ");
     Serial.println(tempC);
-    // logs += "Dallas temp : "+ String(tempC) +"\r\n";
+    logs += "Dallas temp : "+ String(tempC) +"\r\n";
     return (tempC); 
    
     
