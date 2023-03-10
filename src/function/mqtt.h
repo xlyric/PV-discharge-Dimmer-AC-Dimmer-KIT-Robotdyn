@@ -66,7 +66,7 @@ String stringboolMQTT(bool mybool);
 void callback(char* Subscribedtopic, byte* message, unsigned int length) {
   StaticJsonDocument<1024> doc2;
   deserializeJson(doc2, message);
-  if (strcmp( Subscribedtopic, config.SubscribePV ) == 0 && doc2.containsKey("dimmer") && config.dimmer_on_off == 1) { 
+  if (doc2.containsKey("dimmer") && config.dimmer_on_off == 1) { 
     int puissancemqtt = doc2["dimmer"]; 
     puissancemqtt = puissancemqtt - config.startingpow;
     if (puissancemqtt < 0) puissancemqtt = 0;

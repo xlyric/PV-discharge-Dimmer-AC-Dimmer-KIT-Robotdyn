@@ -76,7 +76,7 @@ void loadConfiguration(const char *filename, Config &config) {
           doc["mode"] | "off", 
           sizeof(config.mode));
   strlcpy(config.SubscribePV,                 
-        doc["SubscribePV"] | "Xlyric/PvRouter-7988/sensors/dimmer/state", 
+        doc["SubscribePV"] | "Xlyric/+/sensors/dimmer/state", 
         sizeof(config.SubscribePV));    
   strlcpy(config.SubscribeTEMP,                 
         doc["SubscribeTEMP"] | "", 
