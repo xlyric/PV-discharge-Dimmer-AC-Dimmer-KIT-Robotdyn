@@ -380,7 +380,7 @@ String getmqtt() {
 String readmqttsave(){
         String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
         String node_id = String("dimmer-") + node_mac; 
-        String save_command = String("sauvegarde/"+ node_id );
+        String save_command = String("Xlyric/sauvegarde/"+ node_id );
         client.subscribe(save_command.c_str());
         return String("<html><head><meta http-equiv='refresh' content='5;url=config.html' /></head><body><h1>config restauree, retour au setup dans 5 secondes, pensez a sauvegarder sur la flash </h1></body></html>");
 }
