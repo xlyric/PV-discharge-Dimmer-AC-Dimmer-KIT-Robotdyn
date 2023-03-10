@@ -384,11 +384,11 @@
                                                     </div>
                                                     <div class="card-body">
                                                         <div class="form-group row">
-                                                            <div class="col-sm-6">Consigne du routeur</div>
+                                                            <div class="col-sm-6">Protocole</div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <div class="col-sm-6">
-                                                                <select id="PVROUTER" class="form-control" >
+                                                                <select id="PVROUTER" class="form-control form-control-user">
                                                                     <option value="http">HTTP</option>
                                                                     <option value="mqtt">MQTT</option>
                                                                 </select>
@@ -531,7 +531,7 @@ function save () {
 }
 
 		
-		</script >
+		</script>
            
 
 
@@ -554,7 +554,7 @@ $( "#save" ).click(function() {
 
 $( "#formulaire" ).submit(function() {
 
-	 var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(), 'idxtemp':$('#idxtemp').val(), 'maxtemp':$('#maxtemp').val(), 'IDXAlarme':$('#IDXAlarme').val(), 'IDX':$('#IDX').val(), 'startingpow':$('#startingpow').val(), 'minpow':$('#minpow').val(), 'maxpow':$('#maxpow').val(), 'child':$('#child').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val(), 'mode':$('#delester').val(), 'pvrouter':$('#pvrouter').val() } 
+	 var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(), 'idxtemp':$('#idxtemp').val(), 'maxtemp':$('#maxtemp').val(), 'IDXAlarme':$('#IDXAlarme').val(), 'IDX':$('#IDX').val(), 'startingpow':$('#startingpow').val(), 'minpow':$('#minpow').val(), 'maxpow':$('#maxpow').val(), 'child':$('#child').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val(), 'mode':$('#delester').val(), 'PVROUTER':$('#PVROUTER').val() } 
 
      $.ajax({
             type: "GET",
@@ -587,7 +587,8 @@ $("#PVROUTER").change(function() {
         $('#PV_MQTT').show();
     }
 });
-$("#PVROUTER").trigger("change");
+
+// $("#PVROUTER").trigger('change');
 
 
 var recupconfig = $.get ({
@@ -636,6 +637,8 @@ var recupconfig = $.get ({
         document.getElementById("DOMOTICZ").value = config[i];
     i++;
         document.getElementById("PVROUTER").value = config[i];
+    $("#PVROUTER").trigger('change');
+
             </script>
 
         </div>

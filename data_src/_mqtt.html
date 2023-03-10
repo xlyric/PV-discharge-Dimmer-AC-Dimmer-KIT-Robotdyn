@@ -178,7 +178,7 @@
                                                 >
                                             </div>
                                             <div class="form-group">
-                                                Topic  :
+                                                Topic DOMOTICZ :
                                                 <input
                                                     type="text"
                                                     class="form-control form-control-user"
@@ -233,13 +233,13 @@ $.get( "/get", { servermode: mode } )
 .done(function(data) { 
 $( "#saveform" ).text( "Configuration appliqué" ).show().fadeOut( 5000 );
 var config = data.split(";");
-document.getElementById("MQTT").value = config[16];
+document.getElementById("MQTT").value = config[18];
 }); 
 
 
 }
 		
-		</script >
+		</script>
 
             <script>
 

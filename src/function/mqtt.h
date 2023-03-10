@@ -231,7 +231,7 @@ void Mqtt_send_DOMOTICZ(String idx, String value)
     // delay(10);  // <- fixes some issues with WiFi stability
 
     client.publish(config.Publish, String(message).c_str(), true);      
-    yield();
+    
     // String jdompub = String(config.Publish) + "/"+idx ;
     // client.publish(jdompub.c_str() , value.c_str(), true);
 
@@ -271,15 +271,15 @@ void reconnect() {
     // if (client.connect(clientId.c_str(),mqtt_config.username, mqtt_config.password)) {
         Serial.println("connected");
         logs += "Connected\r\n";
-        if (strcmp(config.PVROUTER, "mqtt") == 0 && config.SubscribePV != NULL ) {client.subscribe(config.SubscribePV);}
-        if (strcmp(config.PVROUTER, "mqtt") == 0 && config.SubscribeTEMP != NULL ) {client.subscribe(config.SubscribeTEMP);}
+        if (strcmp(config.PVROUTER, "mqtt") == 0 && strlen(config.SubscribePV) !=0 ) {client.subscribe(config.SubscribePV);}
+        if (strcmp(config.PVROUTER, "mqtt") == 0 && strlen(config.SubscribeTEMP) != 0 ) {client.subscribe(config.SubscribeTEMP);}
         client.subscribe(command_button.c_str());
         client.subscribe(command_number.c_str());
         client.subscribe(command_select.c_str());
         client.subscribe(command_switch.c_str());
 
         client.publish(String(topic_Xlyric +"status").c_str() , "online", true); // status Online
-        yield();
+        
         
         String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
         String node_id = String("Dimmer-") + node_mac; 

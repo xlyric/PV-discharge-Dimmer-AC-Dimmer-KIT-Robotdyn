@@ -76,10 +76,10 @@ void loadConfiguration(const char *filename, Config &config) {
           doc["mode"] | "off", 
           sizeof(config.mode));
   strlcpy(config.SubscribePV,                 
-        doc["SubscribePV"] | "homeassistant/sensor/PvRouter-xxxx/statedimmer", 
+        doc["SubscribePV"] | "Xlyric/PvRouter-7988/sensors/dimmer/state", 
         sizeof(config.SubscribePV));    
   strlcpy(config.SubscribeTEMP,                 
-        doc["SubscribeTEMP"] | "homeassistant/sensor/Dimmer-xxxx/state", 
+        doc["SubscribeTEMP"] | "", 
         sizeof(config.SubscribeTEMP));
   //config.dimmer_on_off = doc["dimmer_on_off"] | 1; 
   config.HA = doc["HA"] | true; 
@@ -146,7 +146,7 @@ void saveConfiguration(const char *filename, const Config &config) {
   char buffer[1024];
   serializeJson(doc, buffer);
   client.publish(("Xlyric/sauvegarde/"+ node_id).c_str() ,buffer,  true);
-  yield();
+  
   // Close the file
   configFile.close();
 }

@@ -281,6 +281,8 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     config.dimmer_on_off = request->getParam("dimmer_on_off")->value().toInt();
     if (!AP && mqtt_config.mqtt) { device_dimmer_on_off.send(String(config.dimmer_on_off));}
    }
+   if (request->hasParam("PVROUTER")) { request->getParam("PVROUTER")->value().toCharArray(config.PVROUTER,5);}
+
    if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,50);  }
    if (request->hasParam("mqttpassword")) { request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,50);
    savemqtt(mqtt_conf, mqtt_config); 
@@ -366,7 +368,7 @@ String processor(const String& var){
 String getconfig() {
   String configweb;  
 
-  configweb = String(config.hostname) + ";" +  config.port+";"+ config.Publish +";"+ config.IDXTemp +";"+ config.maxtemp+ ";"  +  config.IDXAlarme + ";"  + config.IDX + ";"  +  config.startingpow+ ";"  +  config.minpow+ ";" +  config.maxpow+ ";"  +  config.child+ ";"  +  config.mode + ";" + config.SubscribePV + ";" + config.SubscribeTEMP + ";" + stringbool(config.HA) + ";" + stringbool(config.JEEDOM) + ";" + stringbool(config.DOMOTICZ) + ";" + config.PVROUTER ;
+  configweb = String(config.hostname) + ";" +  config.port+";"+ config.Publish +";"+ config.IDXTemp +";"+ config.maxtemp+ ";"  +  config.IDXAlarme + ";"  + config.IDX + ";"  +  config.startingpow+ ";"  +  config.minpow+ ";" +  config.maxpow+ ";"  +  config.child+ ";"  +  config.mode + ";" + config.SubscribePV + ";" + config.SubscribeTEMP + ";" + stringbool(config.HA) + ";" + stringbool(config.JEEDOM) + ";" + stringbool(config.DOMOTICZ) + ";" + config.PVROUTER + ";" + stringbool(mqtt_config.mqtt) ;
 
   return String(configweb);
 }
