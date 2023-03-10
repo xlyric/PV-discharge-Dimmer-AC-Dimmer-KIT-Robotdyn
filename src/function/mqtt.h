@@ -9,7 +9,6 @@
 #include <ArduinoJson.h> 
 #include "config/config.h"
 
-
 #ifdef ESP32
 // Web services
   #include "WiFi.h"
@@ -275,7 +274,7 @@ void reconnect() {
     while (!client.connected()) {
       
       Serial.print("Attempting MQTT connection...");
-      logs += "Reconnect MQTT\r\n";
+      logs += loguptime() + "Reconnect MQTT\r\n";
       // Create a random client ID
       // String clientId = "Dimmer";
       // clientId += String(random(0xffff), HEX);
@@ -300,7 +299,7 @@ void reconnect() {
 
       } else {
         Serial.print("failed, rc=");
-        logs += "Fail and retry\r\n";
+        logs += loguptime() + "Fail and retry\r\n";
         Serial.print(client.state());
         Serial.println(" try again in 2 seconds");
         // Wait 2 seconds before retrying
@@ -308,7 +307,7 @@ void reconnect() {
         timeout++; // after 10s break for apply command 
         if (timeout > 5) {
             Serial.println(" try again next time ") ; 
-            logs += "retry later\r\n";
+            logs += loguptime() +"retry later\r\n";
             break;
             }
 

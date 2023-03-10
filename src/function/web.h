@@ -169,7 +169,7 @@ void call_pages() {
 
 //// compressé
   server.on("/sb-admin-2.min.css", HTTP_ANY, [](AsyncWebServerRequest *request){
-    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/sb-admin-2.min.css.gz", "text/css");
+    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/css/sb-admin-2.min.css.gz", "text/css");
     response->addHeader("Content-Encoding", "gzip");
     request->send(response);
   });
