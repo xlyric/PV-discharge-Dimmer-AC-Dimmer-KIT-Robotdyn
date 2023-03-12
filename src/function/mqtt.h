@@ -53,7 +53,7 @@ extern char buffer[1024];
   String number_command = String("homeassistant/number/"+ node_id + "/command");
   String select_command = String("homeassistant/select/"+ node_id + "/command");
   String button_command = String("homeassistant/button/"+ node_id + "/command");
-  String command_save = String("Xlyric/sauvegarde/"+ node_id );
+  String save_command = String("Xlyric/sauvegarde/"+ node_id );
   String topic = "homeassistant/sensor/"+ node_id +"/status";  
 
 void callback(char* Subscribedtopic, byte* message, unsigned int length) {
@@ -294,7 +294,7 @@ void reconnect() {
         
         String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
         String node_id = String("dimmer-") + node_mac; 
-        String save_command = String("sauvegarde/"+ node_id );
+        String save_command = String("Xlyric/sauvegarde/"+ node_id );
         //client.subscribe(save_command.c_str());
 
       } else {
