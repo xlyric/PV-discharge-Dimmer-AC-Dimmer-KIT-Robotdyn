@@ -7,6 +7,7 @@
 #include <ArduinoJson.h> // ArduinoJson : https://github.com/bblanchon/ArduinoJson
 #include "function/ha.h"
 
+#include "uptime.h"
 
 #ifdef ESP32
   #include <FS.h>
@@ -36,6 +37,15 @@ void saveConfigCallback () {
   shouldSaveConfig = true;
 }
 
+String loguptime() {
+  String uptime_stamp;
+  uptime::calculateUptime();
+  uptime_stamp = String(uptime::getDays())+":"+String(uptime::getHours())+":"+String(uptime::getMinutes())+":"+String(uptime::getSeconds())+ "\t";
+  return uptime_stamp;
+}
+
+
+
 // Loads the configuration from a file
 void loadConfiguration(const char *filename, Config &config) {
   // Open file for reading
@@ -51,7 +61,7 @@ void loadConfiguration(const char *filename, Config &config) {
   DeserializationError error = deserializeJson(doc, configFile);
   if (error) {
     Serial.println(F("Failed to read configuration file, using default configuration"));
-    loginit +="Failed to read file config File, use default\r\n"; 
+    loginit += loguptime() + "Failed to read file config File, use default\r\n"; 
     }
   // Copy values from the JsonDocument to the Config
   
@@ -104,7 +114,7 @@ void saveConfiguration(const char *filename, const Config &config) {
    File configFile = LittleFS.open(filename_conf, "w");
   if (!configFile) {
     Serial.println(F("Failed to open config file for writing"));
-    logs +="Failed to read file config File, use default\r\n"; 
+    logs += loguptime() + "Failed to read file config File, use default\r\n"; 
   
     return;
   }
@@ -146,7 +156,7 @@ void saveConfiguration(const char *filename, const Config &config) {
   char buffer[1024];
   serializeJson(doc, buffer);
   client.publish(("Xlyric/sauvegarde/"+ node_id).c_str() ,buffer,  true);
-  
+
   // Close the file
   configFile.close();
 }
@@ -219,7 +229,7 @@ void savemqtt(const char *filename, const Mqtt &mqtt_config) {
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {
     Serial.println(F("Failed to write to file in function Save configuration "));
-    logs += "Failed to write MQTT config\r\n";
+    logs += loguptime() + "Failed to write MQTT config\r\n";
   }
 
   // Close the file
@@ -287,7 +297,7 @@ void savewifiIP(const char *wifi_conf, Wifi_struct &wifi_config_fixe) {
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {
     Serial.println(F("Failed to write to file in function Save configuration "));
-    logs += "Failed to write wifi config\r\n";
+    logs += loguptime() + "Failed to write wifi config\r\n";
   }
 
   // Close the file

@@ -79,20 +79,20 @@ void call_pages() {
       if (request->hasParam(PARAM_INPUT_1)) { 
 
         sysvar.puissance = request->getParam(PARAM_INPUT_1)->value().toInt(); 
-        logs += "HTTP power at " + String(sysvar.puissance) + "\r\n"; 
+        logs += loguptime() + "HTTP power at " + String(sysvar.puissance) + "\r\n"; 
         sysvar.change=1; 
         request->send_P(200, "text/plain", getState().c_str());  
       }
       else if (request->hasParam(PARAM_INPUT_2)) { 
         config.startingpow = request->getParam(PARAM_INPUT_2)->value().toInt(); 
-        logs += "HTTP power at " + String(config.startingpow) + "\r\n"; 
+        logs += loguptime() + "HTTP power at " + String(config.startingpow) + "\r\n"; 
 
         sysvar.change=1; 
         request->send_P(200, "text/plain", getState().c_str());  
       }
       else if (request->hasParam(PARAM_INPUT_2)) { 
         config.startingpow = request->getParam(PARAM_INPUT_2)->value().toInt(); 
-        logs += "HTTP power at " + String(config.startingpow) + "\r\n"; 
+        logs += loguptime() + "HTTP power at " + String(config.startingpow) + "\r\n"; 
         sysvar.change=1; 
         request->send_P(200, "text/plain", getState().c_str());
       }
@@ -169,7 +169,7 @@ void call_pages() {
 
 //// compressé
   server.on("/sb-admin-2.min.css", HTTP_ANY, [](AsyncWebServerRequest *request){
-    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/sb-admin-2.min.css.gz", "text/css");
+    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/css/sb-admin-2.min.css.gz", "text/css");
     response->addHeader("Content-Encoding", "gzip");
     request->send(response);
   });

@@ -341,7 +341,7 @@ void setup() {
   //démarrage file system
   LittleFS.begin();
   Serial.println("Demarrage file System");
-  loginit +="start filesystem\r\n"; 
+  loginit += loguptime() + "Start filesystem\r\n"; 
   // configuration dimmer
   dimmer.begin(NORMAL_MODE, ON); //dimmer initialisation: name.begin(MODE, STATE) 
   #ifdef outputPin2
@@ -378,12 +378,12 @@ void setup() {
   #endif
   // Should load default config if run for the first time
   Serial.println(F("Loading configuration..."));
-  loginit +="load config\r\n"; 
+  loginit += loguptime() + "Load config\r\n"; 
   loadConfiguration(filename_conf, config);
 
   // Create configuration file
   Serial.println(F("Saving configuration..."));
-  loginit +="apply config\r\n"; 
+  loginit +=loguptime() + "Apply config\r\n"; 
   saveConfiguration(filename_conf, config);
 
   Serial.println(F("Loading mqtt_conf configuration..."));
@@ -396,7 +396,7 @@ void setup() {
     //************* Setup - Connexion Wifi
     //***********************************
   Serial.print("start Wifiautoconnect");
-  loginit +="start Wifiautoconnect\r\n"; 
+  loginit +=loguptime() + "Start Wifiautoconnect\r\n"; 
 
    // préparation  configuration IP fixe 
 
@@ -609,7 +609,7 @@ void setup() {
   /// MQTT 
   if (!AP && mqtt_config.mqtt) {
     Serial.println("Connection MQTT" );
-    loginit +="MQTT connexion\r\n"; 
+    loginit +=loguptime() + "MQTT connexion\r\n"; 
    // Serial.println(String(mqtt_config.username));
    // Serial.println(String(mqtt_config.password));
 
@@ -693,7 +693,7 @@ void loop() {
   if ( security == 1 ) { 
       if (!alerte){
         Serial.println("Alert Temp");
-        logs += "Alert Temp\r\n";
+        logs += loguptime() + "Alert Temp\r\n";
          
       
         if (!AP && mqtt_config.mqtt) { 
@@ -752,7 +752,7 @@ void loop() {
             dimmer2.setPower(sysvar.puissance);
           #endif
         }
-          logs += "dimmer at " + String(sysvar.puissance) + "\r\n";
+          logs += loguptime() + "dimmer at " + String(sysvar.puissance) + "\r\n";
           if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); }  //si mode equal envoie de la commande vers la carte fille
           #ifdef  SSR
           analogWrite(JOTTA, (sysvar.puissance*256/100) );
@@ -764,7 +764,7 @@ void loop() {
           if (!AP && mqtt_config.mqtt && digitalRead(COOLER) == LOW ) {device_cooler.send(stringboolMQTT(true));}
           digitalWrite(COOLER, HIGH); // start cooler 
           Timer_Cooler = millis();
-          logs += "Start Cooler\r\n";
+          logs += loguptime() + "Start Cooler\r\n";
         }
         
       // if ( config.IDX != 0 ) {
@@ -917,12 +917,12 @@ float CheckTemperature(String label, byte deviceAddress[12]){
     tempC = sensors.getTempC(deviceAddress);
       if ( (tempC == -127.00) || (tempC == -255.00) ) {
       Serial.print("Error getting temperature");
-      logs += "Dallas on error\r\n";
+      logs += loguptime() + "Dallas on error\r\n";
       }
   } else {
     Serial.print(" Temp C: ");
     Serial.println(tempC);
-    logs += "Dallas temp : "+ String(tempC) +"\r\n";
+    logs += loguptime() + "Dallas temp : "+ String(tempC) +"\r\n";
     return (tempC); 
    
     
@@ -939,7 +939,7 @@ void dallaspresent () {
 
 if ( !ds.search(addr)) {
     Serial.println("Dallas not connected");
-    loginit += "Dallas not connected\r\n";
+    loginit += loguptime() + "Dallas not connected\r\n";
     Serial.println();
     ds.reset_search();
     delay(250);
@@ -987,7 +987,7 @@ if ( !ds.search(addr)) {
 
   Serial.print("  present = ");
   Serial.println(present, HEX);
-  loginit += "Dallas present at "+ String(present, HEX) + "\r\n";
+  loginit += loguptime()+  "Dallas present at "+ String(present, HEX) + "\r\n";
 
   return ;
    

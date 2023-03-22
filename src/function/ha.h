@@ -162,7 +162,6 @@ struct MQTT
       String topic = "Xlyric/"+ node_id +"/sensors/";
       String message = "  { \""+object_id+"\" : \"" + value.c_str() + "\"  } ";
       client.publish(String(topic + object_id + "/state").c_str() , message.c_str(), retain_flag);
-      
     }
   } 
 };
