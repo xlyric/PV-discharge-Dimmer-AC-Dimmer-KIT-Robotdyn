@@ -51,14 +51,15 @@
 
 #endif
 
-#ifdef  SSR
-#define JOTTA  D4 // for boards with CHANGEBLE input pins
-#define ONE_WIRE_BUS D2 // dallas 
+#ifdef  SSR  /// même pin que le stand alone 
+#define JOTTA  D1 // for boards with CHANGEBLE input pins
+#define ONE_WIRE_BUS D7 // dallas 
 #define GRIDFREQ 90 ///PWM frequency
-#define outputPin  D0 
-#define zerocross  D1
-#define COOLER  D7   /// 0 : off  -> 1 : On --> need a dry contact or opto
-
+#define outputPin  D5 
+#define zerocross  D6
+#define COOLER  D8   /// 0 : off  -> 1 : On --> need a dry contact or opto
+#define RELAY1 D3  // Spécial pour relay commandé 
+#define RELAY2 D2  //
 #endif
 
 //// Dallas Configuration for Dimmer with Power supply and D1 Mini on the board
