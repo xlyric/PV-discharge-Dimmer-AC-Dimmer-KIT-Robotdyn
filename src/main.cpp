@@ -677,7 +677,7 @@ void loop() {
     ESP.restart();
   }
 
-  if ( mqtt_config.mqtt) {
+  if ( mqtt_config.mqtt && !AP ) {
     if (!client.connected() ) {
       reconnect();
     }
