@@ -652,6 +652,7 @@ void setup() {
   
   #ifdef  SSR
   analogWriteFreq(GRIDFREQ) ; 
+  analogWriteRange(100);
   analogWrite(JOTTA, 0);
   #endif
 
@@ -742,7 +743,7 @@ void loop() {
           if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); }  //si mode equal envoie de la commande vers la carte fille
 
           #ifdef  SSR
-          analogWrite(JOTTA, (config.maxpow*256/100) );
+          analogWrite(JOTTA, config.maxpow );
           #endif
 
         }
@@ -756,7 +757,7 @@ void loop() {
           logs += "dimmer at " + String(sysvar.puissance) + "\r\n";
           if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); }  //si mode equal envoie de la commande vers la carte fille
           #ifdef  SSR
-          analogWrite(JOTTA, (sysvar.puissance*256/100) );
+          analogWrite(JOTTA, sysvar.puissance );
           #endif
         }
 

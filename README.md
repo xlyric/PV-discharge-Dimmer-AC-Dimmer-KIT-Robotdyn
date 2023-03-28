@@ -85,7 +85,7 @@ There are different versions available depending on what you are using as a dimm
     [![image-1651775990428.png](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/scaled-1680-/image-1651775990428.png)](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/image-1651775990428.png)
     
 
-3. SSR-JOTTA is used to live control an SSR The - connects to the GND and D4 to the + of the Jotta 
+3. SSR-JOTTA is used to live control an SSR The - connects to the GND and D1 to the + of the Jotta 
 The Dallas probe uses D2
 [![image-1651776015419.png](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/scaled-1680-/image-1651776015419.png)](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2022-05/image-1651776015419.png)
 
