@@ -41,6 +41,7 @@ extern bool alerte;
 extern String logs; 
 extern char buffer[1024];
 
+
   /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remonté par MQTT
   /// @param Subscribedtopic 
   /// @param message 
@@ -63,7 +64,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
     int puissancemqtt = doc2["dimmer"]; 
     puissancemqtt = puissancemqtt - config.startingpow;
     if (puissancemqtt < 0) puissancemqtt = 0;
-    // if (puissancemqtt > config.maxpow) puissancemqtt = config.maxpow;
+    //if (puissancemqtt > config.maxpow) puissancemqtt = config.maxpow;
     if (sysvar.puissance != puissancemqtt ) {
       sysvar.puissance = puissancemqtt;
       logs += "MQTT power at " + String(sysvar.puissance) + "\r\n";
@@ -235,7 +236,7 @@ void mqtt(String idx, String value)
       if ( value != "0" ) { nvalue = "2" ; }
       String message = "  { \"idx\" : " + idx +" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
       client.loop();
-      client.publish(config.Publish, String(message).c_str(), true);      
+      client.publish(config.Publish, String(message).c_str(), true);   
     }
 
     if (mqtt_config.jeedom){
@@ -279,8 +280,9 @@ void reconnect() {
       // String clientId = "Dimmer";
       // clientId += String(random(0xffff), HEX);
       // Attempt to connect
-      if (client.connect(node_id.c_str(),mqtt_config.username, mqtt_config.password, topic.c_str(), 2, true, "offline")) {       //Connect to MQTT server
-    // if (client.connect(clientId.c_str(),mqtt_config.username, mqtt_config.password)) {
+      //node_id.c_str(),mqtt_config.username, mqtt_config.password, topic.c_str(), 2, true, "offline"
+    //  if (client.connect(node_id.c_str(),mqtt_config.username, mqtt_config.password, topic.c_str(), 2, true, "offline")) {       //Connect to MQTT server
+     if (client.connect(node_id.c_str(),mqtt_config.username, mqtt_config.password)) {
         Serial.println("connected");
         logs += "Connected\r\n";
         if (strcmp( config.SubscribePV, "none") != 0 ) {client.subscribe(config.SubscribePV);}
@@ -289,14 +291,13 @@ void reconnect() {
         client.subscribe(number_command.c_str());
         client.subscribe(select_command.c_str());
         client.subscribe(button_command.c_str());
-
         client.publish(String(topic).c_str() , "online", true); // status Online
         
         String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
         String node_id = String("dimmer-") + node_mac; 
         String save_command = String("Xlyric/sauvegarde/"+ node_id );
         //client.subscribe(save_command.c_str());
-
+        mqtt(String(config.IDX), String(String(sysvar.puissance)));
       } else {
         Serial.print("failed, rc=");
         logs += loguptime() + "Fail and retry\r\n";

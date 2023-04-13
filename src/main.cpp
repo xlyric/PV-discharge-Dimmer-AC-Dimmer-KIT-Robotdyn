@@ -217,6 +217,7 @@ String switchstate(int state);
 String loginit; 
 String logs="197}11}1"; 
 String getlogs(); 
+int childsend =0; 
 
 char buffer[1024];
 
@@ -682,7 +683,7 @@ void loop() {
     if (!client.connected() ) {
       reconnect();
     }
-    client.loop();
+    //client.loop();  // retiré comme ça faisait clignoter HA en mode delest ou equal 
   }
 
 
@@ -788,17 +789,22 @@ void loop() {
     }
     else if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && security == 1)
     {
-      if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance ); } // si mode délest, envoi du surplus
-      if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); }  //si mode equal envoie de la commande vers la carte fille
+      if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance ); childsend =0 ;} // si mode délest, envoi du surplus
+      if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); childsend =0 ; }  //si mode equal envoie de la commande vers la carte fille
+
     }
     else {
         //// si la commande est trop faible on coupe tout partout
         dimmer.setPower(0);
+        if (!AP && mqtt_config.Mqtt::mqtt) {
+          mqtt(String(config.IDX), "0");
+          device_dimmer.send("0");
+        }
         #ifdef outputPin2
           dimmer2.setPower(0);
         #endif
         dimmer_off();  
-        if ( strcmp(config.mode,"off") != 0) { child_communication(0); }
+        if ( strcmp(config.mode,"off") != 0) {  if (childsend>2) { child_communication(0); childsend++; }}
 
           #ifdef  SSR
           analogWrite(JOTTA, 0 );
