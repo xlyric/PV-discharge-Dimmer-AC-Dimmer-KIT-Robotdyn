@@ -728,10 +728,12 @@ void loop() {
     if (config.dimmer_on_off == 0){
       dimmer_off();  
     }
+    /// si on dépasse la puissance mini demandé 
     if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && security == 0) 
     {
         if (config.dimmer_on_off == 1){dimmer_on();}  // if off, switch on 
 
+        /// si au dessus de la consigne max configuré
         if ( sysvar.puissance > config.maxpow )  
         { 
           if (config.dimmer_on_off == 1){
@@ -757,6 +759,7 @@ void loop() {
         }
           logs += "dimmer at " + String(sysvar.puissance) + "\r\n";
           if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); }  //si mode equal envoie de la commande vers la carte fille
+          if ( strcmp(config.mode,"delester") == 0) { child_communication(0); }  //si mode délest envoie d'une commande à 0
           #ifdef  SSR
           analogWrite(JOTTA, sysvar.puissance );
           #endif
@@ -796,6 +799,10 @@ void loop() {
     else {
         //// si la commande est trop faible on coupe tout partout
         dimmer.setPower(0);
+              /// et sur les sous routeur 
+            if ( strcmp(config.mode,"delester") == 0 ) { child_communication(0); } // si mode délest, envoi du surplus
+            if ( strcmp(config.mode,"equal") == 0) { child_communication(0); }  //si mode equal envoie de la commande vers la carte fille
+
         if (!AP && mqtt_config.Mqtt::mqtt) {
           mqtt(String(config.IDX), "0");
           device_dimmer.send("0");
