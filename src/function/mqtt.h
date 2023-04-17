@@ -285,8 +285,8 @@ void reconnect() {
      if (client.connect(node_id.c_str(),mqtt_config.username, mqtt_config.password)) {
         Serial.println("connected");
         logs += "Connected\r\n";
-        if (strcmp( config.SubscribePV, "none") != 0 ) {client.subscribe(config.SubscribePV);}
-        if (strcmp( config.SubscribeTEMP, "none") != 0 ) {client.subscribe(config.SubscribeTEMP);}
+        if (mqtt_config.mqtt && strlen(config.SubscribePV) !=0 ) {client.subscribe(config.SubscribePV);}
+        if (mqtt_config.mqtt && strlen(config.SubscribeTEMP) != 0 ) {client.subscribe(config.SubscribeTEMP);}
         client.subscribe(switch_command.c_str());
         client.subscribe(number_command.c_str());
         client.subscribe(select_command.c_str());
