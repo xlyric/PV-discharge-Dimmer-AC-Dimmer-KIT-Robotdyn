@@ -683,7 +683,7 @@ void loop() {
     if (!client.connected() ) {
       reconnect();
     }
-    //client.loop();  // retiré comme ça faisait clignoter HA en mode delest ou equal 
+    client.loop();  // retiré comme ça faisait clignoter HA en mode delest ou equal 
   }
 
 
@@ -759,7 +759,7 @@ void loop() {
         }
           logs += "dimmer at " + String(sysvar.puissance) + "\r\n";
           if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); }  //si mode equal envoie de la commande vers la carte fille
-          if ( strcmp(config.mode,"delester") == 0) { child_communication(0); }  //si mode délest envoie d'une commande à 0
+          if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance < config.maxpow) { child_communication(0); }  //si mode délest envoie d'une commande à 0
           #ifdef  SSR
           analogWrite(JOTTA, sysvar.puissance );
           #endif

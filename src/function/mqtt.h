@@ -283,6 +283,7 @@ void reconnect() {
       //node_id.c_str(),mqtt_config.username, mqtt_config.password, topic.c_str(), 2, true, "offline"
     //  if (client.connect(node_id.c_str(),mqtt_config.username, mqtt_config.password, topic.c_str(), 2, true, "offline")) {       //Connect to MQTT server
      if (client.connect(node_id.c_str(),mqtt_config.username, mqtt_config.password)) {
+        client.publish(String(topic).c_str() , "online", true); // status Online
         Serial.println("connected");
         logs += "Connected\r\n";
         if (mqtt_config.mqtt && strlen(config.SubscribePV) !=0 ) {client.subscribe(config.SubscribePV);}
@@ -291,13 +292,13 @@ void reconnect() {
         client.subscribe(number_command.c_str());
         client.subscribe(select_command.c_str());
         client.subscribe(button_command.c_str());
-        client.publish(String(topic).c_str() , "online", true); // status Online
-        
+                
         String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
         String node_id = String("dimmer-") + node_mac; 
         String save_command = String("Xlyric/sauvegarde/"+ node_id );
         //client.subscribe(save_command.c_str());
         mqtt(String(config.IDX), String(String(sysvar.puissance)));
+        device_dimmer.send(String(sysvar.puissance)); 
       } else {
         Serial.print("failed, rc=");
         logs += loguptime() + "Fail and retry\r\n";
