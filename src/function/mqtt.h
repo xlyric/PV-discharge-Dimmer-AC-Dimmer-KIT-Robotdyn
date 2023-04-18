@@ -298,7 +298,7 @@ void reconnect() {
         String save_command = String("Xlyric/sauvegarde/"+ node_id );
         //client.subscribe(save_command.c_str());
         mqtt(String(config.IDX), String(String(sysvar.puissance)));
-        device_dimmer.send(String(sysvar.puissance)); 
+        device_dimmer.send(String(dimmer.getPower())); 
       } else {
         Serial.print("failed, rc=");
         logs += loguptime() + "Fail and retry\r\n";
