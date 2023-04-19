@@ -783,8 +783,8 @@ void loop() {
           if (mqtt_config.HA) {device_dimmer.send(String(config.maxpow));}  // remonté MQTT HA de la commande max
         }
         else {
-          mqtt(String(config.IDX), String(sysvar.puissance)); // remonté MQTT de la commande réelle
-          if (mqtt_config.HA) {device_dimmer.send(String(sysvar.puissance));} // remonté MQTT HA de la commande réelle
+          mqtt(String(config.IDX), String(dimmer.getPower())); // remonté MQTT de la commande réelle
+          if (mqtt_config.HA) {device_dimmer.send(String(dimmer.getPower()));} // remonté MQTT HA de la commande réelle
         }
       }
     
@@ -824,8 +824,8 @@ void loop() {
     
 
       if (!AP && mqtt_config.Mqtt::mqtt) {
-        mqtt(String(config.IDX), String(sysvar.puissance));
-        device_dimmer.send(String(sysvar.puissance));
+        mqtt(String(config.IDX), String(dimmer.getPower()));  // correction 19/04
+        device_dimmer.send(String(dimmer.getPower()));
         // if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
       }
       if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) && digitalRead(COOLER) == HIGH ) {   // cut cooler 

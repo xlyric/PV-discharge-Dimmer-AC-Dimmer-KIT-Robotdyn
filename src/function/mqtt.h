@@ -297,7 +297,7 @@ void reconnect() {
         String node_id = String("dimmer-") + node_mac; 
         String save_command = String("Xlyric/sauvegarde/"+ node_id );
         //client.subscribe(save_command.c_str());
-        mqtt(String(config.IDX), String(String(sysvar.puissance)));
+        mqtt(String(config.IDX), String(String(dimmer.getPower())));   /// correction 19/04 valeur remonté au dessus du max conf
         device_dimmer.send(String(dimmer.getPower())); 
       } else {
         Serial.print("failed, rc=");
