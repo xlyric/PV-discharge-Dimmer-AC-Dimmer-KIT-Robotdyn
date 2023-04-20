@@ -274,28 +274,20 @@ $( "#formulaire" ).submit(function() {
 });
 
 
+var recupconfig =  $.getJSON('/getmqtt', function(data) {
+  for (var key in data) {
+    if (data.hasOwnProperty(key)) {
+      var element = document.getElementById(key);
+      if (element) {
+        element.value = data[key];
+        if (element.type === 'checkbox') {
+          element.checked = data[key];
+        }
+      }
+    }
+  }
+});
 
-
-var recupconfig = $.get ({
-		url : 'getmqtt',
-		type : 'GET',
-		dataType: "text",
-		async: false }).responseText; 
-				  
-    var config = recupconfig.split(";");
-      i=0;
-      document.getElementById("server").value = config[i];
-      i++;
-      document.getElementById("topic").value = config[i];	
-      i++;  
-      document.getElementById("user").value = config[i];
-      i++;
-      document.getElementById("password").value = config[i];
-      i++;
-      document.getElementById("MQTT").checked = config[i];
-	  document.getElementById("MQTT").value = config[i];
-      i++;
-      document.getElementById("port").value = config[i];
             </script>
         </div>
     </div>

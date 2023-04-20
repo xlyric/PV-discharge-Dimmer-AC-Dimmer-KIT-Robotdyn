@@ -80,7 +80,7 @@ void loadConfiguration(const char *filename, Config &config) {
   config.minpow = doc["minpow"] | 5;
   config.maxpow = doc["maxpow"] | 50; 
   strlcpy(config.child,                  
-          doc["child"] | "192.168.1.20", 
+          doc["child"] | "", 
           sizeof(config.child));         
   strlcpy(config.mode,                  
           doc["mode"] | "off", 

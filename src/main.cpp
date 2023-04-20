@@ -742,9 +742,10 @@ void loop() {
               dimmer2.setPower(config.maxpow);
             #endif
           }
-          if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance-config.maxpow ); } // si mode délest, envoi du surplus
-          if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); }  //si mode equal envoie de la commande vers la carte fille
-
+          if ( strcmp(config.child,"") != 0 ) {
+              if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance-config.maxpow ); } // si mode délest, envoi du surplus
+              if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); }  //si mode equal envoie de la commande vers la carte fille
+          }
           #ifdef  SSR
           analogWrite(JOTTA, config.maxpow );
           #endif
@@ -758,8 +759,10 @@ void loop() {
           #endif
         }
           logs += "dimmer at " + String(sysvar.puissance) + "\r\n";
-          if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); }  //si mode equal envoie de la commande vers la carte fille
-          if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance < config.maxpow) { child_communication(0); }  //si mode délest envoie d'une commande à 0
+          if ( strcmp(config.child,"") != 0 ) {
+              if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); }  //si mode equal envoie de la commande vers la carte fille
+              if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance < config.maxpow) { child_communication(0); }  //si mode délest envoie d'une commande à 0
+          }
           #ifdef  SSR
           analogWrite(JOTTA, sysvar.puissance );
           #endif
@@ -792,16 +795,19 @@ void loop() {
     }
     else if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && security == 1)
     {
-      if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance ); childsend =0 ;} // si mode délest, envoi du surplus
-      if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); childsend =0 ; }  //si mode equal envoie de la commande vers la carte fille
-
+      if ( strcmp(config.child,"") != 0 ) {
+        if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance ); childsend =0 ;} // si mode délest, envoi du surplus
+        if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance); childsend =0 ; }  //si mode equal envoie de la commande vers la carte fille
+      }
     }
     else {
         //// si la commande est trop faible on coupe tout partout
         dimmer.setPower(0);
               /// et sur les sous routeur 
+          if ( strcmp(config.child,"") != 0 ) {
             if ( strcmp(config.mode,"delester") == 0 ) { child_communication(0); } // si mode délest, envoi du surplus
             if ( strcmp(config.mode,"equal") == 0) { child_communication(0); }  //si mode equal envoie de la commande vers la carte fille
+          }
 
         if (!AP && mqtt_config.Mqtt::mqtt) {
           mqtt(String(config.IDX), "0");
@@ -888,7 +894,7 @@ if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < c
     //***********************************
 if ( sysvar.celsius >= config.maxtemp && security == 0 ) {
   security = 1 ; 
-  if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance ); } // si mode délest, envoi du surplus
+  if ( strcmp(config.mode,"delester") == 0 && ( strcmp(config.child,"") != 0 ) ) { child_communication(sysvar.puissance ); } // si mode délest, envoi du surplus
   if (!AP && mqtt_config.mqtt && mqtt_config.HA ) { device_dimmer_alarm_temp.send(stringbool(security)); }
 }
 

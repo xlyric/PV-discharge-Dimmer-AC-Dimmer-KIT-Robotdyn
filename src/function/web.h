@@ -3,6 +3,7 @@
 
 // #include <ESP8266WiFi.h>
 #include <ESPAsyncWiFiManager.h>  
+#include <stdlib.h>
 
 // #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -335,11 +336,12 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
 /// @return 
 String getState() {
   String state; 
-  int pow=dimmer.getPower(); 
-  
-  String routeur="PV-ROUTER";
-
-  state = String(pow) + ";" + String(sysvar.celsius) + ";" + String(outputPin) + ";" + String(zerocross)+ ";" + String(WiFi.SSID().substring(0,9)) + ";" + routeur.compareTo(WiFi.SSID().substring(0,9)); 
+  char buffer[8];
+  DynamicJsonDocument doc(64);
+    doc["dimmer"] = dimmer.getPower();
+        dtostrf(sysvar.celsius, 5, 1, buffer); // conversion en n.1f 
+    doc["temperature"] = buffer;
+  serializeJson(doc, state);
   return String(state);
 }
 
@@ -365,17 +367,55 @@ String processor(const String& var){
 
 String getconfig() {
   String configweb;  
+  DynamicJsonDocument doc(512);  
+  //   +  config.mode + ";" + config.SubscribePV + ";" + config.SubscribeTEMP + ";" + config.dimmer_on_off ;
+    doc["IDX"] = config.IDX;
+    doc["idxtemp"] = config.IDXTemp;
+    doc["IDXAlarme"] = config.IDXAlarme;
 
-  configweb = String(config.hostname) + ";" +  config.port+";"+ config.Publish +";"+ config.IDXTemp +";"+ config.maxtemp+ ";"  +  config.IDXAlarme + ";"  + config.IDX + ";"  +  config.startingpow+ ";"  +  config.minpow+ ";" +  config.maxpow+ ";"  +  config.child+ ";"  +  config.mode + ";" + config.SubscribePV + ";" + config.SubscribeTEMP + ";" + config.dimmer_on_off ;
+    doc["maxtemp"] = config.maxtemp;
 
+    doc["startingpow"] = config.startingpow;
+    doc["minpow"] = config.minpow;
+    doc["maxpow"] = config.maxpow;
+
+    doc["child"] = config.child;
+    doc["delester"] = config.mode;
+
+    doc["SubscribePV"] = config.SubscribePV;
+    doc["SubscribeTEMP"] = config.SubscribeTEMP;
+    doc["dimmer_on_off"] = config.dimmer_on_off;
+  
+  serializeJson(doc, configweb);
   return String(configweb);
 }
 
 String getmqtt() {
+    String retour;
+  DynamicJsonDocument doc(512); 
 
-    String retour =String(config.hostname) + ";" + String(config.Publish) + ";" + String(mqtt_config.username) + ";" + String(mqtt_config.password) + ";" + stringbool(mqtt_config.mqtt)+ ";" + String(config.port) ;
-    return String(retour) ;
-  }
+    doc["server"] = config.hostname;
+    doc["port"] = config.port;
+    doc["topic"] = config.Publish;
+    doc["user"] = mqtt_config.username;
+    doc["password"] = mqtt_config.password;
+    doc["MQTT"] = mqtt_config.mqtt;
+  serializeJson(doc, retour);
+  return String(retour) ;
+}
+
+String getcomplement() {
+  String retour;
+  DynamicJsonDocument doc(64); 
+
+    doc["hdebut"] = config.hostname;
+    doc["hfin"] = config.port;
+    doc["tmax"] = config.maxtemp;
+
+  serializeJson(doc, retour);
+  return String(retour) ;
+}
+
 
 String readmqttsave(){
         String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);

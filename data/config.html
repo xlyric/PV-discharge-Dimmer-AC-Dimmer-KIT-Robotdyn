@@ -393,24 +393,16 @@
             <!-- Content Row -->
             <script type="text/javascript"> 
 
+      //<!-- rafraichissement valeurs -->
 setInterval(function refreshsend( ) {
-var xhttpstate = $.get ({
-		url : '/state',
-		type : 'GET',
-		dataType: "text",
-		success: function ( result ) { 
-		var config = result.split(";");
-		
-		document.getElementById("state").innerHTML = config[0];
-		document.getElementById("sigma").innerHTML = config[1];
-		
-		
-	
-		},
-		async: true });
-  }, 5000 ) ;
-
-
+        $.getJSON('/state', function(data) {
+          // Récupérer les données du JSON
+            var dimmer = data.dimmer;
+            var temperature = data.temperature;
+          document.getElementById("state").innerHTML = dimmer;
+          document.getElementById("sigma").innerHTML = temperature;
+          });
+}, 5000);
 	
 function sendmode (mode) {
 
@@ -488,44 +480,20 @@ $( "#formulaire" ).submit(function() {
 
 
 
-var recupconfig = $.get ({
-		url : '/config',
-		type : 'GET',
-		dataType: "text",
-		async: false }).responseText; 
-				  
-        var config = recupconfig.split(";");
-    i=0;
-		
-    i++;
-	
-    i++;
-		
-    i++;
-		document.getElementById("idxtemp").value = config[i];
-    i++;
-		document.getElementById("maxtemp").value = config[i];
-    i++;
-		document.getElementById("IDXAlarme").value = config[i];
-    i++;
-		document.getElementById("IDX").value = config[i];
-    i++;
-        document.getElementById("startingpow").value = config[i];
-    i++;	
-        document.getElementById("minpow").value = config[i];
-    i++;		
-		document.getElementById("maxpow").value = config[i];
-    i++;		
-		document.getElementById("child").value = config[i];
-    i++;
-        document.getElementById("delester").value = config[i];
-    i++;		
-		document.getElementById("SubscribePV").value = config[i];
-    i++;		
-		document.getElementById("SubscribeTEMP").value = config[i];
-    i++;		
-        document.getElementById("dimmer_on_off").checked = config[i];
-		document.getElementById("dimmer_on_off").value = config[i];
+var recupconfig =  $.getJSON('/config', function(data) {
+  for (var key in data) {
+    if (data.hasOwnProperty(key)) {
+      var element = document.getElementById(key);
+      if (element) {
+        element.value = data[key];
+        if (element.type === 'checkbox') {
+          element.checked = data[key];
+        }
+      }
+    }
+  }
+});
+
             </script>
 
         </div>

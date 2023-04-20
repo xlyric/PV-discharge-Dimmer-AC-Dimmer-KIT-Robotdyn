@@ -176,14 +176,14 @@
           
         };
 	
-		<!-- mise à jour de la jauge  --> 	
+	<!-- mise à jour de la jauge  --> 	
 		var gaugePA = new google.visualization.Gauge(document.getElementById('curve_chart2'));
 	    dataGaugePA = new google.visualization.DataTable();
 	    dataGaugePA.addColumn('string', 'Puissance');
 		dataGaugePA.addColumn('number', 'Value');
 		dataGaugePA.addRows(1);
 		
-				<!-- mise à jour de la jauge  --> 	
+	<!-- mise à jour de la jauge  --> 	
 		var gaugePAtemp = new google.visualization.Gauge(document.getElementById('curve_temp'));
 	    dataGaugePAtemp = new google.visualization.DataTable();
 	    dataGaugePAtemp.addColumn('string', 'Power');
@@ -191,30 +191,25 @@
 		dataGaugePAtemp.addRows(1);
 
 
-	<!-- <!-- récupération valeur sigma et State --> 	 -->
-	  setInterval(function ( ) {
+	<!-- récupération valeur sigma et State -->
+				  
+////
+setInterval(function ( ) {
 
-	var xhttpstate = $.get ({
-		url : '/state',
-		type : 'GET',
-		dataType: "text",
-		success: function ( result ) { 
-		var config = result.split(";");
-	
-		dataGaugePA.setValue(0, 0, "Power"); 
-		dataGaugePA.setValue(0, 1, config[0]);
+$.getJSON('/state', function(data) {
+// Récupérer les données du JSON
+    var dimmer = data.dimmer;
+    var temperature = data.temperature;
+    // Mettre à jour les éléments HTML
+        dataGaugePA.setValue(0, 0, "Power"); 
+		dataGaugePA.setValue(0, 1, dimmer);
 		gaugePA.draw(dataGaugePA,optionsGauge);
 		
 		dataGaugePAtemp.setValue(0, 0, "Temp °C"); 
-		dataGaugePAtemp.setValue(0, 1, config[1]);
+		dataGaugePAtemp.setValue(0, 1, temperature);
 		gaugePAtemp.draw(dataGaugePAtemp,optionsGaugetemp);
-	
-		},
-		async: true });
-		
-  }, 2000 ) ;	
-				  
-	
+  });
+}, 2000);
  			
 		  
  
