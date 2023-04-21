@@ -98,6 +98,7 @@
 #include "function/ha.h"
 #include "function/littlefs.h" 
 #include "function/mqtt.h"
+#include "function/minuteur.h"
 
 
 #ifdef ESP32
@@ -207,6 +208,7 @@ DeviceAddress insideThermometer;
 Config config; 
 Mqtt mqtt_config; 
 System sysvar;
+Programme programme; 
 
 String getmqtt(); 
 void savemqtt(const char *filename, const Mqtt &mqtt_config);
@@ -394,7 +396,10 @@ void setup() {
   Serial.println(F("Loading wifi configuration..."));
   loadwifiIP(wifi_conf, wifi_config_fixe);
  
-  
+  Serial.println(F("Loading minuterie"));
+  loadProgramme(programme_conf,programme);
+  saveProgramme(programme_conf,programme);
+
     //***********************************
     //************* Setup - Connexion Wifi
     //***********************************
@@ -657,6 +662,8 @@ void setup() {
   analogWrite(JOTTA, 0);
   #endif
 
+/// init du NTP
+ntpinit(); 
 
 
 Serial.println(ESP.getFreeHeap());
@@ -686,7 +693,34 @@ void loop() {
     client.loop();  // retiré comme ça faisait clignoter HA en mode delest ou equal 
   }
 
+  ///////////////// minuteur 
 
+  if (programme.run) { 
+      //Serial.print(config.maxpow);
+      if (stop_progr()) { 
+        dimmer.setPower(0); 
+        dimmer_off();
+        sysvar.puissance=0;
+        Serial.print("stop minuteur ");
+        mqtt(String(config.IDX), String(dimmer.getPower())); // remonté MQTT de la commande réelle
+        if (mqtt_config.HA) {device_dimmer.send(String(dimmer.getPower()));} 
+      } 
+  } 
+  else { 
+    
+    if (start_progr()){ 
+      sysvar.puissance=config.maxpow; 
+      dimmer_on();
+      dimmer.setPower(config.maxpow); 
+      delay (50);
+      Serial.print("start minuteur ");
+      mqtt(String(config.IDX), String(dimmer.getPower())); // remonté MQTT de la commande réelle
+      if (mqtt_config.HA) {device_dimmer.send(String(dimmer.getPower()));} 
+      }
+  }
+
+
+  ///////////////// restart 
   if (config.restart) {
     delay(5000);
     Serial.print("Restarting Dimmer");
@@ -720,7 +754,7 @@ void loop() {
     alerte=false;
   }
 
-
+  
 
   /// Changement de la puissance (  pb de Exception 9 si call direct ) 
   if ( sysvar.change == 1  ) {
@@ -738,6 +772,7 @@ void loop() {
         { 
           if (config.dimmer_on_off == 1){
             dimmer.setPower(config.maxpow);
+            
             #ifdef outputPin2
               dimmer2.setPower(config.maxpow);
             #endif
@@ -897,6 +932,8 @@ if ( sysvar.celsius >= config.maxtemp && security == 0 ) {
   if ( strcmp(config.mode,"delester") == 0 && ( strcmp(config.child,"") != 0 ) ) { child_communication(sysvar.puissance ); } // si mode délest, envoi du surplus
   if (!AP && mqtt_config.mqtt && mqtt_config.HA ) { device_dimmer_alarm_temp.send(stringbool(security)); }
 }
+
+
 
  delay(100);  // 24/01/2023 changement 500 à 100ms pour plus de réactivité
 }

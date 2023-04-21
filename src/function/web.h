@@ -12,6 +12,9 @@
 #include "function/littlefs.h"
 #include "function/ha.h"
 
+
+
+
 #ifdef ESP32
 // Web services
   #include "WiFi.h"
@@ -27,6 +30,7 @@
 extern Mqtt mqtt_config; 
 extern Config config; 
 extern System sysvar;
+extern Programme programme; 
 
 extern dimmerLamp dimmer; 
 extern DNSServer dns;
@@ -52,8 +56,6 @@ extern String dimmername;
 
 
 
-
-
 const char* PARAM_INPUT_1 = "POWER"; /// paramettre de retour sendmode
 const char* PARAM_INPUT_2 = "OFFSET"; /// paramettre de retour sendmode
 
@@ -68,6 +70,7 @@ String getServermode(String Servermode);
 String stringbool(bool mybool);
 String switchstate(int state);
 String readmqttsave();
+String getminuteur();
 extern String getlogs(); 
 
 
@@ -214,6 +217,21 @@ void call_pages() {
     request->send(200, "text/plain",  getmqtt().c_str()); 
   });
 
+
+/////////// minuteur 
+  server.on("/minuteur.html", HTTP_ANY, [](AsyncWebServerRequest *request){
+    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/minuteur.html", "text/html");
+    //response->addHeader("Content-Encoding", "gzip");
+    request->send(response);
+   // request->send(LittleFS, "/mqtt.html", "text/html");
+  });
+
+  server.on("/getminiteur", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+    request->send(200, "application/json",  getminuteur().c_str()); 
+  });
+
+
+
   server.on("/config", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain", getconfig().c_str());
   });
@@ -287,6 +305,12 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
    savemqtt(mqtt_conf, mqtt_config); 
    saveConfiguration(filename_conf, config);
    }
+
+//// minuteur 
+   if (request->hasParam("heure_demarrage")) { request->getParam("heure_demarrage")->value().toCharArray(programme.heure_demarrage,6);  }
+   if (request->hasParam("heure_arret")) { request->getParam("heure_arret")->value().toCharArray(programme.heure_arret,6);  }
+   if (request->hasParam("temperature")) { programme.temperature = request->getParam("temperature")->value().toInt();  saveProgramme(programme_conf,programme); }
+
   //Ajout des relais
   // #ifdef STANDALONE
   #ifdef RELAY1
@@ -389,6 +413,18 @@ String getconfig() {
   serializeJson(doc, configweb);
   return String(configweb);
 }
+
+String getminuteur() {
+    String retour;
+  DynamicJsonDocument doc(128); 
+
+    doc["heure_demarrage"] = programme.heure_demarrage;
+    doc["heure_arret"] = programme.heure_arret;
+    doc["temperature"] = programme.temperature;
+  serializeJson(doc, retour);
+  return String(retour) ;
+}
+
 
 String getmqtt() {
     String retour;

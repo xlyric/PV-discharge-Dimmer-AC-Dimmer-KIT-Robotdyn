@@ -56,5 +56,13 @@ int change=0;
 
 };
 
+struct Programme {
+public:char heure_demarrage[6];
+public:char heure_arret[6];
+public:int temperature;
+public:bool run; 
+};
+
+
 
 #endif
