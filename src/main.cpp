@@ -757,7 +757,7 @@ void loop() {
   
 
   /// Changement de la puissance (  pb de Exception 9 si call direct ) 
-  if ( sysvar.change == 1  ) {
+  if ( sysvar.change == 1  && programme.run == false ) {
     sysvar.change = 0; 
     if (config.dimmer_on_off == 0){
       dimmer_off();  
