@@ -2,6 +2,7 @@
 #define ENUMS
 
 #include <Arduino.h>
+
 #ifdef ESP32
   #include "WiFi.h"
 #else
@@ -61,6 +62,11 @@ public:char heure_demarrage[6];
 public:char heure_arret[6];
 public:int temperature;
 public:bool run; 
+public:int heure;
+public:int minute;
+
+
+
 };
 
 

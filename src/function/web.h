@@ -11,7 +11,7 @@
 #include "config/config.h"
 #include "function/littlefs.h"
 #include "function/ha.h"
-
+#include "function/minuteur.h"
 
 
 
@@ -421,6 +421,9 @@ String getminuteur() {
     doc["heure_demarrage"] = programme.heure_demarrage;
     doc["heure_arret"] = programme.heure_arret;
     doc["temperature"] = programme.temperature;
+    doc["heure"] = timeClient.getHours();
+    doc["minute"] = timeClient.getMinutes();
+
   serializeJson(doc, retour);
   return String(retour) ;
 }
