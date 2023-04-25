@@ -12,6 +12,15 @@
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
         <!-- Custom styles for this template-->
         <link href="https://ota.apper-solaire.org/css/sb-admin-2.min.css" rel="stylesheet">
+        <<link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+        <!--<link rel="stylesheet" href="/resources/demos/style.css">-->
+        <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+        <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+        <script>
+        $( function() {
+          $( "#tabs" ).tabs();
+        } );
+        </script>
     </head>
     <body id="page-top">
         <!-- Page Wrapper -->
@@ -80,8 +89,6 @@
             <i class="fa fa-bars"></i>
           </button>
 
-
-
           <!-- Topbar Navbar -->
                         <ul class="navbar-nav ml-auto">
                             <!-- Nav Item - Search Dropdown (Visible Only XS) -->
@@ -128,121 +135,120 @@
                         <!-- Page Heading -->
                         <h1 class="h3 mb-2 text-gray-800">Configuration minuteur d'appoint</h1>
                         <div class="col-lg-6">
-                            <div class="card position-relative">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Configuration</h6>
-                                    <span id="saveform"></span>
-                                </div>
-                                <div class="card-body">
-                                    <div class="col-lg-12">
-                                        <form
-                                            class="user"
-                                            id="formulaire"
-                                            method="post"
-                                            action=""
-                                        >
+                            <div id="tabs">
+                                <ul class="nav nav-tabs">
+                                  <li class="nav-item"><a class="nav-link" href="#dimmer">Configuration dimmer</a></li>
+                                  <li class="nav-item"><a class="nav-link" href="#relay1">Configuration relay1</a></li>
+                                  <li class="nav-item"><a class="nav-link" href="#relay2">Configuration relay2</a></li>
+                                </ul>
 
-                                            <div class="form-group">
-                                                Heure de demarrage  :
-                                                <input
-                                                    type="text"
-                                                    class="form-control form-control-user"
-                                                    id="heure_demarrage"
-                                                    placeholder="%heure_demarrage%"
-                                                >
-                                            </div>
-                                            <div class="form-group">
-                                                Heure d'arret  :
-                                                <input
-                                                    type="text"
-                                                    class="form-control form-control-user"
-                                                    id="heure_arret"
-                                                    placeholder="%heure_arret%"
-                                                >
-                                            </div>
-                                            <div class="form-group">
-                                                Température de consigne (°C) :
-                                                <input
-                                                    type="text"
-                                                    class="form-control form-control-user"
-                                                    id="temperature"
-                                                    placeholder="%temperature%"
-                                                >
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <input type="submit" value=" Application des parametres" class="btn btn-primary btn-user btn-block">
-                                </form>
-                                <hr>
-                            </div>
-                        </div>
+                                <div id="dimmer">
+                                    <form class="user" id="dimmer-form" method="post" action="">
+                                      <div class="form-group">
+                                        Heure de démarrage:
+                                        <input type="text" class="form-control form-control-user" id="heure_demarrage_dimmer" placeholder="%heure_demarrage%">
+                                      </div>
+                                      <div class="form-group">
+                                        Heure d'arrêt:
+                                        <input type="text" class="form-control form-control-user" id="heure_arret_dimmer" placeholder="%heure_arret%">
+                                      </div>
+                                      <div class="form-group">
+                                        Température de consigne (°C):
+                                        <input type="text" class="form-control form-control-user" id="temperature_dimmer" placeholder="%temperature%">
+                                      </div>
+                                      <input type="submit" value="Application des paramètres dimmer" class="btn btn-primary btn-user btn-block">
+                                    </form>
+                                  </div>
+
+                                  <div id="relay1">
+                                    <form class="user" id="relay1-form" method="post" action="">
+                                      <div class="form-group">
+                                        Heure de démarrage:
+                                        <input type="text" class="form-control form-control-user" id="heure_demarrage_relay1" placeholder="%heure_demarrage%">
+                                      </div>
+                                      <div class="form-group">
+                                        Heure d'arrêt:
+                                        <input type="text" class="form-control form-control-user" id="heure_arret_relay1" placeholder="%heure_arret%">
+                                      </div>
+                                      <div class="form-group">
+                                        Température de consigne (°C):
+                                        <input type="text" class="form-control form-control-user" id="temperature_relay1" placeholder="%temperature%">
+                                      </div>
+                                      <input type="submit" value="Application des paramètres relay1" class="btn btn-primary btn-user btn-block">
+                                    </form>
+                                  </div>
+
+                                  <div id="relay2">
+                                    <form class="user" id="relay2-form" method="post" action="">
+                                      <div class="form-group">
+                                        Heure de démarrage:
+                                        <input type="text" class="form-control form-control-user" id="heure_demarrage_relay2" placeholder="%heure_demarrage%">
+                                      </div>
+                                      <div class="form-group">
+                                        Heure d'arrêt:
+                                        <input type="text" class="form-control form-control-user" id="heure_arret_relay2" placeholder="%heure_arret%">
+                                      </div>
+                                      <div class="form-group">
+                                        Température de consigne (°C):
+                                        <input type="text" class="form-control form-control-user" id="temperature_relay2" placeholder="%temperature%">
+                                      </div>
+                                       <input type="submit" value="Application des paramètres relay2" class="btn btn-primary btn-user btn-block">
+                                    </form>
+                                  </div>
                     </div>
                 </div>
             </div>
             <!-- Content Row -->
-            <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
-            <script type="text/javascript"> 
-	
+<script>
+  $(document).ready(function() {
+    // Récupération des heures de démarrage et d'arrêt depuis le serveur
+    $.get("/getminiteur?relay2", function(data) {
+      $("#heure_demarrage_relay2").val(data.heure_demarrage);
+      $("#heure_arret_relay2").val(data.heure_arret);
+      $("#temperature_relay2").val(data.temperature);
+    });
 
-function save () {				  
-  		$.get( "/getminiteur", { save: "yes" } )
-		.done(function(data) {
-		});		
+    $.get("/getminiteur?relay1", function(data) {
+      $("#heure_demarrage_relay1").val(data.heure_demarrage);
+      $("#heure_arret_relay1").val(data.heure_arret);
+      $("#temperature_relay1").val(data.temperature);
+    });
+
+    $.get("/getminiteur?dimmer", function(data) {
+      $("#heure_demarrage_dimmer").val(data.heure_demarrage);
+      $("#heure_arret_dimmer").val(data.heure_arret);
+      $("#temperature_dimmer").val(data.temperature);
+    });
+
+    // Envoi des données de formulaire au serveur lors de la soumission du formulaire
+    $("#dimmer-form").submit(function(event) {
+      event.preventDefault();
+      var heure_demarrage = $("#heure_demarrage_dimmer").val();
+      var heure_arret = $("#heure_arret_dimmer").val();
+      var temperature = $("#temperature_dimmer").val();
+      $.get("/setminiteur?dimmer", {"heure_demarrage": heure_demarrage, "heure_arret": heure_arret, "temperature": temperature});
+    });
+
+    $("#relay1-form").submit(function(event) {
+      event.preventDefault();
+      var heure_demarrage = $("#heure_demarrage_relay1").val();
+      var heure_arret = $("#heure_arret_relay1").val();
+      var temperature = $("#temperature_relay1").val();
+      $.get("/setminiteur?relay1", {"heure_demarrage": heure_demarrage, "heure_arret": heure_arret, "temperature": temperature});
+    });
+
+    $("#relay2-form").submit(function(event) {
+      event.preventDefault();
+      var heure_demarrage = $("#heure_demarrage_relay2").val();
+      var heure_arret = $("#heure_arret_relay2").val();
+      var temperature = $("#temperature_relay2").val();
+      $.get("/setminiteur?relay2", {"heure_demarrage": heure_demarrage, "heure_arret": heure_arret, "temperature": temperature});
+    });
 
 
-}
+  });
+</script>
 
-	
-		</script>
-
-            <script>
-
-<!-- sauvegarde de la configuration --> 
-
-$( "#save" ).click(function() {
-
-  
-  		$.get( "getminiteur", { save: "yes" } )
-		.done(function(data) {
-		$( "#savemsg" ).text( "Configuration sauvegardée" ).show().fadeOut( 5000 );
-		});	
-		
-
-});
-
-$( "#formulaire" ).submit(function() {
-
-	 var data = {'heure_demarrage':$('#heure_demarrage').val(), 'heure_arret':$('#heure_arret').val(), 'temperature':$('#temperature').val()} 
-
-        $.ajax({
-            type: "GET",
-            data: data,
-            url: "get",
-
-            success: function(retour){
-                $( "#saveform" ).text( "Configuration appliqué" ).show().fadeOut( 5000 );
-                     
-            }
-        });
-  return false;
-});
-
-
-var recupconfig =  $.getJSON('/getminiteur', function(data) {
-  for (var key in data) {
-    if (data.hasOwnProperty(key)) {
-      var element = document.getElementById(key);
-      if (element) {
-        element.value = data[key];
-        if (element.type === 'checkbox') {
-          element.checked = data[key];
-        }
-      }
-    }
-  }
-});
-
-            </script>
         </div>
     </div>
 </div>
@@ -265,7 +271,7 @@ var recupconfig =  $.getJSON('/getminiteur', function(data) {
 </div>
 <!-- End of Page Wrapper -->
 <!-- Bootstrap core JavaScript-->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>-->
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.bundle.min.js"></script>
 <!-- Core plugin JavaScript-->
 <script src="https://ota.apper-solaire.org/css/jquery.easing.min.js"></script>

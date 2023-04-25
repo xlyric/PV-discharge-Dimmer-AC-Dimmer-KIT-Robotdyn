@@ -209,6 +209,8 @@ Config config;
 Mqtt mqtt_config; 
 System sysvar;
 Programme programme; 
+Programme programme_relay1;
+Programme programme_relay2;
 
 String getmqtt(); 
 void savemqtt(const char *filename, const Mqtt &mqtt_config);
@@ -397,9 +399,19 @@ void setup() {
   loadwifiIP(wifi_conf, wifi_config_fixe);
  
   Serial.println(F("Loading minuterie"));
-  loadProgramme(programme_conf,programme);
-  saveProgramme(programme_conf,programme);
+  programme.name="dimmer";
+  programme.loadProgramme();
+  programme.saveProgramme();
 
+#ifdef RELAY1
+  programme_relay1.name="relay1";
+  programme_relay1.loadProgramme();
+  programme_relay1.saveProgramme();
+
+  programme_relay2.name="relay2";
+  programme_relay2.loadProgramme();
+  programme_relay2.saveProgramme();
+#endif
     //***********************************
     //************* Setup - Connexion Wifi
     //***********************************
@@ -694,21 +706,20 @@ void loop() {
   }
 
   ///////////////// minuteur 
-
+ //// Dimmer 
   if (programme.run) { 
       //Serial.print(config.maxpow);
-      if (stop_progr()) { 
+      if (programme.stop_progr()) { 
         dimmer.setPower(0); 
         dimmer_off();
         sysvar.puissance=0;
-        Serial.print("stop minuteur ");
+        Serial.print("stop minuteur dimmer");
         mqtt(String(config.IDX), String(dimmer.getPower())); // remonté MQTT de la commande réelle
         if (mqtt_config.HA) {device_dimmer.send(String(dimmer.getPower()));} 
       } 
   } 
   else { 
-    
-    if (start_progr()){ 
+    if (programme.start_progr()){ 
       sysvar.puissance=config.maxpow; 
       dimmer_on();
       dimmer.setPower(config.maxpow); 
@@ -719,6 +730,31 @@ void loop() {
       }
   }
 
+#ifdef RELAY1
+ //// relay 1 
+ if (programme_relay1.run) { 
+      if (programme_relay1.stop_progr()) { 
+        digitalWrite(RELAY1 , LOW);
+      }
+ }
+ else {
+      if (programme_relay1.start_progr()){ 
+        digitalWrite(RELAY1 , HIGH);
+      }
+ }
+
+ if (programme_relay2.run) { 
+      if (programme_relay2.stop_progr()) { 
+        digitalWrite(RELAY2 , LOW);
+      }
+ }
+ else {
+      if (programme_relay2.start_progr()){ 
+        digitalWrite(RELAY2 , HIGH);
+      }
+ }
+
+#endif
 
   ///////////////// restart 
   if (config.restart) {

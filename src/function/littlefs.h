@@ -24,7 +24,7 @@ const char *programme_conf = "/programme.json";
 
 
 extern Config config; 
-extern Programme programme; 
+//extern Programme programme; 
 
 extern String loginit;
 extern String logs; 
@@ -297,56 +297,7 @@ void savewifiIP(const char *wifi_conf, Wifi_struct &wifi_config_fixe) {
   configFile.close();
 }
 
-void saveProgramme(const char *programme_conf, const Programme &programme) {
-  DynamicJsonDocument doc(128);
- 
-  // Set the values in the document
-  doc["heure_demarrage"] = programme.heure_demarrage;
-  doc["heure_arret"] = programme.heure_arret;
-  doc["temperature"] = programme.temperature;
-  
-    // Open file for writing
-  File configFile = LittleFS.open(programme_conf, "w");
-  if (!configFile) {
-    Serial.println(F("Failed to open config file for writing"));
-    return;
-  }
 
-  // Serialize JSON to file
-  if (serializeJson(doc, configFile) == 0) {
-    Serial.println(F("Failed to write to file"));
-  }
-  
-  configFile.close();
-}
-
-bool loadProgramme(const char *programme_conf, Programme &programme) {
-  // Open file for reading
-  File configFile = LittleFS.open(programme_conf, "r");
-
-  // Allocate a temporary JsonDocument
-  // Don't forget to change the capacity to match your requirements.
-  // Use arduinojson.org/v6/assistant to compute the capacity.
-  DynamicJsonDocument doc(128);
-
-  // Deserialize the JSON document
-  DeserializationError error = deserializeJson(doc, configFile);
-  if (error) {
-    Serial.println(F("Failed to read minuterie config "));
-    return false;
-  }
- 
-  strlcpy(programme.heure_demarrage,                  // <- destination
-          doc["heure_demarrage"] | "", // <- source
-          sizeof(programme.heure_demarrage));         // <- destination's capacity
-  
-  strlcpy(programme.heure_arret,                  // <- destination
-          doc["heure_arret"] | "", // <- source
-          sizeof(programme.heure_arret));         // <- destination's capacity
-  programme.temperature = doc["temperature"] | 50 ; /// defaut à 50 °
-  configFile.close();
-return true;    
-}
 
 
 #endif
