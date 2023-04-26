@@ -108,22 +108,10 @@
                                 <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in" aria-labelledby="searchDropdown"></div>
                             </li>
                             <!-- Nav Item - Alerts -->
-                            <li class="nav-item dropdown no-arrow mx-1">
+                            <li class="nav-item mx-1">
                                 <a
-                                    class="nav-link dropdown-toggle"
-                                    href="#"
-                                    id="alertsDropdown"
-                                    role="button"
-                                    data-toggle="dropdown"
-                                    aria-haspopup="true"
-                                    aria-expanded="false"
+                                    id="heure"
                                 >
-                                    Transmission mode
-                                    <i class="fas fa-bell fa-fw"></i>
-                                    <!-- Counter - Alerts -->
-                                    <span class="badge badge-danger badge-counter">
-                                        <span id="sendmode2" onclick="sendmode(this.innerHTML);"></span>
-                                    </span>
                                 </a>
                             </li>
                             <div class="topbar-divider d-none d-sm-block"></div>
@@ -206,6 +194,9 @@
       $("#heure_demarrage_relay2").val(data.heure_demarrage);
       $("#heure_arret_relay2").val(data.heure_arret);
       $("#temperature_relay2").val(data.temperature);
+      var heure = data.heure;
+      var minute = data.minute;
+      $("#heure").html( heure + ":" + minute + " GMT+1");
     });
 
     $.get("/getminiteur?relay1", function(data) {
