@@ -416,9 +416,9 @@ String textnofiles() {
 
 String processor(const String& var){
   // Serial.println(var);
-  if (var == "STATE"){
+  /*if (var == "STATE"){
     return getState();
-  } 
+  } */
   if (var == "VERSION"){
     return (VERSION);
   } 
