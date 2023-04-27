@@ -84,7 +84,18 @@ void call_pages() {
     if  (LittleFS.exists("/index.html")) {
       if (request->hasParam(PARAM_INPUT_1)) { 
 
-        sysvar.puissance = request->getParam(PARAM_INPUT_1)->value().toInt(); 
+        
+        /// si remonté de puissance dispo
+         if (request->hasParam("puissance")) { 
+            int dispo = request->getParam("puissance")->value().toInt();
+            config.dispo = dispo;
+            dispo= (100*dispo/config.charge); 
+            if ( strcmp(config.mode,"equal") == 0) {sysvar.puissance = sysvar.puissance + dispo/2;}
+            else {sysvar.puissance = sysvar.puissance + dispo; }
+         }
+         else
+         {sysvar.puissance = request->getParam(PARAM_INPUT_1)->value().toInt();  }
+
         logs += "HTTP power at " + String(sysvar.puissance) + "\r\n"; 
         sysvar.change=1; 
         request->send_P(200, "text/plain", getState().c_str());  
@@ -315,6 +326,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     config.maxtemp = request->getParam("maxtemp")->value().toInt();
     if (!AP && mqtt_config.mqtt) { device_dimmer_maxtemp.send(String(config.maxtemp));}
    }
+   if (request->hasParam("charge")) { config.charge = request->getParam("charge")->value().toInt();}
    if (request->hasParam("IDXAlarme")) { config.IDXAlarme = request->getParam("IDXAlarme")->value().toInt();}
    if (request->hasParam("IDX")) { config.IDX = request->getParam("IDX")->value().toInt();}
    if (request->hasParam("startingpow")) { config.startingpow = request->getParam("startingpow")->value().toInt();
@@ -401,10 +413,15 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
 String getState() {
   String state; 
   char buffer[8];
+  int instant_power= dimmer.getPower() ; 
+  //state = String(instant_power) + "% " +  String(instant_power * config.charge) + "W"; 
+
+  dtostrf(sysvar.celsius, 5, 1, buffer); // conversion en n.1f 
+  
   DynamicJsonDocument doc(64);
-    doc["dimmer"] = dimmer.getPower();
-        dtostrf(sysvar.celsius, 5, 1, buffer); // conversion en n.1f 
+    doc["dimmer"] = instant_power;
     doc["temperature"] = buffer;
+    doc["power"] = (instant_power * config.charge/100);
   serializeJson(doc, state);
   return String(state);
 }
@@ -449,6 +466,7 @@ String getconfig() {
     doc["SubscribePV"] = config.SubscribePV;
     doc["SubscribeTEMP"] = config.SubscribeTEMP;
     doc["dimmer_on_off"] = config.dimmer_on_off;
+    doc["charge"] = config.charge;
   
   serializeJson(doc, configweb);
   return String(configweb);

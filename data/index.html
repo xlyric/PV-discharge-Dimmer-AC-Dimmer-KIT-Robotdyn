@@ -199,10 +199,16 @@ setInterval(function ( ) {
 $.getJSON('/state', function(data) {
 // Récupérer les données du JSON
     var dimmer = data.dimmer;
+    var power = data.power;
     var temperature = data.temperature;
     // Mettre à jour les éléments HTML
         dataGaugePA.setValue(0, 0, "Power"); 
-		dataGaugePA.setValue(0, 1, dimmer);
+		dataGaugePA.setValue(0, 1, power);
+        var pmax = parseInt(power *100 / dimmer ); 
+        optionsGauge.max = pmax;
+        optionsGauge.redTo = pmax;
+        optionsGauge.redFrom = parseInt(pmax/2);
+        optionsGauge.yellowTo = parseInt(pmax/2); 
 		gaugePA.draw(dataGaugePA,optionsGauge);
 		
 		dataGaugePAtemp.setValue(0, 0, "Temp °C"); 

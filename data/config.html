@@ -152,7 +152,8 @@
                                             <div class="col mr-2">
                                                 <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Puissance</div>
                                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                                    <span id="state">%STATE%</span>
+                                                    <span id="state">%STATE%</span>(percent)
+                                                    <span id="power">%POWER%</span>(W)
                                                 </div>
                                             </div>
                                             <div class="col-auto">
@@ -230,6 +231,7 @@
                                                             <div class="col-sm-3">Max Temp (°C)</div>
                                                             <div class="col-sm-3">Min Power (percent)</div>
                                                             <div class="col-sm-3">Max Power (percent)</div>
+                                                            <div class="col-sm-3">Charge (W)</div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <div class="col-sm-3">
@@ -254,6 +256,14 @@
                                                                     class="form-control form-control-user"
                                                                     id="maxpow"
                                                                     placeholder="%MAXPOW%"
+                                                                >
+                                                            </div>
+                                                            <div class="col-sm-3">
+                                                                <input
+                                                                    type="text"
+                                                                    class="form-control form-control-user"
+                                                                    id="charge"
+                                                                    placeholder="%CHARGE%"
                                                                 >
                                                             </div>
                                                         </div>
@@ -405,8 +415,10 @@ setInterval(function refreshsend( ) {
           // Récupérer les données du JSON
             var dimmer = data.dimmer;
             var temperature = data.temperature;
+            var power= data.power;
           document.getElementById("state").innerHTML = dimmer;
           document.getElementById("sigma").innerHTML = temperature;
+          document.getElementById("power").innerHTML = power;
           });
 }, 5000);
 	
@@ -468,7 +480,7 @@ $( "#save" ).click(function() {
 
 $( "#formulaire" ).submit(function() {
 
-	 var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(), 'idxtemp':$('#idxtemp').val(), 'maxtemp':$('#maxtemp').val(), 'IDXAlarme':$('#IDXAlarme').val(), 'IDX':$('#IDX').val(), 'startingpow':$('#startingpow').val(), 'minpow':$('#minpow').val(), 'maxpow':$('#maxpow').val(), 'child':$('#child').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val(), 'mode':$('#delester').val() } 
+	 var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(), 'idxtemp':$('#idxtemp').val(), 'maxtemp':$('#maxtemp').val(), 'IDXAlarme':$('#IDXAlarme').val(), 'IDX':$('#IDX').val(), 'startingpow':$('#startingpow').val(), 'minpow':$('#minpow').val(), 'maxpow':$('#maxpow').val(), 'child':$('#child').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val(), 'mode':$('#delester').val() , 'charge':$('#charge').val()} 
 
      $.ajax({
             type: "GET",

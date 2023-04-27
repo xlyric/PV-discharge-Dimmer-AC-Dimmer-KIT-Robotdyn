@@ -28,7 +28,9 @@ struct Config {
   char SubscribeTEMP[100];
   bool restart;
   int dimmer_on_off;
-
+  int charge;
+  int dispo; 
+  
 };
 
 struct Mqtt {
