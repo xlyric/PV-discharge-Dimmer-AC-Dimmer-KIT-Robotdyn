@@ -252,6 +252,8 @@ HA device_dimmer_child_mode;
 HA device_dimmer_alarm_temp;
 HA device_cooler;
 
+// creation remonté de puissance 
+HA device_dimmer_power;
 
 
 /***************************
@@ -527,6 +529,15 @@ void setup() {
   device_dimmer.Set_retain_flag(true);
   // device_dimmer.Set_expire_after(true);
 
+  device_dimmer_power.Set_name("Watt");
+  device_dimmer_power.Set_object_id("watt");
+  device_dimmer_power.Set_unit_of_meas("W");
+  device_dimmer_power.Set_stat_cla("measurement");
+  device_dimmer_power.Set_dev_cla("power_factor"); // fix is using native unit of measurement '%' which is not a valid unit for the device class ('power') it is using
+  device_dimmer_power.Set_icon("mdi:home-lightning-bolt-outline");
+  device_dimmer_power.Set_entity_type("sensor");
+  device_dimmer_power.Set_retain_flag(true);
+
   device_temp.Set_name("Température");
   device_temp.Set_object_id("temperature");
   device_temp.Set_unit_of_meas("°C");
@@ -618,6 +629,7 @@ void setup() {
   device_cooler.Set_entity_category("diagnostic");
   device_cooler.Set_dev_cla("running");
   device_cooler.Set_retain_flag(true);
+ 
 
 
   //Serial.println(device_temp.name);
@@ -639,6 +651,9 @@ void setup() {
 
         device_dimmer.discovery();
         device_dimmer.send(String(sysvar.puissance));
+
+        device_dimmer_power.discovery();
+        device_dimmer_power.send(String(sysvar.puissance* config.charge/100));
 
         device_cooler.discovery();
         device_cooler.send(stringbool(false));
@@ -715,7 +730,11 @@ void loop() {
         sysvar.puissance=0;
         Serial.print("stop minuteur dimmer");
         mqtt(String(config.IDX), String(dimmer.getPower())); // remonté MQTT de la commande réelle
-        if (mqtt_config.HA) {device_dimmer.send(String(dimmer.getPower()));} 
+        if (mqtt_config.HA) {
+          int instant_power = dimmer.getPower();
+          device_dimmer.send(String(instant_power));
+          device_dimmer_power.send(String(instant_power * config.charge/100)); 
+        } 
       } 
   } 
   else { 
@@ -726,8 +745,12 @@ void loop() {
       delay (50);
       Serial.print("start minuteur ");
       mqtt(String(config.IDX), String(dimmer.getPower())); // remonté MQTT de la commande réelle
-      if (mqtt_config.HA) {device_dimmer.send(String(dimmer.getPower()));} 
-      }
+      if (mqtt_config.HA) {
+        int instant_power = dimmer.getPower();
+        device_dimmer.send(String(instant_power));
+        device_dimmer_power.send(String(instant_power * config.charge/100)); 
+      } 
+    }
   }
 
 #ifdef RELAY1
@@ -815,7 +838,7 @@ void loop() {
           }
           if ( strcmp(config.child,"") != 0 ) {
               if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance-config.maxpow,false ); } // si mode délest, envoi du surplus
-              if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance,false); }  //si mode equal envoie de la commande vers la carte fille
+              if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance,true); }  //si mode equal envoie de la commande vers la carte fille
           }
           #ifdef  SSR
           analogWrite(JOTTA, config.maxpow );
@@ -858,7 +881,11 @@ void loop() {
         }
         else {
           mqtt(String(config.IDX), String(dimmer.getPower())); // remonté MQTT de la commande réelle
-          if (mqtt_config.HA) {device_dimmer.send(String(dimmer.getPower()));} // remonté MQTT HA de la commande réelle
+          if (mqtt_config.HA) {
+                    int instant_power = dimmer.getPower();
+              device_dimmer.send(String(instant_power));
+              device_dimmer_power.send(String(instant_power * config.charge/100)); 
+            } // remonté MQTT HA de la commande réelle
         }
       }
     
@@ -883,6 +910,7 @@ void loop() {
         if (!AP && mqtt_config.Mqtt::mqtt) {
           mqtt(String(config.IDX), "0");
           device_dimmer.send("0");
+          device_dimmer_power.send("0");
         }
         #ifdef outputPin2
           dimmer2.setPower(0);
@@ -901,8 +929,10 @@ void loop() {
     
 
       if (!AP && mqtt_config.Mqtt::mqtt) {
-        mqtt(String(config.IDX), String(dimmer.getPower()));  // correction 19/04
-        device_dimmer.send(String(dimmer.getPower()));
+        int instant_power = dimmer.getPower();
+        mqtt(String(config.IDX), String(instant_power));  // correction 19/04
+        device_dimmer.send(String(instant_power));
+        device_dimmer_power.send(String(instant_power * config.charge/100)); 
         // if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
       }
       if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) && digitalRead(COOLER) == HIGH ) {   // cut cooler 

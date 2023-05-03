@@ -83,18 +83,25 @@ void call_pages() {
     
     if  (LittleFS.exists("/index.html")) {
       if (request->hasParam(PARAM_INPUT_1)) { 
-
+        int input=request->getParam(PARAM_INPUT_1)->value().toInt();
         
         /// si remonté de puissance dispo
          if (request->hasParam("puissance")) { 
             int dispo = request->getParam("puissance")->value().toInt();
             config.dispo = dispo;
             dispo= (100*dispo/config.charge); 
+
+            if (input==0) {sysvar.puissance = 0 ;dispo=0; } /// si POWER=0 on coupe tout 
+              /// on delest 
+            if  (dimmer.getPower() == config.maxpow ) { config.dispo = request->getParam("puissance")->value().toInt(); }
+            else if  (sysvar.puissance + dispo > config.maxpow ) { config.dispo = (dispo - (config.maxpow - sysvar.puissance)) * config.charge / 100;  }
+            // on égalise
             if ( strcmp(config.mode,"equal") == 0) {sysvar.puissance = sysvar.puissance + dispo/2;}
+            
             else {sysvar.puissance = sysvar.puissance + dispo; }
          }
          else
-         {sysvar.puissance = request->getParam(PARAM_INPUT_1)->value().toInt();  }
+         { sysvar.puissance = input;   }
 
         logs += "HTTP power at " + String(sysvar.puissance) + "\r\n"; 
         sysvar.change=1; 

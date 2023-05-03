@@ -35,6 +35,7 @@ extern HA device_dimmer_starting_pow;
 extern HA device_dimmer_maxtemp;
 extern HA device_dimmer_on_off;
 extern HA device_dimmer_alarm_temp;
+extern HA device_dimmer_power;
 
 extern bool discovery_temp; 
 extern bool alerte; 
@@ -72,6 +73,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
     }
     else {
       device_dimmer.send(String(sysvar.puissance));
+      device_dimmer_power.send(String(sysvar.puissance*config.charge/100));
     }
   }
   if (strcmp( Subscribedtopic, config.SubscribeTEMP ) == 0  && doc2.containsKey("temperature")) { 
@@ -303,8 +305,10 @@ void reconnect() {
         String node_id = String("dimmer-") + node_mac; 
         String save_command = String("Xlyric/sauvegarde/"+ node_id );
         //client.subscribe(save_command.c_str());
-        mqtt(String(config.IDX), String(String(dimmer.getPower())));   /// correction 19/04 valeur remonté au dessus du max conf
-        device_dimmer.send(String(dimmer.getPower())); 
+         int instant_power = dimmer.getPower();
+        mqtt(String(config.IDX), String(String(instant_power)));   /// correction 19/04 valeur remonté au dessus du max conf
+        device_dimmer.send(String(instant_power)); 
+        device_dimmer_power.send(String(instant_power * config.charge/100)); 
       } else {
         Serial.print("failed, rc=");
         logs += loguptime() + "Fail and retry\r\n";
