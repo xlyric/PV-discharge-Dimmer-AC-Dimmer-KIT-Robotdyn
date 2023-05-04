@@ -646,6 +646,7 @@ void setup() {
 
     client.setBufferSize(768); // 1024 -> 768 
         if (mqtt_config.HA){
+        /// création des binary_sensor et enregistrement sous HA  
         device_dimmer_on_off.discovery();
         device_dimmer_on_off.send(String(config.dimmer_on_off));
 
@@ -723,7 +724,7 @@ void loop() {
   ///////////////// minuteur 
  //// Dimmer 
   if (programme.run) { 
-      //Serial.print(config.maxpow);
+      //  minuteur en cours
       if (programme.stop_progr()) { 
         dimmer.setPower(0); 
         dimmer_off();
@@ -738,6 +739,7 @@ void loop() {
       } 
   } 
   else { 
+    // minuteur à l'arret
     if (programme.start_progr()){ 
       sysvar.puissance=config.maxpow; 
       dimmer_on();
@@ -779,7 +781,7 @@ void loop() {
 
 #endif
 
-  ///////////////// restart 
+  ///////////////// restart /////////
   if (config.restart) {
     delay(5000);
     Serial.print("Restarting Dimmer");
@@ -798,7 +800,7 @@ void loop() {
         alerte=true;
 
       }
-    //// Trigger
+    //// Trigger de sécurité température
       if ( sysvar.celsius <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
         security = 0 ;
                 if (!AP && mqtt_config.mqtt && mqtt_config.HA) { device_dimmer_alarm_temp.send(stringbool(security)); }
@@ -826,7 +828,7 @@ void loop() {
     {
         if (config.dimmer_on_off == 1){dimmer_on();}  // if off, switch on 
 
-        /// si au dessus de la consigne max configuré
+        /// si au dessus de la consigne max configuré alors config.maxpow. 
         if ( sysvar.puissance > config.maxpow )  
         { 
           if (config.dimmer_on_off == 1){
@@ -836,16 +838,18 @@ void loop() {
               dimmer2.setPower(config.maxpow);
             #endif
           }
+          /// si on a une carte fille, on envoie la commande 
           if ( strcmp(config.child,"") != 0 ) {
               if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance-config.maxpow,false ); } // si mode délest, envoi du surplus
               if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance,true); }  //si mode equal envoie de la commande vers la carte fille
           }
+          
           #ifdef  SSR
           analogWrite(JOTTA, config.maxpow );
           #endif
 
         }
-        else {
+        else { 
         if (config.dimmer_on_off == 1){
           dimmer.setPower(sysvar.puissance);
           #ifdef outputPin2
@@ -862,7 +866,7 @@ void loop() {
           #endif
         }
 
-        /// cooler 
+        /// controle du cooler
         if (config.dimmer_on_off == 1){
           digitalWrite(COOLER, HIGH); // start cooler 
           Timer_Cooler = millis();
@@ -870,6 +874,7 @@ void loop() {
           logs += "Start Cooler\r\n";
         }
         
+      /// si on est en mode MQTT on remonte les valeurs vers HA et MQTT
       if (!AP && mqtt_config.mqtt) { 
         if (config.dimmer_on_off == 0){
           mqtt(String(config.IDX), String("0"));  // remonté MQTT de la commande 0
@@ -891,6 +896,7 @@ void loop() {
     
 
     }
+    /// si la sécurité est active on déleste 
     else if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && security == 1)
     {
       if ( strcmp(config.child,"") != 0 ) {
@@ -898,8 +904,8 @@ void loop() {
         if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance,false); childsend =0 ; }  //si mode equal envoie de la commande vers la carte fille
       }
     }
+    //// si la commande est trop faible on coupe tout partout
     else {
-        //// si la commande est trop faible on coupe tout partout
         dimmer.setPower(0);
               /// et sur les sous routeur 
           if ( strcmp(config.child,"") != 0 ) {
@@ -941,6 +947,8 @@ void loop() {
 }
     }
   }
+
+  //// controle du cooler et remonté MQTT 
 if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < config.minpow) && digitalRead(COOLER) == HIGH ) {   // cut cooler 
   digitalWrite(COOLER, LOW); 
   if (!AP && mqtt_config.mqtt) { device_cooler.send(stringbool(false));}
@@ -956,7 +964,7 @@ if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < c
     sysvar.celsius=CheckTemperature("Inside : ", addr); 
     }
 
-    //gestion des erreurs DS18B20
+  ///gestion des erreurs DS18B20
     if ( (sysvar.celsius == -127.00) || (sysvar.celsius == -255.00) ) {
       sysvar.celsius=previous_celsius;
     }

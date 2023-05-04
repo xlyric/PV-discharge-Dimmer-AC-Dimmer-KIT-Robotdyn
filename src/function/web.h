@@ -79,29 +79,34 @@ extern String getlogs();
 
 void call_pages() {
 
+/// page de index et récupération des requetes de puissance
   server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
     
     if  (LittleFS.exists("/index.html")) {
+      /// si requete sur POWER
       if (request->hasParam(PARAM_INPUT_1)) { 
         int input=request->getParam(PARAM_INPUT_1)->value().toInt();
         
-        /// si remonté de puissance dispo
+        /// si remonté de puissance dispo alors prioritaire
          if (request->hasParam("puissance")) { 
+            /// on recupere la puissance disponible  
             int dispo = request->getParam("puissance")->value().toInt();
+            /// on la converti en pourcentage de charge et config.dispo contient la puissance disponible en W 
             config.dispo = dispo;
             dispo= (100*dispo/config.charge); 
-
-            if (input==0) {sysvar.puissance = 0 ;dispo=0; } /// si POWER=0 on coupe tout 
-              /// on delest 
-            if  (dimmer.getPower() == config.maxpow ) { config.dispo = request->getParam("puissance")->value().toInt(); }
-            else if  (sysvar.puissance + dispo > config.maxpow ) { config.dispo = (dispo - (config.maxpow - sysvar.puissance)) * config.charge / 100;  }
+            /// si POWER=0 on coupe tout
+            if (input==0) {sysvar.puissance = 0 ;dispo=0; } 
+            ///   si au max, on prend la puissance dispo 
+            else if  (dimmer.getPower() == config.maxpow ) { config.dispo = request->getParam("puissance")->value().toInt(); }
+            /// si on dépasse le max, on prend la puissance dispo restante 
+            else if  (dimmer.getPower() + dispo > config.maxpow ) { config.dispo = (config.dispo - ((config.maxpow - dimmer.getPower()) * config.charge / 100));  }
+            //else if  (sysvar.puissance + dispo > config.maxpow ) { config.dispo = (dispo - (config.maxpow - sysvar.puissance)) * config.charge / 100;  }
             // on égalise
             if ( strcmp(config.mode,"equal") == 0) {sysvar.puissance = sysvar.puissance + dispo/2;}
-            
             else {sysvar.puissance = sysvar.puissance + dispo; }
          }
          else
-         { sysvar.puissance = input;   }
+         { sysvar.puissance = input;  config.dispo = 0; }
 
         logs += "HTTP power at " + String(sysvar.puissance) + "\r\n"; 
         sysvar.change=1; 
@@ -137,6 +142,7 @@ void call_pages() {
     
   }); 
 
+/// page de config et récupération des requetes de config
   server.on("/config.html",HTTP_ANY, [](AsyncWebServerRequest *request){
     if  (LittleFS.exists("/config.html")) {
         if (!AP) {

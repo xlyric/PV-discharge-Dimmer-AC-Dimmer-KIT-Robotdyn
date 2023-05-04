@@ -202,7 +202,7 @@ $.getJSON('/state', function(data) {
     var power = data.power;
     var temperature = data.temperature;
     // Mettre à jour les éléments HTML
-        dataGaugePA.setValue(0, 0, "Power"); 
+        dataGaugePA.setValue(0, 0, "Power (W)"); 
 		dataGaugePA.setValue(0, 1, power);
         var pmax = parseInt(power *100 / dimmer ); 
         optionsGauge.max = pmax;
