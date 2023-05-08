@@ -787,7 +787,7 @@ void loop() {
     Serial.print("Restarting Dimmer");
     ESP.restart();
   }
-  //// si la sécurité température est active 
+  //// si la sécurité température est active on coupe le dimmer
   if ( security == 1 ) { 
       if (!alerte){
         Serial.println("Alert Temp");
@@ -849,6 +849,7 @@ void loop() {
           #endif
 
         }
+        /// fonctionnement normal
         else { 
         if (config.dimmer_on_off == 1){
           dimmer.setPower(sysvar.puissance);
@@ -858,7 +859,7 @@ void loop() {
         }
           logs += "dimmer at " + String(sysvar.puissance) + "\r\n";
           if ( strcmp(config.child,"") != 0 ) {
-              if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance,false); }  //si mode equal envoie de la commande vers la carte fille
+              if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance,true); }  //si mode equal envoie de la commande vers la carte fille
               if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance < config.maxpow) { child_communication(0,false); }  //si mode délest envoie d'une commande à 0
           }
           #ifdef  SSR
@@ -1003,6 +1004,9 @@ if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < c
     //***********************************
 if ( sysvar.celsius >= config.maxtemp && security == 0 ) {
   security = 1 ; 
+  float temp = sysvar.celsius + 0.2; /// pour être sur que la dernière consigne envoyé soit au moins égale au max.temp  
+  mqtt(String(config.IDXTemp), String(temp));  /// remonté MQTT de la température
+  if ( mqtt_config.HA ) { device_temp.send(String(temp)); }
   if ( strcmp(config.mode,"delester") == 0 && ( strcmp(config.child,"") != 0 ) ) { child_communication(sysvar.puissance,false); } // si mode délest, envoi du surplus
   if (!AP && mqtt_config.mqtt && mqtt_config.HA ) { device_dimmer_alarm_temp.send(stringbool(security)); }
 }

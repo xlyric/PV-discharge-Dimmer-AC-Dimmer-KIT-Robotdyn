@@ -252,19 +252,16 @@ void mqtt(String idx, String value)
 
 //// communication avec carte fille ( HTTP )
 
-void child_communication(int delest_power,bool equal = false){
+void child_communication(int delest_power, bool equal = false){
   int instant_power ;
   String baseurl; 
-  if (config.dispo != 0 ) { instant_power = config.dispo; }
-  else { instant_power = delest_power*config.charge;}
+  if (config.dispo != 0 ) { if (equal) { instant_power = config.dispo/2 ;} else {instant_power = config.dispo; } }
+  else { instant_power = delest_power*config.charge/100   ; }  /// ça posera problème si il y a pas de commandes de puissance en W comme le 2eme dimmer se calque sur la puissance du 1er 
 
-  if (equal) { 
-      instant_power = instant_power /2 ;  
-  }
   baseurl = "/?POWER=" + String(delest_power) + "&puissance=" + instant_power ; http.begin(domotic_client,config.child,80,baseurl); 
   http.GET();
   http.end(); 
-  logs += "child at " + String(delest_power) + "\r\n";
+  logs += "child at " + String(delest_power) + " " + String(instant_power) +  "\r\n";
 }
 
 
