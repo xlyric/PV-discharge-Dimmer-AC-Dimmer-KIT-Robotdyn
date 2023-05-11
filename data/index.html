@@ -204,7 +204,8 @@ $.getJSON('/state', function(data) {
     // Mettre à jour les éléments HTML
         dataGaugePA.setValue(0, 0, "Power (W)"); 
 		dataGaugePA.setValue(0, 1, power);
-        var pmax = parseInt(power *100 / dimmer ); 
+        var pmaxtemp = parseInt(power *100 / dimmer ); 
+        let pmax = isNaN(pmaxtemp) ? 1000 : pmaxtemp;
         optionsGauge.max = pmax;
         optionsGauge.redTo = pmax;
         optionsGauge.redFrom = parseInt(pmax/2);
