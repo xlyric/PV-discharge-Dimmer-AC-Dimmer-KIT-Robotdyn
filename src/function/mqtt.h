@@ -237,13 +237,14 @@ void mqtt(String idx, String value)
       String nvalue = "0" ; 
       if ( value != "0" ) { nvalue = "2" ; }
       String message = "  { \"idx\" : " + idx +" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
-      client.loop();
+      //client.loop();
       client.publish(config.Publish, String(message).c_str(), true);   
     }
 
     if (mqtt_config.jeedom){
       String jdompub = String(config.Publish) + "/"+idx ;
       client.publish(jdompub.c_str() , value.c_str(), true);
+      //client.loop();
     }
     Serial.println("MQTT SENT");
   }
@@ -272,7 +273,7 @@ void reconnect() {
   // String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
   // String node_id = String("dimmer-") + node_mac; 
   // String topic = "homeassistant/sensor/"+ node_id +"/status";  
-
+  
   // Loop until we're reconnected
   int timeout = 0; 
   if  (LittleFS.exists("/mqtt.json"))
@@ -280,7 +281,7 @@ void reconnect() {
     while (!client.connected()) {
       
       Serial.print("Attempting MQTT connection...");
-      logs += loguptime() + "Reconnect MQTT\r\n";
+      logs += loguptime() + " Reconnect MQTT\r\n";
       // Create a random client ID
       // String clientId = "Dimmer";
       // clientId += String(random(0xffff), HEX);

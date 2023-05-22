@@ -2,6 +2,7 @@
 #define HA_FUNCTIONS
 
 #include <PubSubClient.h>
+//#include <AsyncMqttClient.h>
 
 extern PubSubClient client;
 
@@ -207,6 +208,7 @@ struct HA
       String topic = "homeassistant/"+ entity_type +"/"+ node_id +"/";
       String message = "  { \""+object_id+"\" : \"" + value.c_str() + "\"  } ";
       client.publish(String(topic + object_id + "/state").c_str() , message.c_str(), retain_flag);
+      client.loop();
     } 
 
 

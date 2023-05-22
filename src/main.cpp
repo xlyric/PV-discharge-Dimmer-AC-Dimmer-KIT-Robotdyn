@@ -84,6 +84,9 @@
 // #include <LittleFS.h> // décalé avec la condition ESP32
 #include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
 #include <ArduinoJson.h> // ArduinoJson : https://github.com/bblanchon/ArduinoJson
+
+#include <TaskScheduler.h>
+
 // ota mise à jour sans fil
 #include <AsyncElegantOTA.h>
 // Dallas 18b20
@@ -100,6 +103,12 @@
 #include "function/mqtt.h"
 #include "function/minuteur.h"
 
+#include "tasks/dallas.h"
+#include "tasks/cooler.h"
+
+Task Task_dallas(15000, TASK_FOREVER, &mqttdallas);
+Task Task_Cooler(15000, TASK_FOREVER, &cooler);
+Scheduler runner;
 
 #ifdef ESP32
 // Web services
@@ -132,6 +141,8 @@
 // Create AsyncWebServer object on port 80
 WiFiClient domotic_client;
 // mqtt
+//AsyncWiFiManager wifiManager(&server,&dns);
+
 void mqtt(String idx, String value);
 PubSubClient client(domotic_client);
 
@@ -225,7 +236,6 @@ int childsend =0;
 
 char buffer[1024];
 
-//AsyncWiFiManager wifiManager(&server,&dns);
 
 /// création des sensors
 HA device_dimmer; 
@@ -623,7 +633,7 @@ void setup() {
   device_dimmer_alarm_temp.Set_dev_cla("problem");
   device_dimmer_alarm_temp.Set_retain_flag(true);
 
-  device_cooler.Set_name("Ventillateur");
+  device_cooler.Set_name("Ventilateur");
   device_cooler.Set_object_id("cooler");
   device_cooler.Set_entity_type("binary_sensor");
   device_cooler.Set_entity_category("diagnostic");
@@ -641,7 +651,9 @@ void setup() {
    // Serial.println(String(mqtt_config.password));
 
     client.setServer(config.hostname, config.port);
+    client.setClient(domotic_client);
     client.setCallback(callback);
+    client.setKeepAlive(60);
     reconnect();
 
     client.setBufferSize(768); // 1024 -> 768 
@@ -693,6 +705,13 @@ void setup() {
 /// init du NTP
 ntpinit(); 
 
+/// init des tasks
+runner.init();
+runner.addTask(Task_dallas);    
+Task_dallas.enable();
+
+runner.addTask(Task_Cooler);
+Task_Cooler.enable();
 
 Serial.println(ESP.getFreeHeap());
 }
@@ -702,6 +721,16 @@ bool alerte=false;
 /// LOOP 
 ///
 void loop() {
+ 
+  if ( mqtt_config.mqtt && !AP ) {
+    if (!client.connected() ) {
+      reconnect();
+    }
+    client.loop();  // retiré comme ça faisait clignoter HA en mode delest ou equal 
+  }
+
+ runner.execute(); // gestion des taches
+
 
   if (logs.length() > LOG_MAX_STRING_LENGTH ) { 
    logs="197}11}1";
@@ -714,12 +743,7 @@ void loop() {
     ESP.restart();
   }
 
-  if ( mqtt_config.mqtt && !AP ) {
-    if (!client.connected() ) {
-      reconnect();
-    }
-    client.loop();  // retiré comme ça faisait clignoter HA en mode delest ou equal 
-  }
+
 
   ///////////////// minuteur 
  //// Dimmer 
@@ -867,19 +891,13 @@ void loop() {
           #endif
         }
 
-        /// controle du cooler
-        if (config.dimmer_on_off == 1){
-          digitalWrite(COOLER, HIGH); // start cooler 
-          Timer_Cooler = millis();
-          if (!AP && mqtt_config.mqtt && mqtt_config.HA) {device_cooler.send(stringbool(true));}
-          logs += "Start Cooler\r\n";
-        }
+
         
       /// si on est en mode MQTT on remonte les valeurs vers HA et MQTT
       if (!AP && mqtt_config.mqtt) { 
         if (config.dimmer_on_off == 0){
           mqtt(String(config.IDX), String("0"));  // remonté MQTT de la commande 0
-          if (mqtt_config.HA) {device_dimmer.send(String("0")); }  // remonté MQTT HA de la commande 0 
+          if (mqtt_config.HA) {device_dimmer.send(String("0"));  device_dimmer_power.send(String("0")); }  // remonté MQTT HA de la commande 0 
         }
         else if ( sysvar.puissance > config.maxpow ) {
           mqtt(String(config.IDX), String(config.maxpow));  // remonté MQTT de la commande max
@@ -942,18 +960,18 @@ void loop() {
         device_dimmer_power.send(String(instant_power * config.charge/100)); 
         // if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
       }
-      if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) && digitalRead(COOLER) == HIGH ) {   // cut cooler 
+      /*if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) && digitalRead(COOLER) == HIGH ) {   // cut cooler 
         digitalWrite(COOLER, LOW); 
         if (!AP && mqtt_config.mqtt) { device_cooler.send(stringbool(false));}
-}
+      }*/
     }
   }
 
   //// controle du cooler et remonté MQTT 
-if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < config.minpow) && digitalRead(COOLER) == HIGH ) {   // cut cooler 
+/*if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < config.minpow) && digitalRead(COOLER) == HIGH ) {   // cut cooler 
   digitalWrite(COOLER, LOW); 
   if (!AP && mqtt_config.mqtt) { device_cooler.send(stringbool(false));}
-}
+}*/
 
  ///// dallas présent >> mesure 
   if ( present == 1 ) { 
@@ -977,7 +995,7 @@ if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < c
       
     if (!AP && mqtt_config.mqtt) {
 
-       mqtt(String(config.IDXTemp), String(sysvar.celsius));  /// remonté MQTT de la température
+      // mqtt(String(config.IDXTemp), String(sysvar.celsius));  /// remonté MQTT de la température // envoyé en task
       //mqtt_HA (String(sysvar.celsius),String(sysvar.puissance));
       //device_temp.send(String(sysvar.celsius));
       if (!discovery_temp && mqtt_config.HA) {
@@ -989,7 +1007,7 @@ if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < c
         device_dimmer_maxtemp.send(String(config.maxtemp));
         
       }
-      if ( mqtt_config.HA ) { device_temp.send(String(sysvar.celsius)); }
+     // if ( mqtt_config.HA ) { device_temp.send(String(sysvar.celsius)); } // envoyé en task 
 
     }
       refreshcount = 0; 
@@ -1021,32 +1039,7 @@ if ( sysvar.celsius >= config.maxtemp && security == 0 ) {
 //////////////
 
 
-    //***********************************
-    //************* récupération d'une température du 18b20
-    //***********************************
 
-float CheckTemperature(String label, byte deviceAddress[12]){
-  float tempC = sensors.getTempC(deviceAddress);
-  Serial.print(label);
-  if ( (tempC == -127.00) || (tempC == -255.00) ) {
-    
-    //// cas d'une sonde trop longue à préparer les valeurs 
-    delay(187); /// attente de 187ms ( temps de réponse de la sonde )
-    tempC = sensors.getTempC(deviceAddress);
-      if ( (tempC == -127.00) || (tempC == -255.00) ) {
-      Serial.print("Error getting temperature");
-      logs += loguptime() + "Dallas on error\r\n";
-      }
-  } else {
-    Serial.print(" Temp C: ");
-    Serial.println(tempC);
-    logs += "Dallas temp : "+ String(tempC) +"\r\n";
-    return (tempC); 
-   
-    
-  }  
-  return (tempC); 
-}
 
 
     //***********************************
