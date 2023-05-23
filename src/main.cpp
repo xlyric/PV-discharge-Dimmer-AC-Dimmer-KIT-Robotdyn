@@ -93,7 +93,8 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 //mqtt
-#include <PubSubClient.h>
+//#include <PubSubClient.h>
+#include <AsyncMqttClient.h>
 /// config
 #include "config/config.h"
 #include "config/enums.h"
@@ -144,8 +145,8 @@ WiFiClient domotic_client;
 //AsyncWiFiManager wifiManager(&server,&dns);
 
 void mqtt(String idx, String value);
-PubSubClient client(domotic_client);
-
+//PubSubClient client(domotic_client);
+AsyncMqttClient client;
 
 //AsyncWebServer server(80);
 DNSServer dns;
@@ -153,7 +154,7 @@ HTTPClient http;
 bool shouldSaveConfig = false;
 Wifi_struct wifi_config_fixe; 
 
-void reconnect();
+//void reconnect();
 //void Mqtt_HA_hello();
 void child_communication(int delest_power);
 
@@ -499,6 +500,7 @@ void setup() {
   }
 
 
+
     //***********************************
     //************* Setup - OTA 
     //***********************************
@@ -647,17 +649,24 @@ void setup() {
   if (!AP && mqtt_config.mqtt) {
     Serial.println("Connection MQTT" );
     loginit +=loguptime() + "MQTT connexion\r\n"; 
+    
+      /// connexion MQTT 
+    async_mqtt_init();
+    connectToMqtt();
+    delay(1000);  
+    
    // Serial.println(String(mqtt_config.username));
    // Serial.println(String(mqtt_config.password));
 
-    client.setServer(config.hostname, config.port);
-    client.setClient(domotic_client);
-    client.setCallback(callback);
-    client.setKeepAlive(60);
-    reconnect();
+    
+    //client.setClient(domotic_client);
+    //client.setCallback(callback);
+    //client.setKeepAlive(60);
+    //reconnect();
 
-    client.setBufferSize(768); // 1024 -> 768 
+    
         if (mqtt_config.HA){
+          Serial.println("HA discovery" );
         /// création des binary_sensor et enregistrement sous HA  
         device_dimmer_on_off.discovery();
         device_dimmer_on_off.send(String(config.dimmer_on_off));
@@ -694,6 +703,7 @@ void setup() {
 
         device_dimmer_save.discovery();
         }
+        reconnect() ;
   }
   
   #ifdef  SSR
@@ -724,9 +734,9 @@ void loop() {
  
   if ( mqtt_config.mqtt && !AP ) {
     if (!client.connected() ) {
-      reconnect();
+      connectToMqtt();
     }
-    client.loop();  // retiré comme ça faisait clignoter HA en mode delest ou equal 
+    //client.loop();  // retiré comme ça faisait clignoter HA en mode delest ou equal 
   }
 
  runner.execute(); // gestion des taches

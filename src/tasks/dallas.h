@@ -1,7 +1,7 @@
 #ifndef TASK_DALLAS
 #define TASK_DALLAS
 
-extern PubSubClient client;
+extern AsyncMqttClient  client;
 extern DallasTemperature sensors;
 extern bool AP; // mode point d'accès
 extern Mqtt mqtt_config; // configuration mqtt
@@ -17,7 +17,7 @@ void mqttdallas() {
     if (mqtt_config.mqtt && present == 1 ) {
         sysvar.celsius=CheckTemperature("Inside : ", addr); 
         sysvar.celsius+=.2; // pour les valeurs max
-        reconnect();
+        //reconnect();
         mqtt(String(config.IDXTemp), String(sysvar.celsius));
         if ( mqtt_config.HA ) { device_temp.send(String(sysvar.celsius)); }
         logs += "Dallas temp : "+ String(sysvar.celsius) +"\r\n";

@@ -10,7 +10,7 @@
 //#define MQTT_USER ""   //// not used, use mqtt.json file  --> to delete 01/23
 //#define MQTT_PASSWORD ""  //// not used, use mqtt.json file --> to delete 01/23
 
-#define VERSION "Version 20230522" 
+#define VERSION "Version 20230523" 
 
 /// default configuration for Dimmer with Power supply and D1 Mini on the board ( default : D0 - D1 )
 #ifdef  POWERSUPPLY

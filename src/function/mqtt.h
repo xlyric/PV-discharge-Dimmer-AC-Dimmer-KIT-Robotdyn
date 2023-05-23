@@ -42,6 +42,12 @@ extern bool alerte;
 extern String logs; 
 extern char buffer[1024];
 
+extern AsyncMqttClient client; 
+
+void onMqttConnect(bool sessionPresent);
+void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
+void onMqttSubscribe(uint16_t packetId, uint8_t qos);
+void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total);
 
   /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remonté par MQTT
   /// @param Subscribedtopic 
@@ -58,9 +64,11 @@ extern char buffer[1024];
   String save_command = String("Xlyric/sauvegarde/"+ node_id );
   String topic = "homeassistant/sensor/"+ node_id +"/status";  
 
-void callback(char* Subscribedtopic, byte* message, unsigned int length) {
+void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
+  //char* Subscribedtopic, byte* message, unsigned int length
   StaticJsonDocument<1024> doc2;
-  deserializeJson(doc2, message);
+  deserializeJson(doc2, payload);
+  /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remonté par MQTT
   if (strcmp( Subscribedtopic, config.SubscribePV ) == 0 && doc2.containsKey("dimmer")) { 
     int puissancemqtt = doc2["dimmer"]; 
     puissancemqtt = puissancemqtt - config.startingpow;
@@ -76,6 +84,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
       device_dimmer_power.send(String(sysvar.puissance*config.charge/100));
     }
   }
+  /// @brief Enregistrement temperature
   if (strcmp( Subscribedtopic, config.SubscribeTEMP ) == 0  && doc2.containsKey("temperature")) { 
     float temperaturemqtt = doc2["temperature"]; 
     if (!discovery_temp) {
@@ -87,9 +96,6 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
       device_dimmer_maxtemp.send(String(config.maxtemp));
     }
     device_temp.send(String(sysvar.celsius));
-
-
-
     if (sysvar.celsius != temperaturemqtt ) {
       sysvar.celsius = temperaturemqtt;
       logs += "MQTT temp at " + String(sysvar.celsius) + "\r\n";
@@ -98,6 +104,7 @@ void callback(char* Subscribedtopic, byte* message, unsigned int length) {
     //   logs += "Subscribedtopic : " + String(Subscribedtopic)+ "\r\n";
     // logs += "switchcommand : " + String(switch_command)+ "\r\n";
 //#ifdef  STANDALONE // désactivé sinon ne fonctionne pas avec ESP32
+  /// @brief Enregistrement des requetes de commandes 
   if (strcmp( Subscribedtopic, switch_command.c_str() ) == 0) { 
     #ifdef RELAY1
       if (doc2.containsKey("relay1")) { 
@@ -238,12 +245,12 @@ void mqtt(String idx, String value)
       if ( value != "0" ) { nvalue = "2" ; }
       String message = "  { \"idx\" : " + idx +" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
       //client.loop();
-      client.publish(config.Publish, String(message).c_str(), true);   
+      client.publish(config.Publish, 0,true, String(message).c_str());   
     }
 
     if (mqtt_config.jeedom){
       String jdompub = String(config.Publish) + "/"+idx ;
-      client.publish(jdompub.c_str() , value.c_str(), true);
+      client.publish(jdompub.c_str() ,0,true, value.c_str());
       //client.loop();
     }
     Serial.println("MQTT SENT");
@@ -275,10 +282,10 @@ void reconnect() {
   // String topic = "homeassistant/sensor/"+ node_id +"/status";  
   
   // Loop until we're reconnected
-  int timeout = 0; 
+  //int timeout = 0; 
   if  (LittleFS.exists("/mqtt.json"))
   {
-    while (!client.connected()) {
+   // while (!client.connected()) {
       
       Serial.print("Attempting MQTT connection...");
       logs += loguptime() + " Reconnect MQTT\r\n";
@@ -288,16 +295,17 @@ void reconnect() {
       // Attempt to connect
       //node_id.c_str(),mqtt_config.username, mqtt_config.password, topic.c_str(), 2, true, "offline"
     //  if (client.connect(node_id.c_str(),mqtt_config.username, mqtt_config.password, topic.c_str(), 2, true, "offline")) {       //Connect to MQTT server
-     if (client.connect(node_id.c_str(),mqtt_config.username, mqtt_config.password)) {
-        client.publish(String(topic).c_str() , "online", true); // status Online
+   //  if (client.connect()) {
+        client.publish(String(topic).c_str() ,0,true, "online"); // status Online
         Serial.println("connected");
         logs += "Connected\r\n";
-        if (mqtt_config.mqtt && strlen(config.SubscribePV) !=0 ) {client.subscribe(config.SubscribePV);}
-        if (mqtt_config.mqtt && strlen(config.SubscribeTEMP) != 0 ) {client.subscribe(config.SubscribeTEMP);}
-        client.subscribe(switch_command.c_str());
-        client.subscribe(number_command.c_str());
-        client.subscribe(select_command.c_str());
-        client.subscribe(button_command.c_str());
+        if (mqtt_config.mqtt && strlen(config.SubscribePV) !=0 ) {client.subscribe(config.SubscribePV,1);}
+        if (mqtt_config.mqtt && strlen(config.SubscribeTEMP) != 0 ) {client.subscribe(config.SubscribeTEMP,1);}
+        client.subscribe(switch_command.c_str(),1);
+        Serial.println(switch_command.c_str());
+        client.subscribe(number_command.c_str(),1);
+        client.subscribe(select_command.c_str(),1);
+        client.subscribe(button_command.c_str(),1);
                 
         String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
         String node_id = String("dimmer-") + node_mac; 
@@ -307,22 +315,73 @@ void reconnect() {
         mqtt(String(config.IDX), String(String(instant_power)));   /// correction 19/04 valeur remonté au dessus du max conf
         device_dimmer.send(String(instant_power)); 
         device_dimmer_power.send(String(instant_power * config.charge/100)); 
-      } else {
-        Serial.print("failed, rc=");
-        logs += loguptime() + "Fail and retry\r\n";
-        Serial.print(client.state());
-        Serial.println(" try again in 2 seconds");
-        // Wait 2 seconds before retrying
-        delay(2000);   // 24/01/2023 passage de 5 a 2s
-        timeout++; // after 10s break for apply command 
-        if (timeout > 5) {
-            Serial.println(" try again next time ") ; 
-            logs += loguptime() +"retry later\r\n";
-            break;
-            }
-
-      }
-    }
+           
+    
   } else {  Serial.println(" Filesystem not present "); delay(5000); }
 }
+#define MQTT_HOST IPAddress(192, 168, 1, 20)
+void async_mqtt_init() {
+  IPAddress ip;
+  ip.fromString(config.hostname);
+Serial.println(ip);
+  client.setClientId(node_id.c_str());
+  client.setKeepAlive(60);
+  client.setCredentials(mqtt_config.username, mqtt_config.password);
+  client.onDisconnect(onMqttDisconnect);
+  client.onSubscribe(onMqttSubscribe);
+  //client.onUnsubscribe(onMqttUnsubscribe);
+  client.onMessage(callback);
+  //client.onPublish(onMqttPublish);
+
+  client.setServer(ip, config.port);
+  client.setMaxTopicLength(768); // 1024 -> 768 
+  client.onConnect(onMqttConnect);
+  }
+
+void connectToMqtt() {
+  Serial.println("Connecting to MQTT...");
+  client.connect();
+}
+
+void onMqttConnect(bool sessionPresent) {
+  Serial.println("Connected to MQTT.");
+  Serial.print("Session present: ");
+  Serial.println(sessionPresent);
+
+}
+
+void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
+  Serial.println("Disconnected from MQTT.");
+  if (WiFi.isConnected()) {
+    connectToMqtt();
+  }
+}
+
+
+void onMqttSubscribe(uint16_t packetId, uint8_t qos) {
+  Serial.println("Subscribe acknowledged.");
+  Serial.print("  packetId: ");
+  Serial.println(packetId);
+  Serial.print("  qos: ");
+  Serial.println(qos);
+}
+/*
+void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
+  Serial.println("Publish received.");
+  Serial.print("  topic: ");
+  Serial.println(topic);
+  Serial.print("  qos: ");
+  Serial.println(properties.qos);
+  Serial.print("  dup: ");
+  Serial.println(properties.dup);
+  Serial.print("  retain: ");
+  Serial.println(properties.retain);
+  Serial.print("  len: ");
+  Serial.println(len);
+  Serial.print("  payload: ");
+  Serial.println(payload);
+  Serial.print("  total: ");
+  Serial.println(total);
+}*/
+
 #endif

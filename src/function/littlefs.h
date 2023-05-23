@@ -150,7 +150,7 @@ void saveConfiguration(const char *filename, const Config &config) {
   /// Publish on MQTT 
   char buffer[1024];
   serializeJson(doc, buffer);
-  client.publish(("Xlyric/sauvegarde/"+ node_id).c_str() ,buffer,  true);
+  client.publish(("Xlyric/sauvegarde/"+ node_id).c_str() ,0,true, buffer);
   
   // Close the file
   configFile.close();

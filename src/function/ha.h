@@ -1,10 +1,10 @@
 #ifndef HA_FUNCTIONS
 #define HA_FUNCTIONS
 
-#include <PubSubClient.h>
-//#include <AsyncMqttClient.h>
+//#include <PubSubClient.h>
+#include <AsyncMqttClient.h>
 
-extern PubSubClient client;
+extern AsyncMqttClient  client;
 
 
 struct HA
@@ -62,7 +62,7 @@ struct HA
               info =         "\"dev_cla\": \""+dev_cla+"\","
             "\"unit_of_meas\": \""+unit_of_meas+"\","
             "\"stat_cla\": \""+stat_cla+"\"," 
-            "\"avty_t\": \""+ topic + "status\","
+           // "\"avty_t\": \""+ topic + "status\","
             "\"value_template\": \"{{ value_json."+ object_id +" }}\","; 
       }
       else if (entity_type == "switch") { 
@@ -72,8 +72,8 @@ struct HA
             "\"pl_off\": \"{ \\\""+object_id+"\\\" : \\\"0\\\"  } \","
             "\"stat_on\":1,"
             "\"stat_off\":0,"
-            "\"cmd_t\": \""+ topic + "command\"," 
-            "\"avty_t\": \"homeassistant/sensor/"+ node_id +"/" + "status\",";
+            "\"cmd_t\": \""+ topic + "command\"," ;
+           // "\"avty_t\": \"homeassistant/sensor/"+ node_id +"/" + "status\",";
       } 
       else if (entity_type == "number") { 
               info =         "\"val_tpl\": \"{{ value_json."+ object_id +" }}\"," //
@@ -82,29 +82,29 @@ struct HA
             "\"entity_category\": \""+ entity_category + "\"," //
             "\"max\": \""+max+"\"," //
             "\"min\": \""+min+"\"," //
-            "\"step\": \""+step+"\"," //
-            "\"avty_t\": \"homeassistant/sensor/"+ node_id +"/" + "status\","; //
+            "\"step\": \""+step+"\"," ;//
+          //  "\"avty_t\": \"homeassistant/sensor/"+ node_id +"/" + "status\","; //
       } 
       else if (entity_type == "select") { 
               info =         "\"val_tpl\": \"{{ value_json."+ object_id +" }}\"," //
             "\"cmd_t\": \""+ topic + "command\"," //
             "\"cmd_tpl\": \"{ \\\""+object_id+"\\\" : \\\"{{ value }}\\\" } \"," 
             "\"entity_category\": \""+ entity_category + "\"," //
-			      "\"options\": ["+ entity_option + "]," //
-            "\"avty_t\": \"homeassistant/sensor/"+ node_id +"/" + "status\","; //
+			      "\"options\": ["+ entity_option + "]," ;//
+          //  "\"avty_t\": \"homeassistant/sensor/"+ node_id +"/" + "status\","; //
       } 
       else if (entity_type == "binary_sensor") { 
               info =         "\"dev_cla\": \""+dev_cla+"\","
             "\"pl_on\":\"true\","
             "\"pl_off\":\"false\","
-            "\"val_tpl\": \"{{ value_json."+ object_id +" }}\","
-            "\"avty_t\": \"homeassistant/sensor/"+ node_id +"/" + "status\",";
+            "\"val_tpl\": \"{{ value_json."+ object_id +" }}\",";
+         //   "\"avty_t\": \"homeassistant/sensor/"+ node_id +"/" + "status\",";
       }
       else if (entity_type == "button") { 
               info =            "\"entity_category\": \""+ entity_category + "\"," //
             "\"cmd_t\": \""+ topic + "command\"," //
-            "\"pl_prs\": \"{ \\\""+object_id+"\\\" : \\\"1\\\"  } \","
-            "\"avty_t\": \"homeassistant/sensor/"+ node_id +"/" + "status\",";
+            "\"pl_prs\": \"{ \\\""+object_id+"\\\" : \\\"1\\\"  } \",";
+//"\"avty_t\": \"homeassistant/sensor/"+ node_id +"/" + "status\",";
       }
       return info;
     }
@@ -172,7 +172,8 @@ struct HA
             + device_declare() + 
             "}";
 
-      client.publish(String(topic+object_id+"/config").c_str() , device.c_str(), true); // déclaration autoconf dimmer
+      client.publish(String(topic+object_id+"/config").c_str() ,1,true, device.c_str()); // déclaration autoconf dimmer
+      send("0");
      // Serial.println(device.c_str());   /// sérial pour debug
     }
 
@@ -207,8 +208,8 @@ struct HA
     public:void send(String value){
       String topic = "homeassistant/"+ entity_type +"/"+ node_id +"/";
       String message = "  { \""+object_id+"\" : \"" + value.c_str() + "\"  } ";
-      client.publish(String(topic + object_id + "/state").c_str() , message.c_str(), retain_flag);
-      client.loop();
+      client.publish(String(topic + object_id + "/state").c_str() ,1,true, message.c_str());
+      //client.loop();
     } 
 
 
