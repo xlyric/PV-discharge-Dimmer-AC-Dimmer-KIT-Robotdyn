@@ -984,7 +984,7 @@ void loop() {
 }*/
 
  ///// dallas présent >> mesure 
-  if ( present == 1 ) { 
+ /* if ( present == 1 ) { 
     refreshcount ++;
 
     if (refreshcount == 1 ) {
@@ -1025,7 +1025,7 @@ void loop() {
   
     previous_celsius=sysvar.celsius;
     // delay(500);  /// suppression 24/01/2023 pour plus de rapidité
-  } 
+  } */
 
     //***********************************
     //************* LOOP - Activation de la sécurité

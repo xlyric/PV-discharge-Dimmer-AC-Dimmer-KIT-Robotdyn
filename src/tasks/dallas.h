@@ -48,22 +48,16 @@ void mqttdallas() {
     //***********************************
 
 float CheckTemperature(String label, byte deviceAddress[12]){
+
+  sensors.requestTemperatures();
+  delay(200);
   float tempC = sensors.getTempC(deviceAddress);
   Serial.print(label);
   if ( (tempC == -127.00) || (tempC == -255.00) ) {
-    
+    delay(250);
     //// cas d'une sonde trop longue à préparer les valeurs 
-    delay(187); /// attente de 187ms ( temps de réponse de la sonde )
+     /// attente de 187ms ( temps de réponse de la sonde )
     tempC = sensors.getTempC(deviceAddress);
-      if ( (tempC == -127.00) || (tempC == -255.00) ) {
-      Serial.print("Error getting temperature");
-      logs += loguptime() + "Dallas on error\r\n";
-      }
-  } else {
-    Serial.print(" Temp C: ");
-    Serial.println(tempC);
-    return (tempC); 
-   
   }  
   return (tempC); 
 }
