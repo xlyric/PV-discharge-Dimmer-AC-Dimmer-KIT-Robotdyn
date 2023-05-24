@@ -9,6 +9,7 @@ extern byte present; // capteur dallas présent ou non
 extern String logs; // logs
 extern byte security; // sécurité
 extern byte addr[8]; 
+extern float previous_celsius; // température précédente
 
 float CheckTemperature(String label, byte deviceAddress[12]);
 
@@ -16,12 +17,20 @@ float CheckTemperature(String label, byte deviceAddress[12]);
 void mqttdallas() {
     if (mqtt_config.mqtt && present == 1 ) {
         sysvar.celsius=CheckTemperature("Inside : ", addr); 
-        sysvar.celsius+=.2; // pour les valeurs max
-        //reconnect();
+        // arrondi à 1 décimale 
+        if ( (sysvar.celsius == -127.00) || (sysvar.celsius == -255.00) ) {
+         sysvar.celsius=previous_celsius;
+        }
+        else { 
+        sysvar.celsius = (roundf(sysvar.celsius * 10) / 10 ) + 0.1; // pour les valeurs min
+        }
+
+        if ( sysvar.celsius != previous_celsius ) {
+        // envoie des infos en mqtt dans ce cas
         mqtt(String(config.IDXTemp), String(sysvar.celsius));
         if ( mqtt_config.HA ) { device_temp.send(String(sysvar.celsius)); }
         logs += "Dallas temp : "+ String(sysvar.celsius) +"\r\n";
-        
+        }
         //}
     } 
     //// détection sécurité température
@@ -31,7 +40,7 @@ void mqttdallas() {
         if ( mqtt_config.HA ) { device_dimmer.send("0"); }
         }
   
-
+  previous_celsius=sysvar.celsius;
 }
  
     //***********************************
