@@ -23,16 +23,37 @@ NTPClient timeClient(ntpUDP);
 
 extern System sysvar;
 
+void offset_heure_ete();
+void timeclientEpoch_to_date(time_t epoch) ;
+
+epoc actual_time; 
 
 /// @brief ///////init du NTP 
 void ntpinit() {
       // Configurer le serveur NTP et le fuseau horaire
   timeClient.begin();
-  timeClient.setTimeOffset(3600); // Fuseau horaire (en secondes, ici GMT+1)
   timeClient.update();
+  offset_heure_ete();
   Serial.println(timeClient.getFormattedTime());
+  
 }
 
+void timeclientEpoch_to_date(time_t epoch)  { // convert epoch to date  
+  actual_time.mois = month(epoch);
+  actual_time.jour = day(epoch);
+  actual_time.heure = hour(epoch);
+  }
+
+
+void offset_heure_ete() {
+  timeclientEpoch_to_date(timeClient.getEpochTime());
+  if (actual_time.jour >= 25 && actual_time.mois >= 3 && actual_time.heure >= 2) {
+    timeClient.setTimeOffset(7200); // Fuseau horaire (en secondes, ici GMT+2)
+  }
+  if (actual_time.jour >= 25 && actual_time.mois >= 10 && actual_time.heure >= 3) {
+    timeClient.setTimeOffset(3600); // Fuseau horaire (en secondes, ici GMT+1)
+  }
+}
 
 //////// structure pour les programmateurs. 
 struct Programme {
@@ -135,6 +156,7 @@ bool stop_progr() {
     if (heures == timeClient.getHours() && minutes == timeClient.getMinutes()) {
         run=false; 
         timeClient.update();
+        offset_heure_ete();     
         return true; 
     }
   }

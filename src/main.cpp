@@ -786,6 +786,7 @@ void loop() {
         device_dimmer.send(String(instant_power));
         device_dimmer_power.send(String(instant_power * config.charge/100)); 
       } 
+      offset_heure_ete(); // on corrige l'heure d'été si besoin
     }
   }
 

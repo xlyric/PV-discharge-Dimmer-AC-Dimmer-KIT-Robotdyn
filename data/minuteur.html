@@ -196,7 +196,7 @@
       $("#temperature_relay2").val(data.temperature);
       var heure = data.heure;
       var minute = data.minute;
-      $("#heure").html( heure + ":" + minute + " GMT+1");
+      $("#heure").html( heure + ":" + minute );
     });
 
     $.get("/getminiteur?relay1", function(data) {

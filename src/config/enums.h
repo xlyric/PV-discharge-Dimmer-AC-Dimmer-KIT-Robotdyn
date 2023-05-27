@@ -60,6 +60,14 @@ bool cooler=0;
 
 };
 
+struct epoc {
+  public:int heure;
+  public:int minute;
+  public:int seconde;
+  public:int jour;
+  public:int mois;
+  public:int annee;
+};
 
 
 
