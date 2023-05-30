@@ -243,7 +243,7 @@ void mqtt(String idx, String value)
     if (mqtt_config.domoticz){
       String nvalue = "0" ; 
       if ( value != "0" ) { nvalue = "2" ; }
-      String message = "  { \"idx\" : " + idx +" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
+      String message = "  { \"idx\" : \"" + idx +"\" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
       //client.loop();
       client.publish(config.Publish, 0,true, String(message).c_str());   
     }
