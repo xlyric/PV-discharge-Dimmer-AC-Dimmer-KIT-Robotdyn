@@ -823,22 +823,30 @@ void loop() {
     ESP.restart();
   }
   //// si la sécurité température est active on coupe le dimmer
+
+  if ( sysvar.celsius > ( config.maxtemp + 0.5)) { 
+            mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(sysvar.celsius) ));  ///send alert to MQTT
+            device_dimmer_alarm_temp.send("Alert temp");
+          }
+
   if ( security == 1 ) { 
       if (!alerte){
         Serial.println("Alert Temp");
         logs += "Alert Temp\r\n";
-         
       
-        if (!AP && mqtt_config.mqtt) { 
-            mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(sysvar.celsius) ));  ///send alert to MQTT
+        if (!AP && mqtt_config.mqtt ){
+              mqtt(String(config.IDXAlarme), String("Ballon chaud " ));  ///send alert to MQTT
+              device_dimmer_alarm_temp.send("Hot water");
         }
         alerte=true;
-
+        
       }
     //// Trigger de sécurité température
       if ( sysvar.celsius <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
         security = 0 ;
-                if (!AP && mqtt_config.mqtt && mqtt_config.HA) { device_dimmer_alarm_temp.send(stringbool(security)); }
+                if (!AP && mqtt_config.mqtt && mqtt_config.HA) { device_dimmer_alarm_temp.send(stringbool(security)); 
+                 mqtt(String(config.IDXAlarme), String("RAS" ));
+                }
         sysvar.change = 1 ;
       }
       else {
