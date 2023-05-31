@@ -55,6 +55,7 @@ float celsius=0.00;
 int puissance; 
 int change=0; 
 bool cooler=0;
+int puissance_cumul=0;
 //String loginit;
 //String logs="197}11}1";
 

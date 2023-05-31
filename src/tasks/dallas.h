@@ -27,7 +27,7 @@ void mqttdallas() {
 
         if ( sysvar.celsius != previous_celsius ) {
         // envoie des infos en mqtt dans ce cas
-        mqtt(String(config.IDXTemp), String(sysvar.celsius));
+        mqtt(String(config.IDXTemp), String(sysvar.celsius),"Temperature");
         if ( mqtt_config.HA ) { device_temp.send(String(sysvar.celsius)); }
         logs += "Dallas temp : "+ String(sysvar.celsius) +"\r\n";
         }

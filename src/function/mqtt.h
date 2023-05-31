@@ -222,7 +222,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
 
 
 //// envoie de commande MQTT 
-void mqtt(String idx, String value)
+void mqtt(String idx, String value, String name="")
 {
 
   if (idx != "0") { // Autant vérifier qu'une seule fois?
@@ -242,10 +242,18 @@ void mqtt(String idx, String value)
     
     if (mqtt_config.domoticz){
       String nvalue = "0" ; 
+      String retour; 
+      DynamicJsonDocument doc(128);
       if ( value != "0" ) { nvalue = "2" ; }
-      String message = "  { \"idx\" : \"" + idx +"\" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
+      doc["idx"] = idx;
+      doc["nvalue"] = nvalue;
+      doc["svalue"] = value;
+      doc["name"] = name;
+      serializeJson(doc, retour);
+//      String message = "  { \"idx\" : \"" + idx +"\" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
       //client.loop();
-      client.publish(config.Publish, 0,true, String(message).c_str());   
+      //client.publish(config.Publish, 0,true, String(message).c_str());   
+      client.publish(config.Publish, 0,true, retour.c_str());
     }
 
     if (mqtt_config.jeedom){

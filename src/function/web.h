@@ -431,10 +431,11 @@ String getState() {
 
   dtostrf(sysvar.celsius, 5, 1, buffer); // conversion en n.1f 
   
-  DynamicJsonDocument doc(64);
+  DynamicJsonDocument doc(128);
     doc["dimmer"] = instant_power;
     doc["temperature"] = buffer;
     doc["power"] = (instant_power * config.charge/100);
+    doc["Ptotal"]  = sysvar.puissance_cumul + (instant_power * config.charge/100);
   serializeJson(doc, state);
   return String(state);
 }

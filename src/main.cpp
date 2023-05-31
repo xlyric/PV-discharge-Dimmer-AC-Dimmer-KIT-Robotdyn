@@ -106,9 +106,11 @@
 
 #include "tasks/dallas.h"
 #include "tasks/cooler.h"
+#include "tasks/get_power.h"
 
 Task Task_dallas(15000, TASK_FOREVER, &mqttdallas);
 Task Task_Cooler(15000, TASK_FOREVER, &cooler);
+Task Task_GET_POWER(10000, TASK_FOREVER, &get_dimmer_child_power);
 Scheduler runner;
 
 #ifdef ESP32
@@ -265,6 +267,7 @@ HA device_cooler;
 
 // creation remonté de puissance 
 HA device_dimmer_power;
+HA device_dimmer_total_power;
 
 
 /***************************
@@ -550,6 +553,16 @@ void setup() {
   device_dimmer_power.Set_entity_type("sensor");
   device_dimmer_power.Set_retain_flag(true);
 
+  device_dimmer_total_power.Set_name("Watt total");
+  device_dimmer_total_power.Set_object_id("watt_total");
+  device_dimmer_total_power.Set_unit_of_meas("W");
+  device_dimmer_total_power.Set_stat_cla("measurement");
+  device_dimmer_total_power.Set_dev_cla("power_factor"); // fix is using native unit of measurement '%' which is not a valid unit for the device class ('power') it is using
+  device_dimmer_total_power.Set_icon("mdi:home-lightning-bolt-outline");
+  device_dimmer_total_power.Set_entity_type("sensor");
+  device_dimmer_total_power.Set_retain_flag(true);
+
+
   device_temp.Set_name("Température");
   device_temp.Set_object_id("temperature");
   device_temp.Set_unit_of_meas("°C");
@@ -677,6 +690,9 @@ void setup() {
         device_dimmer_power.discovery();
         device_dimmer_power.send(String(sysvar.puissance* config.charge/100));
 
+        device_dimmer_total_power.discovery();
+        device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
+
         device_cooler.discovery();
         device_cooler.send(stringbool(false));
 
@@ -723,6 +739,9 @@ Task_dallas.enable();
 runner.addTask(Task_Cooler);
 Task_Cooler.enable();
 
+runner.addTask(Task_GET_POWER );
+Task_GET_POWER.enable();
+
 Serial.println(ESP.getFreeHeap());
 }
 
@@ -764,11 +783,13 @@ void loop() {
         dimmer_off();
         sysvar.puissance=0;
         Serial.print("stop minuteur dimmer");
-        mqtt(String(config.IDX), String(dimmer.getPower())); // remonté MQTT de la commande réelle
+        mqtt(String(config.IDX), String(dimmer.getPower()),"pourcent"); // remonté MQTT de la commande réelle
         if (mqtt_config.HA) {
           int instant_power = dimmer.getPower();
           device_dimmer.send(String(instant_power));
           device_dimmer_power.send(String(instant_power * config.charge/100)); 
+          device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
+
         } 
       } 
   } 
@@ -780,11 +801,12 @@ void loop() {
       dimmer.setPower(config.maxpow); 
       delay (50);
       Serial.print("start minuteur ");
-      mqtt(String(config.IDX), String(dimmer.getPower())); // remonté MQTT de la commande réelle
+      mqtt(String(config.IDX), String(dimmer.getPower()),"pourcent"); // remonté MQTT de la commande réelle
       if (mqtt_config.HA) {
         int instant_power = dimmer.getPower();
         device_dimmer.send(String(instant_power));
         device_dimmer_power.send(String(instant_power * config.charge/100)); 
+        device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
       } 
       offset_heure_ete(); // on corrige l'heure d'été si besoin
     }
@@ -825,7 +847,7 @@ void loop() {
   //// si la sécurité température est active on coupe le dimmer
 
   if ( sysvar.celsius > ( config.maxtemp + 0.5)) { 
-            mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(sysvar.celsius) ));  ///send alert to MQTT
+            mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(sysvar.celsius) ),"Alerte");  ///send alert to MQTT
             device_dimmer_alarm_temp.send("Alert temp");
           }
 
@@ -835,7 +857,7 @@ void loop() {
         logs += "Alert Temp\r\n";
       
         if (!AP && mqtt_config.mqtt ){
-              mqtt(String(config.IDXAlarme), String("Ballon chaud " ));  ///send alert to MQTT
+              mqtt(String(config.IDXAlarme), String("Ballon chaud " ),"Alerte");  ///send alert to MQTT
               device_dimmer_alarm_temp.send("Hot water");
         }
         alerte=true;
@@ -845,7 +867,7 @@ void loop() {
       if ( sysvar.celsius <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
         security = 0 ;
                 if (!AP && mqtt_config.mqtt && mqtt_config.HA) { device_dimmer_alarm_temp.send(stringbool(security)); 
-                 mqtt(String(config.IDXAlarme), String("RAS" ));
+                 mqtt(String(config.IDXAlarme), String("RAS" ),"Alerte");
                 }
         sysvar.change = 1 ;
       }
@@ -915,19 +937,21 @@ void loop() {
       /// si on est en mode MQTT on remonte les valeurs vers HA et MQTT
       if (!AP && mqtt_config.mqtt) { 
         if (config.dimmer_on_off == 0){
-          mqtt(String(config.IDX), String("0"));  // remonté MQTT de la commande 0
-          if (mqtt_config.HA) {device_dimmer.send(String("0"));  device_dimmer_power.send(String("0")); }  // remonté MQTT HA de la commande 0 
+          mqtt(String(config.IDX), String("0"),"pourcent");  // remonté MQTT de la commande 0
+          if (mqtt_config.HA) {device_dimmer.send(String("0"));  device_dimmer_power.send(String("0")); device_dimmer_total_power.send(String(sysvar.puissance_cumul)); 
+          }  // remonté MQTT HA de la commande 0 
         }
         else if ( sysvar.puissance > config.maxpow ) {
-          mqtt(String(config.IDX), String(config.maxpow));  // remonté MQTT de la commande max
-          if (mqtt_config.HA) {device_dimmer.send(String(config.maxpow));}  // remonté MQTT HA de la commande max
+          mqtt(String(config.IDX), String(config.maxpow),"pourcent");  // remonté MQTT de la commande max
+          if (mqtt_config.HA) {device_dimmer.send(String(config.maxpow)); device_dimmer_total_power.send(String(sysvar.puissance_cumul + config.maxpow)); }  // remonté MQTT HA de la commande max
         }
         else {
-          mqtt(String(config.IDX), String(dimmer.getPower())); // remonté MQTT de la commande réelle
+          mqtt(String(config.IDX), String(dimmer.getPower()),"pourcent"); // remonté MQTT de la commande réelle
           if (mqtt_config.HA) {
                     int instant_power = dimmer.getPower();
               device_dimmer.send(String(instant_power));
               device_dimmer_power.send(String(instant_power * config.charge/100)); 
+              device_dimmer_total_power.send(String(sysvar.puissance_cumul + (instant_power* config.charge/100)));
             } // remonté MQTT HA de la commande réelle
         }
       }
@@ -952,7 +976,7 @@ void loop() {
           }
 
         if (!AP && mqtt_config.Mqtt::mqtt) {
-          mqtt(String(config.IDX), "0");
+          mqtt(String(config.IDX), "0","pourcent");
           device_dimmer.send("0");
           device_dimmer_power.send("0");
         }
@@ -974,9 +998,10 @@ void loop() {
 
       if (!AP && mqtt_config.Mqtt::mqtt) {
         int instant_power = dimmer.getPower();
-        mqtt(String(config.IDX), String(instant_power));  // correction 19/04
+        mqtt(String(config.IDX), String(instant_power),"Watt");  // correction 19/04
         device_dimmer.send(String(instant_power));
         device_dimmer_power.send(String(instant_power * config.charge/100)); 
+        device_dimmer_total_power.send(String(sysvar.puissance_cumul + (instant_power*config.charge/100) ));
         // if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
       }
       /*if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) && digitalRead(COOLER) == HIGH ) {   // cut cooler 
@@ -1042,7 +1067,7 @@ void loop() {
 if ( sysvar.celsius >= config.maxtemp && security == 0 ) {
   security = 1 ; 
   float temp = sysvar.celsius + 0.2; /// pour être sur que la dernière consigne envoyé soit au moins égale au max.temp  
-  mqtt(String(config.IDXTemp), String(temp));  /// remonté MQTT de la température
+  mqtt(String(config.IDXTemp), String(temp),"Temperature");  /// remonté MQTT de la température
   if ( mqtt_config.HA ) { device_temp.send(String(temp)); }
   if ( strcmp(config.mode,"delester") == 0 && ( strcmp(config.child,"") != 0 ) ) { child_communication(sysvar.puissance,false); } // si mode délest, envoi du surplus
   if (!AP && mqtt_config.mqtt && mqtt_config.HA ) { device_dimmer_alarm_temp.send(stringbool(security)); }
