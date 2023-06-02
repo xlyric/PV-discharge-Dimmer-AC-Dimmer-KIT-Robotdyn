@@ -425,11 +425,11 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
 /// @return 
 String getState() {
   String state; 
-  char buffer[8];
+  char buffer[5];
   int instant_power= dimmer.getPower() ; 
   //state = String(instant_power) + "% " +  String(instant_power * config.charge) + "W"; 
-
-  dtostrf(sysvar.celsius, 5, 1, buffer); // conversion en n.1f 
+   
+  dtostrf(sysvar.celsius,2, 1, buffer); // conversion en n.1f 
   
   DynamicJsonDocument doc(128);
     doc["dimmer"] = instant_power;
