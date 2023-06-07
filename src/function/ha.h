@@ -6,7 +6,6 @@
 
 extern AsyncMqttClient  client;
 
-
 struct HA
 {
     private:int MQTT_INTERVAL = 60;
@@ -136,29 +135,6 @@ struct HA
             "}"; 
             return info;
             }
-    //private:String uniq_id; 
-    //private:String value_template; 
-
-    /*public:void discovery(){
-      IPaddress =   WiFi.localIP().toString() ;
-      String device= "{ \"dev_cla\": \""+dev_cla+"\","
-            "\"unit_of_meas\": \""+unit_of_meas+"\","
-            "\"stat_cla\": \""+stat_cla+"\"," 
-            "\"name\": \""+ name +"-"+ node_mac + "\"," 
-            "\"state_topic\": \""+ topic +  "state\","
-            "\"stat_t\": \""+ topic  + "state\","
-            "\"avty_t\": \""+ topic + "status\","
-            "\"uniq_id\": \""+ node_mac + "-" + name +"\", "
-            "\"value_template\": \"{{ value_json."+name +" }}\", "
-            "\"cmd_t\": \""+ topic +"command\","
-            "\"cmd_tpl\": \"{{ value_json."+name +" }}\", "
-            + icon
-            + device_declare() + 
-          "}";
-          if (dev_cla =="" ) { dev_cla = name; }
-          client.publish((topic+dev_cla+"/config").c_str() , device.c_str() , true); // déclaration autoconf dimmer
-          Serial.println(device.c_str());
-    }*/
 
     public:void discovery(){
       String topic = "homeassistant/"+ entity_type +"/"+ node_id +"/";
@@ -174,37 +150,9 @@ struct HA
 
       client.publish(String(topic+object_id+"/config").c_str() ,1,true, device.c_str()); // déclaration autoconf dimmer
       send("0");
-     // Serial.println(device.c_str());   /// sérial pour debug
+     
     }
 
-   /* public:void discovery_switch(){
-      IPaddress =   WiFi.localIP().toString() ;
-      String device= "{"
-            "\"name\": \""+ name +"-"+ node_mac + "\"," 
-            "\"payload_off\": \"OFF\","
-            "\"payload_on\": \"ON\","
-            "\"state_topic\": \""+ topic_switch_state +  name + "_" + node_mac + "/state\","
-            "\"uniq_id\": \""+ node_mac + "-" + name +"\", "
-            "\"value_template\": \"{{ value_json."+name +" }}\", "
-            "\"cmd_t\": \""+ topic_switch + name +"/set\","
-            + icon
-            + device_declare() + 
-          "}";
-          if (dev_cla =="" ) { dev_cla = name; }
-          client.publish((topic_switch+dev_cla+"/config").c_str() , device.c_str() , true); // déclaration autoconf dimmer
-          Serial.println(device.c_str());
-          Serial.println(ESP.getFreeHeap());
-    }
-
-    public:void send2(String value){
-       //String message = "  { \""+name+"\" : \"" + value.c_str() + "\"  } ";
-       client.publish((topic + "state").c_str() , value.c_str(), true);
-    }
-
-    public:void switch_send(String value){
-       client.publish((topic_switch_state + name + "_" + node_mac + "/state").c_str() , value.c_str(), true);
-    }*/
- 
     public:void send(String value){
       String topic = "homeassistant/"+ entity_type +"/"+ node_id +"/";
       String message = "  { \""+object_id+"\" : \"" + value.c_str() + "\"  } ";
@@ -215,5 +163,156 @@ struct HA
 
 };
 
+/// création des sensors
+HA device_dimmer; 
+HA device_temp; 
 
+/// création des switchs
+HA device_relay1;
+HA device_relay2;
+HA device_dimmer_on_off;
+
+/// création des button
+HA device_dimmer_save;
+
+/// création number
+HA device_dimmer_starting_pow; 
+HA device_dimmer_maxtemp;
+HA device_dimmer_minpow;
+HA device_dimmer_maxpow;
+
+/// création select
+HA device_dimmer_child_mode;
+
+/// création binary_sensor
+HA device_dimmer_alarm_temp;
+HA device_cooler;
+
+// creation remonté de puissance 
+HA device_dimmer_power;
+HA device_dimmer_total_power;
+
+void devices_init(){
+  /// création des sensors
+  device_dimmer.Set_name("Puissance");
+  device_dimmer.Set_object_id("power");
+  device_dimmer.Set_unit_of_meas("%");
+  device_dimmer.Set_stat_cla("measurement");
+  device_dimmer.Set_dev_cla("power_factor"); // fix is using native unit of measurement '%' which is not a valid unit for the device class ('power') it is using
+  device_dimmer.Set_icon("mdi:percent");
+  device_dimmer.Set_entity_type("sensor");
+  device_dimmer.Set_retain_flag(true);
+  // device_dimmer.Set_expire_after(true);
+
+  device_dimmer_power.Set_name("Watt");
+  device_dimmer_power.Set_object_id("watt");
+  device_dimmer_power.Set_unit_of_meas("W");
+  device_dimmer_power.Set_stat_cla("measurement");
+  device_dimmer_power.Set_dev_cla("power_factor"); // fix is using native unit of measurement '%' which is not a valid unit for the device class ('power') it is using
+  device_dimmer_power.Set_icon("mdi:home-lightning-bolt-outline");
+  device_dimmer_power.Set_entity_type("sensor");
+  device_dimmer_power.Set_retain_flag(true);
+
+  device_dimmer_total_power.Set_name("Watt total");
+  device_dimmer_total_power.Set_object_id("watt_total");
+  device_dimmer_total_power.Set_unit_of_meas("W");
+  device_dimmer_total_power.Set_stat_cla("measurement");
+  device_dimmer_total_power.Set_dev_cla("power_factor"); // fix is using native unit of measurement '%' which is not a valid unit for the device class ('power') it is using
+  device_dimmer_total_power.Set_icon("mdi:home-lightning-bolt-outline");
+  device_dimmer_total_power.Set_entity_type("sensor");
+  device_dimmer_total_power.Set_retain_flag(true);
+
+
+  device_temp.Set_name("Température");
+  device_temp.Set_object_id("temperature");
+  device_temp.Set_unit_of_meas("°C");
+  device_temp.Set_stat_cla("measurement");
+  device_temp.Set_dev_cla("temperature");
+  device_temp.Set_entity_type("sensor");
+  device_temp.Set_retain_flag(true);
+  // device_dimmer.Set_expire_after(true);
+
+  
+  /// création des switch
+  device_relay1.Set_name("Relais 1");
+  device_relay1.Set_object_id("relay1");
+  device_relay1.Set_entity_type("switch");
+  device_relay1.Set_retain_flag(true);
+
+  device_relay2.Set_name("Relais 2");
+  device_relay2.Set_object_id("relay2");
+  device_relay2.Set_entity_type("switch");
+  device_relay2.Set_retain_flag(true);
+
+  device_dimmer_on_off.Set_name("Dimmer");
+  device_dimmer_on_off.Set_object_id("on_off");
+  device_dimmer_on_off.Set_entity_type("switch");
+  device_dimmer_on_off.Set_retain_flag(true);
+ 
+  /// création des button
+  device_dimmer_save.Set_name("Sauvegarder");
+  device_dimmer_save.Set_object_id("save");
+  device_dimmer_save.Set_entity_type("button");
+  device_dimmer_save.Set_entity_category("config");
+  device_dimmer_save.Set_retain_flag(false);
+
+  /// création des number
+  device_dimmer_starting_pow.Set_name("Puissance de démarrage");
+  device_dimmer_starting_pow.Set_object_id("starting_power");
+  device_dimmer_starting_pow.Set_entity_type("number");
+  device_dimmer_starting_pow.Set_entity_category("config");
+  device_dimmer_starting_pow.Set_entity_valuemin("-100");
+  device_dimmer_starting_pow.Set_entity_valuemax("500"); // trop? pas assez? TODO : test sans valeur max?
+  device_dimmer_starting_pow.Set_entity_valuestep("1");
+  device_dimmer_starting_pow.Set_retain_flag(true);
+
+  device_dimmer_minpow.Set_name("Puissance mini");
+  device_dimmer_minpow.Set_object_id("minpow");
+  device_dimmer_minpow.Set_entity_type("number");
+  device_dimmer_minpow.Set_entity_category("config");
+  device_dimmer_minpow.Set_entity_valuemin("0");
+  device_dimmer_minpow.Set_entity_valuemax("100"); // trop? pas assez? TODO : test sans valeur max?
+  device_dimmer_minpow.Set_entity_valuestep("1");
+  device_dimmer_minpow.Set_retain_flag(true);
+
+  device_dimmer_maxpow.Set_name("Puissance maxi");
+  device_dimmer_maxpow.Set_object_id("maxpow");
+  device_dimmer_maxpow.Set_entity_type("number");
+  device_dimmer_maxpow.Set_entity_category("config");
+  device_dimmer_maxpow.Set_entity_valuemin("0");
+  device_dimmer_maxpow.Set_entity_valuemax("100"); // trop? pas assez? TODO : test sans valeur max?
+  device_dimmer_maxpow.Set_entity_valuestep("1");
+  device_dimmer_maxpow.Set_retain_flag(true);
+
+  device_dimmer_maxtemp.Set_name("Température maxi");
+  device_dimmer_maxtemp.Set_object_id("maxtemp");
+  device_dimmer_maxtemp.Set_entity_type("number");
+  device_dimmer_maxtemp.Set_entity_category("config");
+  device_dimmer_maxtemp.Set_entity_valuemin("0");
+  device_dimmer_maxtemp.Set_entity_valuemax("75"); // trop? pas assez? TODO : test sans valeur max?
+  device_dimmer_maxtemp.Set_entity_valuestep("1");
+  device_dimmer_maxtemp.Set_retain_flag(true);
+  /// création des select
+  device_dimmer_child_mode.Set_name("Mode");
+  device_dimmer_child_mode.Set_object_id("child_mode");
+  device_dimmer_child_mode.Set_entity_type("select");
+  device_dimmer_child_mode.Set_entity_category("config");
+  device_dimmer_child_mode.Set_entity_option("\"off\",\"delester\",\"equal\"");
+  device_dimmer_child_mode.Set_retain_flag(true);
+
+  // création des binary_sensor
+  device_dimmer_alarm_temp.Set_name("Surchauffe");
+  device_dimmer_alarm_temp.Set_object_id("alarm_temp");
+  device_dimmer_alarm_temp.Set_entity_type("binary_sensor");
+  device_dimmer_alarm_temp.Set_entity_category("diagnostic");
+  device_dimmer_alarm_temp.Set_dev_cla("problem");
+  device_dimmer_alarm_temp.Set_retain_flag(true);
+
+  device_cooler.Set_name("Ventilateur");
+  device_cooler.Set_object_id("cooler");
+  device_cooler.Set_entity_type("binary_sensor");
+  device_cooler.Set_entity_category("diagnostic");
+  device_cooler.Set_dev_cla("running");
+  device_cooler.Set_retain_flag(true);
+}
 #endif

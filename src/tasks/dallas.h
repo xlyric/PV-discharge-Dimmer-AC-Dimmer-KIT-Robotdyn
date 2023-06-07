@@ -12,6 +12,7 @@ extern byte addr[8];
 extern float previous_celsius; // température précédente
 
 float CheckTemperature(String label, byte deviceAddress[12]);
+void dallaspresent ();
 
 /// @brief / task executé toute les n secondes pour publier la température ( voir déclaration task dans main )
 void mqttdallas() {
@@ -61,4 +62,6 @@ float CheckTemperature(String label, byte deviceAddress[12]){
   }  
   return (tempC); 
 }
+
+
 #endif

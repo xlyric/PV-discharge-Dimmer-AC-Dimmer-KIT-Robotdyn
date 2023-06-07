@@ -61,31 +61,21 @@
  *          MQTT to Domoticz for temp 
  */
 
-
-
-
 /***************************
  * Librairy
  **************************/
 
-// time librairy   
-//#include <NTPClient.h>
-// Dimmer librairy 
 #include <Arduino.h>
-#include <RBDdimmer.h>   /// the corrected librairy  in RBDDimmer-master-corrected.rar , the original has a bug
+// Dimmer librairy 
+#include <RBDdimmer.h>   /// the corrected librairy  in personal depot , the original has a bug
 // Web services
-// #include <ESP8266WiFi.h> // décalé avec la condition ESP32
 #include <ESPAsyncWiFiManager.h>    
-// #include <ESPAsyncTCP.h> // décalé avec la condition ESP32
 #include <ESPAsyncWebServer.h>
-// #include <ESP8266HTTPClient.h> // décalé avec la condition ESP32
-// File System
-//#include <fs.h>
-// #include <LittleFS.h> // décalé avec la condition ESP32
-#include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
-#include <ArduinoJson.h> // ArduinoJson : https://github.com/bblanchon/ArduinoJson
 
-#include <TaskScheduler.h>
+#include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
+#include <ArduinoJson.h> // ArduinoJson v6
+
+#include <TaskScheduler.h> // gestion des taches
 
 // ota mise à jour sans fil
 #include <AsyncElegantOTA.h>
@@ -93,7 +83,6 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 //mqtt
-//#include <PubSubClient.h>
 #include <AsyncMqttClient.h>
 /// config
 #include "config/config.h"
@@ -103,11 +92,13 @@
 #include "function/littlefs.h" 
 #include "function/mqtt.h"
 #include "function/minuteur.h"
+#include "function/dimmer.h"
 
 #include "tasks/dallas.h"
 #include "tasks/cooler.h"
 #include "tasks/get_power.h"
 
+// taches
 Task Task_dallas(15000, TASK_FOREVER, &mqttdallas);
 Task Task_Cooler(15000, TASK_FOREVER, &cooler);
 Task Task_GET_POWER(10000, TASK_FOREVER, &get_dimmer_child_power);
@@ -135,42 +126,23 @@ Scheduler runner;
  * Begin Settings
  **************************/
 
-// WIFI
-// At first launch, create wifi network 'dimmer'  ( pwd : dimmer ) 
-
 //***********************************
 //************* Gestion du serveur WEB
 //***********************************
 // Create AsyncWebServer object on port 80
 WiFiClient domotic_client;
-// mqtt
-//AsyncWiFiManager wifiManager(&server,&dns);
-
-void mqtt(String idx, String value);
-//PubSubClient client(domotic_client);
 AsyncMqttClient client;
 
-//AsyncWebServer server(80);
 DNSServer dns;
 HTTPClient http;
 bool shouldSaveConfig = false;
 Wifi_struct wifi_config_fixe; 
 
-//void reconnect();
-//void Mqtt_HA_hello();
-void child_communication(int delest_power);
 
-//void mqtt_HA(String sensor_temp, String sensor_dimmer);
-
-void callback(char* Subscribedtopic, byte* message, unsigned int length) ;
 
 //***********************************
 //************* Time
 //***********************************
-//const long utcOffsetInSeconds = 3600;
-//char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-//WiFiUDP ntpUDP;
-//NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 int timesync = 0; 
 int timesync_refresh = 120; 
 
@@ -183,7 +155,7 @@ int timesync_refresh = 120;
 //************* Dallas
 //***********************************
 void dallaspresent ();
-float CheckTemperature(String label, byte deviceAddress[12]);
+//float CheckTemperature(String label, byte deviceAddress[12]);
 #define TEMPERATURE_PRECISION 10
 
 
@@ -200,9 +172,9 @@ OneWire  ds(ONE_WIRE_BUS);  //  (a 4.7K resistor is necessary - 5.7K work with 3
 DallasTemperature sensors(&ds);
 DeviceAddress insideThermometer;
 
-  byte i;
+  
   byte present = 0;
-  byte type_s;
+  
   byte data[12];
   byte addr[8];
   //float celsius = 0.00;
@@ -239,39 +211,8 @@ int childsend =0;
 
 char buffer[1024];
 
-
-/// création des sensors
-HA device_dimmer; 
-HA device_temp; 
-
-/// création des switchs
-HA device_relay1;
-HA device_relay2;
-HA device_dimmer_on_off;
-
-/// création des button
-HA device_dimmer_save;
-
-/// création number
-HA device_dimmer_starting_pow; 
-HA device_dimmer_maxtemp;
-HA device_dimmer_minpow;
-HA device_dimmer_maxpow;
-
-/// création select
-HA device_dimmer_child_mode;
-
-/// création binary_sensor
-HA device_dimmer_alarm_temp;
-HA device_cooler;
-
-// creation remonté de puissance 
-HA device_dimmer_power;
-HA device_dimmer_total_power;
-
-
 /***************************
- * init Dimmer5
+ * init Dimmer
  **************************/
 
 dimmerLamp dimmer(outputPin, zerocross); //initialise port for dimmer for ESP8266, ESP32, Arduino due boards
@@ -283,45 +224,11 @@ dimmerLamp dimmer(outputPin, zerocross); //initialise port for dimmer for ESP826
 int outVal = 0;
 
     //***********************************
-    //************* function web 5
+    //************* function web 
     //***********************************
 
 
 unsigned long Timer_Cooler;
-
-/// fonction pour mettre en pause ou allumer le dimmer 
-void dimmer_on()
-{
-  if (dimmer.getState()==0) {
-    dimmer.setState(ON);
-    logs +="Dimmer On\r\n"; 
-    delay(50);
-    }
-  #ifdef outputPin2
-    if (dimmer2.getState()==0) {
-      dimmer2.setState(ON);
-      logs +="Dimmer2 On\r\n"; 
-      delay(50);
-    }  
-  #endif
-}
-
-void dimmer_off()
-{
-  if (dimmer.getState()==1) {
-    dimmer.setPower(0);
-    dimmer.setState(OFF);
-    logs +="Dimmer Off\r\n"; 
-    digitalWrite(COOLER, LOW);
-    delay(50);
-    }
-  #ifdef outputPin2
-    dimmer2.setPower(0);
-    dimmer2.setState(OFF);
-    logs +="Dimmer2 Off\r\n"; 
-    delay(50);
-  #endif
-}
 
 IPAddress _ip,_gw,_sn;
 
@@ -534,127 +441,7 @@ void setup() {
   /// recherche d'une sonde dallas
   dallaspresent();
 
-  /// création des sensors
-  device_dimmer.Set_name("Puissance");
-  device_dimmer.Set_object_id("power");
-  device_dimmer.Set_unit_of_meas("%");
-  device_dimmer.Set_stat_cla("measurement");
-  device_dimmer.Set_dev_cla("power_factor"); // fix is using native unit of measurement '%' which is not a valid unit for the device class ('power') it is using
-  device_dimmer.Set_icon("mdi:percent");
-  device_dimmer.Set_entity_type("sensor");
-  device_dimmer.Set_retain_flag(true);
-  // device_dimmer.Set_expire_after(true);
-
-  device_dimmer_power.Set_name("Watt");
-  device_dimmer_power.Set_object_id("watt");
-  device_dimmer_power.Set_unit_of_meas("W");
-  device_dimmer_power.Set_stat_cla("measurement");
-  device_dimmer_power.Set_dev_cla("power_factor"); // fix is using native unit of measurement '%' which is not a valid unit for the device class ('power') it is using
-  device_dimmer_power.Set_icon("mdi:home-lightning-bolt-outline");
-  device_dimmer_power.Set_entity_type("sensor");
-  device_dimmer_power.Set_retain_flag(true);
-
-  device_dimmer_total_power.Set_name("Watt total");
-  device_dimmer_total_power.Set_object_id("watt_total");
-  device_dimmer_total_power.Set_unit_of_meas("W");
-  device_dimmer_total_power.Set_stat_cla("measurement");
-  device_dimmer_total_power.Set_dev_cla("power_factor"); // fix is using native unit of measurement '%' which is not a valid unit for the device class ('power') it is using
-  device_dimmer_total_power.Set_icon("mdi:home-lightning-bolt-outline");
-  device_dimmer_total_power.Set_entity_type("sensor");
-  device_dimmer_total_power.Set_retain_flag(true);
-
-
-  device_temp.Set_name("Température");
-  device_temp.Set_object_id("temperature");
-  device_temp.Set_unit_of_meas("°C");
-  device_temp.Set_stat_cla("measurement");
-  device_temp.Set_dev_cla("temperature");
-  device_temp.Set_entity_type("sensor");
-  device_temp.Set_retain_flag(true);
-  // device_dimmer.Set_expire_after(true);
-
-  
-  /// création des switch
-  device_relay1.Set_name("Relais 1");
-  device_relay1.Set_object_id("relay1");
-  device_relay1.Set_entity_type("switch");
-  device_relay1.Set_retain_flag(true);
-
-  device_relay2.Set_name("Relais 2");
-  device_relay2.Set_object_id("relay2");
-  device_relay2.Set_entity_type("switch");
-  device_relay2.Set_retain_flag(true);
-
-  device_dimmer_on_off.Set_name("Dimmer");
-  device_dimmer_on_off.Set_object_id("on_off");
-  device_dimmer_on_off.Set_entity_type("switch");
-  device_dimmer_on_off.Set_retain_flag(true);
- 
-  /// création des button
-  device_dimmer_save.Set_name("Sauvegarder");
-  device_dimmer_save.Set_object_id("save");
-  device_dimmer_save.Set_entity_type("button");
-  device_dimmer_save.Set_entity_category("config");
-  device_dimmer_save.Set_retain_flag(false);
-
-  /// création des number
-  device_dimmer_starting_pow.Set_name("Puissance de démarrage");
-  device_dimmer_starting_pow.Set_object_id("starting_power");
-  device_dimmer_starting_pow.Set_entity_type("number");
-  device_dimmer_starting_pow.Set_entity_category("config");
-  device_dimmer_starting_pow.Set_entity_valuemin("-100");
-  device_dimmer_starting_pow.Set_entity_valuemax("500"); // trop? pas assez? TODO : test sans valeur max?
-  device_dimmer_starting_pow.Set_entity_valuestep("1");
-  device_dimmer_starting_pow.Set_retain_flag(true);
-
-  device_dimmer_minpow.Set_name("Puissance mini");
-  device_dimmer_minpow.Set_object_id("minpow");
-  device_dimmer_minpow.Set_entity_type("number");
-  device_dimmer_minpow.Set_entity_category("config");
-  device_dimmer_minpow.Set_entity_valuemin("0");
-  device_dimmer_minpow.Set_entity_valuemax("100"); // trop? pas assez? TODO : test sans valeur max?
-  device_dimmer_minpow.Set_entity_valuestep("1");
-  device_dimmer_minpow.Set_retain_flag(true);
-
-  device_dimmer_maxpow.Set_name("Puissance maxi");
-  device_dimmer_maxpow.Set_object_id("maxpow");
-  device_dimmer_maxpow.Set_entity_type("number");
-  device_dimmer_maxpow.Set_entity_category("config");
-  device_dimmer_maxpow.Set_entity_valuemin("0");
-  device_dimmer_maxpow.Set_entity_valuemax("100"); // trop? pas assez? TODO : test sans valeur max?
-  device_dimmer_maxpow.Set_entity_valuestep("1");
-  device_dimmer_maxpow.Set_retain_flag(true);
-
-  device_dimmer_maxtemp.Set_name("Température maxi");
-  device_dimmer_maxtemp.Set_object_id("maxtemp");
-  device_dimmer_maxtemp.Set_entity_type("number");
-  device_dimmer_maxtemp.Set_entity_category("config");
-  device_dimmer_maxtemp.Set_entity_valuemin("0");
-  device_dimmer_maxtemp.Set_entity_valuemax("75"); // trop? pas assez? TODO : test sans valeur max?
-  device_dimmer_maxtemp.Set_entity_valuestep("1");
-  device_dimmer_maxtemp.Set_retain_flag(true);
-  /// création des select
-  device_dimmer_child_mode.Set_name("Mode");
-  device_dimmer_child_mode.Set_object_id("child_mode");
-  device_dimmer_child_mode.Set_entity_type("select");
-  device_dimmer_child_mode.Set_entity_category("config");
-  device_dimmer_child_mode.Set_entity_option("\"off\",\"delester\",\"equal\"");
-  device_dimmer_child_mode.Set_retain_flag(true);
-
-  // création des binary_sensor
-  device_dimmer_alarm_temp.Set_name("Surchauffe");
-  device_dimmer_alarm_temp.Set_object_id("alarm_temp");
-  device_dimmer_alarm_temp.Set_entity_type("binary_sensor");
-  device_dimmer_alarm_temp.Set_entity_category("diagnostic");
-  device_dimmer_alarm_temp.Set_dev_cla("problem");
-  device_dimmer_alarm_temp.Set_retain_flag(true);
-
-  device_cooler.Set_name("Ventilateur");
-  device_cooler.Set_object_id("cooler");
-  device_cooler.Set_entity_type("binary_sensor");
-  device_cooler.Set_entity_category("diagnostic");
-  device_cooler.Set_dev_cla("running");
-  device_cooler.Set_retain_flag(true);
+  devices_init(); // initialisation des devices HA
  
 
 
@@ -836,7 +623,6 @@ void loop() {
         digitalWrite(RELAY2 , HIGH);
       }
  }
-
 #endif
 
   ///////////////// restart /////////
@@ -991,11 +777,6 @@ void loop() {
           analogWrite(JOTTA, 0 );
           #endif
 
-        //   if ( config.IDX != 0 ) { mqtt(String(config.IDX), String(0)); }
-        // //mqtt_HA (String(sysvar.celsius),String(sysvar.puissance));
-        // //device_dimmer.send(String(sysvar.puissance));
-        // mqtt(String(config.IDX), String(sysvar.puissance));
-    
 
       if (!AP && mqtt_config.Mqtt::mqtt) {
         int instant_power = dimmer.getPower();
@@ -1003,64 +784,11 @@ void loop() {
         device_dimmer.send(String(instant_power));
         device_dimmer_power.send(String(instant_power * config.charge/100)); 
         device_dimmer_total_power.send(String(sysvar.puissance_cumul + (instant_power*config.charge/100) ));
-        // if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) { digitalWrite(COOLER, LOW); }  // cut cooler 
       }
-      /*if ( (millis() - Timer_Cooler) > (TIMERDELAY * 1000) && digitalRead(COOLER) == HIGH ) {   // cut cooler 
-        digitalWrite(COOLER, LOW); 
-        if (!AP && mqtt_config.mqtt) { device_cooler.send(stringbool(false));}
-      }*/
+
     }
   }
 
-  //// controle du cooler et remonté MQTT 
-/*if ( ((millis() - Timer_Cooler) > (TIMERDELAY * 1000) ) && (sysvar.puissance < config.minpow) && digitalRead(COOLER) == HIGH ) {   // cut cooler 
-  digitalWrite(COOLER, LOW); 
-  if (!AP && mqtt_config.mqtt) { device_cooler.send(stringbool(false));}
-}*/
-
- ///// dallas présent >> mesure 
- /* if ( present == 1 ) { 
-    refreshcount ++;
-
-    if (refreshcount == 1 ) {
-    sensors.requestTemperatures();
-  
-    sysvar.celsius=CheckTemperature("Inside : ", addr); 
-    }
-
-  ///gestion des erreurs DS18B20
-    if ( (sysvar.celsius == -127.00) || (sysvar.celsius == -255.00) ) {
-      sysvar.celsius=previous_celsius;
-    }
-    else {
-      sysvar.celsius=(floor(10*sysvar.celsius+0.5))/10; // arrondi 1 décimale
-    }   
-
-    if ( refreshcount >= refresh && sysvar.celsius !=-127 && sysvar.celsius !=-255) { 
-      
-    if (!AP && mqtt_config.mqtt) {
-
-      // mqtt(String(config.IDXTemp), String(sysvar.celsius));  /// remonté MQTT de la température // envoyé en task
-      //mqtt_HA (String(sysvar.celsius),String(sysvar.puissance));
-      //device_temp.send(String(sysvar.celsius));
-      if (!discovery_temp && mqtt_config.HA) {
-        discovery_temp = true;
-        device_dimmer_alarm_temp.discovery();
-        device_temp.discovery();
-        device_dimmer_maxtemp.discovery();
-        device_dimmer_alarm_temp.send(stringbool(security));
-        device_dimmer_maxtemp.send(String(config.maxtemp));
-        
-      }
-     // if ( mqtt_config.HA ) { device_temp.send(String(sysvar.celsius)); } // envoyé en task 
-
-    }
-      refreshcount = 0; 
-    } 
-  
-    previous_celsius=sysvar.celsius;
-    // delay(500);  /// suppression 24/01/2023 pour plus de rapidité
-  } */
 
     //***********************************
     //************* LOOP - Activation de la sécurité
@@ -1092,6 +820,8 @@ if ( sysvar.celsius >= config.maxtemp && security == 0 ) {
     //***********************************
 
 void dallaspresent () {
+  byte i;
+  byte type_s;
 
 if ( !ds.search(addr)) {
     Serial.println("Dallas not connected");
@@ -1157,7 +887,7 @@ String getlogs(){
     return logs ; 
 } 
 
-
+/*
 /// @brief beta 
 void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
   if(!index){
@@ -1177,4 +907,4 @@ void merge(JsonObject dest, JsonObjectConst src)
    {
      dest[kvp.key()] = kvp.value();
    }
-}
+}*/

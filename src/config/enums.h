@@ -50,14 +50,24 @@ struct Wifi_struct {
 
 ///variables globales 
 struct System {
-
+/// @brief  température actuelle
 float celsius=0.00; 
+/// @brief  puissance actuelle en %
 int puissance; 
+/// @brief  puissance actuelle en Watt
+int puissancewatt=0; 
+/// @brief  puissance max locale en Watt
+int puissancemax=0; 
+/// @brief  puissance dispo en watt
+int puissance_dispo=0;
+
 int change=0; 
+/// @brief état du ventilateur
 bool cooler=0;
+/// @brief  puissance cumulée en Watt (remonté par l'enfant toute les 10 secondes)
 int puissance_cumul=0;
-//String loginit;
-//String logs="197}11}1";
+/// @brief etat de la surchauffe
+byte security=0;
 
 };
 
