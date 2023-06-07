@@ -34,7 +34,7 @@ void ntpinit() {
   timeClient.begin();
   timeClient.update();
   offset_heure_ete();
-  Serial.println(timeClient.getFormattedTime());
+  DEBUG_PRINTLN(timeClient.getFormattedTime());
   
 }
 
@@ -165,15 +165,4 @@ bool stop_progr() {
 
 
 };
-
-
-
-
-
-
-
-
-
-
-
 #endif

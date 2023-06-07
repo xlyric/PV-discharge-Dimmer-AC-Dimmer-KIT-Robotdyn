@@ -61,7 +61,7 @@ extern String dimmername;
 const char* PARAM_INPUT_1 = "POWER"; /// paramettre de retour sendmode
 const char* PARAM_INPUT_2 = "OFFSET"; /// paramettre de retour sendmode
 
-extern char buffer[1024];
+//extern char buffer[1024];
 
 String getmqtt(); 
 String getconfig(); 
@@ -69,7 +69,7 @@ String getState();
 String textnofiles();
 String processor(const String& var);
 String getServermode(String Servermode);
-String stringbool(bool mybool);
+
 String switchstate(int state);
 String readmqttsave();
 String getMinuteur(const Programme& minuteur);
@@ -556,17 +556,5 @@ String getServermode(String Servermode) {
   if ( Servermode == "domoticz" ) {   mqtt_config.domoticz = !mqtt_config.domoticz; }
 return String(Servermode);
 }
-
-String stringbool(bool mybool){
-  String truefalse = "true";
-  if (mybool == false ) {truefalse = "false";}
-  return String(truefalse);
-  }
-
-// String switchstate(int state){
-//   String statestring ="OFF";
-//   if (state==1) statestring ="ON";
-//   return (statestring);
-// }
 
 #endif

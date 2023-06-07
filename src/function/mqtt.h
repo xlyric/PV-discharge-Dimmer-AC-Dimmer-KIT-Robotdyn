@@ -40,7 +40,7 @@ extern HA device_dimmer_power;
 extern bool discovery_temp; 
 extern bool alerte; 
 extern String logs; 
-extern char buffer[1024];
+//extern char buffer[1024];
 
 extern AsyncMqttClient client; 
 
@@ -48,7 +48,7 @@ void onMqttConnect(bool sessionPresent);
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
 void onMqttSubscribe(uint16_t packetId, uint8_t qos);
 void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total);
-
+char buffer[1024];
   /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remonté par MQTT
   /// @param Subscribedtopic 
   /// @param message 
@@ -284,26 +284,11 @@ void child_communication(int delest_power, bool equal = false){
 //////////// reconnexion MQTT
 
 void reconnect() {
-  // String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-  // String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-  // String node_id = String("dimmer-") + node_mac; 
-  // String topic = "homeassistant/sensor/"+ node_id +"/status";  
-  
-  // Loop until we're reconnected
-  //int timeout = 0; 
   if  (LittleFS.exists("/mqtt.json"))
   {
-   // while (!client.connected()) {
       
       Serial.print("Attempting MQTT connection...");
       logs += loguptime() + " Reconnect MQTT\r\n";
-      // Create a random client ID
-      // String clientId = "Dimmer";
-      // clientId += String(random(0xffff), HEX);
-      // Attempt to connect
-      //node_id.c_str(),mqtt_config.username, mqtt_config.password, topic.c_str(), 2, true, "offline"
-    //  if (client.connect(node_id.c_str(),mqtt_config.username, mqtt_config.password, topic.c_str(), 2, true, "offline")) {       //Connect to MQTT server
-   //  if (client.connect()) {
         client.publish(String(topic).c_str() ,0,true, "online"); // status Online
         Serial.println("connected");
         logs += "Connected\r\n";
@@ -331,15 +316,13 @@ void reconnect() {
 void async_mqtt_init() {
   IPAddress ip;
   ip.fromString(config.hostname);
-Serial.println(ip);
+  DEBUG_PRINTLN(ip);
   client.setClientId(node_id.c_str());
   client.setKeepAlive(60);
   client.setCredentials(mqtt_config.username, mqtt_config.password);
   client.onDisconnect(onMqttDisconnect);
   client.onSubscribe(onMqttSubscribe);
-  //client.onUnsubscribe(onMqttUnsubscribe);
   client.onMessage(callback);
-  //client.onPublish(onMqttPublish);
 
   client.setServer(ip, config.port);
   client.setMaxTopicLength(768); // 1024 -> 768 
@@ -347,7 +330,7 @@ Serial.println(ip);
   }
 
 void connectToMqtt() {
-  Serial.println("Connecting to MQTT...");
+  DEBUG_PRINTLN("Connecting to MQTT...");
   client.connect();
 }
 
@@ -370,26 +353,8 @@ void onMqttSubscribe(uint16_t packetId, uint8_t qos) {
   Serial.println("Subscribe acknowledged.");
   Serial.print("  packetId: ");
   Serial.println(packetId);
-  Serial.print("  qos: ");
-  Serial.println(qos);
+  DEBUG_PRINTLN("  qos: ");
+  DEBUG_PRINTLN(qos);
 }
-/*
-void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
-  Serial.println("Publish received.");
-  Serial.print("  topic: ");
-  Serial.println(topic);
-  Serial.print("  qos: ");
-  Serial.println(properties.qos);
-  Serial.print("  dup: ");
-  Serial.println(properties.dup);
-  Serial.print("  retain: ");
-  Serial.println(properties.retain);
-  Serial.print("  len: ");
-  Serial.println(len);
-  Serial.print("  payload: ");
-  Serial.println(payload);
-  Serial.print("  total: ");
-  Serial.println(total);
-}*/
 
 #endif

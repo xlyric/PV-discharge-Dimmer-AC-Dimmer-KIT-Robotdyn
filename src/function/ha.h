@@ -5,6 +5,10 @@
 #include <AsyncMqttClient.h>
 
 extern AsyncMqttClient  client;
+extern Config config;
+extern Mqtt mqtt_config;
+extern System sysvar;
+String stringbool(bool mybool);
 
 struct HA
 {
@@ -314,5 +318,49 @@ void devices_init(){
   device_cooler.Set_entity_category("diagnostic");
   device_cooler.Set_dev_cla("running");
   device_cooler.Set_retain_flag(true);
+}
+
+void HA_discover(){
+  if (mqtt_config.HA){
+          Serial.println("HA discovery" );
+        /// création des binary_sensor et enregistrement sous HA  
+        device_dimmer_on_off.discovery();
+        device_dimmer_on_off.send(String(config.dimmer_on_off));
+
+        device_dimmer.discovery();
+        device_dimmer.send(String(sysvar.puissance));
+
+        device_dimmer_power.discovery();
+        device_dimmer_power.send(String(sysvar.puissance* config.charge/100));
+
+        device_dimmer_total_power.discovery();
+        device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
+
+        device_cooler.discovery();
+        device_cooler.send(stringbool(false));
+
+    //  device_temp.discovery(); // discovery fait à la 1ere réception sonde ou mqtt.
+        #ifdef RELAY1
+          device_relay1.discovery();
+          device_relay1.send(String(0));
+        #endif
+        #ifdef RELAY2
+          device_relay2.discovery();
+          device_relay2.send(String(0));
+        #endif
+        device_dimmer_starting_pow.discovery();
+        device_dimmer_starting_pow.send(String(config.startingpow));
+
+        device_dimmer_minpow.discovery();
+        device_dimmer_minpow.send(String(config.minpow));
+
+        device_dimmer_maxpow.discovery();
+        device_dimmer_maxpow.send(String(config.maxpow));
+
+        device_dimmer_child_mode.discovery();
+        device_dimmer_child_mode.send(String(config.mode));
+
+        device_dimmer_save.discovery();
+        }
 }
 #endif
