@@ -84,12 +84,13 @@
 
 #define LOG_MAX_STRING_LENGTH 254 // taille max des logs stockées
 
-//#define Debug
+/// activation mode debug
+#define Debug
   #ifdef Debug
     #define DEBUG_PRINTLN(x) Serial.println(x)
   #else
     #define DEBUG_PRINTLN(x)
   #endif
-  
+
 #endif
 

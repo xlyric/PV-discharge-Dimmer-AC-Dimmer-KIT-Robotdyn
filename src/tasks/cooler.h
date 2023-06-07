@@ -22,6 +22,10 @@ void cooler() {
             sysvar.cooler = 0;
         }
     } 
+    else {
+        sysvar.cooler = 0;
+    }
+
     if ( cooler_change != sysvar.cooler ) {
         if ( sysvar.cooler == 1 ) {
         digitalWrite(COOLER, HIGH);

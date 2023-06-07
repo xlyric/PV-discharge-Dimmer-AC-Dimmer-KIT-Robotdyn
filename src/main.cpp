@@ -592,15 +592,17 @@ void loop() {
     alerte=false;
   }
 
-  
+  ////////////////// control de la puissance /////////////////
 
-  /// Changement de la puissance (  pb de Exception 9 si call direct ) 
-  if ( sysvar.change == 1  && programme.run == false ) {
+  if ( sysvar.change == 1  && programme.run == false ) {   /// si changement et pas de minuteur en cours
     sysvar.change = 0; 
     if (config.dimmer_on_off == 0){
       dimmer_off();  
     }
+    
     /// si on dépasse la puissance mini demandé 
+    DEBUG_PRINTLN(sysvar.puissance);
+    
     if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && security == 0) 
     {
         if (config.dimmer_on_off == 1){dimmer_on();}  // if off, switch on 
