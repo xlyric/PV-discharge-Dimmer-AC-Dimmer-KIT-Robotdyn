@@ -12,6 +12,7 @@ extern HA device_cooler;
 
 void cooler() {
 
+                      
     bool cooler_change = sysvar.cooler ;
 
     /// controle du cooler 
@@ -36,6 +37,7 @@ void cooler() {
         if ( mqtt_config.HA ) {  device_cooler.send(stringbool(false));  }
         }
     }
+
  // pas besoin de tempo pour l'arret, vu que c'est toute les 15 secondes la task 
 }
 

@@ -271,10 +271,16 @@ void mqtt(String idx, String value, String name="")
 void child_communication(int delest_power, bool equal = false){
   int instant_power ;
   String baseurl; 
-  if (config.dispo != 0 ) { if (equal) { instant_power = config.dispo/2 ;} else {instant_power = config.dispo; } }
-  else { instant_power = delest_power*config.charge/100   ; }  /// ça posera problème si il y a pas de commandes de puissance en W comme le 2eme dimmer se calque sur la puissance du 1er 
+  instant_power = delest_power*config.charge/100;
+  baseurl = "/?POWER=" + String(delest_power); 
+  //if (sysvar.puissance_dispo !=0 ) {  baseurl = "/?POWER=" + String(delest_power) + "&puissance=" + String(sysvar.puissance_dispo) ; }
+  if (sysvar.puissance_dispo !=0 ) {  
+    baseurl.concat("&puissance=");
+    baseurl.concat(String(sysvar.puissance_dispo)) ; 
+   }
+    //else {  }  /// ça posera problème si il y a pas de commandes de puissance en W comme le 2eme dimmer se calque sur la puissance du 1er 
 
-  baseurl = "/?POWER=" + String(delest_power) + "&puissance=" + instant_power ; http.begin(domotic_client,config.child,80,baseurl); 
+  http.begin(domotic_client,config.child,80,baseurl); 
   http.GET();
   http.end(); 
   logs += "child at " + String(delest_power) + " " + String(instant_power) +  "\r\n";
@@ -288,7 +294,7 @@ void reconnect() {
   {
       
       Serial.print("Attempting MQTT connection...");
-      logs += loguptime() + " Reconnect MQTT\r\n";
+      logs.concat(loguptime("Reconnect MQTT"));
         client.publish(String(topic).c_str() ,0,true, "online"); // status Online
         Serial.println("connected");
         logs += "Connected\r\n";

@@ -93,10 +93,12 @@
 #include "function/mqtt.h"
 #include "function/minuteur.h"
 #include "function/dimmer.h"
+#include "function/jotta.h"
 
 #include "tasks/dallas.h"
 #include "tasks/cooler.h"
 #include "tasks/get_power.h"
+
 
 // taches
 Task Task_dallas(15000, TASK_FOREVER, &mqttdallas);
@@ -257,8 +259,10 @@ void setup() {
 
   //démarrage file system
   LittleFS.begin();
+  // correction d'erreur de chargement de FS 
+  delay(1000);
   Serial.println("Demarrage file System");
-  loginit += loguptime() + "Start filesystem\r\n"; 
+  loginit.concat(loguptime("Start filesystem")); 
   // configuration dimmer
   dimmer.begin(NORMAL_MODE, ON); //dimmer initialisation: name.begin(MODE, STATE) 
   #ifdef outputPin2
@@ -292,12 +296,12 @@ void setup() {
   #endif
   // Should load default config if run for the first time
   Serial.println(F("Loading configuration..."));
-  loginit += loguptime() + "Load config\r\n"; 
+  loginit.concat(loguptime("Load config")); 
   loadConfiguration(filename_conf, config);
 
   // Create configuration file
   Serial.println(F("Saving configuration..."));
-  loginit +=loguptime() + "Apply config\r\n"; 
+  loginit.concat(loguptime("Apply config")); 
   saveConfiguration(filename_conf, config);
 
   Serial.println(F("Loading mqtt_conf configuration..."));
@@ -324,7 +328,7 @@ void setup() {
     //************* Setup - Connexion Wifi
     //***********************************
   Serial.print("start Wifiautoconnect");
-  loginit +=loguptime() + "Start Wifiautoconnect\r\n"; 
+  loginit.concat(loguptime("Start Wifiautoconnect")); 
 
    // préparation  configuration IP fixe 
 
@@ -425,7 +429,7 @@ void setup() {
   /// MQTT 
   if (!AP && mqtt_config.mqtt) {
     Serial.println("Connection MQTT" );
-    loginit +=loguptime() + "MQTT connexion\r\n"; 
+    loginit.concat(loguptime("MQTT connexion")); 
     
       /// connexion MQTT 
     async_mqtt_init();
@@ -437,9 +441,11 @@ void setup() {
   }
   
   #ifdef  SSR
-  analogWriteFreq(GRIDFREQ) ; 
-  analogWriteRange(100);
-  analogWrite(JOTTA, 0);
+  //analogWriteFreq(GRIDFREQ) ; 
+  //analogWriteRange(100);
+  //analogWrite(JOTTA, 0);
+  init_jotta(); 
+  timer_init();
   #endif
 
 /// init du NTP
@@ -457,6 +463,10 @@ runner.addTask(Task_GET_POWER );
 Task_GET_POWER.enable();
 
 DEBUG_PRINTLN(ESP.getFreeHeap());
+
+
+delay(1000);
+Serial.println(frequency);
 }
 
 bool alerte=false;
@@ -465,7 +475,9 @@ bool alerte=false;
 /// LOOP 
 /////////////////////
 void loop() {
- 
+  Serial.print(frequency);Serial.print(" ");
+  Serial.print(time_tempo);Serial.print("-");
+
   /// connexion MQTT
   if ( mqtt_config.mqtt && !AP ) {
     if (!client.connected() ) {
@@ -494,6 +506,7 @@ void loop() {
       if (programme.stop_progr()) { 
         dimmer.setPower(0); 
         dimmer_off();
+        DEBUG_PRINTLN("programme.run");
         sysvar.puissance=0;
         Serial.print("stop minuteur dimmer");
         mqtt(String(config.IDX), String(dimmer.getPower()),"pourcent"); // remonté MQTT de la commande réelle
@@ -561,6 +574,7 @@ void loop() {
   if ( sysvar.celsius > ( config.maxtemp + 0.5)) { 
             mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(sysvar.celsius) ),"Alerte");  ///send alert to MQTT
             device_dimmer_alarm_temp.send("Alert temp");
+            
           }
 
   if ( security == 1 ) { 
@@ -597,10 +611,12 @@ void loop() {
   if ( sysvar.change == 1  && programme.run == false ) {   /// si changement et pas de minuteur en cours
     sysvar.change = 0; 
     if (config.dimmer_on_off == 0){
+      
       dimmer_off();  
     }
     
     /// si on dépasse la puissance mini demandé 
+    DEBUG_PRINTLN("------------------");
     DEBUG_PRINTLN(sysvar.puissance);
     
     if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && security == 0) 
@@ -608,7 +624,7 @@ void loop() {
         if (config.dimmer_on_off == 1){dimmer_on();}  // if off, switch on 
 
         /// si au dessus de la consigne max configuré alors config.maxpow. 
-        if ( sysvar.puissance > config.maxpow )  
+        if ( sysvar.puissance > config.maxpow || sysvar.puissance_cumul > sysvar.puissancemax )  
         { 
           if (config.dimmer_on_off == 1){
             dimmer.setPower(config.maxpow);
@@ -619,12 +635,13 @@ void loop() {
           }
           /// si on a une carte fille, on envoie la commande 
           if ( strcmp(config.child,"") != 0 ) {
-              if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance-config.maxpow,false ); } // si mode délest, envoi du surplus
+              if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance-config.maxpow,true ); } // si mode délest, envoi du surplus
               if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance,true); }  //si mode equal envoie de la commande vers la carte fille
           }
           
           #ifdef  SSR
-          analogWrite(JOTTA, config.maxpow );
+          //analogWrite(JOTTA, config.maxpow );
+          jotta_command(config.maxpow);
           #endif
 
         }
@@ -642,7 +659,8 @@ void loop() {
               if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance < config.maxpow) { child_communication(0,false); }  //si mode délest envoie d'une commande à 0
           }
           #ifdef  SSR
-          analogWrite(JOTTA, sysvar.puissance );
+          //analogWrite(JOTTA, sysvar.puissance );
+          jotta_command(sysvar.puissance);
           #endif
         }
 
@@ -662,7 +680,7 @@ void loop() {
         else {
           mqtt(String(config.IDX), String(dimmer.getPower()),"pourcent"); // remonté MQTT de la commande réelle
           if (mqtt_config.HA) {
-                    int instant_power = dimmer.getPower();
+              int instant_power = dimmer.getPower();
               device_dimmer.send(String(instant_power));
               device_dimmer_power.send(String(instant_power * config.charge/100)); 
               device_dimmer_total_power.send(String(sysvar.puissance_cumul + (instant_power* config.charge/100)));
@@ -673,15 +691,17 @@ void loop() {
 
     }
     /// si la sécurité est active on déleste 
-    else if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && security == 1)
+    else if ( sysvar.puissance != 0 && security == 1)
     {
       if ( strcmp(config.child,"") != 0 ) {
-        if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance ,false); childsend =0 ;} // si mode délest, envoi du surplus
-        if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance,false); childsend =0 ; }  //si mode equal envoie de la commande vers la carte fille
+        if (sysvar.puissance > 200 ) {sysvar.puissance = 200 ;}
+        if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance ,true); childsend =0 ;} // si mode délest, envoi du surplus
+        if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance,true); childsend =0 ; }  //si mode equal envoie de la commande vers la carte fille
       }
     }
     //// si la commande est trop faible on coupe tout partout
-    else {
+    else if ( sysvar.puissance <= config.minpow ){
+        DEBUG_PRINTLN("commande est trop faible");
         dimmer.setPower(0);
               /// et sur les sous routeur 
           if ( strcmp(config.child,"") != 0 ) {
@@ -689,11 +709,14 @@ void loop() {
             if ( strcmp(config.mode,"equal") == 0) { child_communication(0,false); }  //si mode equal envoie de la commande vers la carte fille
           }
 
-        if (!AP && mqtt_config.Mqtt::mqtt) {
+        if ( mqtt_config.mqtt ) {
           mqtt(String(config.IDX), "0","pourcent");
-          device_dimmer.send("0");
+        }
+        if ( mqtt_config.HA ) { 
+          device_dimmer.send("0"); 
           device_dimmer_power.send("0");
         }
+
         #ifdef outputPin2
           dimmer2.setPower(0);
         #endif
@@ -701,7 +724,8 @@ void loop() {
         if ( strcmp(config.mode,"off") != 0) {  if (childsend>2) { child_communication(0,false); childsend++; }}
 
           #ifdef  SSR
-          analogWrite(JOTTA, 0 );
+          //analogWrite(JOTTA, 0 );
+          jotta_command(0);
           #endif
 
 
@@ -714,6 +738,8 @@ void loop() {
       }
 
     }
+
+    
   }
 
 
@@ -732,8 +758,10 @@ if ( sysvar.celsius >= config.maxtemp && security == 0 ) {
           device_dimmer_power.send(String(0));
           device_dimmer_total_power.send(String(sysvar.puissance_cumul));
           }  /// si HA remonté MQTT HA de la température
+
 }
 
+  //DEBUG_PRINTLN(sysvar.puissance);
  delay(100);  // 24/01/2023 changement 500 à 100ms pour plus de réactivité
 }
 
@@ -751,7 +779,7 @@ void dallaspresent () {
 
 if ( !ds.search(addr)) {
     Serial.println("Dallas not connected");
-    loginit += loguptime() + "Dallas not connected\r\n";
+    loginit.concat(loguptime("Dallas not connected"));
     DEBUG_PRINTLN();
     ds.reset_search();
     delay(250);
@@ -799,7 +827,7 @@ if ( !ds.search(addr)) {
 
   Serial.print("  present = ");
   Serial.println(present, HEX);
-  loginit += loguptime()+  "Dallas present at "+ String(present, HEX) + "\r\n";
+  loginit.concat(loguptime("Dallas present at "+ String(present, HEX)));
 
   return ;
    

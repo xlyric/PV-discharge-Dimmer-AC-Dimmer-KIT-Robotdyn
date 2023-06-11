@@ -35,11 +35,19 @@ void mqttdallas() {
         //}
     } 
     //// détection sécurité température
-        if  ( sysvar.celsius > config.maxtemp ) {
-            // coupure du dimmer
-            sysvar.puissance=0;
-        if ( mqtt_config.HA ) { device_dimmer.send("0"); }
-        }
+    if  ( sysvar.celsius >= config.maxtemp ) {
+        // coupure du dimmer
+        DEBUG_PRINTLN("détection sécurité température");
+        sysvar.puissance=0;
+        
+      if ( mqtt_config.mqtt ) {
+        mqtt(String(config.IDX), "0","pourcent");
+      }
+      if ( mqtt_config.HA ) { 
+        device_dimmer.send("0"); 
+        device_dimmer_power.send("0");
+      }
+    }
   
   previous_celsius=sysvar.celsius;
 }

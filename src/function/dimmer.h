@@ -22,6 +22,9 @@
 extern struct System sysvar;
 extern struct Config config;  
 extern dimmerLamp dimmer;
+#ifdef outputPin2
+extern dimmerLamp dimmer2;
+#endif
 
 ///déclaration des fonctions
 void dimmer_on();

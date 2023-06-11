@@ -83,16 +83,35 @@ void call_pages() {
   server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
     
     if  (LittleFS.exists("/index.html")) {
+      DEBUG_PRINTLN("------------------");
+      DEBUG_PRINTLN(sysvar.puissance);
       /// si requete sur POWER
+
+#ifdef DEBUG
+      Serial.println("index.html");
+  int paramsCount = request->params();
+  for (int i = 0; i < paramsCount; i++) {
+    AsyncWebParameter *param = request->getParam(i);
+    if (param->isPost()) {
+      Serial.printf("Paramètre POST : %s = %s\n", param->name().c_str(), param->value().c_str());
+    } else {
+      Serial.printf("Paramètre GET : %s = %s\n", param->name().c_str(), param->value().c_str());
+    }
+  }
+#endif
+
       if (request->hasParam(PARAM_INPUT_1)) { 
         int input=request->getParam(PARAM_INPUT_1)->value().toInt();
         
         /// si remonté de puissance dispo alors prioritaire
          if (request->hasParam("puissance")) { 
             /// on recupere la puissance disponible  
+            
             int dispo = request->getParam("puissance")->value().toInt();
+            DEBUG_PRINTLN("puissance="+String(dispo));
             /// on la converti en pourcentage de charge et config.dispo contient la puissance disponible en W 
             config.dispo = dispo;
+            sysvar.puissance_dispo = dispo;
             dispo= (100*dispo/config.charge); 
             /// si POWER=0 on coupe tout
             if (input==0) {sysvar.puissance = 0 ;dispo=0; } 
@@ -106,22 +125,25 @@ void call_pages() {
             else {sysvar.puissance = sysvar.puissance + dispo; }
          }
          else
-         { sysvar.puissance = input;  config.dispo = 0; }
+         { sysvar.puissance = input;  config.dispo = 0; DEBUG_PRINTLN("input="+String(input));}
 
-        logs += "HTTP power at " + String(sysvar.puissance) + "\r\n"; 
+        if (sysvar.puissance >= 200) {sysvar.puissance = 200; }
+        logs.concat("HTTP power at " + String(sysvar.puissance)+"\r\n");
+        sysvar.change=1; 
+        String pb=getState().c_str(); 
+        pb = pb +String(sysvar.puissance) +" " + String(input) +" " + String(sysvar.puissance_dispo) ;
+        request->send_P(200, "text/plain", pb.c_str() );  
+      } 
+      else if (request->hasParam(PARAM_INPUT_2)) { 
+        config.startingpow = request->getParam(PARAM_INPUT_2)->value().toInt(); 
+        logs.concat("HTTP power at " + String(config.startingpow)+"\r\n");
+
         sysvar.change=1; 
         request->send_P(200, "text/plain", getState().c_str());  
       }
       else if (request->hasParam(PARAM_INPUT_2)) { 
         config.startingpow = request->getParam(PARAM_INPUT_2)->value().toInt(); 
-        logs += "HTTP power at " + String(config.startingpow) + "\r\n"; 
-
-        sysvar.change=1; 
-        request->send_P(200, "text/plain", getState().c_str());  
-      }
-      else if (request->hasParam(PARAM_INPUT_2)) { 
-        config.startingpow = request->getParam(PARAM_INPUT_2)->value().toInt(); 
-        logs += "HTTP power at " + String(config.startingpow) + "\r\n"; 
+        logs.concat("HTTP power at " + String(config.startingpow)+"\r\n");
         sysvar.change=1; 
         request->send_P(200, "text/plain", getState().c_str());
       }
@@ -140,6 +162,8 @@ void call_pages() {
       request->send_P(200, "text/html", textnofiles().c_str());
     }
     
+    DEBUG_PRINTLN(sysvar.puissance);
+    DEBUG_PRINTLN("------------------");
   }); 
 
 /// page de config et récupération des requetes de config
@@ -375,6 +399,8 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
    if (request->hasParam("heure_demarrage")) { request->getParam("heure_demarrage")->value().toCharArray(programme.heure_demarrage,6);  }
    if (request->hasParam("heure_arret")) { request->getParam("heure_arret")->value().toCharArray(programme.heure_arret,6);  }
    if (request->hasParam("temperature")) { programme.temperature = request->getParam("temperature")->value().toInt();  programme.saveProgramme(); }
+
+
 
   //Ajout des relais
   // #ifdef STANDALONE

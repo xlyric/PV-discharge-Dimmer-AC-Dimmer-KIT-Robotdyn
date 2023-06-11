@@ -41,10 +41,10 @@ void saveConfigCallback () {
   shouldSaveConfig = true;
 }
 
-String loguptime() {
+String loguptime(String log) {
   String uptime_stamp;
   uptime::calculateUptime();
-  uptime_stamp = String(uptime::getDays())+":"+String(uptime::getHours())+":"+String(uptime::getMinutes())+":"+String(uptime::getSeconds())+ "\t";
+  uptime_stamp = String(uptime::getDays())+":"+String(uptime::getHours())+":"+String(uptime::getMinutes())+":"+String(uptime::getSeconds())+ "\t"+log +"\r\n";
   return uptime_stamp;
 }
 
@@ -65,7 +65,7 @@ void loadConfiguration(const char *filename, Config &config) {
   DeserializationError error = deserializeJson(doc, configFile);
   if (error) {
     Serial.println(F("Failed to read configuration file, using default configuration"));
-    loginit += loguptime() + "Failed to read file config File, use default\r\n"; 
+    loginit.concat(loguptime("Failed to read file config File, use default")); 
     }
   // Copy values from the JsonDocument to the Config
   
@@ -113,7 +113,7 @@ void saveConfiguration(const char *filename, const Config &config) {
    File configFile = LittleFS.open(filename_conf, "w");
   if (!configFile) {
     Serial.println(F("Failed to open config file for writing"));
-    logs += loguptime() + "Failed to read file config File, use default\r\n"; 
+    logs += loguptime("Failed to read file config File, use default"); 
   
     return;
   }
@@ -224,7 +224,7 @@ void savemqtt(const char *filename, const Mqtt &mqtt_config) {
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {
     Serial.println(F("Failed to write to file in function Save configuration "));
-    logs += loguptime() + "Failed to write MQTT config\r\n";
+    logs.concat(loguptime("Failed to write MQTT config"));
   }
 
   // Close the file
@@ -292,7 +292,7 @@ void savewifiIP(const char *wifi_conf, Wifi_struct &wifi_config_fixe) {
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {
     Serial.println(F("Failed to write to file in function Save configuration "));
-    logs += loguptime() + "Failed to write wifi config\r\n";
+    logs.concat("Failed to write wifi config");
   }
 
   // Close the file

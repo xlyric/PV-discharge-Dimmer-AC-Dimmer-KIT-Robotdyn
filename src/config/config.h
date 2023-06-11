@@ -10,7 +10,7 @@
 //#define MQTT_USER ""   //// not used, use mqtt.json file  --> to delete 01/23
 //#define MQTT_PASSWORD ""  //// not used, use mqtt.json file --> to delete 01/23
 
-#define VERSION "Version 20230606" 
+#define VERSION "Version 20230607" 
 
 /// default configuration for Dimmer with Power supply and D1 Mini on the board ( default : D0 - D1 )
 #ifdef  POWERSUPPLY
@@ -54,7 +54,7 @@
 #ifdef  SSR  /// même pin que le stand alone 
 #define JOTTA  D1 // for boards with CHANGEBLE input pins
 #define ONE_WIRE_BUS D7 // dallas 
-#define GRIDFREQ 90 ///PWM frequency
+#define GRIDFREQ 50 ///PWM frequency
 #define outputPin  D5 
 #define zerocross  D6
 #define COOLER  D8   /// 0 : off  -> 1 : On --> need a dry contact or opto
@@ -85,7 +85,7 @@
 #define LOG_MAX_STRING_LENGTH 254 // taille max des logs stockées
 
 /// activation mode debug
-#define Debug
+//#define Debug
   #ifdef Debug
     #define DEBUG_PRINTLN(x) Serial.println(x)
   #else
