@@ -78,10 +78,12 @@ IRAM_ATTR void jotta_ISR()
 
 void timer_init()
 {
+  #ifdef  SSR
 	timer1_attachInterrupt(jotta_ISR);
 	timer1_enable(TIM_DIV16, TIM_EDGE, TIM_LOOP);
 	timer1_write(timeoutPinjotta); //100 us
   Serial.println("timer_init");
+  #endif
 }
 
 void init_jotta() {
