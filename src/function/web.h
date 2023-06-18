@@ -116,13 +116,21 @@ void call_pages() {
             /// si POWER=0 on coupe tout
             if (input==0) {sysvar.puissance = 0 ;dispo=0; } 
             ///   si au max, on prend la puissance dispo 
-            else if  (dimmer.getPower() == config.maxpow ) { config.dispo = request->getParam("puissance")->value().toInt(); }
+            //else if  (dimmer.getPower() == config.maxpow ) { config.dispo = request->getParam("puissance")->value().toInt(); }
             /// si on dépasse le max, on prend la puissance dispo restante 
-            else if  (dimmer.getPower() + dispo > config.maxpow ) { config.dispo = (config.dispo - ((config.maxpow - dimmer.getPower()) * config.charge / 100));  }
+            else if  (dimmer.getPower() + dispo >= config.maxpow ) { 
+              config.dispo = (config.dispo - ((config.maxpow - dimmer.getPower()) * config.charge / 100));  
+              dispo = (100*config.dispo/config.charge); // on recalcule le pourcentage
+              logs.concat("puissance max \r\n");
+            }
             //else if  (sysvar.puissance + dispo > config.maxpow ) { config.dispo = (dispo - (config.maxpow - sysvar.puissance)) * config.charge / 100;  }
             // on égalise
-            if ( strcmp(config.mode,"equal") == 0) {sysvar.puissance = sysvar.puissance + dispo/2;}
-            else {sysvar.puissance = sysvar.puissance + dispo; }
+            if ( strcmp(config.mode,"equal") == 0) {
+              sysvar.puissance = sysvar.puissance + dispo/2;
+            }
+            else {
+              sysvar.puissance = sysvar.puissance + dispo; 
+            }
          }
          else
          { sysvar.puissance = input;  config.dispo = 0; DEBUG_PRINTLN("input="+String(input));}
