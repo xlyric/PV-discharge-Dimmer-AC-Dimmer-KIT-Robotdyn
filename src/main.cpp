@@ -635,7 +635,7 @@ void loop() {
           }
           /// si on a une carte fille, on envoie la commande 
           if ( strcmp(config.child,"") != 0 ) {
-              if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance-config.maxpow,true ); } // si mode délest, envoi du surplus
+              if ( strcmp(config.mode,"delester") == 0 ) { child_communication(int((sysvar.puissance-config.maxpow)*FACTEUR_REGULATION),true ); } // si mode délest, envoi du surplus
               if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance,true); }  //si mode equal envoie de la commande vers la carte fille
           }
           
@@ -655,7 +655,7 @@ void loop() {
         }
           logs += "dimmer at " + String(sysvar.puissance) + "\r\n";
           if ( strcmp(config.child,"") != 0 ) {
-              if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance,true); }  //si mode equal envoie de la commande vers la carte fille
+              if ( strcmp(config.mode,"equal") == 0) { child_communication(int(sysvar.puissance*FACTEUR_REGULATION),true); }  //si mode equal envoie de la commande vers la carte fille
               if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance < config.maxpow) { child_communication(0,false); }  //si mode délest envoie d'une commande à 0
           }
           #ifdef  SSR
@@ -695,7 +695,7 @@ void loop() {
     {
       if ( strcmp(config.child,"") != 0 ) {
         if (sysvar.puissance > 200 ) {sysvar.puissance = 200 ;}
-        if ( strcmp(config.mode,"delester") == 0 ) { child_communication(sysvar.puissance ,true); childsend =0 ;} // si mode délest, envoi du surplus
+        if ( strcmp(config.mode,"delester") == 0 ) { child_communication(int(FACTEUR_REGULATION*sysvar.puissance) ,true); childsend =0 ;} // si mode délest, envoi du surplus
         if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance,true); childsend =0 ; }  //si mode equal envoie de la commande vers la carte fille
       }
     }

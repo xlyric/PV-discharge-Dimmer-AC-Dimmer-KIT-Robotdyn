@@ -10,7 +10,9 @@ int time_sync = 0;  // Variable utilisée pour stocker le temps
 int frequency = 0;  // Variable utilisée pour stocker la fréquence du réseau
 int time_tempo = 0;  // Variable utilisée pour stocker le temps temporaire
 int jotta_pow = 0;  // Variable utilisée pour stocker la commande de dimmer
-int avance_phase = 15;  // Variable utilisée pour stocker l'avance de phase
+int avance_phase = 20;  // Variable utilisée pour stocker l'avance de phase
+
+// 15 perfect pour moi, mais pour titi faut test 20
 //>13
 //<17
 //volatile bool topDepart = false;  // Variable volatile utilisée comme indicateur de top départ
