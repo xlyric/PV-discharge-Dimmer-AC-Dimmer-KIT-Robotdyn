@@ -245,8 +245,8 @@ void mqtt(String idx, String value, String name="")
       String retour; 
       DynamicJsonDocument doc(128);
       if ( value != "0" ) { nvalue = "2" ; }
-      doc["idx"] = idx;
-      doc["nvalue"] = nvalue;
+      doc["idx"] = idx.toInt();
+      doc["nvalue"] = nvalue.toInt();
       doc["svalue"] = value;
       doc["name"] = name;
       serializeJson(doc, retour);
