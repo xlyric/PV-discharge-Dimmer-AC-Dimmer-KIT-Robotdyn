@@ -225,7 +225,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
 void mqtt(String idx, String value, String name="")
 {
 
-  if (idx != "0") { // Autant vérifier qu'une seule fois?
+  if (idx != "0" || idx != "" ) { // Autant vérifier qu'une seule fois?
     
   // Grace a l'ajout de "exp_aft" sur le discovery, 
   // je préfère envoyer power et temp séparément, à chaque changement de valeur.
