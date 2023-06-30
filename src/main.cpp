@@ -571,10 +571,11 @@ void loop() {
   }
 
   //// si la sécurité température est active on coupe le dimmer
-  if ( sysvar.celsius > ( config.maxtemp + 0.5)) { 
+  if ( sysvar.celsius > ( config.maxtemp + 2) && (!alerte) ) { 
             mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(sysvar.celsius) ),"Alerte");  ///send alert to MQTT
             device_dimmer_alarm_temp.send("Alert temp");
-            
+            alerte=true;
+            dimmer_off();
           }
 
   if ( security == 1 ) { 
