@@ -33,8 +33,9 @@ void ntpinit() {
       // Configurer le serveur NTP et le fuseau horaire
   timeClient.begin();
   timeClient.update();
+  //Serial.println(timeClient.getFormattedTime());
   offset_heure_ete();
-  DEBUG_PRINTLN(timeClient.getFormattedTime());
+  Serial.println(timeClient.getFormattedTime());
   
 }
 
@@ -42,15 +43,19 @@ void timeclientEpoch_to_date(time_t epoch)  { // convert epoch to date
   actual_time.mois = month(epoch);
   actual_time.jour = day(epoch);
   actual_time.heure = hour(epoch);
+  DEBUG_PRINTLN(actual_time.mois);
+  DEBUG_PRINTLN(actual_time.jour);
+  DEBUG_PRINTLN(actual_time.heure);
   }
 
 
 void offset_heure_ete() {
   timeclientEpoch_to_date(timeClient.getEpochTime());
-  if (actual_time.jour >= 25 && actual_time.mois >= 3 && actual_time.heure >= 2) {
+  //timeClient.setTimeOffset(7200);
+  if ((actual_time.jour >= 25 && actual_time.mois >= 3 && actual_time.heure >= 2)||(actual_time.mois >= 4)){
     timeClient.setTimeOffset(7200); // Fuseau horaire (en secondes, ici GMT+2)
   }
-  if (actual_time.jour >= 25 && actual_time.mois >= 10 && actual_time.heure >= 3) {
+  if ((actual_time.jour >= 25 && actual_time.mois >= 10 && actual_time.heure >= 3)||(actual_time.mois >= 11)) {
     timeClient.setTimeOffset(3600); // Fuseau horaire (en secondes, ici GMT+1)
   }
 }
