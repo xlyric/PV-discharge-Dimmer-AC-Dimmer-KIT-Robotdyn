@@ -545,5 +545,14 @@ var recupconfig =  $.getJSON('/config', function(data) {
 <script src="https://ota.apper-solaire.org/css/jquery.easing.min.js"></script>
 <!-- Custom scripts for all pages-->
 <script src="https://ota.apper-solaire.org/css/sb-admin-2.js"></script>
+<script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
+<script>
+  kofiWidgetOverlay.draw('clyric', {
+    'type': 'floating-chat',
+    'floating-chat.donateButton.text': 'Support me',
+    'floating-chat.donateButton.background-color': '#00b9fe',
+    'floating-chat.donateButton.text-color': '#fff'
+  });
+</script>
 </body>
 </html>
