@@ -475,8 +475,8 @@ bool alerte=false;
 /// LOOP 
 /////////////////////
 void loop() {
-  Serial.print(frequency);Serial.print(" ");
-  Serial.print(time_tempo);Serial.print("-");
+  //Serial.print(frequency);Serial.print(" ");
+  //Serial.print(time_tempo);Serial.print("-");
 
   /// connexion MQTT
   if ( mqtt_config.mqtt && !AP ) {
