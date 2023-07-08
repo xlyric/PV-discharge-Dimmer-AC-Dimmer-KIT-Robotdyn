@@ -1,8 +1,10 @@
 #ifndef TASK_DALLAS
 #define TASK_DALLAS
 
+#ifdef STANDALONE
 #include <Pinger.h>
 Pinger pinger;
+#endif
 
 extern AsyncMqttClient  client;
 extern DallasTemperature sensors;
@@ -69,7 +71,7 @@ void mqttdallas() {
     dallas_error = 0; // remise à zéro du compteur d'erreur
   }
 
-
+#ifdef STANDALONE
   if ( pinger.Ping(WiFi.gatewayIP())) {
     //Serial.println("Ping OK");
     //ESP.restart();
@@ -86,6 +88,7 @@ void mqttdallas() {
     DEBUG_PRINTLN("détection perte gateway");
     ESP.restart();
   }
+#endif
 
 }
  
