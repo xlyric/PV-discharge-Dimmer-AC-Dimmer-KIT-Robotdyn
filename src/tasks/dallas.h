@@ -11,19 +11,24 @@ extern byte security; // sécurité
 extern byte addr[8]; 
 extern float previous_celsius; // température précédente
 
+int dallas_error = 0; // compteur d'erreur dallas
+
 float CheckTemperature(String label, byte deviceAddress[12]);
 void dallaspresent ();
 
 /// @brief / task executé toute les n secondes pour publier la température ( voir déclaration task dans main )
 void mqttdallas() {
-    if (mqtt_config.mqtt && present == 1 ) {
+        if (mqtt_config.mqtt && present == 1 ) {
         sysvar.celsius=CheckTemperature("Inside : ", addr); 
+       
         // arrondi à 1 décimale 
         if ( (sysvar.celsius == -127.00) || (sysvar.celsius == -255.00) ) {
          sysvar.celsius=previous_celsius;
+         dallas_error ++; // incrémente le compteur d'erreur
         }
         else { 
-        sysvar.celsius = (roundf(sysvar.celsius * 10) / 10 ) + 0.1; // pour les valeurs min
+          sysvar.celsius = (roundf(sysvar.celsius * 10) / 10 ) + 0.1; // pour les valeurs min
+          dallas_error = 0; // remise à zéro du compteur d'erreur
         }
 
         if ( sysvar.celsius != previous_celsius ) {
@@ -50,6 +55,13 @@ void mqttdallas() {
     }
   
   previous_celsius=sysvar.celsius;
+
+  // si trop d'erreur dallas, on remonte en mqtt
+  if ( dallas_error > 10 ) {
+    DEBUG_PRINTLN("détection perte sonde dallas");
+    mqtt(String(config.IDXAlarme), String("Dallas perdue"),"Dallas perdue");
+    dallas_error = 0; // remise à zéro du compteur d'erreur
+  }
 }
  
     //***********************************
