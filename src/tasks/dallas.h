@@ -1,6 +1,9 @@
 #ifndef TASK_DALLAS
 #define TASK_DALLAS
 
+#include <Pinger.h>
+Pinger pinger;
+
 extern AsyncMqttClient  client;
 extern DallasTemperature sensors;
 extern bool AP; // mode point d'accès
@@ -10,8 +13,11 @@ extern String logs; // logs
 extern byte security; // sécurité
 extern byte addr[8]; 
 extern float previous_celsius; // température précédente
+extern IPAddress gatewayIP;
+
 
 int dallas_error = 0; // compteur d'erreur dallas
+int gw_error = 0;   // compteur d'erreur gateway
 
 float CheckTemperature(String label, byte deviceAddress[12]);
 void dallaspresent ();
@@ -57,11 +63,30 @@ void mqttdallas() {
   previous_celsius=sysvar.celsius;
 
   // si trop d'erreur dallas, on remonte en mqtt
-  if ( dallas_error > 10 ) {
+  if ( dallas_error > 8 ) {
     DEBUG_PRINTLN("détection perte sonde dallas");
     mqtt(String(config.IDXAlarme), String("Dallas perdue"),"Dallas perdue");
     dallas_error = 0; // remise à zéro du compteur d'erreur
   }
+
+
+  if ( pinger.Ping(WiFi.gatewayIP())) {
+    //Serial.println("Ping OK");
+    //ESP.restart();
+    gw_error = 0; // remise à zéro du compteur d'erreur
+  }
+  else {
+    //Serial.println("perte de ping");
+    //ESP.restart();
+    gw_error ++; // incrémente le compteur d'erreur
+  }
+
+/// si GW perdu, reboot de l'ESP après 2 minutes
+  if ( gw_error > 8 ) {
+    DEBUG_PRINTLN("détection perte gateway");
+    ESP.restart();
+  }
+
 }
  
     //***********************************

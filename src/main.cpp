@@ -202,6 +202,7 @@ Programme programme_relay2;
 
 String getmqtt(); 
 void savemqtt(const char *filename, const Mqtt &mqtt_config);
+bool pingIP(IPAddress ip) ;
 String stringbool(bool mybool);
 String getServermode(String Servermode);
 String switchstate(int state);
@@ -228,7 +229,8 @@ int childsend =0;
 
 unsigned long Timer_Cooler;
 
-IPAddress _ip,_gw,_sn;
+IPAddress _ip,_gw,_sn,gatewayIP  ;
+
 
 
     //***********************************
@@ -392,6 +394,10 @@ void setup() {
   Serial.print("IP address: ");
 
   Serial.println(WiFi.localIP()); 
+  gatewayIP = WiFi.gatewayIP();
+  Serial.println(gatewayIP);
+  
+
   #ifndef ESP32
     Serial.println(ESP.getResetReason());
   #endif
@@ -851,3 +857,4 @@ String stringbool(bool mybool){
   if (mybool == false ) {truefalse = "false";}
   return String(truefalse);
   }
+
