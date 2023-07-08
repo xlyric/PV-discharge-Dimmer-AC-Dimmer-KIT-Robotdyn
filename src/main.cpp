@@ -353,6 +353,8 @@ void setup() {
     wifiManager.autoConnect("dimmer");
     DEBUG_PRINTLN("end Wifiautoconnect");
     wifiManager.setSaveConfigCallback(saveConfigCallback);
+    wifiManager.setConfigPortalTimeout(180);
+    
 
     strcpy(wifi_config_fixe.static_ip, custom_IP_Address.getValue());
     strcpy(wifi_config_fixe.static_sn, custom_IP_mask.getValue());
@@ -367,6 +369,8 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
+  // change le nom du device en fonction de l'adresse MAC
+  WiFi.setHostname(("Dimmer-"+WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17)).c_str());
 
    /// restart si la configuration OP static est différente ip affectée suite changement ip Autoconf
   if ( !strcmp(wifi_config_fixe.static_ip, "" ) == 0 )  {
