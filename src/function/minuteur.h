@@ -7,7 +7,7 @@
 #include <WiFiUdp.h>
 #include <TimeLib.h>
 
-#ifdef ESP32
+#if defined(ESP32) || defined(ESP32ETH)
   #include <FS.h>
   #include "SPIFFS.h"
   #define LittleFS SPIFFS // Fonctionne, mais est-ce correct? 

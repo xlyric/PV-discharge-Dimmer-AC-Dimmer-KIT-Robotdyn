@@ -36,6 +36,11 @@
  *  |               | 33(GPIO21), 35(GPIO1),  |                         |
  *  |               | 36(GPIO22), 37(GPIO23), |                         |
  *  +---------------+-------------------------+-------------------------+
+ *  | ESP32ETH      | 39(39),     36(36),     |                         |
+ *  |               | 15(15),     14(14),     | 15(15),     14(14),     |
+ *  |               | 12(12),     5(5),       | 12(12),     5(5),       |
+ *  |               | 4(4),       2(2),       | 4(4),       2(2),       |
+ *  +---------------+-------------------------+-------------------------+
  *  | Arduino M0    | D7 (NOT CHANGABLE)      | D0-D6, D8-D13           |
  *  | Arduino Zero  |                         |                         |
  *  +---------------+-------------------------+-------------------------+
@@ -106,7 +111,7 @@ Task Task_Cooler(15000, TASK_FOREVER, &cooler);
 Task Task_GET_POWER(10000, TASK_FOREVER, &get_dimmer_child_power);
 Scheduler runner;
 
-#ifdef ESP32
+#if defined(ESP32) || defined(ESP32ETH)
 // Web services
   #include "WiFi.h"
   #include <AsyncTCP.h>
@@ -122,6 +127,10 @@ Scheduler runner;
   #include <ESP8266HTTPClient.h> 
 // File System
   #include <LittleFS.h>
+#endif
+
+#ifdef ESP32ETH
+  #include <ETH.h>
 #endif
 
 /***************************
@@ -239,7 +248,11 @@ IPAddress _ip,_gw,_sn,gatewayIP  ;
 
 void setup() {
   Serial.begin(115200);
-   
+
+  #ifdef ESP32ETH
+    ETH.begin(ETH_ADDR, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_TYPE, ETH_CLK_MODE);
+  #endif
+
   /// Correction issue full power at start
   pinMode(outputPin, OUTPUT); 
   #ifdef outputPin2
@@ -293,7 +306,7 @@ void setup() {
       //***********************************
     //************* Setup -  récupération du fichier de configuration
     //***********************************
-  #ifndef ESP32
+  #if !defined(ESP32) && !defined(ESP32ETH)
     ESP.getResetReason();
   #endif
   // Should load default config if run for the first time
@@ -398,7 +411,7 @@ void setup() {
   Serial.println(gatewayIP);
   
 
-  #ifndef ESP32
+  #if !defined(ESP32) && !defined(ESP32ETH)
     Serial.println(ESP.getResetReason());
   #endif
   //// AP MODE 

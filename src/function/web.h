@@ -15,7 +15,7 @@
 
 
 
-#ifdef ESP32
+#if defined(ESP32) || defined(ESP32ETH)
 // Web services
   #include "WiFi.h"
   #include <AsyncTCP.h>
