@@ -93,7 +93,7 @@
 #define ONE_WIRE_BUS 12 
 //#define RELAY1       2 
 //#define RELAY2       4 
-#define COOLER       15
+#define COOLER       5
 
 #define ETH_CLK_MODE    ETH_CLOCK_GPIO17_OUT
 #define ETH_POWER_PIN   16
