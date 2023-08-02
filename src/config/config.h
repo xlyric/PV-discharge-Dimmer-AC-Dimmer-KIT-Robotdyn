@@ -87,13 +87,13 @@
 #undef RELAY2
 #undef COOLER
 
-#define outputPin    14
-#define outputPin2   15
+#define outputPin    15
+//#define outputPin2   14
 #define zerocross    36
 #define ONE_WIRE_BUS 12 
-#define RELAY1       2 
-#define RELAY2       4 
-#define COOLER       35  
+//#define RELAY1       2 
+//#define RELAY2       4 
+#define COOLER       15
 
 #define ETH_CLK_MODE    ETH_CLOCK_GPIO17_OUT
 #define ETH_POWER_PIN   16
