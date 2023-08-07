@@ -469,7 +469,7 @@ Task_dallas.enable();
 runner.addTask(Task_Cooler);
 Task_Cooler.enable();
 
-runner.addTask(Task_GET_POWER );
+runner.addTask(Task_GET_POWER);
 Task_GET_POWER.enable();
 
 DEBUG_PRINTLN(ESP.getFreeHeap());
@@ -519,6 +519,8 @@ void loop() {
         DEBUG_PRINTLN("programme.run");
         sysvar.puissance=0;
         Serial.print("stop minuteur dimmer");
+        //arret du ventilateur
+        digitalWrite(COOLER, LOW);
         mqtt(String(config.IDX), String(dimmer.getPower()),"pourcent"); // remonté MQTT de la commande réelle
         if (mqtt_config.HA) {
           int instant_power = dimmer.getPower();
@@ -537,6 +539,8 @@ void loop() {
       dimmer.setPower(config.maxpow); 
       delay (50);
       Serial.print("start minuteur ");
+      //demarrage du ventilateur 
+      digitalWrite(COOLER, HIGH);
       mqtt(String(config.IDX), String(dimmer.getPower()),"pourcent"); // remonté MQTT de la commande réelle
       if (mqtt_config.HA) {
         int instant_power = dimmer.getPower();
