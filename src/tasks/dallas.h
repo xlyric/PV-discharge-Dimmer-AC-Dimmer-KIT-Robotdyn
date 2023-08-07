@@ -26,7 +26,7 @@ void dallaspresent ();
 
 /// @brief / task executé toute les n secondes pour publier la température ( voir déclaration task dans main )
 void mqttdallas() {
-        if (mqtt_config.mqtt && present == 1 ) {
+        if ( present == 1 ) {
         sysvar.celsius=CheckTemperature("Inside : ", addr); 
        
         // arrondi à 1 décimale 
@@ -38,14 +38,14 @@ void mqttdallas() {
           sysvar.celsius = (roundf(sysvar.celsius * 10) / 10 ) + 0.1; // pour les valeurs min
           dallas_error = 0; // remise à zéro du compteur d'erreur
         }
-
-        if ( sysvar.celsius != previous_celsius ) {
-        // envoie des infos en mqtt dans ce cas
-        mqtt(String(config.IDXTemp), String(sysvar.celsius),"Temperature");
-        if ( mqtt_config.HA ) { device_temp.send(String(sysvar.celsius)); }
-        logs += "Dallas temp : "+ String(sysvar.celsius) +"\r\n";
+        if (mqtt_config.mqtt)  { 
+          if ( sysvar.celsius != previous_celsius ) {
+            // envoie des infos en mqtt dans ce cas
+            mqtt(String(config.IDXTemp), String(sysvar.celsius),"Temperature");
+            if ( mqtt_config.HA ) { device_temp.send(String(sysvar.celsius)); }
+            logs += "Dallas temp : "+ String(sysvar.celsius) +"\r\n";
+          }
         }
-        //}
     } 
     //// détection sécurité température
     if  ( sysvar.celsius >= config.maxtemp ) {
