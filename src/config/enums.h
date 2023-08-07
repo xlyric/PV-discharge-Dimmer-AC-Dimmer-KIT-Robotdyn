@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#ifdef ESP32
+#if defined(ESP32) || defined(ESP32ETH)
   #include "WiFi.h"
 #else
   #include <ESP8266WiFi.h>
