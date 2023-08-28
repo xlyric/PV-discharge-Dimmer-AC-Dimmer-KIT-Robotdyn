@@ -464,11 +464,14 @@ void setup() {
   }
   
   #ifdef  SSR
-  //analogWriteFreq(GRIDFREQ) ; 
-  //analogWriteRange(100);
-  //analogWrite(JOTTA, 0);
-  init_jotta(); 
-  timer_init();
+    #ifdef OLDSSR
+      analogWriteFreq(GRIDFREQ) ; 
+      analogWriteRange(100);
+      analogWrite(JOTTA, 0);
+    #else
+      init_jotta(); 
+      timer_init();
+    #endif
   #endif
 
 /// init du NTP
@@ -670,8 +673,11 @@ void loop() {
           }
           
           #ifdef  SSR
-          //analogWrite(JOTTA, config.maxpow );
-          jotta_command(config.maxpow);
+            #ifdef OLDSSR
+              analogWrite(JOTTA, config.maxpow );
+            #else
+              jotta_command(config.maxpow);
+            #endif
           #endif
 
         }
@@ -689,8 +695,11 @@ void loop() {
               if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance < config.maxpow) { child_communication(0,false); }  //si mode délest envoie d'une commande à 0
           }
           #ifdef  SSR
-          //analogWrite(JOTTA, sysvar.puissance );
-          jotta_command(sysvar.puissance);
+            #ifdef OLDSSR
+              analogWrite(JOTTA, sysvar.puissance );
+            #else
+              jotta_command(sysvar.puissance);
+            #endif
           #endif
         }
 
@@ -754,8 +763,11 @@ void loop() {
         if ( strcmp(config.mode,"off") != 0) {  if (childsend>2) { child_communication(0,false); childsend++; }}
 
           #ifdef  SSR
-          //analogWrite(JOTTA, 0 );
-          jotta_command(0);
+            #ifdef OLDSSR
+              analogWrite(JOTTA, 0 );
+            #else
+              jotta_command(0);
+            #endif
           #endif
 
 
