@@ -540,6 +540,7 @@ void loop() {
           device_dimmer.send(String(instant_power));
           device_dimmer_power.send(String(instant_power * config.charge/100)); 
           device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
+          device_cooler.send("0");
 
         } 
       } 
@@ -560,6 +561,7 @@ void loop() {
         device_dimmer.send(String(instant_power));
         device_dimmer_power.send(String(instant_power * config.charge/100)); 
         device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
+        device_cooler.send("1");
       } 
       offset_heure_ete(); // on corrige l'heure d'été si besoin
     }
