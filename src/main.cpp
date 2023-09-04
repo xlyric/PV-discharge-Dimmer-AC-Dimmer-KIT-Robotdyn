@@ -368,7 +368,7 @@ void setup() {
     wifiManager.autoConnect("dimmer");
     DEBUG_PRINTLN("end Wifiautoconnect");
     wifiManager.setSaveConfigCallback(saveConfigCallback);
-    wifiManager.setConfigPortalTimeout(180);
+    wifiManager.setConfigPortalTimeout(600);
     
 
     strcpy(wifi_config_fixe.static_ip, custom_IP_Address.getValue());
