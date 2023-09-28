@@ -8,6 +8,7 @@ extern AsyncMqttClient  client;
 extern Config config;
 extern Mqtt mqtt_config;
 extern System sysvar;
+extern dimmerLamp dimmer;
 String stringbool(bool mybool);
 
 struct HA
@@ -184,6 +185,7 @@ HA device_dimmer_starting_pow;
 HA device_dimmer_maxtemp;
 HA device_dimmer_minpow;
 HA device_dimmer_maxpow;
+HA device_dimmer_send_power;
 
 /// création select
 HA device_dimmer_child_mode;
@@ -288,6 +290,15 @@ void devices_init(){
   device_dimmer_maxpow.Set_entity_valuestep("1");
   device_dimmer_maxpow.Set_retain_flag(true);
 
+  device_dimmer_send_power.Set_name("dimmer power");
+  device_dimmer_send_power.Set_object_id("powdimmer");
+  device_dimmer_send_power.Set_entity_type("number");
+  device_dimmer_send_power.Set_entity_category("config");
+  device_dimmer_send_power.Set_entity_valuemin("0");
+  device_dimmer_send_power.Set_entity_valuemax("100"); // trop? pas assez? TODO : test sans valeur max?
+  device_dimmer_send_power.Set_entity_valuestep("1");
+  device_dimmer_send_power.Set_retain_flag(true);
+
   device_dimmer_maxtemp.Set_name("Température maxi");
   device_dimmer_maxtemp.Set_object_id("maxtemp");
   device_dimmer_maxtemp.Set_entity_type("number");
@@ -356,6 +367,9 @@ void HA_discover(){
 
         device_dimmer_maxpow.discovery();
         device_dimmer_maxpow.send(String(config.maxpow));
+
+        device_dimmer_send_power.discovery();
+        device_dimmer_send_power.send(String(dimmer.getPower()));
 
         device_dimmer_child_mode.discovery();
         device_dimmer_child_mode.send(String(config.mode));

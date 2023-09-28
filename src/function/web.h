@@ -200,10 +200,10 @@ void call_pages() {
   server.on("/resetwifi", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain", "Resetting Wifi and reboot");
     wifiManager.resetSettings();
+    config.restart = true;
   });
 
   server.on("/reboot", HTTP_ANY, [](AsyncWebServerRequest *request){
-   // request->send_P(200, "text/plain","Restarting");
     request->redirect("/");
     config.restart = true;
   });

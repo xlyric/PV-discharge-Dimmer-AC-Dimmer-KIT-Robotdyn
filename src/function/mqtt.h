@@ -36,6 +36,7 @@ extern HA device_dimmer_maxtemp;
 extern HA device_dimmer_on_off;
 extern HA device_dimmer_alarm_temp;
 extern HA device_dimmer_power;
+extern HA device_dimmer_send_power; 
 
 extern bool discovery_temp; 
 extern bool alerte; 
@@ -69,8 +70,8 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
   StaticJsonDocument<1024> doc2;
   deserializeJson(doc2, payload);
   /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remonté par MQTT
-  if (strcmp( Subscribedtopic, config.SubscribePV ) == 0 && doc2.containsKey("dimmer")) { 
-    int puissancemqtt = doc2["dimmer"]; 
+  if (strcmp( Subscribedtopic, config.SubscribePV ) == 0 && doc2.containsKey("power")) { 
+    int puissancemqtt = doc2["power"]; 
     puissancemqtt = puissancemqtt - config.startingpow;
     if (puissancemqtt < 0) puissancemqtt = 0;
     //if (puissancemqtt > config.maxpow) puissancemqtt = config.maxpow;
@@ -158,6 +159,16 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
         logs += "MQTT maxpow at " + String(maxpow) + "\r\n";
         device_dimmer_maxpow.send(String(maxpow));
         sysvar.change=1; 
+      }
+    }
+    else if (doc2.containsKey("powdimmer")) { 
+      int powdimmer = doc2["powdimmer"]; 
+      if (sysvar.puissance != powdimmer ) {
+        if ( config.maxpow != 0 && powdimmer > config.maxpow ) { powdimmer = config.maxpow; } 
+        sysvar.puissance = powdimmer;
+        sysvar.change=1; 
+        logs += "MQTT power at " + String(powdimmer) + "\r\n";
+       
       }
     }
     else if (doc2.containsKey("maxtemp")) { 
@@ -318,7 +329,7 @@ void reconnect() {
     
   } else {  Serial.println(" Filesystem not present "); delay(5000); }
 }
-#define MQTT_HOST IPAddress(192, 168, 1, 20)
+//#define MQTT_HOST IPAddress(192, 168, 1, 20)
 void async_mqtt_init() {
   IPAddress ip;
   ip.fromString(config.hostname);
