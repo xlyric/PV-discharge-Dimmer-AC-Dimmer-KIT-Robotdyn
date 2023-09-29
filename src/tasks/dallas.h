@@ -27,26 +27,26 @@ void dallaspresent ();
 /// @brief / task executé toute les n secondes pour publier la température ( voir déclaration task dans main )
 void mqttdallas() {
         if ( present == 1 ) {
-        sysvar.celsius=CheckTemperature("Inside : ", addr); 
-       
-        // arrondi à 1 décimale 
-        if ( (sysvar.celsius == -127.00) || (sysvar.celsius == -255.00) ) {
-         sysvar.celsius=previous_celsius;
-         dallas_error ++; // incrémente le compteur d'erreur
-        }
-        else { 
-          sysvar.celsius = (roundf(sysvar.celsius * 10) / 10 ) + 0.1; // pour les valeurs min
-          dallas_error = 0; // remise à zéro du compteur d'erreur
-        }
-        if (mqtt_config.mqtt)  { 
-          if ( sysvar.celsius != previous_celsius ) {
-            // envoie des infos en mqtt dans ce cas
-            mqtt(String(config.IDXTemp), String(sysvar.celsius),"Temperature");
-            if ( mqtt_config.HA ) { device_temp.send(String(sysvar.celsius)); }
-            logs += "Dallas temp : "+ String(sysvar.celsius) +"\r\n";
+          sysvar.celsius=CheckTemperature("Inside : ", addr); 
+        
+          // arrondi à 1 décimale 
+          if ( (sysvar.celsius == -127.00) || (sysvar.celsius == -255.00) ) {
+          sysvar.celsius=previous_celsius;
+          dallas_error ++; // incrémente le compteur d'erreur
           }
-        }
-    } 
+          else { 
+            sysvar.celsius = (roundf(sysvar.celsius * 10) / 10 ) + 0.1; // pour les valeurs min
+            dallas_error = 0; // remise à zéro du compteur d'erreur
+          }
+          if (mqtt_config.mqtt)  { 
+            if ( sysvar.celsius != previous_celsius ) {
+              // envoie des infos en mqtt dans ce cas
+              mqtt(String(config.IDXTemp), String(sysvar.celsius),"Temperature");
+              if ( mqtt_config.HA ) { device_temp.send(String(sysvar.celsius)); }
+              logs += "Dallas temp : "+ String(sysvar.celsius) +"\r\n";
+            }
+          }
+         } 
     //// détection sécurité température
     if  ( sysvar.celsius >= config.maxtemp ) {
         // coupure du dimmer
