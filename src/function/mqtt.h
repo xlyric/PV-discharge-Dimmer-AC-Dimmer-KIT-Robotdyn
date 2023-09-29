@@ -264,12 +264,17 @@ void mqtt(String idx, String value, String name="")
 //      String message = "  { \"idx\" : \"" + idx +"\" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
       //client.loop();
       //client.publish(config.Publish, 0,true, String(message).c_str());   
-      client.publish(config.Publish, 0,true, retour.c_str());
+      // si config.Publish est vide, on ne publie pas
+      if (strlen(config.Publish) != 0 ) {
+        client.publish(config.Publish, 0,true, retour.c_str());
+      }
     }
 
     if (mqtt_config.jeedom){
-      String jdompub = String(config.Publish) + "/"+idx ;
-      client.publish(jdompub.c_str() ,0,true, value.c_str());
+      if (strlen(config.Publish) != 0 ) {
+         String jdompub = String(config.Publish) + "/"+idx ;
+          client.publish(jdompub.c_str() ,0,true, value.c_str());
+      }
       //client.loop();
     }
     Serial.println("MQTT SENT");
