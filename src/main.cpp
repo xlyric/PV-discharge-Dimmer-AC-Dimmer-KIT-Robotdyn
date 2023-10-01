@@ -232,6 +232,14 @@ int childsend =0;
  dimmerLamp dimmer2(outputPin2, zerocross); //initialise port for dimmer2 for ESP8266, ESP32, Arduino due boards
 #endif
 
+  //// test JOTTA non random
+  #ifdef SSR_TEST
+  #include <Ticker.h>
+  Ticker timer;
+  SSR_BURST ssr_burst;
+  #endif
+
+
     //***********************************
     //************* function web 
     //***********************************
@@ -463,11 +471,16 @@ void setup() {
     reconnect() ;
   }
   
+ 
   #ifdef  SSR
     #ifdef OLDSSR
       analogWriteFreq(GRIDFREQ) ; 
       analogWriteRange(100);
       analogWrite(JOTTA, 0);
+    #elif  defined(SSR_TEST)
+      pinMode(JOTTA, OUTPUT);
+      ssr_burst.calcul(0);
+      timer.attach_ms(10, SSR_run); // Attachez la fonction task() au temporisateur pour qu'elle s'exécute toutes les 1000 ms
     #else
       init_jotta(); 
       timer_init();
@@ -675,7 +688,9 @@ void loop() {
           #ifdef  SSR
             #ifdef OLDSSR
               analogWrite(JOTTA, config.maxpow );
-            #else
+            #elif  defined(SSR_TEST)
+              ssr_burst.calcul(config.maxpow);
+            #else 
               jotta_command(config.maxpow);
             #endif
           #endif
@@ -697,6 +712,8 @@ void loop() {
           #ifdef  SSR
             #ifdef OLDSSR
               analogWrite(JOTTA, sysvar.puissance );
+            #elif  defined(SSR_TEST)
+              ssr_burst.calcul(sysvar.puissance);
             #else
               jotta_command(sysvar.puissance);
             #endif
@@ -765,6 +782,8 @@ void loop() {
           #ifdef  SSR
             #ifdef OLDSSR
               analogWrite(JOTTA, 0 );
+            #elif  defined(SSR_TEST)
+              ssr_burst.calcul(0);
             #else
               jotta_command(0);
             #endif

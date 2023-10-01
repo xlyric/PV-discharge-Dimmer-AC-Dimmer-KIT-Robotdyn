@@ -4,6 +4,92 @@
 #include <Arduino.h>
 #include "config/config.h"
 
+/// code des tests SSR non random
+#ifdef SSR_TEST
+
+    struct SSR_BURST
+    {
+      /* data */
+      public:char* sequence_result;
+
+      public:void calcul(int puissance){
+        double decimalValue; 
+        decimalValue = round(puissance * 100) / 10000; // Arrondir à 2 décimales
+        int denominator = 100; // Choisissez une valeur de dénominateur appropriée
+
+        int numerator = decimalValue * denominator;
+        int gcdValue = gcd(numerator, denominator);
+
+        numerator /= gcdValue;
+        denominator /= gcdValue;
+
+        //Serial.print(decimalValue, 2); // Affichez le nombre décimal avec 4 décimales
+        Serial.print("en fraction : ");
+        Serial.print(numerator);
+        Serial.print("/");
+        Serial.print(denominator);
+        
+        float sequence = float(denominator) / float(numerator) ;
+        Serial.print(" Sequence : ");
+        Serial.println(sequence);
+        // boucle de 100 occurences
+        sequence_result = action_sequence(sequence);
+      }
+
+    /// @brief  fonction de calcul de la séquence d'ouverture et fermeture du SSR 
+    /// @param sequence 
+    /// @return 
+      private:char* action_sequence(float sequence) {
+        float boucle = sequence; 
+        char* sequence_char = (char*)malloc(102); // Allouer de la mémoire pour le tableau de caractères
+        
+        for (int j = 1; j < 101; j++) {
+          if (j >= boucle) {
+            //Serial.print("+");
+            sequence_char[j - 1] = '+';
+            boucle = boucle + sequence;
+          } else {
+            sequence_char[j - 1] = '-';
+            //Serial.print("-");
+          }
+        }
+        
+        sequence_char[101] = '\0'; // Terminer la chaîne avec un caractère nul
+        //Serial.println("");
+      // Serial.println(sequence_char);
+        return sequence_char;
+      }
+
+    /// @brief  fonction de calcul du plus grand diviseur commun
+      private:int gcd(int a, int b) {
+        if (b == 0) {
+          return a;
+        }
+        return gcd(b, a % b);
+      } 
+
+    };
+
+
+    int sequence_timer = 0;
+
+    extern SSR_BURST ssr_burst;
+
+    void SSR_run(){
+      if (ssr_burst.sequence_result[sequence_timer] == '+') {
+        digitalWrite(JOTTA, HIGH);
+      } else {
+        digitalWrite(JOTTA, LOW);
+      }
+
+      sequence_timer++;
+
+      if (sequence_timer == 100) {
+        sequence_timer = 0;
+      }
+
+    }
+#endif 
   // Configuration de la broche comme sortie
 
 int time_sync = 0;  // Variable utilisée pour stocker le temps 
@@ -29,6 +115,8 @@ int avance_phase = 20;  // Variable utilisée pour stocker l'avance de phase
   #endif
 
 }*/
+
+
 
 IRAM_ATTR void jotta_run(){
   #ifdef  SSR
@@ -74,7 +162,6 @@ IRAM_ATTR void jotta_ISR()
     //frequency = 0;
   }*/
   //timer1_write(timeoutPinjotta); //100 us
-
   #endif
 }
 
@@ -115,7 +202,19 @@ void jotta_sync(){
 }
 */
 
+void Jotta_burst_command(int command){
+   /// calculer le temps de burst en fonction de la commande 
+  #ifdef  SSR
+   // calcul du nombre de modulation par seconde
+  float nb_modulation = 100 / command; 
+  
+  
 
+  
+
+
+   #endif
+}
 
 
 #endif
