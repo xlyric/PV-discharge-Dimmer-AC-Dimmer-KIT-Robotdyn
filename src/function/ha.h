@@ -314,8 +314,8 @@ void devices_init(){
   device_dimmer_charge.Set_entity_type("number");
   device_dimmer_charge.Set_entity_category("config");
   device_dimmer_charge.Set_entity_valuemin("0");
-  device_dimmer_charge.Set_entity_valuemax("10000");
-  device_dimmer_charge.Set_entity_valuestep("100");
+  device_dimmer_charge.Set_entity_valuemax("3000");
+  device_dimmer_charge.Set_entity_valuestep("50");
   device_dimmer_charge.Set_retain_flag(true);
 
   /// création des select
