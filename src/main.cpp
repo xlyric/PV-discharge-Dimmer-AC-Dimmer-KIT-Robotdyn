@@ -266,6 +266,10 @@ void setup() {
   #ifdef outputPin2
     pinMode(outputPin2, OUTPUT); 
   #endif
+  
+  rst_info *reset_info = ESP.getResetInfoPtr();
+  Serial.printf("Reason for reset: %d\n", reset_info->reason);
+  loginit.concat("Reason for reset: %d\n",reset_info->reason);
 
   #ifdef RELAY1 // permet de rajouter les relais en ne modifiant que config.h, et pas seulement en STANDALONE
     pinMode(RELAY1, OUTPUT);
@@ -749,7 +753,7 @@ void loop() {
     /// si la sécurité est active on déleste 
     else if ( sysvar.puissance != 0 && security == 1)
     {
-      if ( strcmp(config.child,"") != 0 ) {
+      if ( strcmp(config.child,"") != 0 || strcmp(config.mode,"off") != 0) {
         if (sysvar.puissance > 200 ) {sysvar.puissance = 200 ;}
         if ( strcmp(config.mode,"delester") == 0 ) { child_communication(int(FACTEUR_REGULATION*sysvar.puissance) ,true); childsend =0 ;} // si mode délest, envoi du surplus
         if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance,true); childsend =0 ; }  //si mode equal envoie de la commande vers la carte fille
