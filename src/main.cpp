@@ -101,13 +101,12 @@
 #include "function/jotta.h"
 
 #include "tasks/dallas.h"
-#include "tasks/cooler.h"
 #include "tasks/get_power.h"
 
 
 // taches
 Task Task_dallas(15000, TASK_FOREVER, &mqttdallas);
-Task Task_Cooler(15000, TASK_FOREVER, &cooler);
+
 Task Task_GET_POWER(10000, TASK_FOREVER, &get_dimmer_child_power);
 Scheduler runner;
 
@@ -495,8 +494,8 @@ runner.init();
 runner.addTask(Task_dallas);    
 Task_dallas.enable();
 
-runner.addTask(Task_Cooler);
-Task_Cooler.enable();
+
+
 
 runner.addTask(Task_GET_POWER);
 Task_GET_POWER.enable();
@@ -556,7 +555,7 @@ void loop() {
           device_dimmer.send(String(instant_power));
           device_dimmer_power.send(String(instant_power * config.charge/100)); 
           device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
-          device_cooler.send("0");
+          device_cooler.send(stringbool(false));
 
         } 
       } 
@@ -577,7 +576,7 @@ void loop() {
         device_dimmer.send(String(instant_power));
         device_dimmer_power.send(String(instant_power * config.charge/100)); 
         device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
-        device_cooler.send("1");
+        device_cooler.send(stringbool(true));
       } 
       offset_heure_ete(); // on corrige l'heure d'été si besoin
     }
@@ -700,6 +699,10 @@ void loop() {
         else { 
         if (config.dimmer_on_off == 1){
           dimmer.setPower(sysvar.puissance);
+          //demarrage du ventilateur 
+          digitalWrite(COOLER, HIGH);
+          // envoie mqtt
+          if ( mqtt_config.HA ) {  device_cooler.send(stringbool(true));  }
           #ifdef outputPin2
             dimmer2.setPower(sysvar.puissance);
           #endif
@@ -759,6 +762,8 @@ void loop() {
     else if ( sysvar.puissance <= config.minpow ){
         DEBUG_PRINTLN("commande est trop faible");
         dimmer.setPower(0);
+        //arret du ventilateur
+        digitalWrite(COOLER, LOW);
               /// et sur les sous routeur 
           if ( strcmp(config.child,"") != 0 ) {
             if ( strcmp(config.mode,"delester") == 0 ) { child_communication(0,false); } // si mode délest, envoi du surplus
@@ -771,6 +776,7 @@ void loop() {
         if ( mqtt_config.HA ) { 
           device_dimmer.send("0"); 
           device_dimmer_power.send("0");
+          device_cooler.send(stringbool(false));
         }
 
         #ifdef outputPin2
