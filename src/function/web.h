@@ -134,8 +134,11 @@ void call_pages() {
          }
          else
          { sysvar.puissance = input;  config.dispo = 0; DEBUG_PRINTLN("input="+String(input));}
-
-        if (sysvar.puissance >= 200) {sysvar.puissance = 200; }
+        
+        // si config.child = 0.0.0.0 alors max = 100 
+        int max = 200;
+        if (strcmp(config.child,"") == 0 || strcmp(config.mode,"off") ==0 ) { max = 100; } 
+        if (sysvar.puissance >= max) {sysvar.puissance = max; }
         logs.concat("HTTP power at " + String(sysvar.puissance)+"\r\n");
         sysvar.change=1; 
         String pb=getState().c_str(); 
