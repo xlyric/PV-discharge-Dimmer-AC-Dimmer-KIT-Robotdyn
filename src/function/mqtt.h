@@ -180,6 +180,15 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
         sysvar.change=1; 
       }
     }
+    else if (doc2.containsKey("charge")) { 
+      int charge = doc2["charge"]; 
+      if (config.charge != charge ) {
+        config.charge = charge;
+        logs += "MQTT charge at " + String(charge) + "\r\n";
+        device_dimmer_charge.send(String(charge));
+        sysvar.change=1; 
+      }
+    }
   }
 //save
   if (strcmp( Subscribedtopic, button_command.c_str() ) == 0) { 

@@ -388,6 +388,10 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     config.maxpow = request->getParam("maxpow")->value().toInt();
     if (!AP && mqtt_config.mqtt) { device_dimmer_maxpow.send(String(config.maxpow));}
    }
+    if (request->hasParam("charge")) { 
+    config.charge = request->getParam("charge")->value().toInt();
+    if (!AP && mqtt_config.mqtt) { device_dimmer_charge.send(String(config.charge));}
+   }
    if (request->hasParam("child")) { request->getParam("child")->value().toCharArray(config.child,15);  }
    if (request->hasParam("mode")) { 
     request->getParam("mode")->value().toCharArray(config.mode,10);  
