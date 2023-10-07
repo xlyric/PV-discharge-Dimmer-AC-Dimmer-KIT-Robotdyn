@@ -53,7 +53,6 @@ void dimmer_off()
     dimmer.setPower(0);
     dimmer.setState(OFF);
     logs +="Dimmer Off\r\n"; 
-    //digitalWrite(COOLER, LOW);
     delay(50);
     }
   #ifdef outputPin2

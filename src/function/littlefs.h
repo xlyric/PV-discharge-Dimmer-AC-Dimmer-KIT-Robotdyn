@@ -91,10 +91,10 @@ void loadConfiguration(const char *filename, Config &config) {
           doc["mode"] | "off", 
           sizeof(config.mode));
   strlcpy(config.SubscribePV,                 
-        doc["SubscribePV"] | "homeassistant/sensor/PvRouter-xxxx/statedimmer", 
+        doc["SubscribePV"] | "none", 
         sizeof(config.SubscribePV));    
   strlcpy(config.SubscribeTEMP,                 
-        doc["SubscribeTEMP"] | "homeassistant/sensor/dimmer-xxxx/temperature/state", 
+        doc["SubscribeTEMP"] | "none", 
         sizeof(config.SubscribeTEMP));
   config.dimmer_on_off = doc["dimmer_on_off"] | 1; 
 

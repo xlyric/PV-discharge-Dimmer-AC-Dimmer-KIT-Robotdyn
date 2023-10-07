@@ -139,7 +139,7 @@ bool start_progr() {
   }
       
   if(timeClient.isTimeSet()) {
-    if (heures == timeClient.getHours() && minutes == timeClient.getMinutes() && sysvar.celsius < temperature )  { // correction bug #19  
+    if (heures == timeClient.getHours() && minutes == timeClient.getMinutes() && sysvar.celsius < temperature ) { // correction bug #19  
         run=true; 
         timeClient.update();
         return true; 

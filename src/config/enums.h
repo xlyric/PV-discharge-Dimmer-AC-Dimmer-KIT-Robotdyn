@@ -68,7 +68,6 @@ bool cooler=0;
 int puissance_cumul=0;
 /// @brief etat de la surchauffe
 byte security=0;
-//int cooler_refresh=0;
 };
 
 struct epoc {

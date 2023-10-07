@@ -120,6 +120,8 @@ Scheduler runner;
   #include <FS.h>
   #include "SPIFFS.h"
   #define LittleFS SPIFFS // Fonctionne, mais est-ce correct? 
+  #include <esp_system.h>
+
 #else
 // Web services
   #include <ESP8266WiFi.h>
@@ -266,10 +268,17 @@ void setup() {
   #ifdef outputPin2
     pinMode(outputPin2, OUTPUT); 
   #endif
-  
+  #if defined(ESP32) || defined(ESP32ETH)
+  esp_reset_reason_t reset_reason = esp_reset_reason();
+  Serial.printf("Reason for reset: %d\n", reset_reason);
+  loginit.concat("Reason for reset: ");
+  loginit.concat(reset_reason);
+  #else
   rst_info *reset_info = ESP.getResetInfoPtr();
   Serial.printf("Reason for reset: %d\n", reset_info->reason);
-  loginit.concat("Reason for reset: %d\n",reset_info->reason);
+  loginit.concat("Reason for reset: ");
+  loginit.concat(reset_info->reason);
+  #endif
 
   #ifdef RELAY1 // permet de rajouter les relais en ne modifiant que config.h, et pas seulement en STANDALONE
     pinMode(RELAY1, OUTPUT);
