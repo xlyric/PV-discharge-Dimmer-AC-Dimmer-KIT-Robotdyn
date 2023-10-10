@@ -10,6 +10,7 @@ extern String logs;
 extern bool AP; // mode point d'accès
 extern HA device_cooler;
 extern byte security;
+extern Programme programme;
 
 unsigned long lastCoolerOffTime = 0;
 const unsigned long cooldownDuration = 60 * 1000; // 1 minute en millisecondes
@@ -20,7 +21,7 @@ void cooler() {
 
     /// controle du cooler 
     if (config.dimmer_on_off == 1){
-        if ( sysvar.puissance > config.minpow && sysvar.celsius < config.maxtemp && security == 0) {
+        if ( ( sysvar.puissance > config.minpow && sysvar.celsius < config.maxtemp && security == 0 ) || ( programme.run == true )) {
             sysvar.cooler = 1;
         } else {
             sysvar.cooler = 0;
@@ -41,7 +42,7 @@ void cooler() {
 
     }
 
-    if (sysvar.cooler == 0 && millis() - lastCoolerOffTime >= cooldownDuration && digitalRead(COOLER) == HIGH) {
+    if (sysvar.cooler == 0 && millis() - lastCoolerOffTime >= cooldownDuration && digitalRead(COOLER) == HIGH && programme.run == false) {
         digitalWrite(COOLER, LOW); // Éteindre le ventilateur après X secondes (cooldownDuration)
     
         if ( mqtt_config.HA ) {  device_cooler.send(stringbool(false));  }
