@@ -109,6 +109,7 @@
                                 </div>
                                 <div class="card-body">
                                     <div id="curve_chart2" style=" width: auto; height: 200px;"></div>
+                                    <h3 id="vide"></h3>
                                 </div>
                             </div>
                         </div>
@@ -116,10 +117,11 @@
                             <div class="card shadow mb-4">
                                 <!-- Card Header - Dropdown -->
                                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">temp</h6>
+                                    <h6 class="m-0 font-weight-bold text-primary">Température</h6>
                                 </div>
                                 <div class="card-body">
                                     <div id="curve_temp" style=" width: auto; height: 200px;"></div>
+                                    <h3 id="alerte"></h3>
                                 </div>
                             </div>
                         </div>
@@ -201,6 +203,7 @@ $.getJSON('/state', function(data) {
     var dimmer = data.dimmer;
     var power = data.power;
     var temperature = data.temperature;
+    var alerte = data.alerte;
     // Mettre à jour les éléments HTML
         dataGaugePA.setValue(0, 0, "Power (W)"); 
 		dataGaugePA.setValue(0, 1, power);
@@ -215,6 +218,16 @@ $.getJSON('/state', function(data) {
 		dataGaugePAtemp.setValue(0, 0, "Temp °C"); 
 		dataGaugePAtemp.setValue(0, 1, temperature);
 		gaugePAtemp.draw(dataGaugePAtemp,optionsGaugetemp);
+
+    // recupération de l'état de sécurité
+        
+    // ecriture de "refroidissement" dans le div alerte si l'état est à 1
+        if (alerte == 1) {
+            document.getElementById("alerte").innerHTML = "Refroidissement";
+        } else {
+            document.getElementById("alerte").innerHTML = "";
+        }
+    
   });
 }, 2000);
  			

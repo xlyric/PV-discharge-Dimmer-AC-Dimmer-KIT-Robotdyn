@@ -36,6 +36,7 @@ extern Programme programme_relay2;
 
 extern dimmerLamp dimmer; 
 extern DNSServer dns;
+extern byte security; 
 
 AsyncWebServer server(80);
 
@@ -482,6 +483,8 @@ String getState() {
     doc["temperature"] = buffer;
     doc["power"] = (instant_power * config.charge/100);
     doc["Ptotal"]  = sysvar.puissance_cumul + (instant_power * config.charge/100);
+    // recupération de l'état de surchauffe
+    doc["alerte"]  = security;
   serializeJson(doc, state);
   return String(state);
 }
@@ -497,7 +500,9 @@ String processor(const String& var){
     return getState();
   } */
   if (var == "VERSION"){
-    return (VERSION);
+    // affichage de la version et de l'environnement
+    String VERSION_http = String(VERSION) + " " + String(COMPILE_NAME) ; 
+    return (VERSION_http);
   } 
   if (var == "NAME"){
     return (dimmername);
