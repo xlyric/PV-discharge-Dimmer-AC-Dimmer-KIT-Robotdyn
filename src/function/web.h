@@ -467,7 +467,12 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
 String getState() {
   String state; 
   char buffer[5];
-  int instant_power= dimmer.getPower() ; 
+  #ifdef SSR
+  int instant_power= sysvar.puissance ; 
+  #else
+  int instant_power= dimmer.getPower(); 
+  #endif
+
   //state = String(instant_power) + "% " +  String(instant_power * config.charge) + "W"; 
    
   dtostrf(sysvar.celsius,2, 1, buffer); // conversion en n.1f 
