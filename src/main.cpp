@@ -492,7 +492,7 @@ void setup() {
       analogWrite(JOTTA, 0);
     #elif  defined(SSR_TEST)
       pinMode(JOTTA, OUTPUT);
-      ssr_burst.calcul(0);
+      ssr_burst.set_power(0);
       timer.attach_ms(10, SSR_run); // Attachez la fonction task() au temporisateur pour qu'elle s'exécute toutes les 1000 ms
     #else
       init_jotta(); 
@@ -694,10 +694,13 @@ void loop() {
           #ifdef  SSR
             #ifdef OLDSSR
               analogWrite(JOTTA, config.maxpow );
+
             #elif  defined(SSR_TEST)
-              ssr_burst.calcul(config.maxpow);
+              //ssr_burst.calcul(config.maxpow);
+              ssr_burst.set_power(config.maxpow);
             #else 
               jotta_command(config.maxpow);
+              sysvar.puissance = config.maxpow;
             #endif
           #endif
 
@@ -719,7 +722,7 @@ void loop() {
             #ifdef OLDSSR
               analogWrite(JOTTA, sysvar.puissance );
             #elif  defined(SSR_TEST)
-              ssr_burst.calcul(sysvar.puissance);
+              ssr_burst.set_power(sysvar.puissance);
             #else
               jotta_command(sysvar.puissance);
             #endif
@@ -789,7 +792,7 @@ void loop() {
             #ifdef OLDSSR
               analogWrite(JOTTA, 0 );
             #elif  defined(SSR_TEST)
-              ssr_burst.calcul(0);
+              ssr_burst.set_power(0);
             #else
               jotta_command(0);
             #endif

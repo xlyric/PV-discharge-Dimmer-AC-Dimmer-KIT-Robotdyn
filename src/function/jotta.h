@@ -11,6 +11,18 @@
     {
       /* data */
       public:char* sequence_result;
+      private:int power;
+
+      // getter puissance 
+      public:int get_power(){
+        return power;
+      }
+
+      //setter puissance 
+      public:void set_power(int power){
+        this->power = power;
+        calcul(power);
+      }
 
       public:void calcul(int puissance){
         double decimalValue; 

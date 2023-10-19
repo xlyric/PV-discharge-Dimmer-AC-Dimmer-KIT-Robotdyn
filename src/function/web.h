@@ -12,6 +12,7 @@
 #include "function/littlefs.h"
 #include "function/ha.h"
 #include "function/minuteur.h"
+#include "function/jotta.h"
 
 
 
@@ -76,6 +77,9 @@ String readmqttsave();
 String getMinuteur(const Programme& minuteur);
 extern String getlogs(); 
 
+#ifdef SSR_TEST
+extern SSR_BURST ssr_burst;
+#endif
 
 
 void call_pages() {
@@ -468,8 +472,12 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
 String getState() {
   String state; 
   char buffer[5];
-  #ifdef SSR
-  int instant_power= sysvar.puissance ; 
+  #ifdef  SSR
+    #ifdef SSR_TEST
+      int instant_power= ssr_burst.get_power();
+    #else
+      int instant_power= sysvar.puissance ;
+    #endif
   #else
   int instant_power= dimmer.getPower(); 
   #endif

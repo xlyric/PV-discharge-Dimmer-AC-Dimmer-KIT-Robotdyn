@@ -57,7 +57,7 @@ void mqttdallas() {
             #ifdef OLDSSR
               analogWrite(JOTTA, 0 );
             #elif  defined(SSR_TEST)
-              ssr_burst.calcul(0);
+              ssr_burst.set_power(0);
             #else
               jotta_command(0);
             #endif
