@@ -556,8 +556,19 @@ void loop() {
   if (programme.run) { 
       //  minuteur en cours
       if (programme.stop_progr()) { 
-        dimmer.setPower(0); 
-        dimmer_off();
+            // Robotdyn dimmer
+            #ifdef ROBOTDYN
+            dimmer.setPower(0); 
+            dimmer_off();
+            #endif
+            // SSR dimmer
+            #ifdef  SSR
+              #ifdef SSR_TEST
+                ssr_burst.set_power(0);
+              #else
+                jotta_command(0);
+              #endif
+            #endif
         DEBUG_PRINTLN("programme.run");
         sysvar.puissance=0;
         Serial.print("stop minuteur dimmer");
@@ -574,9 +585,20 @@ void loop() {
     // minuteur à l'arret
     if (programme.start_progr()){ 
       sysvar.puissance=config.maxpow; 
-      dimmer_on();
-      dimmer.setPower(config.maxpow); 
-      delay (50);
+          //// robotdyn dimmer
+          #ifdef ROBOTDYN
+              dimmer_on();
+              dimmer.setPower(config.maxpow); 
+              delay (50);
+          #endif
+          //// SSR dimmer
+          #ifdef  SSR
+            #ifdef SSR_TEST
+              ssr_burst.set_power(config.maxpow);
+            #else
+              jotta_command(config.maxpow);
+            #endif
+          #endif
       Serial.print("start minuteur ");
       mqtt(String(config.IDX), String(dimmer.getPower()),"pourcent"); // remonté MQTT de la commande réelle
       if (mqtt_config.HA) {
