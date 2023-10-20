@@ -71,8 +71,10 @@
  **************************/
 
 #include <Arduino.h>
-// Dimmer librairy 
-#include <RBDdimmer.h>   /// the corrected librairy  in personal depot , the original has a bug
+#ifdef ROBOTDYN
+  // Dimmer librairy 
+  #include <RBDdimmer.h>   /// the corrected librairy  in personal depot , the original has a bug
+#endif
 // Web services
 #include <ESPAsyncWiFiManager.h>    
 #include <ESPAsyncWebServer.h>
@@ -97,8 +99,16 @@
 #include "function/littlefs.h" 
 #include "function/mqtt.h"
 #include "function/minuteur.h"
-#include "function/dimmer.h"
-#include "function/jotta.h"
+
+#ifdef ROBOTDYN
+  #include "function/dimmer.h"
+#endif
+
+#ifdef  SSR
+  #include "function/jotta.h"
+#endif
+
+#include "function/unified_dimmer.h"
 
 #include "tasks/dallas.h"
 #include "tasks/cooler.h"
@@ -228,19 +238,22 @@ int childsend =0;
 /***************************
  * init Dimmer
  **************************/
-
- dimmerLamp dimmer(outputPin, zerocross); //initialise port for dimmer for ESP8266, ESP32, Arduino due boards
-#ifdef outputPin2
- dimmerLamp dimmer2(outputPin2, zerocross); //initialise port for dimmer2 for ESP8266, ESP32, Arduino due boards
+#ifdef ROBOTDYN
+  
+    dimmerLamp dimmer(outputPin, zerocross); //initialise port for dimmer for ESP8266, ESP32, Arduino due boards
+  #ifdef outputPin2
+    dimmerLamp dimmer2(outputPin2, zerocross); //initialise port for dimmer2 for ESP8266, ESP32, Arduino due boards
+  #endif
 #endif
 
   //// test JOTTA non random
-  #ifdef SSR_TEST
+  #ifdef SSR_ZC
   #include <Ticker.h>
   Ticker timer;
   SSR_BURST ssr_burst;
   #endif
 
+gestion_puissance unified_dimmer; 
 
     //***********************************
     //************* function web 
@@ -299,12 +312,15 @@ void setup() {
   delay(1000);
   Serial.println("Demarrage file System");
   loginit.concat(loguptime("Start filesystem")); 
+  #ifdef ROBOTDYN
   // configuration dimmer
-  dimmer.begin(NORMAL_MODE, ON); //dimmer initialisation: name.begin(MODE, STATE) 
-  #ifdef outputPin2
-    dimmer2.begin(NORMAL_MODE, ON); //dimmer initialisation: name.begin(MODE, STATE) 
-  #endif
-  
+    #ifndef outputPin2
+      dimmer.begin(NORMAL_MODE, ON); //dimmer initialisation: name.begin(MODE, STATE) 
+    #else 
+      dimmer2.begin(NORMAL_MODE, ON); //dimmer initialisation: name.begin(MODE, STATE) 
+    #endif
+
+
   #ifdef POWERSUPPLY2022  
   /// correct bug board
   dimmer.setState(ON);
@@ -315,9 +331,10 @@ void setup() {
   pinMode(POS_PIN, OUTPUT); 
   digitalWrite(POS_PIN, 1);
   #endif
+#endif
 
   /// init de sécurité     
-  dimmer.setPower(0); 
+  unified_dimmer.set_power(0); 
   #ifdef outputPin2
     dimmer2.setPower(0); 
   #endif
@@ -490,9 +507,9 @@ void setup() {
       analogWriteFreq(GRIDFREQ) ; 
       analogWriteRange(100);
       analogWrite(JOTTA, 0);
-    #elif  defined(SSR_TEST)
+    #elif  defined(SSR_ZC)
       pinMode(JOTTA, OUTPUT);
-      ssr_burst.set_power(0);
+      unified_dimmer.set_power(0);
       timer.attach_ms(10, SSR_run); // Attachez la fonction task() au temporisateur pour qu'elle s'exécute toutes les 1000 ms
     #else
       init_jotta(); 
@@ -518,7 +535,7 @@ DEBUG_PRINTLN(ESP.getFreeHeap());
 
 
 delay(1000);
-Serial.println(frequency);
+//Serial.println(frequency);
 }
 
 bool alerte=false;
@@ -557,24 +574,16 @@ void loop() {
       //  minuteur en cours
       if (programme.stop_progr()) { 
             // Robotdyn dimmer
-            #ifdef ROBOTDYN
-            dimmer.setPower(0); 
-            dimmer_off();
-            #endif
-            // SSR dimmer
-            #ifdef  SSR
-              #ifdef SSR_TEST
-                ssr_burst.set_power(0);
-              #else
-                jotta_command(0);
-              #endif
-            #endif
+
+            unified_dimmer.set_power(0); 
+            unified_dimmer.dimmer_off();
+
         DEBUG_PRINTLN("programme.run");
         sysvar.puissance=0;
         Serial.print("stop minuteur dimmer");
-        mqtt(String(config.IDX), String(dimmer.getPower()),"pourcent"); // remonté MQTT de la commande réelle
+        mqtt(String(config.IDX), String(unified_dimmer.get_power()),"pourcent"); // remonté MQTT de la commande réelle
         if (mqtt_config.HA) {
-          int instant_power = dimmer.getPower();
+          int instant_power = unified_dimmer.get_power();
           device_dimmer.send(String(instant_power));
           device_dimmer_power.send(String(instant_power * config.charge/100)); 
           device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
@@ -586,23 +595,15 @@ void loop() {
     if (programme.start_progr()){ 
       sysvar.puissance=config.maxpow; 
           //// robotdyn dimmer
-          #ifdef ROBOTDYN
-              dimmer_on();
-              dimmer.setPower(config.maxpow); 
+
+              unified_dimmer.dimmer_on();
+              unified_dimmer.set_power(config.maxpow); 
               delay (50);
-          #endif
-          //// SSR dimmer
-          #ifdef  SSR
-            #ifdef SSR_TEST
-              ssr_burst.set_power(config.maxpow);
-            #else
-              jotta_command(config.maxpow);
-            #endif
-          #endif
+
       Serial.print("start minuteur ");
-      mqtt(String(config.IDX), String(dimmer.getPower()),"pourcent"); // remonté MQTT de la commande réelle
+      mqtt(String(config.IDX), String(unified_dimmer.get_power()),"pourcent"); // remonté MQTT de la commande réelle
       if (mqtt_config.HA) {
-        int instant_power = dimmer.getPower();
+        int instant_power = unified_dimmer.get_power();
         device_dimmer.send(String(instant_power));
         device_dimmer_power.send(String(instant_power * config.charge/100)); 
         device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
@@ -648,7 +649,7 @@ void loop() {
             mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(sysvar.celsius) ),"Alerte");  ///send alert to MQTT
             device_dimmer_alarm_temp.send("Alert temp");
             alerte=true;
-            dimmer_off();
+            unified_dimmer.dimmer_off();
           }
 
   if ( security == 1 ) { 
@@ -672,7 +673,7 @@ void loop() {
         sysvar.change = 1 ;
       }
       else {
-      dimmer_off();
+        unified_dimmer.dimmer_off();
       }
   }
   else 
@@ -686,51 +687,39 @@ void loop() {
     sysvar.change = 0; 
     if (config.dimmer_on_off == 0){
       
-      dimmer_off();  
+        unified_dimmer.dimmer_off();
     }
     
     /// si on dépasse la puissance mini demandé 
-    DEBUG_PRINTLN("------------------");
+    DEBUG_PRINTLN("694------------------");
     DEBUG_PRINTLN(sysvar.puissance);
     
     if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && security == 0) 
     {
-        if (config.dimmer_on_off == 1){dimmer_on();}  // if off, switch on 
-
+        DEBUG_PRINTLN("699------------------");
+        if (config.dimmer_on_off == 1){unified_dimmer.dimmer_on();}  // if off, switch on 
+        DEBUG_PRINTLN("701------------------");
         /// si au dessus de la consigne max configuré alors config.maxpow. 
         if ( sysvar.puissance > config.maxpow || sysvar.puissance_cumul > sysvar.puissancemax )  
         { 
           if (config.dimmer_on_off == 1){
-            dimmer.setPower(config.maxpow);
+            unified_dimmer.set_power(config.maxpow);
             
             #ifdef outputPin2
               dimmer2.setPower(config.maxpow);
             #endif
           }
           /// si on a une carte fille, on envoie la commande 
-          if ( strcmp(config.child,"") != 0 ) {
+          if ( strcmp(config.child,"none") != 0 || strcmp(config.mode,"off") != 0 ) {
               if ( strcmp(config.mode,"delester") == 0 ) { child_communication(int((sysvar.puissance-config.maxpow)*FACTEUR_REGULATION),true ); } // si mode délest, envoi du surplus
               if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance,true); }  //si mode equal envoie de la commande vers la carte fille
           }
-          
-          #ifdef  SSR
-            #ifdef OLDSSR
-              analogWrite(JOTTA, config.maxpow );
-
-            #elif  defined(SSR_TEST)
-              //ssr_burst.calcul(config.maxpow);
-              ssr_burst.set_power(config.maxpow);
-            #else 
-              jotta_command(config.maxpow);
-              sysvar.puissance = config.maxpow;
-            #endif
-          #endif
-
+        DEBUG_PRINTLN("716------------------");
         }
         /// fonctionnement normal
         else { 
         if (config.dimmer_on_off == 1){
-          dimmer.setPower(sysvar.puissance);
+          unified_dimmer.set_power(sysvar.puissance);
           #ifdef outputPin2
             dimmer2.setPower(sysvar.puissance);
           #endif
@@ -740,17 +729,8 @@ void loop() {
               if ( strcmp(config.mode,"equal") == 0) { child_communication(int(sysvar.puissance*FACTEUR_REGULATION),true); }  //si mode equal envoie de la commande vers la carte fille
               if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance < config.maxpow) { child_communication(0,false); }  //si mode délest envoie d'une commande à 0
           }
-          #ifdef  SSR
-            #ifdef OLDSSR
-              analogWrite(JOTTA, sysvar.puissance );
-            #elif  defined(SSR_TEST)
-              ssr_burst.set_power(sysvar.puissance);
-            #else
-              jotta_command(sysvar.puissance);
-            #endif
-          #endif
         }
-
+        DEBUG_PRINTLN("732------------------");
 
         
       /// si on est en mode MQTT on remonte les valeurs vers HA et MQTT
@@ -765,9 +745,9 @@ void loop() {
           if (mqtt_config.HA) {device_dimmer.send(String(config.maxpow)); device_dimmer_total_power.send(String(sysvar.puissance_cumul + config.maxpow)); }  // remonté MQTT HA de la commande max
         }
         else {
-          mqtt(String(config.IDX), String(dimmer.getPower()),"pourcent"); // remonté MQTT de la commande réelle
+          mqtt(String(config.IDX), String(unified_dimmer.get_power()),"pourcent"); // remonté MQTT de la commande réelle
           if (mqtt_config.HA) {
-              int instant_power = dimmer.getPower();
+              int instant_power = unified_dimmer.get_power();
               device_dimmer.send(String(instant_power));
               device_dimmer_power.send(String(instant_power * config.charge/100)); 
               device_dimmer_total_power.send(String(sysvar.puissance_cumul + (instant_power* config.charge/100)));
@@ -789,7 +769,7 @@ void loop() {
     //// si la commande est trop faible on coupe tout partout
     else if ( sysvar.puissance <= config.minpow ){
         DEBUG_PRINTLN("commande est trop faible");
-        dimmer.setPower(0);
+        unified_dimmer.set_power(0);
               /// et sur les sous routeur 
           if ( strcmp(config.child,"") != 0 ) {
             if ( strcmp(config.mode,"delester") == 0 ) { child_communication(0,false); } // si mode délest, envoi du surplus
@@ -807,22 +787,14 @@ void loop() {
         #ifdef outputPin2
           dimmer2.setPower(0);
         #endif
-        dimmer_off();  
+            unified_dimmer.dimmer_off();
         if ( strcmp(config.mode,"off") != 0) {  if (childsend>2) { child_communication(0,false); childsend++; }}
 
-          #ifdef  SSR
-            #ifdef OLDSSR
-              analogWrite(JOTTA, 0 );
-            #elif  defined(SSR_TEST)
-              ssr_burst.set_power(0);
-            #else
-              jotta_command(0);
-            #endif
-          #endif
+
 
 
       if (!AP && mqtt_config.Mqtt::mqtt) {
-        int instant_power = dimmer.getPower();
+        int instant_power = unified_dimmer.get_power();
         mqtt(String(config.IDX), String(instant_power),"Watt");  // correction 19/04
         device_dimmer.send(String(instant_power));
         device_dimmer_power.send(String(instant_power * config.charge/100)); 
@@ -840,8 +812,8 @@ void loop() {
     //***********************************
 if ( sysvar.celsius >= config.maxtemp && security == 0 ) {
   security = 1 ; 
-  dimmer.setPower(0);
-  dimmer_off();
+  unified_dimmer.set_power(0);
+            unified_dimmer.dimmer_off();
   float temp = sysvar.celsius + 0.2; /// pour être sur que la dernière consigne envoyé soit au moins égale au max.temp  
   mqtt(String(config.IDXTemp), String(temp),"Temperature");  /// remonté MQTT de la température
   if ( mqtt_config.HA ) { 

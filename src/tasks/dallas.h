@@ -53,15 +53,8 @@ void mqttdallas() {
         DEBUG_PRINTLN("détection sécurité température");
         sysvar.puissance=0;
 
-        #ifdef  SSR
-            #ifdef OLDSSR
-              analogWrite(JOTTA, 0 );
-            #elif  defined(SSR_TEST)
-              ssr_burst.set_power(0);
-            #else
-              jotta_command(0);
-            #endif
-        #endif
+              unified_dimmer.set_power(0);
+
         
       if ( mqtt_config.mqtt ) {
         mqtt(String(config.IDX), "0","pourcent");

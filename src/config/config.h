@@ -70,7 +70,7 @@
 
 #ifdef ESP32
 #define outputPin  14
-#define outputPin2  27
+//#define outputPin2  27 /// désactivé pour le moment ne comprneds pas pourquoi c'est arrivé dans le code. 
 #define zerocross  33
 #define ONE_WIRE_BUS 4 
 #define RELAY1 25 
@@ -88,7 +88,7 @@
 #undef COOLER
 
 #define outputPin    15
-//#define outputPin2   14
+//#define outputPin2   14 /// désactivé pour le moment
 #define zerocross    36
 #define ONE_WIRE_BUS 12 
 //#define RELAY1       2 

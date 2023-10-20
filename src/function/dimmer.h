@@ -5,7 +5,9 @@
 
 #include <Arduino.h>
 #include "mqtt.h"
-#include <RBDdimmer.h>
+#ifdef ROBOTDYN
+  #include <RBDdimmer.h>
+#endif
 
 #if defined(ESP32) || defined(ESP32ETH)
 // Web services
@@ -27,9 +29,9 @@ extern dimmerLamp dimmer2;
 #endif
 
 ///déclaration des fonctions
-void dimmer_on();
-void dimmer_off();
-
+//void dimmer_on();
+//void dimmer_off();
+/*
 /// fonction pour mettre en pause ou allumer le dimmer 
 void dimmer_on()
 {
@@ -62,7 +64,7 @@ void dimmer_off()
     delay(50);
   #endif
 }
-
+*/
 
 /*
 void envoie_vers_enfant(int puissance);

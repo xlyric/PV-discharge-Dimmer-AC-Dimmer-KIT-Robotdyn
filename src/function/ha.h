@@ -8,7 +8,8 @@ extern AsyncMqttClient  client;
 extern Config config;
 extern Mqtt mqtt_config;
 extern System sysvar;
-extern dimmerLamp dimmer;
+
+//extern dimmerLamp dimmer;
 String stringbool(bool mybool);
 
 struct HA
@@ -383,7 +384,7 @@ void HA_discover(){
         device_dimmer_charge.send(String(config.charge));
 
         device_dimmer_send_power.discovery();
-        device_dimmer_send_power.send(String(dimmer.getPower()));
+        device_dimmer_send_power.send(String(sysvar.puissance));
 
         device_dimmer_child_mode.discovery();
         device_dimmer_child_mode.send(String(config.mode));

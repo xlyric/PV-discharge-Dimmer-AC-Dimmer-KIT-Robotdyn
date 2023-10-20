@@ -12,9 +12,8 @@
 #include "function/littlefs.h"
 #include "function/ha.h"
 #include "function/minuteur.h"
-#include "function/jotta.h"
-
-
+//#include "function/jotta.h"
+#include "function/unified_dimmer.h"
 
 #if defined(ESP32) || defined(ESP32ETH)
 // Web services
@@ -34,8 +33,9 @@ extern System sysvar;
 extern Programme programme; 
 extern Programme programme_relay1; 
 extern Programme programme_relay2; 
+extern gestion_puissance unified_dimmer; 
 
-extern dimmerLamp dimmer; 
+//extern dimmerLamp dimmer; 
 extern DNSServer dns;
 extern byte security; 
 
@@ -77,7 +77,7 @@ String readmqttsave();
 String getMinuteur(const Programme& minuteur);
 extern String getlogs(); 
 
-#ifdef SSR_TEST
+#ifdef SSR_ZC
 extern SSR_BURST ssr_burst;
 #endif
 
@@ -88,7 +88,7 @@ void call_pages() {
   server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
     
     if  (LittleFS.exists("/index.html")) {
-      DEBUG_PRINTLN("------------------");
+      DEBUG_PRINTLN("91------------------");
       DEBUG_PRINTLN(sysvar.puissance);
       /// si requete sur POWER
 
@@ -123,8 +123,8 @@ void call_pages() {
             ///   si au max, on prend la puissance dispo 
             //else if  (dimmer.getPower() == config.maxpow ) { config.dispo = request->getParam("puissance")->value().toInt(); }
             /// si on dépasse le max, on prend la puissance dispo restante 
-            else if  (dimmer.getPower() + dispo >= config.maxpow ) { 
-              config.dispo = (config.dispo - ((config.maxpow - dimmer.getPower()) * config.charge / 100));  
+            else if  (unified_dimmer.get_power() + dispo >= config.maxpow ) { 
+              config.dispo = (config.dispo - ((config.maxpow - unified_dimmer.get_power()) * config.charge / 100));  
               dispo = (100*config.dispo/config.charge); // on recalcule le pourcentage
               logs.concat("puissance max \r\n");
             }
@@ -138,11 +138,11 @@ void call_pages() {
             }
          }
          else
-         { sysvar.puissance = input;  config.dispo = 0; DEBUG_PRINTLN("input="+String(input));}
+         { sysvar.puissance = input;  config.dispo = 0; DEBUG_PRINTLN("141-input="+String(input));}
         
         // si config.child = 0.0.0.0 alors max = 100 
         int max = 200;
-        if (strcmp(config.child,"") == 0 || strcmp(config.mode,"off") ==0 ) { max = 100; } 
+        if (strcmp(config.child,"none") == 0 || strcmp(config.mode,"off") ==0 ) { max = 100; } 
         if (sysvar.puissance >= max) {sysvar.puissance = max; }
         logs.concat("HTTP power at " + String(sysvar.puissance)+"\r\n");
         sysvar.change=1; 
@@ -179,7 +179,7 @@ void call_pages() {
     }
     
     DEBUG_PRINTLN(sysvar.puissance);
-    DEBUG_PRINTLN("------------------");
+    DEBUG_PRINTLN("182------------------");
   }); 
 
 /// page de config et récupération des requetes de config
@@ -473,13 +473,13 @@ String getState() {
   String state; 
   char buffer[5];
   #ifdef  SSR
-    #ifdef SSR_TEST
-      int instant_power= ssr_burst.get_power();
+    #ifdef SSR_ZC
+      int instant_power= unified_dimmer.get_power(); 
     #else
       int instant_power= sysvar.puissance ;
     #endif
   #else
-  int instant_power= dimmer.getPower(); 
+  int instant_power= unified_dimmer.get_power(); 
   #endif
 
   //state = String(instant_power) + "% " +  String(instant_power * config.charge) + "W"; 

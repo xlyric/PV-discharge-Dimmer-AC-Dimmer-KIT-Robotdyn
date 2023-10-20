@@ -8,6 +8,7 @@
 //#include <ESP8266HTTPClient.h> 
 #include <ArduinoJson.h> 
 #include "config/config.h"
+#include "function/unified_dimmer.h"
 
 #if defined(ESP32) || defined(ESP32ETH)
 // Web services
@@ -21,10 +22,12 @@
   #include <ESP8266HTTPClient.h> 
 #endif
 
+//extern gestion_puissance unified_dimmer; 
 extern Config config; 
 extern System sysvar;
 extern HTTPClient http;
 extern WiFiClient domotic_client;
+
 
 extern HA device_dimmer_child_mode;
 
@@ -335,7 +338,7 @@ void reconnect() {
         String node_id = String("dimmer-") + node_mac; 
         String save_command = String("Xlyric/sauvegarde/"+ node_id );
         //client.subscribe(save_command.c_str());
-         int instant_power = dimmer.getPower();
+         int instant_power = sysvar.puissance;  // 
         mqtt(String(config.IDX), String(String(instant_power)));   /// correction 19/04 valeur remonté au dessus du max conf
         device_dimmer.send(String(instant_power)); 
         device_dimmer_power.send(String(instant_power * config.charge/100)); 

@@ -5,7 +5,7 @@
 #include "config/config.h"
 
 /// code des tests SSR non random
-#ifdef SSR_TEST
+#ifdef SSR_ZC
 
     struct SSR_BURST
     {
