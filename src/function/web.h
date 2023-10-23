@@ -515,6 +515,9 @@ String processor(const String& var){
   if (var == "NAME"){
     return (dimmername);
   } 
+  if (var == "RSSI"){
+    return (String(WiFi.RSSI()));
+  } 
   return ("N/A");
 } 
 
