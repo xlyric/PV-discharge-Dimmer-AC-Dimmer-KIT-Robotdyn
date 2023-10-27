@@ -75,7 +75,7 @@ String getServermode(String Servermode);
 String switchstate(int state);
 String readmqttsave();
 String getMinuteur(const Programme& minuteur);
-extern String getlogs(); 
+extern Logs Logging; 
 
 #ifdef SSR_ZC
 extern SSR_BURST ssr_burst;
@@ -126,7 +126,7 @@ void call_pages() {
             else if  (unified_dimmer.get_power() + dispo >= config.maxpow ) { 
               config.dispo = (config.dispo - ((config.maxpow - unified_dimmer.get_power()) * config.charge / 100));  
               dispo = (100*config.dispo/config.charge); // on recalcule le pourcentage
-              logs.concat("puissance max \r\n");
+              logging.Set_log_init("puissance max \r\n");
             }
             //else if  (sysvar.puissance + dispo > config.maxpow ) { config.dispo = (dispo - (config.maxpow - sysvar.puissance)) * config.charge / 100;  }
             // on égalise
@@ -144,7 +144,7 @@ void call_pages() {
         int max = 200;
         if (strcmp(config.child,"none") == 0 || strcmp(config.mode,"off") ==0 ) { max = 100; } 
         if (sysvar.puissance >= max) {sysvar.puissance = max; }
-        logs.concat("HTTP power at " + String(sysvar.puissance)+"\r\n");
+        logging.Set_log_init("HTTP power at " + String(sysvar.puissance)+"\r\n");
         sysvar.change=1; 
         String pb=getState().c_str(); 
         pb = pb +String(sysvar.puissance) +" " + String(input) +" " + String(sysvar.puissance_dispo) ;
@@ -152,14 +152,14 @@ void call_pages() {
       } 
       else if (request->hasParam(PARAM_INPUT_2)) { 
         config.startingpow = request->getParam(PARAM_INPUT_2)->value().toInt(); 
-        logs.concat("HTTP power at " + String(config.startingpow)+"\r\n");
+        logging.Set_log_init("HTTP power at " + String(config.startingpow)+"\r\n");
 
         sysvar.change=1; 
         request->send_P(200, "text/plain", getState().c_str());  
       }
       else if (request->hasParam(PARAM_INPUT_2)) { 
         config.startingpow = request->getParam(PARAM_INPUT_2)->value().toInt(); 
-        logs.concat("HTTP power at " + String(config.startingpow)+"\r\n");
+        logging.Set_log_init("HTTP power at " + String(config.startingpow)+"\r\n");
         sysvar.change=1; 
         request->send_P(200, "text/plain", getState().c_str());
       }
@@ -346,8 +346,10 @@ void call_pages() {
   });
 
   server.on("/cs", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", getlogs().c_str());
-    logs="197}11}1";
+    logging.Set_log_init("}1");
+    request->send_P(200, "text/plain", logging.Get_log_init().c_str());
+    // reinit de logging.log_init 
+    logging.reset_log_init(); 
   });
 
 

@@ -63,13 +63,13 @@ void dimmer_on()
   #ifdef ROBOTDYN
     if (dimmer.getState()==0) {
       dimmer.setState(ON);
-      logs +="Dimmer On\r\n"; 
+      logging.Set_log_init("Dimmer On\r\n");
       delay(50);
     }
     #ifdef outputPin2
       if (dimmer2.getState()==0) {
         dimmer2.setState(ON);
-        logs +="Dimmer2 On\r\n"; 
+        logging.Set_log_init("Dimmer2 On\r\n");
         delay(50);
       }  
     #endif
@@ -82,13 +82,13 @@ void dimmer_off()
     if (dimmer.getState()==1) {
       dimmer.setPower(0);
       dimmer.setState(OFF);
-      logs +="Dimmer Off\r\n"; 
+      logging.Set_log_init("Dimmer Off\r\n");
       delay(50);
     }
     #ifdef outputPin2 /// désactivé pour le moment
       dimmer2.setPower(0);
       dimmer2.setState(OFF);
-      logs +="Dimmer2 Off\r\n"; 
+      logging.Set_log_init("Dimmer2 Off\r\n");
       delay(50);
     #endif
   #endif

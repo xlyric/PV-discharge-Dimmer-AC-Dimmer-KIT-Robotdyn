@@ -228,9 +228,12 @@ String stringbool(bool mybool);
 String getServermode(String Servermode);
 String switchstate(int state);
 
-String loginit; 
-String logs="197}11}1"; 
-String getlogs(); 
+/// @brief  declaration des logs 
+Logs logging;/// declare logs 
+
+//String loginit; 
+//String logs="197}11}1"; 
+//String getlogs(); 
 int childsend =0; 
 
 //char buffer[1024];
@@ -275,6 +278,7 @@ void setup() {
   #ifdef ESP32ETH
     ETH.begin(ETH_ADDR, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_TYPE, ETH_CLK_MODE);
   #endif
+  logging.Set_log_init("197}11}1");
 
   /// Correction issue full power at start
   pinMode(outputPin, OUTPUT); 
@@ -284,13 +288,13 @@ void setup() {
   #if defined(ESP32) || defined(ESP32ETH)
   esp_reset_reason_t reset_reason = esp_reset_reason();
   Serial.printf("Reason for reset: %d\n", reset_reason);
-  loginit.concat("Reason for reset: ");
-  loginit.concat(reset_reason);
+  logging.Set_log_init("Reason for reset: ");
+  logging.Set_log_init(String(reset_reason).c_str());
   #else
   rst_info *reset_info = ESP.getResetInfoPtr();
   Serial.printf("Reason for reset: %d\n", reset_info->reason);
-  loginit.concat("Reason for reset: ");
-  loginit.concat(reset_info->reason);
+  logging.Set_log_init("Reason for reset: ");
+  logging.Set_log_init(String(reset_info->reason).c_str());
   #endif
 
   #ifdef RELAY1 // permet de rajouter les relais en ne modifiant que config.h, et pas seulement en STANDALONE
@@ -311,7 +315,7 @@ void setup() {
   // correction d'erreur de chargement de FS 
   delay(1000);
   Serial.println("Demarrage file System");
-  loginit.concat(loguptime("Start filesystem")); 
+  logging.Set_log_init("Start filesystem \r\n"); 
   #ifdef ROBOTDYN
   // configuration dimmer
     #ifndef outputPin2
@@ -349,12 +353,12 @@ void setup() {
   #endif
   // Should load default config if run for the first time
   Serial.println(F("Loading configuration..."));
-  loginit.concat(loguptime("Load config")); 
+  logging.Set_log_init("Load config \r\n"); 
   loadConfiguration(filename_conf, config);
 
   // Create configuration file
   Serial.println(F("Saving configuration..."));
-  loginit.concat(loguptime("Apply config")); 
+  logging.Set_log_init("Apply config \r\n"); 
   saveConfiguration(filename_conf, config);
 
   Serial.println(F("Loading mqtt_conf configuration..."));
@@ -363,7 +367,7 @@ void setup() {
   loadwifiIP(wifi_conf, wifi_config_fixe);
  
   /// chargement des conf de minuteries
-  Serial.println(F("Loading minuterie"));
+  Serial.println(F("Loading minuterie \r\n"));
   programme.name="dimmer";
   programme.loadProgramme();
   programme.saveProgramme();
@@ -381,7 +385,7 @@ void setup() {
     //************* Setup - Connexion Wifi
     //***********************************
   Serial.print("start Wifiautoconnect");
-  loginit.concat(loguptime("Start Wifiautoconnect")); 
+  logging.Set_log_init("Start Wifiautoconnect \r\n"); 
 
    // préparation  configuration IP fixe 
 
@@ -490,7 +494,7 @@ void setup() {
   /// MQTT 
   if (!AP && mqtt_config.mqtt) {
     Serial.println("Connection MQTT" );
-    loginit.concat(loguptime("MQTT connexion")); 
+    logging.Set_log_init("MQTT connexion \r\n"); 
     
       /// connexion MQTT 
     async_mqtt_init();
@@ -557,9 +561,7 @@ void loop() {
   runner.execute(); // gestion des taches
 
   /// limitation de la taille de la chaine de log
-  if (logs.length() > LOG_MAX_STRING_LENGTH ) { 
-   logs="197}11}1";
-  }
+  logging.clean_log_init();
 
   /// detection de la perte de wifi
   if (WiFi.status() != WL_CONNECTED) {
@@ -655,7 +657,7 @@ void loop() {
   if ( security == 1 ) { 
       if (!alerte){
         Serial.println("Alert Temp");
-        logs += "Alert Temp\r\n";
+        logging.Set_log_init("Alert Temp\r\n");
       
         if (!AP && mqtt_config.mqtt ){
               mqtt(String(config.IDXAlarme), String("Ballon chaud " ),"Alerte");  ///send alert to MQTT
@@ -724,7 +726,10 @@ void loop() {
             dimmer2.setPower(sysvar.puissance);
           #endif
         }
-          logs += "dimmer at " + String(sysvar.puissance) + "\r\n";
+          logging.Set_log_init("dimmer at " );
+          logging.Set_log_init(String(sysvar.puissance).c_str()); 
+          logging.Set_log_init("\r\n");
+
           if ( strcmp(config.child,"") != 0 ) {
               if ( strcmp(config.mode,"equal") == 0) { child_communication(int(sysvar.puissance*FACTEUR_REGULATION),true); }  //si mode equal envoie de la commande vers la carte fille
               if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance < config.maxpow) { child_communication(0,false); }  //si mode délest envoie d'une commande à 0
@@ -825,6 +830,8 @@ if ( sysvar.celsius >= config.maxtemp && security == 0 ) {
 
 }
 
+
+
   //DEBUG_PRINTLN(sysvar.puissance);
  delay(100);  // 24/01/2023 changement 500 à 100ms pour plus de réactivité
 }
@@ -843,7 +850,7 @@ void dallaspresent () {
 
 if ( !ds.search(addr)) {
     Serial.println("Dallas not connected");
-    loginit.concat(loguptime("Dallas not connected"));
+    logging.Set_log_init("Dallas not connected \r\n");
     DEBUG_PRINTLN();
     ds.reset_search();
     delay(250);
@@ -891,19 +898,12 @@ if ( !ds.search(addr)) {
 
   Serial.print("  present = ");
   Serial.println(present, HEX);
-  loginit.concat(loguptime("Dallas present at "+ String(present, HEX)));
+  logging.Set_log_init("Dallas present at "+ String(present, HEX)+"\r\n");
 
   return ;
    
   }
 
-/// affichage de logs 
-String getlogs(){
-    logs = logs + loginit + "}1"; 
-    loginit = "";
-  
-    return logs ; 
-} 
 
 String stringbool(bool mybool){
   String truefalse = "true";

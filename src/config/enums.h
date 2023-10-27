@@ -9,7 +9,35 @@
   #include <ESP8266WiFi.h>
 #endif
 
-extern String logs;
+//extern String logs;
+
+/// @brief  partie délicate car pas mal d'action sur la variable log_init et donc protection de la variable ( pour éviter les pb mémoire )
+struct Logs {
+  private:char log_init[LOG_MAX_STRING_LENGTH];
+
+  ///setter log_init
+  public:void Set_log_init(String setter) {strcat(log_init,setter.c_str()); }
+
+  ///getter log_init
+  public:String Get_log_init() {return log_init; }
+
+  //clean log_init
+  public:void clean_log_init() {
+      if (strlen(log_init) > (LOG_MAX_STRING_LENGTH - (LOG_MAX_STRING_LENGTH/10)) ) {
+      log_init[0] = '\0';
+      strcat(log_init,"197}11}1");
+      }
+  }
+
+  //reset log_init
+  public:void reset_log_init() {
+      log_init[0] = '\0';
+      strcat(log_init,"197}11}1");
+  }
+
+  
+};
+
 
 struct Config {
   char hostname[16];

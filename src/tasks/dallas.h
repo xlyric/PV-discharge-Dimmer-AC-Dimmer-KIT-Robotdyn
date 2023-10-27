@@ -43,7 +43,9 @@ void mqttdallas() {
               // envoie des infos en mqtt dans ce cas
               mqtt(String(config.IDXTemp), String(sysvar.celsius),"Temperature");
               if ( mqtt_config.HA ) { device_temp.send(String(sysvar.celsius)); }
-              logs += "Dallas temp : "+ String(sysvar.celsius) +"\r\n";
+
+              logging.Set_log_init("Dallas temp : "+ String(sysvar.celsius) +"\r\n");
+
             }
           }
          } 
