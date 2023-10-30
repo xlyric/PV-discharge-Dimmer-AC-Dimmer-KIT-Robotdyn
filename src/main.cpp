@@ -537,6 +537,10 @@ Task_GET_POWER.enable();
 
 DEBUG_PRINTLN(ESP.getFreeHeap());
 
+/// affichage de l'heure  GMT +1 dans la log
+logging.Set_log_init("fin du demarrage: ");
+logging.Set_log_init(timeClient.getFormattedTime());
+logging.Set_log_init("\r\n");
 
 delay(1000);
 //Serial.println(frequency);
@@ -576,7 +580,7 @@ void loop() {
       //  minuteur en cours
       if (programme.stop_progr()) { 
             // Robotdyn dimmer
-
+            logging.Set_log_init("stop minuteur dimmer\r\n");
             unified_dimmer.set_power(0); 
             unified_dimmer.dimmer_off();
 
@@ -590,6 +594,8 @@ void loop() {
           device_dimmer_power.send(String(instant_power * config.charge/100)); 
           device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
         } 
+        // réinint de la sécurité température 
+        sysvar.security = 0 ;
       } 
   } 
   else { 
@@ -597,7 +603,7 @@ void loop() {
     if (programme.start_progr()){ 
       sysvar.puissance=config.maxpow; 
           //// robotdyn dimmer
-
+              logging.Set_log_init("start minuteur dimmer\r\n");
               unified_dimmer.dimmer_on();
               unified_dimmer.set_power(config.maxpow); 
               delay (50);
@@ -618,22 +624,26 @@ void loop() {
  //// relay 1 
  if (programme_relay1.run) { 
       if (programme_relay1.stop_progr()) { 
+        logging.Set_log_init("stop minuteur relay1\r\n");
         digitalWrite(RELAY1 , LOW);
       }
  }
  else {
       if (programme_relay1.start_progr()){ 
+        logging.Set_log_init("start minuteur relay1\r\n");
         digitalWrite(RELAY1 , HIGH);
       }
  }
 
  if (programme_relay2.run) { 
       if (programme_relay2.stop_progr()) { 
+        logging.Set_log_init("stop minuteur relay2\r\n");
         digitalWrite(RELAY2 , LOW);
       }
  }
  else {
       if (programme_relay2.start_progr()){ 
+        logging.Set_log_init("start minuteur relay2\r\n");
         digitalWrite(RELAY2 , HIGH);
       }
  }
