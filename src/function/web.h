@@ -488,15 +488,20 @@ String getState() {
    
   dtostrf(sysvar.celsius,2, 1, buffer); // conversion en n.1f 
   
-  DynamicJsonDocument doc(256);
+  DynamicJsonDocument doc(192);
     doc["dimmer"] = instant_power;
     doc["temperature"] = buffer;
     doc["power"] = (instant_power * config.charge/100);
     doc["Ptotal"]  = sysvar.puissance_cumul + (instant_power * config.charge/100);
     // recupération de l'état de surchauffe
     doc["alerte"]  = security;
+#ifdef RELAY1    
     doc["relay1"]   = digitalRead(RELAY1);
     doc["relay2"]   = digitalRead(RELAY2);
+#else
+    doc["relay1"]   = 0;
+    doc["relay2"]   = 0;
+#endif
     doc["minuteur"] = programme.run;
   serializeJson(doc, state);
   return String(state);
