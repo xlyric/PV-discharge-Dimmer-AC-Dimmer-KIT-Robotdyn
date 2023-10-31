@@ -126,6 +126,20 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card shadow mb-4">
+                                <!-- Card Header - Dropdown -->
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Etats</h6>
+                                </div>
+                                <div class="card-body">
+                                <b>Etat Minuteur : </b><h4 id="minuteur"></h4>
+                                <b>Etat Relais 1 : </b><h4 id="relais 1"></h4>
+                                <b>Etat Relais 2 : </b><h4 id="relais 2"></h4>
+
+                                </div>
+                            </div>
+                        </div>
                         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
                         <script type="text/javascript"> 
 				  
@@ -205,6 +219,10 @@ $.getJSON('/state', function(data) {
     var power = data.power;
     var temperature = data.temperature;
     var alerte = data.alerte;
+    var minuteur = data.minuteur;
+    var relais1 = data.relais1;
+    var relais2 = data.relais2;
+
     // Mettre à jour les éléments HTML
         dataGaugePA.setValue(0, 0, "Power (W)"); 
 		dataGaugePA.setValue(0, 1, power);
@@ -228,7 +246,28 @@ $.getJSON('/state', function(data) {
         } else {
             document.getElementById("alerte").innerHTML = "";
         }
+
+    // ecriture de "minuteur" dans le div minuteur si l'état est à 1
+        if (minuteur == 1) {
+            document.getElementById("minuteur").innerHTML = "Minuteur";
+        } else {
+            document.getElementById("minuteur").innerHTML = "Non actif";
+        }
     
+    // ecriture de "ON" dans le div relais 1 si l'état est à 1
+        if (relais1 == 1) {
+            document.getElementById("relais 1").innerHTML = "ON";
+        } else {
+            document.getElementById("relais 1").innerHTML = "OFF";
+        }
+
+    // ecriture de "ON" dans le div relais 2 si l'état est à 1
+        if (relais2 == 1) {
+            document.getElementById("relais 2").innerHTML = "ON";
+        } else {
+            document.getElementById("relais 2").innerHTML = "OFF";
+        }
+
   });
 }, 2000);
  			
