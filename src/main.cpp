@@ -417,7 +417,7 @@ void setup() {
     wifiManager.autoConnect(("dimmer-"+WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17)).c_str());
     
     DEBUG_PRINTLN("end Wifiautoconnect");
-    //wifiManager.setSaveConfigCallback(saveConfigCallback);
+    wifiManager.setSaveConfigCallback(saveConfigCallback);
     wifiManager.setConfigPortalTimeout(600);
  
 
