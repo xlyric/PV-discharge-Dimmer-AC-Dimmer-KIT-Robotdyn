@@ -76,7 +76,7 @@
   #include <RBDdimmer.h>   /// the corrected librairy  in personal depot , the original has a bug
 #endif
 // Web services
-#include <ESPAsyncWiFiManager.h>    
+#include <ESPAsyncWiFiManager.h> 
 #include <ESPAsyncWebServer.h>
 
 #include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
@@ -100,6 +100,7 @@
 #include "function/mqtt.h"
 #include "function/minuteur.h"
 
+
 #ifdef ROBOTDYN
   #include "function/dimmer.h"
 #endif
@@ -113,12 +114,16 @@
 #include "tasks/dallas.h"
 #include "tasks/cooler.h"
 #include "tasks/get_power.h"
+#include "tasks/relais.h"
 
 
 // taches
 Task Task_dallas(15000, TASK_FOREVER, &mqttdallas);
 Task Task_Cooler(15000, TASK_FOREVER, &cooler);
 Task Task_GET_POWER(10000, TASK_FOREVER, &get_dimmer_child_power);
+#ifdef RELAY1
+Task Task_relay(20000, TASK_FOREVER, &relais_controle);
+#endif
 Scheduler runner;
 
 #if defined(ESP32) || defined(ESP32ETH)
@@ -387,8 +392,10 @@ void setup() {
   Serial.print("start Wifiautoconnect");
   logging.Set_log_init("Start Wifiautoconnect \r\n"); 
 
-   // préparation  configuration IP fixe 
 
+
+   // préparation  configuration IP fixe 
+   
     AsyncWiFiManagerParameter custom_IP_Address("server", "IP", wifi_config_fixe.static_ip, 16);
     wifiManager.addParameter(&custom_IP_Address);
     AsyncWiFiManagerParameter custom_IP_gateway("gateway", "gateway", wifi_config_fixe.static_gw, 16);
@@ -408,19 +415,21 @@ void setup() {
     }
 
     wifiManager.autoConnect(("dimmer-"+WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17)).c_str());
-    DEBUG_PRINTLN("end Wifiautoconnect");
-    wifiManager.setSaveConfigCallback(saveConfigCallback);
-    wifiManager.setConfigPortalTimeout(600);
     
+    DEBUG_PRINTLN("end Wifiautoconnect");
+    //wifiManager.setSaveConfigCallback(saveConfigCallback);
+    wifiManager.setConfigPortalTimeout(600);
+ 
 
-    strcpy(wifi_config_fixe.static_ip, custom_IP_Address.getValue());
+   strcpy(wifi_config_fixe.static_ip, custom_IP_Address.getValue());
     strcpy(wifi_config_fixe.static_sn, custom_IP_mask.getValue());
-    strcpy(wifi_config_fixe.static_gw, custom_IP_gateway.getValue());
+   strcpy(wifi_config_fixe.static_gw, custom_IP_gateway.getValue());
 
     DEBUG_PRINTLN("static adress: " + String(wifi_config_fixe.static_ip) + " mask: " + String(wifi_config_fixe.static_sn) + " GW: " + String(wifi_config_fixe.static_gw));
 
     savewifiIP(wifi_conf, wifi_config_fixe);
-
+   
+  
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);

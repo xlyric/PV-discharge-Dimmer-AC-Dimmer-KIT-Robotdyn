@@ -2,7 +2,7 @@
 #define WEB_FUNCTIONS
 
 // #include <ESP8266WiFi.h>
-#include <ESPAsyncWiFiManager.h>  
+#include <ESPAsyncWiFiManager.h> 
 #include <stdlib.h>
 
 // #include <ESPAsyncTCP.h>
@@ -42,6 +42,7 @@ extern byte security;
 AsyncWebServer server(80);
 
 AsyncWiFiManager wifiManager(&server,&dns);
+
 
 extern bool AP; 
 
@@ -207,7 +208,7 @@ void call_pages() {
 
   server.on("/resetwifi", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain", "Resetting Wifi and reboot");
-    wifiManager.resetSettings();
+    //wifiManager.resetSettings();
     config.restart = true;
   });
 
@@ -292,19 +293,6 @@ void call_pages() {
    // request->send(LittleFS, "/mqtt.html", "text/html");
   });
 
-    server.on("/minuteur1.html", HTTP_ANY, [](AsyncWebServerRequest *request){
-    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/minuteurR1.html", "text/html");
-    //response->addHeader("Content-Encoding", "gzip");
-    request->send(response);
-   // request->send(LittleFS, "/mqtt.html", "text/html");
-  });
-
-    server.on("/minuteur2.html", HTTP_ANY, [](AsyncWebServerRequest *request){
-    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/minuteurR2.html", "text/html");
-    //response->addHeader("Content-Encoding", "gzip");
-    request->send(response);
-   // request->send(LittleFS, "/mqtt.html", "text/html");
-  });
 
   server.on("/getminiteur", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     if (request->hasParam("dimmer")) { request->send(200, "application/json",  getMinuteur(programme));  }
@@ -335,6 +323,38 @@ void call_pages() {
       request->send(200, "application/json",  getMinuteur(programme_relay2)); 
     }
   });
+
+  /// reglage des seuils relais
+    server.on("/relai.html", HTTP_ANY, [](AsyncWebServerRequest *request){
+    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/relai.html", "text/html");
+    //response->addHeader("Content-Encoding", "gzip");
+    request->send(response);
+   // request->send(LittleFS, "/mqtt.html", "text/html");
+  });
+
+    server.on("/getseuil", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+    if (request->hasParam("relay1")) { request->send(200, "application/json",  getMinuteur(programme_relay1)); }
+    if (request->hasParam("relay2")) { request->send(200, "application/json",  getMinuteur(programme_relay2)); }
+    //request->send(200, "application/json",  getminuteur(programme_relay2).c_str()); 
+  });
+
+  server.on("/setseuil", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+    String name; 
+    if (request->hasParam("relay1")) { 
+            if (request->hasParam("seuil_demarrage")) { programme_relay1.seuil_start =request->getParam("seuil_demarrage")->value().toInt();   }
+            if (request->hasParam("seuil_arret")) { programme_relay1.seuil_stop =request->getParam("seuil_arret")->value().toInt();   }
+            if (request->hasParam("temperature")) { programme_relay1.seuil_temperature = request->getParam("temperature")->value().toInt();  programme_relay1.saveProgramme(); }
+      request->send(200, "application/json",  getMinuteur(programme_relay1)); 
+    }
+    if (request->hasParam("relay2")) { 
+            if (request->hasParam("seuil_demarrage")) { programme_relay2.seuil_start = request->getParam("seuil_demarrage")->value().toInt();   }
+            if (request->hasParam("seuil_arret")) { programme_relay2.seuil_stop = request->getParam("seuil_arret")->value().toInt();   }
+            if (request->hasParam("temperature")) { programme_relay2.seuil_temperature = request->getParam("temperature")->value().toInt();  programme_relay2.saveProgramme(); }
+      request->send(200, "application/json",  getMinuteur(programme_relay2)); 
+    }
+  });
+
+
 
   server.on("/config", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain", getconfig().c_str());
@@ -573,12 +593,15 @@ String getminuteur(Programme name) {
 } */ 
 
 String getMinuteur(const Programme& minuteur) {
-    DynamicJsonDocument doc(128);
+    DynamicJsonDocument doc(256);
     doc["heure_demarrage"] = minuteur.heure_demarrage;
     doc["heure_arret"] = minuteur.heure_arret;
     doc["temperature"] = minuteur.temperature;
     doc["heure"] = timeClient.getHours();
     doc["minute"] = timeClient.getMinutes();
+    doc["seuil_start"] = minuteur.seuil_start;
+    doc["seuil_stop"] = minuteur.seuil_stop;
+    doc["seuil_temp"] = minuteur.seuil_temperature;
 
     String retour;
     serializeJson(doc, retour);
