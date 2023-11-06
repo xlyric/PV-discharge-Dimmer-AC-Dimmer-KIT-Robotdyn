@@ -79,7 +79,7 @@ struct Wifi_struct {
 ///variables globales 
 struct System {
 /// @brief  température actuelle
-float celsius=0.00; 
+float celsius=20.00; 
 /// @brief  puissance actuelle en %
 int puissance; 
 /// @brief  puissance actuelle en Watt

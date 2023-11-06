@@ -27,8 +27,9 @@ void dallaspresent ();
 /// @brief / task executé toute les n secondes pour publier la température ( voir déclaration task dans main )
 void mqttdallas() {
         if ( present == 1 ) {
+
           sysvar.celsius=CheckTemperature("Inside : ", addr); 
-        
+          
           // arrondi à 1 décimale 
           if ( (sysvar.celsius == -127.00) || (sysvar.celsius == -255.00) ) {
           sysvar.celsius=previous_celsius;
@@ -39,7 +40,7 @@ void mqttdallas() {
             dallas_error = 0; // remise à zéro du compteur d'erreur
           }
           if (mqtt_config.mqtt)  { 
-            if ( sysvar.celsius != previous_celsius ) {
+            if ( sysvar.celsius != previous_celsius || sysvar.celsius != 0.99) {
               // envoie des infos en mqtt dans ce cas
               mqtt(String(config.IDXTemp), String(sysvar.celsius),"Temperature");
               if ( mqtt_config.HA ) { device_temp.send(String(sysvar.celsius)); }

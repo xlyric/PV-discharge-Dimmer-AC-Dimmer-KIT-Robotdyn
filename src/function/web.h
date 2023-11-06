@@ -2,7 +2,7 @@
 #define WEB_FUNCTIONS
 
 // #include <ESP8266WiFi.h>
-#include <ESPAsyncWiFiManager.h> 
+//#include <ESPAsyncWiFiManager.h> 
 #include <stdlib.h>
 
 // #include <ESPAsyncTCP.h>
@@ -42,6 +42,7 @@ extern byte security;
 AsyncWebServer server(80);
 
 AsyncWiFiManager wifiManager(&server,&dns);
+
 
 
 extern bool AP; 

@@ -155,7 +155,7 @@ struct HA
             "}";
 
       client.publish(String(topic+object_id+"/config").c_str() ,1,true, device.c_str()); // déclaration autoconf dimmer
-      send("0");
+      //send("0");
      
     }
 
@@ -363,6 +363,8 @@ void HA_discover(){
         device_cooler.send(stringbool(false));
 
         device_temp.discovery(); // discovery fait à la 1ere réception sonde ou mqtt.
+
+
         #ifdef RELAY1
           device_relay1.discovery();
           device_relay1.send(String(0));

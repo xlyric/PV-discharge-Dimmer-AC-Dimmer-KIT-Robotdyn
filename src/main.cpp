@@ -77,6 +77,7 @@
 #endif
 // Web services
 #include <ESPAsyncWiFiManager.h> 
+
 #include <ESPAsyncWebServer.h>
 
 #include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
@@ -395,7 +396,7 @@ void setup() {
 
 
    // préparation  configuration IP fixe 
-   
+
     AsyncWiFiManagerParameter custom_IP_Address("server", "IP", wifi_config_fixe.static_ip, 16);
     wifiManager.addParameter(&custom_IP_Address);
     AsyncWiFiManagerParameter custom_IP_gateway("gateway", "gateway", wifi_config_fixe.static_gw, 16);
@@ -428,7 +429,7 @@ void setup() {
     DEBUG_PRINTLN("static adress: " + String(wifi_config_fixe.static_ip) + " mask: " + String(wifi_config_fixe.static_sn) + " GW: " + String(wifi_config_fixe.static_gw));
 
     savewifiIP(wifi_conf, wifi_config_fixe);
-   
+
   
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
