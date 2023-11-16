@@ -145,10 +145,18 @@ struct Programme {
       return true;    
   }
 
+ void commande_run(){
+        run=true; 
+        timeClient.update();
+
+  }
 
 bool start_progr() {
   int heures, minutes;
   sscanf(heure_demarrage, "%d:%d", &heures, &minutes);
+
+  int heures_fin, minutes_fin;
+  sscanf(heure_arret, "%d:%d", &heures_fin, &minutes_fin);
 
   // si heure_demarrage == heure_arret alors on retourne false ( correction du bug si pas de programmation)
   if (strcmp(heure_demarrage, heure_arret) == 0) {
@@ -157,11 +165,30 @@ bool start_progr() {
       
   if(timeClient.isTimeSet()) {
     if (heures == timeClient.getHours() && minutes == timeClient.getMinutes() && sysvar.celsius < temperature ) { // correction bug #19  
-        run=true; 
-        timeClient.update();
+        commande_run();
         return true; 
     }
   }
+
+  // remise en route en cas de reboot et si l'heure est dépassée  
+  // recherche si l'heure est passée 
+  bool heure_passee = false;
+  if (timeClient.getHours() > heures || (timeClient.getHours() == heures && timeClient.getMinutes() > minutes )) {
+                       heure_passee = true; 
+  }
+  // recherche si l'heure d'arret est est passée
+  bool heure_arret_passee = false;
+  if (timeClient.getHours() > heures_fin || (timeClient.getHours() == heures_fin && timeClient.getMinutes() >= minutes_fin )) {
+                       heure_arret_passee = true; 
+  }
+
+
+  if (heure_passee && !heure_arret_passee && sysvar.celsius < temperature ) {
+           commande_run();
+            return true; 
+  }
+
+
 return false; 
 }
 
