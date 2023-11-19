@@ -216,7 +216,7 @@ void devices_init(){
   device_dimmer_power.Set_object_id("watt");
   device_dimmer_power.Set_unit_of_meas("W");
   device_dimmer_power.Set_stat_cla("measurement");
-  device_dimmer_power.Set_dev_cla("power_factor"); // fix is using native unit of measurement '%' which is not a valid unit for the device class ('power') it is using
+  device_dimmer_power.Set_dev_cla("power"); // fix is using native unit of measurement '%' which is not a valid unit for the device class ('power') it is using
   device_dimmer_power.Set_icon("mdi:home-lightning-bolt-outline");
   device_dimmer_power.Set_entity_type("sensor");
   device_dimmer_power.Set_retain_flag(true);
@@ -225,7 +225,7 @@ void devices_init(){
   device_dimmer_total_power.Set_object_id("watt_total");
   device_dimmer_total_power.Set_unit_of_meas("W");
   device_dimmer_total_power.Set_stat_cla("measurement");
-  device_dimmer_total_power.Set_dev_cla("power_factor"); // fix is using native unit of measurement '%' which is not a valid unit for the device class ('power') it is using
+  device_dimmer_total_power.Set_dev_cla("power"); // fix is using native unit of measurement '%' which is not a valid unit for the device class ('power') it is using
   device_dimmer_total_power.Set_icon("mdi:home-lightning-bolt-outline");
   device_dimmer_total_power.Set_entity_type("sensor");
   device_dimmer_total_power.Set_retain_flag(true);
