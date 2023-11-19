@@ -395,7 +395,7 @@ void async_mqtt_init() {
 void connectToMqtt() {
   DEBUG_PRINTLN("Connecting to MQTT...");
   client.connect();
-  client.setKeepAlive(60);
+  client.setKeepAlive(60); // 10s c'est beaucoup trop agressif pour les mqtt
   
 }
 
