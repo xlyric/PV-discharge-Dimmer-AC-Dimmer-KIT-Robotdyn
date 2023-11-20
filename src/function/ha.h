@@ -154,9 +154,13 @@ struct HA
             + device_declare() + 
             "}";
 
-      client.publish(String(topic+object_id+"/config").c_str() ,1,true, device.c_str()); // déclaration autoconf dimmer
-      //send("0");
-     
+       if (strlen(object_id.c_str()) > 0) {
+        client.publish(String(topic+object_id+"/config").c_str() ,1,true, device.c_str()); // déclaration autoconf dimmer
+       }  
+       else {
+        client.publish(String(topic+"config").c_str() ,1,true, device.c_str()); // déclaration autoconf dimmer
+       }
+ 
     }
 
     public:void send(String value){
