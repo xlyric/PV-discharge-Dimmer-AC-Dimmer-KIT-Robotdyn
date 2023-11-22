@@ -10,6 +10,8 @@
     #include "function/jotta.h"
 #endif
 
+
+
 // @brief  structure pour uniformiser les commandes de puissances entre robotdyn et SSR
 struct gestion_puissance
 {
@@ -17,8 +19,11 @@ public:int power;
 
 // setter
 void set_power(int power){
-  // une sécurité de plus 
-  if ( power > config.maxpow )  { power = config.maxpow;  sysvar.puissance = config.maxpow; }
+  if ( sysvar.celsius > config.maxtemp ) { power = 0; sysvar.puissance = 0; } /// si la température est supérieur à la température max on coupe tout
+  else if ( power > config.maxpow )  { power = config.maxpow;  sysvar.puissance = config.maxpow; }
+
+  /// vérification de la température 
+  
   this->power = power;
   /// pour le SSR
   #ifdef SSR_ZC
@@ -33,8 +38,6 @@ void set_power(int power){
   #ifdef ROBOTDYN
     dimmer.setPower(power);
   #endif
-
-
    
 }
 

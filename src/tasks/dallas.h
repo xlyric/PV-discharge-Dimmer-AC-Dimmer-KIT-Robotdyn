@@ -34,6 +34,7 @@ void mqttdallas() {
           if ( (sysvar.celsius == -127.00) || (sysvar.celsius == -255.00) ) {
           sysvar.celsius=previous_celsius;
           dallas_error ++; // incrémente le compteur d'erreur
+          logging.Set_log_init("Problème de lecture Dallas : échec "+ String(dallas_error) + "\r\n");
           }
           else { 
             sysvar.celsius = (roundf(sysvar.celsius * 10) / 10 ) + 0.1; // pour les valeurs min
@@ -71,11 +72,17 @@ void mqttdallas() {
   previous_celsius=sysvar.celsius;
 
   // si trop d'erreur dallas, on remonte en mqtt
-  if ( dallas_error > 8 ) {
+  if ( dallas_error > 5 ) {
     DEBUG_PRINTLN("détection perte sonde dallas");
     mqtt(String(config.IDXAlarme), String("Dallas perdue"),"Dallas perdue");
+    logging.Set_log_init("Dallas perdue !!!\r\n");
     dallas_error = 0; // remise à zéro du compteur d'erreur
-  }
+    ///mise en sécurité
+    sysvar.celsius = 99.9;  
+    previous_celsius=sysvar.celsius;
+    unified_dimmer.set_power(0);
+    }
+
 
 #ifdef STANDALONE
   if ( pinger.Ping(WiFi.gatewayIP())) {
