@@ -288,6 +288,9 @@ void setup() {
 
   /// Correction issue full power at start
   pinMode(outputPin, OUTPUT); 
+  pinMode(D1, OUTPUT);
+  digitalWrite(D1, 0);
+  
   #ifdef outputPin2
     pinMode(outputPin2, OUTPUT); 
   #endif
