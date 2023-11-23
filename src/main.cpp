@@ -288,9 +288,12 @@ void setup() {
 
   /// Correction issue full power at start
   pinMode(outputPin, OUTPUT); 
-  pinMode(D1, OUTPUT);
-  digitalWrite(D1, 0);
-  
+  #ifndef ESP32ETH 
+    #ifndef ESP32
+      pinMode(D1, OUTPUT);
+      digitalWrite(D1, 0);
+    #endif
+  #endif
   #ifdef outputPin2
     pinMode(outputPin2, OUTPUT); 
   #endif
