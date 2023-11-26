@@ -297,6 +297,15 @@ void setup() {
   #ifdef outputPin2
     pinMode(outputPin2, OUTPUT); 
   #endif
+
+  #ifdef POWERSUPPLY2022  
+  pinMode(GND_PIN, OUTPUT);  /// board bug
+  digitalWrite(GND_PIN, 0);  /// board bug with pin 16 
+
+  pinMode(POS_PIN, OUTPUT); 
+  digitalWrite(POS_PIN, 1);
+  #endif
+
   #if defined(ESP32) || defined(ESP32ETH)
   esp_reset_reason_t reset_reason = esp_reset_reason();
   Serial.printf("Reason for reset: %d\n", reset_reason);
