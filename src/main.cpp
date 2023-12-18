@@ -161,6 +161,7 @@ Scheduler runner;
 // Create AsyncWebServer object on port 80
 WiFiClient domotic_client;
 AsyncMqttClient client;
+bool mqttConnected = false;
 
 DNSServer dns;
 HTTPClient http;
@@ -519,15 +520,11 @@ void setup() {
   /// MQTT 
   if (!AP && mqtt_config.mqtt) {
     Serial.println("Connection MQTT" );
-    logging.Set_log_init("MQTT connexion \r\n"); 
+    logging.Set_log_init("Attempting MQTT connexion \r\n"); 
     
-      /// connexion MQTT 
+    /// Configuration et connexion MQTT 
     async_mqtt_init();
-    connectToMqtt();
-    delay(1000);  
-    
-    HA_discover(); // Hello des devices HA
-    reconnect() ;
+    connect_and_subscribe() ;
   }
   
  
@@ -581,10 +578,8 @@ void loop() {
   //Serial.print(time_tempo);Serial.print("-");
 
   /// connexion MQTT
-  if ( mqtt_config.mqtt && !AP ) {
-    if (!client.connected() ) {
-      connectToMqtt();
-    }
+  if (!mqttConnected) {
+    connect_and_subscribe();
   }
 
   runner.execute(); // gestion des taches
