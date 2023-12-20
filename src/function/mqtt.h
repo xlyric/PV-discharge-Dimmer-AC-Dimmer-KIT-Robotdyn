@@ -329,7 +329,8 @@ void child_communication(int delest_power, bool equal = false){
   //if (sysvar.puissance_dispo !=0 ) {  baseurl = "/?POWER=" + String(delest_power) + "&puissance=" + String(sysvar.puissance_dispo) ; }
   if (sysvar.puissance_dispo !=0 ) {  
     baseurl.concat("&puissance=");
-    baseurl.concat(String(sysvar.puissance_dispo)) ; 
+    if (strcmp(config.mode,"equal") == 0) { baseurl.concat(String(sysvar.puissance_dispo/2)); }
+    else { baseurl.concat(String(sysvar.puissance_dispo)); }
    }
     //else {  }  /// ça posera problème si il y a pas de commandes de puissance en W comme le 2eme dimmer se calque sur la puissance du 1er 
 
