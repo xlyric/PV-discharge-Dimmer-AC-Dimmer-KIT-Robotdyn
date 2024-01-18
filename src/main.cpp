@@ -728,14 +728,14 @@ void loop() {
     }
     
     /// si on dépasse la puissance mini demandé 
-    DEBUG_PRINTLN("694------------------");
+    DEBUG_PRINTLN(("%d------------------",__LINE__));
     DEBUG_PRINTLN(sysvar.puissance);
     
     if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && security == 0) 
     {
-        DEBUG_PRINTLN("699------------------");
+         DEBUG_PRINTLN(("%d------------------",__LINE__));
         if (config.dimmer_on_off == 1){unified_dimmer.dimmer_on();}  // if off, switch on 
-        DEBUG_PRINTLN("701------------------");
+         DEBUG_PRINTLN(("%d------------------",__LINE__));
         /// si au dessus de la consigne max configuré alors config.maxpow. 
         if ( sysvar.puissance > config.maxpow || sysvar.puissance_cumul > sysvar.puissancemax )  
         { 
@@ -751,7 +751,7 @@ void loop() {
               if ( strcmp(config.mode,"delester") == 0 ) { child_communication(int((sysvar.puissance-config.maxpow)*FACTEUR_REGULATION),true ); } // si mode délest, envoi du surplus
               if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance,true); }  //si mode equal envoie de la commande vers la carte fille
           }
-        DEBUG_PRINTLN("716------------------");
+        DEBUG_PRINTLN(("%d------------------",__LINE__));
         }
         /// fonctionnement normal
         else { 
@@ -770,7 +770,7 @@ void loop() {
               if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance < config.maxpow) { child_communication(0,false); }  //si mode délest envoie d'une commande à 0
           }
         }
-        DEBUG_PRINTLN("732------------------");
+         DEBUG_PRINTLN(("%d------------------",__LINE__));
 
         
       /// si on est en mode MQTT on remonte les valeurs vers HA et MQTT
