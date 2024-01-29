@@ -10,7 +10,7 @@
     struct SSR_BURST
     {
       /* data */
-      public:char* sequence_result;
+      public:char sequence_result[102];
       private:int power;
 
       // getter puissance 
@@ -24,7 +24,9 @@
         calcul(power);
       }
 
-      public:void calcul(int puissance){
+      public:
+      void calcul(int puissance)
+      {
         double decimalValue; 
         decimalValue = round(puissance * 100) / 10000; // Arrondir à 2 décimales
         int denominator = 100; // Choisissez une valeur de dénominateur appropriée
@@ -45,31 +47,30 @@
         Serial.print(" Sequence : ");
         Serial.println(sequence);
         // boucle de 100 occurences
-        sequence_result = action_sequence(sequence);
+        action_sequence(sequence);
       }
 
     /// @brief  fonction de calcul de la séquence d'ouverture et fermeture du SSR 
     /// @param sequence 
     /// @return 
-      private:char* action_sequence(float sequence) {
-        float boucle = sequence; 
-        char* sequence_char = (char*)malloc(102); // Allouer de la mémoire pour le tableau de caractères
+      private:void action_sequence(float sequence) {
+        float boucle = sequence;
         
         for (int j = 1; j < 101; j++) {
           if (j >= boucle) {
             //Serial.print("+");
-            sequence_char[j - 1] = '+';
+            sequence_result[j - 1] = '+';
             boucle = boucle + sequence;
           } else {
-            sequence_char[j - 1] = '-';
+            sequence_result[j - 1] = '-';
             //Serial.print("-");
           }
         }
         
-        sequence_char[101] = '\0'; // Terminer la chaîne avec un caractère nul
+        sequence_result[101] = '\0'; // Terminer la chaîne avec un caractère nul
         //Serial.println("");
       // Serial.println(sequence_char);
-        return sequence_char;
+       // return sequence_char;
       }
 
     /// @brief  fonction de calcul du plus grand diviseur commun
@@ -214,19 +215,15 @@ void jotta_sync(){
 }
 */
 
-void Jotta_burst_command(int command){
+//void Jotta_burst_command(int command){
    /// calculer le temps de burst en fonction de la commande 
-  #ifdef  SSR
+  //#ifdef  SSR
    // calcul du nombre de modulation par seconde
-  float nb_modulation = 100 / command; 
-  
-  
-
-  
+  //float nb_modulation = 100 / command;  
 
 
-   #endif
-}
+   //#endif
+//}
 
 
 #endif
