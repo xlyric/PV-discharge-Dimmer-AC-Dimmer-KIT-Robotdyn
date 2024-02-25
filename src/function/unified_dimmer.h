@@ -15,12 +15,12 @@
 // @brief  structure pour uniformiser les commandes de puissances entre robotdyn et SSR
 struct gestion_puissance
 {
-public:int power;
+public:float power;
 
 // setter
-void set_power(int power){
-  if ( sysvar.celsius > config.maxtemp ) { power = 0; sysvar.puissance = 0; } /// si la température est supérieur à la température max on coupe tout
-  else if ( power > config.maxpow )  { power = config.maxpow;  sysvar.puissance = config.maxpow; }
+void set_power(float power){
+  if ( sysvar.celsius > config.maxtemp ) { power = 0; } /// si la température est supérieur à la température max on coupe tout
+  else if ( power > config.maxpow )  { power = config.maxpow; }
 
   /// vérification de la température 
   

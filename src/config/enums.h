@@ -81,7 +81,7 @@ struct System {
 /// @brief  température actuelle
 float celsius=20.00; 
 /// @brief  puissance actuelle en %
-int puissance; 
+float puissance; 
 /// @brief  puissance actuelle en Watt
 int puissancewatt=0; 
 /// @brief  puissance max locale en Watt

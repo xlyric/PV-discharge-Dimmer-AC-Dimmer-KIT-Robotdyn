@@ -73,7 +73,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
   //char* Subscribedtopic, byte* message, unsigned int length
   StaticJsonDocument<1024> doc2;
   deserializeJson(doc2, payload);
-  /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remonté par MQTT
+  /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remontées par MQTT
   if (strcmp( Subscribedtopic, config.SubscribePV ) == 0 && doc2.containsKey("power")) { 
     int puissancemqtt = doc2["power"]; 
     puissancemqtt = puissancemqtt - config.startingpow;
@@ -83,7 +83,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
       sysvar.puissance = puissancemqtt;
       logging.Set_log_init("MQTT power at "); 
       logging.Set_log_init(String(sysvar.puissance).c_str());
-      logging.Set_log_init("\r\n");
+      logging.Set_log_init("%\r\n");
       sysvar.change=1; 
     }
     else {
@@ -107,7 +107,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
       sysvar.celsius = temperaturemqtt;
       logging.Set_log_init("MQTT temp at ");
       logging.Set_log_init(String(sysvar.celsius).c_str());
-      logging.Set_log_init("\r\n");
+      logging.Set_log_init("°C\r\n");
     }
   }
     //   logs += "Subscribedtopic : " + String(Subscribedtopic)+ "\r\n";
@@ -154,7 +154,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
         config.startingpow = startingpow;
         logging.Set_log_init("MQTT starting_pow at ");
         logging.Set_log_init(String(startingpow).c_str());
-        logging.Set_log_init("\r\n");
+        logging.Set_log_init("%\r\n");
         device_dimmer_starting_pow.send(String(startingpow));
         sysvar.change=1; 
       }
@@ -165,7 +165,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
         config.minpow = minpow;
         logging.Set_log_init("MQTT minpow at " );
         logging.Set_log_init(String(minpow).c_str()); 
-        logging.Set_log_init("\r\n");
+        logging.Set_log_init("%\r\n");
         device_dimmer_minpow.send(String(minpow));
         sysvar.change=1; 
       }
@@ -176,7 +176,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
         config.maxpow = maxpow;
         logging.Set_log_init("MQTT maxpow at ");
         logging.Set_log_init(String(maxpow).c_str());
-        logging.Set_log_init("\r\n");
+        logging.Set_log_init("%\r\n");
         device_dimmer_maxpow.send(String(maxpow));
         sysvar.change=1; 
       }
@@ -189,7 +189,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
         sysvar.change=1; 
         logging.Set_log_init("MQTT power at ");
         logging.Set_log_init(String(powdimmer).c_str());
-        logging.Set_log_init("\r\n");
+        logging.Set_log_init("%\r\n");
        
       }
     }
@@ -199,7 +199,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
         config.maxtemp = maxtemp;
         logging.Set_log_init("MQTT maxtemp at ");  
         logging.Set_log_init(String(maxtemp).c_str());
-        logging.Set_log_init("\r\n");
+        logging.Set_log_init("°C\r\n");
         device_dimmer_maxtemp.send(String(maxtemp));
         sysvar.change=1; 
       }
@@ -210,7 +210,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
         config.charge = charge;
         logging.Set_log_init("MQTT charge at ");
         logging.Set_log_init("String(charge).c_str()");
-        logging.Set_log_init("\r\n");
+        logging.Set_log_init("W\r\n");
         device_dimmer_charge.send(String(charge));
         sysvar.change=1; 
       }
@@ -323,26 +323,33 @@ void mqtt(String idx, String value, String name="")
 //// communication avec carte fille ( HTTP )
 
 void child_communication(int delest_power, bool equal = false){
-  int instant_power ;
+  //int instant_power ;
+  int tmp_puissance_dispo=0 ;
   String baseurl; 
-  instant_power = delest_power*config.charge/100;
+  //instant_power = delest_power*config.charge/100;
   baseurl = "/?POWER=" + String(delest_power); 
-  //if (sysvar.puissance_dispo !=0 ) {  baseurl = "/?POWER=" + String(delest_power) + "&puissance=" + String(sysvar.puissance_dispo) ; }
-  if (sysvar.puissance_dispo !=0 ) {  
+  
+  /// Modif RV 20240219
+  /// Ajout de " delest_power != 0" pour ne pas envoyer une demande de puissance si on le passe de toutes façons à 0
+  if (sysvar.puissance_dispo !=0 && delest_power != 0) {  
     baseurl.concat("&puissance=");
-    if (strcmp(config.mode,"equal") == 0) { baseurl.concat(String(sysvar.puissance_dispo/2)); }
-    else { baseurl.concat(String(sysvar.puissance_dispo)); }
-   }
-    //else {  }  /// ça posera problème si il y a pas de commandes de puissance en W comme le 2eme dimmer se calque sur la puissance du 1er 
+    //if (strcmp(config.mode,"equal") == 0) { baseurl.concat(String(sysvar.puissance_dispo/2)); }
+    //else { baseurl.concat(String(sysvar.puissance_dispo)); }
+    if ( strcmp(config.child,"") != 0 && strcmp(config.mode,"equal") == 0 ) { tmp_puissance_dispo = sysvar.puissance_dispo/2;}
+    else { tmp_puissance_dispo = sysvar.puissance_dispo; }
+      baseurl.concat(String(tmp_puissance_dispo)); 
+  }
+  //else {  }  /// ça posera problème si il y a pas de commandes de puissance en W comme le 2eme dimmer se calque sur la puissance du 1er 
 
   http.begin(domotic_client,config.child,80,baseurl); 
   http.GET();
   http.end(); 
+  
   logging.Set_log_init("child at ");
   logging.Set_log_init(String(delest_power).c_str());
-  logging.Set_log_init(" ");
-  logging.Set_log_init(String(instant_power).c_str());
-  logging.Set_log_init("\r\n");
+  logging.Set_log_init("% _ ");
+  logging.Set_log_init(String(tmp_puissance_dispo).c_str());
+  logging.Set_log_init("W\r\n");
 }
 
 

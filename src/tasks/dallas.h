@@ -31,10 +31,10 @@ void mqttdallas() {
           sysvar.celsius=CheckTemperature("Inside : ", addr); 
           
           // arrondi à 1 décimale 
-          if ( (sysvar.celsius == -127.00) || (sysvar.celsius == -255.00) ) {
+          if ( (sysvar.celsius == -127.00) || (sysvar.celsius == -255.00) || (sysvar.celsius > 200.00) ) {
           sysvar.celsius=previous_celsius;
           dallas_error ++; // incrémente le compteur d'erreur
-          logging.Set_log_init("Problème de lecture Dallas : échec "+ String(dallas_error) + "\r\n");
+          logging.Set_log_init("Dallas : échec "+ String(dallas_error) + "\r\n");
           }
           else { 
             sysvar.celsius = (roundf(sysvar.celsius * 10) / 10 ) + 0.1; // pour les valeurs min
@@ -46,7 +46,7 @@ void mqttdallas() {
               mqtt(String(config.IDXTemp), String(sysvar.celsius),"Temperature");
               if ( mqtt_config.HA ) { device_temp.send(String(sysvar.celsius)); }
 
-              logging.Set_log_init("Dallas temp : "+ String(sysvar.celsius) +"\r\n");
+              logging.Set_log_init("Dallas temp : " + String(sysvar.celsius) + "\r\n");
 
             }
           }
@@ -55,9 +55,20 @@ void mqttdallas() {
     if  ( sysvar.celsius >= config.maxtemp ) {
         // coupure du dimmer
         DEBUG_PRINTLN("détection sécurité température");
-        sysvar.puissance=0;
 
-              unified_dimmer.set_power(0);
+        unified_dimmer.set_power(0);
+        unified_dimmer.dimmer_off();
+        
+      
+      if ( strcmp(config.child,"") != 0 && strcmp(config.mode,"off") != 0){
+        //sysvar.puissance=0;
+        //logging.Set_log_init( "Consigne temp atteinte - Puissance locale à 0 - le reste va aux enfants\r\n" );
+      }
+      else {
+        sysvar.puissance=0;
+        unified_dimmer.set_power(0);
+              //logging.Set_log_init( "Consigne temp atteinte - Puissance locale à 0 - pas d'enfant à servir\r\n" );
+      }
 
         
       if ( mqtt_config.mqtt ) {
@@ -72,6 +83,7 @@ void mqttdallas() {
   previous_celsius=sysvar.celsius;
 
   // si trop d'erreur dallas, on remonte en mqtt
+// la tache Task_dallas tourne les 15s ... donc on accèpte 1m15' sans réponse de la sonde
   if ( dallas_error > 5 ) {
     DEBUG_PRINTLN("détection perte sonde dallas");
     mqtt(String(config.IDXAlarme), String("Dallas perdue"),"Dallas perdue");
