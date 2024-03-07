@@ -778,12 +778,18 @@ void loop() {
             //if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance < config.maxpow) { child_communication(0,false); childsend = 0; }  //si mode délest envoie d'une commande à 0
             if ( strcmp(config.mode,"equal") == 0) { 
               child_communication(int(sysvar.puissance),true); 
-              logging.Set_log_init("Child at " + String(sysvar.puissance) + "%\r\n"); 
+             // logging.Set_log_init("Child at " + String(sysvar.puissance) + "%\r\n"); 
             }  //si mode equal envoie de la commande vers la carte fille
-            if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance < config.maxpow) { 
-              child_communication(0,false); logging.Set_log_init("Child at 0\r\n"); 
+            if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance <= config.maxpow) { 
+              child_communication(0,false); 
+              logging.Set_log_init("Child at 0\r\n"); 
             }  //si mode délest envoie d'une commande à 0
-              DEBUG_PRINTLN("773 -----------------");
+
+            if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance > config.maxpow) { // si sysvar.puissance passe subitement au dessus de config.maxpow
+              child_communication(int((sysvar.puissance-config.maxpow)),true );
+              logging.Set_log_init("===> Cas oublié <===\r\n");
+            }
+              DEBUG_PRINTLN(("%d  -----------------",__LINE__));
               DEBUG_PRINTLN(sysvar.puissance);
           }
         }

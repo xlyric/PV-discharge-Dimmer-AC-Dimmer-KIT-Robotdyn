@@ -110,6 +110,8 @@ void call_pages() {
       if (request->hasParam(PARAM_INPUT_1)) { 
 
         float input=request->getParam(PARAM_INPUT_1)->value().toFloat();
+
+        
         
         /// si remontée de puissance dispo alors prioritaire
          if (request->hasParam("puissance")) { 
@@ -152,13 +154,13 @@ void call_pages() {
               if ( (security == 1) || (unified_dimmer.get_power() >= config.maxpow) ) {
                 sysvar.puissance = sysvar.puissance + dispo;          // En %
                 sysvar.puissance_dispo = sysvar.puissance_dispo * 2 ; //  En W - On multiplie par 2 car la fonction child_communication() fera / 2
-                logging.Set_log_init(" Mode \"equal\" - Full\r\n");
+                //logging.Set_log_init(" Mode \"equal\" - Full\r\n");
               }
               else { // Mode avec dimmer enfant en equal ET toujours en capacité de router localement de la puissance
               sysvar.puissance = sysvar.puissance + dispo/2;        // En %
                   // sysvar.puissance_dispo est égal à ce qu'il était en haut et sera / par 2 par child_communication() donc on est bon
                   // config.dispo est égal à ce qu'il était en haut  et on en n'a plus besoin de toutes façons
-                  logging.Set_log_init(" Mode \"equal\" - Half\r\n");
+                  //logging.Set_log_init(" Mode \"equal\" - Half\r\n");
               }
             }
             else {  // si mode sans dimmer enfant ou en mode délestage vers un fils

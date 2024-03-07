@@ -48,6 +48,8 @@ extern Logs logging;
 
 extern AsyncMqttClient client; 
 
+int old_puissance = 0;
+
 void connectToMqtt();
 void onMqttConnect(bool sessionPresent);
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
@@ -323,6 +325,11 @@ void mqtt(String idx, String value, String name="")
 //// communication avec carte fille ( HTTP )
 
 void child_communication(int delest_power, bool equal = false){
+
+  if (old_puissance == delest_power) return;
+  logging.Set_log_init(String(old_puissance).c_str() );
+  logging.Set_log_init(" -> ");
+  logging.Set_log_init(String(delest_power).c_str());
   //int instant_power ;
   int tmp_puissance_dispo=0 ;
   String baseurl; 
@@ -350,6 +357,7 @@ void child_communication(int delest_power, bool equal = false){
   logging.Set_log_init("% _ ");
   logging.Set_log_init(String(tmp_puissance_dispo).c_str());
   logging.Set_log_init("W\r\n");
+  old_puissance = delest_power;
 }
 
 
