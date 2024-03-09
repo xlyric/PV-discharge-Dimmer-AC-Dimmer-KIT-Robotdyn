@@ -27,16 +27,16 @@ void set_power(float power){
   this->power = power;
   /// pour le SSR
   #ifdef SSR_ZC
-    ssr_burst.set_power(power);
+    ssr_burst.set_power(int(power));
   #endif
  
   #ifdef SSR_RANDOM
-    jotta_command(power);
+    jotta_command(int(power));
   #endif
 
   /// pour le dimmer robotdyn
   #ifdef ROBOTDYN
-    dimmer.setPower(power);
+    dimmer.setPower(int(power));
   #endif
    
 }
