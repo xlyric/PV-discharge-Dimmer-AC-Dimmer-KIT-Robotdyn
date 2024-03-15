@@ -14,7 +14,6 @@ extern HTTPClient http;
 
 void get_dimmer_child_power (){
     /// récupération de la puissance du dimmer enfant en http
-
      if (!strcmp(config.mode, "off") == 0) {
         String baseurl; 
         baseurl = "/state";
@@ -38,7 +37,6 @@ void get_dimmer_child_power (){
             sysvar.puissance_cumul = 0;
         }
      }
-
 }
 
 

@@ -716,7 +716,7 @@ void loop() {
   ////////////////// control de la puissance /////////////////
 
   if ( sysvar.change == 1  && programme.run == false ) {   /// si changement et pas de minuteur en cours
-    sysvar.change = 0; 
+    // sysvar.change = 0; sisi, j'insiste, faut le mettre à la fin 
     if (config.dimmer_on_off == 0){
               unified_dimmer.dimmer_off();
     }
@@ -726,7 +726,7 @@ void loop() {
     DEBUG_PRINTLN(sysvar.puissance);
 
    if (sysvar.puissance_cumul != 0) {
-      if ( strcmp(config.child,"") != 0 && strcmp(config.mode,"off") == 0 ) {
+      if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 && strcmp(config.mode,"off") == 0 ) {
         child_communication(0,false); 
         // Du coup je force sysvar.puissance_cumul à 0 puisque Task_GET_POWER ne renverra plus rien désormais
         // ça évitera dans rentrer dans cette boucle à l'infini en bombardant le dimmer d'ordres à 0 pour rien
@@ -749,11 +749,15 @@ void loop() {
               dimmer2.setPower(config.maxpow);
             #endif
           }
-          /// si on a une carte fille, on envoie la commande 
-          if ( strcmp(config.child,"") != 0 && strcmp(config.mode,"off") != 0 ) {
+          /// si on a une carte fille et qu'elle n'est pas configurée sur off, on envoie la commande 
+          if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 && strcmp(config.mode,"off") != 0 ) {
               //if ( strcmp(config.mode,"delester") == 0 ) { child_communication(int((sysvar.puissance-config.maxpow)*FACTEUR_REGULATION),true ); } // si mode délest, envoi du surplus
-              if ( strcmp(config.mode,"delester") == 0 ) { child_communication(int((sysvar.puissance-config.maxpow)),true ); } // si mode délest, envoi du surplus
-              if ( strcmp(config.mode,"equal") == 0) { child_communication(sysvar.puissance,true); }  //si mode equal envoie de la commande vers la carte fille
+              if ( strcmp(config.mode,"delester") == 0 ) { 
+                child_communication(int((sysvar.puissance-config.maxpow)),true );  // si mode délest, envoi du surplus
+              }
+              if ( strcmp(config.mode,"equal") == 0) { 
+                child_communication(sysvar.puissance,true);   //si mode equal envoie de la commande vers la carte fille
+}
           }
         DEBUG_PRINTLN(("%d------------------",__LINE__));
         DEBUG_PRINTLN(sysvar.puissance);
@@ -769,10 +773,10 @@ void loop() {
         }
           logging.Set_log_init("dimmer at " );
           logging.Set_log_init(String(sysvar.puissance).c_str()); 
-          logging.Set_log_init("\r\n");
+          logging.Set_log_init("%\r\n");
 
 
-          if ( strcmp(config.child,"") != 0 ) {
+          if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 ) {
              //int puissance_regulee = sysvar.puissance*FACTEUR_REGULATION;
               //if ( strcmp(config.mode,"equal") == 0) { child_communication(int(sysvar.puissance*FACTEUR_REGULATION),true); childsend = 0;}  //si mode equal envoie de la commande vers la carte fille
             //if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance < config.maxpow) { child_communication(0,false); childsend = 0; }  //si mode délest envoie d'une commande à 0
@@ -782,12 +786,12 @@ void loop() {
             }  //si mode equal envoie de la commande vers la carte fille
             if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance <= config.maxpow) { 
               child_communication(0,false); 
-              logging.Set_log_init("Child at 0\r\n"); 
+              //logging.Set_log_init("Child at 0\r\n"); 
             }  //si mode délest envoie d'une commande à 0
 
             if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance > config.maxpow) { // si sysvar.puissance passe subitement au dessus de config.maxpow
               child_communication(int((sysvar.puissance-config.maxpow)),true );
-              logging.Set_log_init("===> Cas oublié <===\r\n");
+              //logging.Set_log_init("===> Cas oublié <===\r\n");
             }
               DEBUG_PRINTLN(("%d  -----------------",__LINE__));
               DEBUG_PRINTLN(sysvar.puissance);
@@ -829,7 +833,7 @@ void loop() {
     else if ( sysvar.puissance != 0 && security == 1)
     {
 
-      if ( strcmp(config.child,"") != 0 || strcmp(config.mode,"off") != 0) {
+      if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0  && strcmp(config.mode,"off") != 0) {
         if (sysvar.puissance > 200 ) {sysvar.puissance = 200 ;}
 
         if ( strcmp(config.mode,"delester") == 0 ) { child_communication(int(sysvar.puissance) ,true); childsend = 0 ; } // si mode délest, envoi du surplus
@@ -842,7 +846,7 @@ void loop() {
         unified_dimmer.set_power(0);
         unified_dimmer.dimmer_off();
               /// et sur les sous routeur 
-        if ( strcmp(config.child,"") != 0 ) {
+        if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 ) {
             if ( strcmp(config.mode,"delester") == 0 ) { child_communication(0,false); } // si mode délest, envoi du surplus
             if ( strcmp(config.mode,"equal") == 0) { child_communication(0,false); }  //si mode equal envoie de la commande vers la carte fille
             if ( strcmp(config.mode,"off") != 0) {
@@ -876,6 +880,7 @@ void loop() {
 
     }
     
+  sysvar.change = 0; /// déplacé ici à la fin
   }
 
     //***********************************

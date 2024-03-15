@@ -60,13 +60,12 @@ void mqttdallas() {
         unified_dimmer.dimmer_off();
         
       
-      if ( strcmp(config.child,"") != 0 && strcmp(config.mode,"off") != 0){
-        //sysvar.puissance=0;
-        //logging.Set_log_init( "Consigne temp atteinte - Puissance locale à 0 - le reste va aux enfants\r\n" );
+      if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 && strcmp(config.mode,"off") != 0){
+                //logging.Set_log_init( "Consigne temp atteinte - Puissance locale à 0 - le reste va aux enfants\r\n" );
       }
       else {
         sysvar.puissance=0;
-        unified_dimmer.set_power(0);
+        //unified_dimmer.set_power(0); // déjà fait 8 lignes au dessus
               //logging.Set_log_init( "Consigne temp atteinte - Puissance locale à 0 - pas d'enfant à servir\r\n" );
       }
 

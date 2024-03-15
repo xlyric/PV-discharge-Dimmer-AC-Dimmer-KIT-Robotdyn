@@ -112,10 +112,18 @@ void call_pages() {
         float input=request->getParam(PARAM_INPUT_1)->value().toFloat();
 
         
-        
-        /// si remontée de puissance dispo alors prioritaire
-         if (request->hasParam("puissance")) { 
+          if (input==0) {
+            sysvar.puissance = 0 ;            // En %
+            //int dispo=0;                          // En % // on ne s'en sert pas, donc commenté
+            sysvar.puissance_dispo = 0;         // En W
+            sysvar.change = 0; // par sécurité, au cas ou le main n'aurait pas fini
+          }
+                  
+        // Modif RV - correction bug si dimmer configuré mais pas allumé ou planté
+          else if (sysvar.change == 1){}
                       
+/// si remontée de puissance dispo alors prioritaire
+          else if (request->hasParam("puissance")) {
 /// on recupère la puissance disponible  
             float dispo = request->getParam("puissance")->value().toFloat();
             DEBUG_PRINTLN("puissance="+String(dispo));
@@ -124,69 +132,43 @@ void call_pages() {
             sysvar.puissance_dispo = dispo;     // En W
             dispo = (100*dispo/config.charge);  // En %
  
-            /// si POWER=0 on coupe tout
-            if (input==0) {
-              sysvar.puissance = 0 ;            // En %
-              dispo=0;                          // En %
-              sysvar.puissance_dispo=0;         // En W
-            } 
-
-            ///  Modif RV - 18/02/2024
-            /// en rajoutant ce else on évite de ce palucher tous les calculs même quand il n'y a pas de puissance à router
-            else { 
-
-              /// Modif RV - 18/02/2024
-              /// Du coup ce else if devient un if 
-              ///
-              /// Je me suis tordu le neurone sur ce passage déjà l'année dernière avant de laisser tomber
-              /// J'ai essayé la semaine dernière en le commentant et cela fonctionnait mieux sans qu'avec
-              /// 
-              /// Je n'ai rien lâché et là je crois que je le tiens !
-              ///
+            
               /// si on dépasse le max, on calcule la puissance dispo restante pour un dimmer enfant
               if (unified_dimmer.get_power() + dispo >= config.maxpow ) {       // En %
                 sysvar.puissance_dispo = (config.dispo - ((config.maxpow - unified_dimmer.get_power()) * config.charge / 100));  // En W
-
               }
 
             // on égalise
-            if ( strcmp(config.child,"") != 0 && strcmp(config.mode,"equal") == 0  ) {
+            if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 && strcmp(config.mode,"equal") == 0  ) {
               if ( (security == 1) || (unified_dimmer.get_power() >= config.maxpow) ) {
                 sysvar.puissance = sysvar.puissance + dispo;          // En %
                 sysvar.puissance_dispo = sysvar.puissance_dispo * 2 ; //  En W - On multiplie par 2 car la fonction child_communication() fera / 2
-                //logging.Set_log_init(" Mode \"equal\" - Full\r\n");
-              }
+                              }
               else { // Mode avec dimmer enfant en equal ET toujours en capacité de router localement de la puissance
               sysvar.puissance = sysvar.puissance + dispo/2;        // En %
-                  // sysvar.puissance_dispo est égal à ce qu'il était en haut et sera / par 2 par child_communication() donc on est bon
-                  // config.dispo est égal à ce qu'il était en haut  et on en n'a plus besoin de toutes façons
-                  //logging.Set_log_init(" Mode \"equal\" - Half\r\n");
-              }
+                  }
             }
             else {  // si mode sans dimmer enfant ou en mode délestage vers un fils
               sysvar.puissance = sysvar.puissance + dispo;            // En %
-                // sysvar.puissance_dispo est égal à ce qu'il était en haut, c'est bon
-                // config.dispo est égal à ce qu'il était en haut et on en n'a plus besoin de toutes façons
-              }
+                              }
          }
          
-         }
-
          else // uniquement la commande /?POWER= reçue
          {
            sysvar.puissance = input;
-           
-           sysvar.puissance_dispo = 0;
-           //config.dispo = 0; //on en n'a plus besoin à ce moment là
-           DEBUG_PRINTLN(("%d-input=" + String(input),__LINE__));
+                      sysvar.puissance_dispo = 0;
+                      DEBUG_PRINTLN(("%d-input=" + String(input),__LINE__));
          }
 
         // si config.child = 0.0.0.0 alors max = 100 
         int max = 200;
-        if (strcmp(config.child,"none") == 0 || strcmp(config.mode,"off") ==0 ) { max = 100; } 
+        if (strcmp(config.child,"none") == 0 || strcmp(config.mode,"off") == 0 ) { max = 100; } 
         if (sysvar.puissance >= max) {sysvar.puissance = max; }
         logging.Set_log_init("HTTP power at " + String(sysvar.puissance) + "%\r\n");
+// Modif RV - correction bug si dimmer configuré mais pas allumé ou planté
+        if (sysvar.change == 0) { 
         sysvar.change=1; 
+        }
         String pb=getState().c_str(); 
         pb = pb +String(sysvar.puissance) +" " + String(input) +" " + String(sysvar.puissance_dispo) ;
         request->send_P(200, "text/plain", pb.c_str() );  
