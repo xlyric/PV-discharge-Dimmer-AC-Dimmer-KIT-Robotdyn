@@ -207,11 +207,56 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <br>
+                                    <div class="card position-relative">
+                                        <div class="card-header py-3">
+                                        <h6 class="m-0 font-weight-bold text-primary">Domoticz</h6>
+                                            <span id="saveform"></span>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="form-group row">
+                                                <div class="col-sm-3">IDX temp</div>
+                                                <div class="col-sm-3">IDX pow</div>
+                                                <div class="col-sm-3">IDX alarme</div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <div class="col-sm-3">
+                                                    <input
+                                                        type="number"
+                                                        step="1"
+                                                        class="form-control form-control-user"
+                                                        id="idxtemp"
+                                                        placeholder="%IDXTEMP%"
+                                                    >
+                                                </div>
+                                                <div class="col-sm-3">
+                                                    <input
+                                                        type="number"
+                                                        step="1"
+                                                        class="form-control form-control-user"
+                                                        id="IDX"
+                                                        placeholder="%IDX%"
+                                                    >
+                                                </div>
+                                                <div class="col-sm-3">
+                                                    <input
+                                                        type="number"
+                                                        step="1"
+                                                        class="form-control form-control-user"
+                                                        id="IDXAlarme"
+                                                        placeholder="%IDXALARME%"
+                                                    >
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div> 
                                     <input type="submit" value=" Application des paramètres" class="btn btn-primary btn-user btn-block">
                                 </form>
-                                <hr>
+
                             </div>
                         </div>
+
+
                     </div>
                 </div>
             </div>
@@ -259,7 +304,7 @@ $( "#save" ).click(function() {
 
 $( "#formulaire" ).submit(function() {
 
-	 var data = {'hostname':$('#server').val(), 'port':$('#port').val(), 'Publish':$('#topic').val(), 'mqttuser':$('#user').val(), 'mqttpassword':$('#password').val()} 
+	 var data = {'hostname':$('#server').val(), 'port':$('#port').val(), 'Publish':$('#topic').val(), 'mqttuser':$('#user').val(), 'mqttpassword':$('#password').val(), 'idxtemp':$('#idxtemp').val(), 'IDXAlarme':$('#IDXAlarme').val(), 'IDX':$('#IDX').val()} 
 
         $.ajax({
             type: "GET",

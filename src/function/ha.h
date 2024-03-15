@@ -121,10 +121,8 @@ struct HA
     //private:String state_topic; 
     //private:String stat_t; 
     //private:String avty_t;
-
-    
-    private:String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-    //private:String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
+    private:String node_mac = config.say_my_name;
+       
     private:String node_id = String("dimmer-") + node_mac; 
     //private:String topic = "homeassistant/sensor/"+ node_id +"/";
     private:String topic_switch = "homeassistant/switch/"+ node_id +"/";

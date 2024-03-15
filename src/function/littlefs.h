@@ -96,6 +96,9 @@ void loadConfiguration(const char *filename, Config &config) {
         doc["SubscribeTEMP"] | "none", 
         sizeof(config.SubscribeTEMP));
   config.dimmer_on_off = doc["dimmer_on_off"] | 1; 
+  strlcpy(config.say_my_name,                 
+        doc["name"] | "", 
+        sizeof(config.say_my_name));
 
   configFile.close();
   
@@ -140,6 +143,7 @@ void saveConfiguration(const char *filename, const Config &config) {
   doc["SubscribeTEMP"] = config.SubscribeTEMP;
   doc["dimmer_on_off"] = config.dimmer_on_off;
   doc["charge"] = config.charge;
+  doc["name"] = config.say_my_name;
 
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {

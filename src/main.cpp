@@ -196,7 +196,7 @@ void dallaspresent ();
 String routeur="PV-ROUTER";
 bool AP = false; 
 bool discovery_temp;
-String dimmername ="";
+
 
 OneWire  ds(ONE_WIRE_BUS);  //  (a 4.7K resistor is necessary - 5.7K work with 3.3 ans 5V power)
 DallasTemperature sensors(&ds);
@@ -431,7 +431,12 @@ void setup() {
           Serial.print(String(wifi_config_fixe.static_ip));
     }
 
-    wifiManager.autoConnect(("dimmer-"+WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17)).c_str());
+    if (strcmp(config.say_my_name, "") == 0) {
+      strcpy(config.say_my_name, ("Dimmer-"+WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17)).c_str());
+    }
+    wifiManager.autoConnect(config.say_my_name);
+    
+    
     
     DEBUG_PRINTLN("end Wifiautoconnect");
     wifiManager.setSaveConfigCallback(saveConfigCallback);
@@ -452,8 +457,11 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-  // change le nom du device en fonction de l'adresse MAC
-  WiFi.setHostname(("Dimmer-"+WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17)).c_str());
+
+    WiFi.setHostname(config.say_my_name);
+
+  //***********************************
+
 
    /// restart si la configuration OP static est différente ip affectée suite changement ip Autoconf
   if ( !strcmp(wifi_config_fixe.static_ip, "" ) == 0 )  {
@@ -487,7 +495,9 @@ void setup() {
       AP = true; 
   }
 
-  dimmername = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17); 
+
+  
+
 
     //***********************************
     //************* Setup - OTA 

@@ -60,9 +60,10 @@ char buffer[1024];
   /// @param message 
   /// @param length 
 
-  String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
+  //String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
   // String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17); // non utilisé
-  String node_id = String("dimmer-") + node_mac; 
+  //String node_id = String("dimmer-") + node_mac; 
+  String node_id = config.say_my_name;
   String switch_command = String("homeassistant/switch/"+ node_id + "/command");
   String number_command = String("homeassistant/number/"+ node_id + "/command");
   String select_command = String("homeassistant/select/"+ node_id + "/command");
@@ -383,8 +384,9 @@ void connect_and_subscribe() {
         client.subscribe(select_command.c_str(),1);
         client.subscribe(button_command.c_str(),1);
 
-        String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-        String node_id = String("dimmer-") + node_mac; 
+        //String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
+        //String node_id = String("dimmer-") + node_mac; 
+        String node_id = config.say_my_name;
         String save_command = String("Xlyric/sauvegarde/"+ node_id );
         //client.subscribe(save_command.c_str());
         int instant_power = sysvar.puissance;  // 

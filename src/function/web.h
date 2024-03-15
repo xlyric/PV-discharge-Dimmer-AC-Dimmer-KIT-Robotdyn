@@ -58,7 +58,7 @@ extern HA device_dimmer_maxpow;
 extern HA device_dimmer_minpow;
 extern HA device_dimmer_starting_pow;
 extern HA device_dimmer_maxtemp;
-extern String dimmername;
+
 
 
 
@@ -442,6 +442,7 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     if (!AP && mqtt_config.mqtt) { device_dimmer_child_mode.send(String(config.mode));}
    }
 
+   if (request->hasParam("dimmername")) { request->getParam("dimmername")->value().toCharArray(config.say_my_name,100);}
    if (request->hasParam("SubscribePV")) { request->getParam("SubscribePV")->value().toCharArray(config.SubscribePV,100);}
    if (request->hasParam("SubscribeTEMP")) { request->getParam("SubscribeTEMP")->value().toCharArray(config.SubscribeTEMP,100);}
    if (request->hasParam("dimmer_on_off")) { 
@@ -560,7 +561,7 @@ String processor(const String& var){
     return (VERSION_http);
   } 
   if (var == "NAME"){
-    return (dimmername);
+    return (config.say_my_name);
   } 
   if (var == "RSSI"){
     return (String(WiFi.RSSI()));
@@ -573,10 +574,6 @@ String getconfig() {
   String configweb;  
   DynamicJsonDocument doc(512);  
   //   +  config.mode + ";" + config.SubscribePV + ";" + config.SubscribeTEMP + ";" + config.dimmer_on_off ;
-    doc["IDX"] = config.IDX;
-    doc["idxtemp"] = config.IDXTemp;
-    doc["IDXAlarme"] = config.IDXAlarme;
-
     doc["maxtemp"] = config.maxtemp;
 
     doc["startingpow"] = config.startingpow;
@@ -590,6 +587,7 @@ String getconfig() {
     doc["SubscribeTEMP"] = config.SubscribeTEMP;
     doc["dimmer_on_off"] = config.dimmer_on_off;
     doc["charge"] = config.charge;
+    doc["dimmername"] = config.say_my_name;
   
   serializeJson(doc, configweb);
   return String(configweb);
@@ -636,6 +634,9 @@ String getmqtt() {
     doc["user"] = mqtt_config.username;
     doc["password"] = mqtt_config.password;
     doc["MQTT"] = mqtt_config.mqtt;
+    doc["IDX"] = config.IDX;
+    doc["idxtemp"] = config.IDXTemp;
+    doc["IDXAlarme"] = config.IDXAlarme;
   serializeJson(doc, retour);
   return String(retour) ;
 }
@@ -654,8 +655,9 @@ String getcomplement() {
 
 
 String readmqttsave(){
-        String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-        String node_id = String("dimmer-") + node_mac; 
+        //String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
+        //String node_id = String("dimmer-") + node_mac; 
+        String node_id = config.say_my_name;
         String save_command = String("Xlyric/sauvegarde/"+ node_id );
         client.subscribe(save_command.c_str(),1);
         return String("<html><head><meta http-equiv='refresh' content='5;url=config.html' /></head><body><h1>config restauree, retour au setup dans 5 secondes, pensez a sauvegarder sur la flash </h1></body></html>");

@@ -58,7 +58,7 @@ struct Config {
   int dimmer_on_off;
   int charge;
   int dispo; 
-  
+  char say_my_name[32];
 };
 
 struct Mqtt {
