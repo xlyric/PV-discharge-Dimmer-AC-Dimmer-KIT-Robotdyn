@@ -121,7 +121,10 @@ struct HA
     //private:String state_topic; 
     //private:String stat_t; 
     //private:String avty_t;
-    private:String node_mac = config.say_my_name;
+   
+    private:String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
+    // setter mod_mac
+    public:void Set_node_mac(String setter) {node_mac=setter; }
        
     private:String node_id = String("dimmer-") + node_mac; 
     //private:String topic = "homeassistant/sensor/"+ node_id +"/";
@@ -203,6 +206,7 @@ HA device_dimmer_power;
 HA device_dimmer_total_power;
 
 void devices_init(){
+  
   /// création des sensors
   device_dimmer.Set_name("Puissance");
   device_dimmer.Set_object_id("power");

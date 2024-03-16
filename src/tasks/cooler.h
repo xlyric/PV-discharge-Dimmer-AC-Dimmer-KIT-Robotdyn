@@ -52,7 +52,7 @@ void cooler() {
     
     
     ///ajout d'envoie MQTT pour test fuite mémoire
-    String temp_topic = "memory/dimmer-" + String(config.say_my_name);
+    String temp_topic = "memory/" + String(config.say_my_name);
    client.publish(temp_topic.c_str(), 0,true, String(ESP.getFreeHeap()).c_str());
 
  // pas besoin de tempo pour l'arret, vu que c'est toute les 15 secondes la task 
