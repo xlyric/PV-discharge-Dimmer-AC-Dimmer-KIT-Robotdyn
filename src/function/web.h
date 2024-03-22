@@ -126,6 +126,7 @@ void call_pages() {
           else if (request->hasParam("puissance")) {
 /// on recupère la puissance disponible  
             float dispo = request->getParam("puissance")->value().toFloat();
+
             DEBUG_PRINTLN("puissance="+String(dispo));
             /// on la converti en pourcentage de charge et config.dispo contient la puissance disponible en W 
             config.dispo = dispo;               // En W
@@ -418,7 +419,22 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     config.maxtemp = request->getParam("maxtemp")->value().toInt();
     if (!AP && mqtt_config.mqtt) { device_dimmer_maxtemp.send(String(config.maxtemp));}
    }
-   if (request->hasParam("charge")) { config.charge = request->getParam("charge")->value().toInt();}
+   //if (request->hasParam("charge")) { config.charge = request->getParam("charge")->value().toInt();}
+if (request->hasParam("charge1")) { 
+    config.charge1 = request->getParam("charge1")->value().toInt(); 
+    config.charge = config.charge1 + config.charge2 + config.charge3;
+    if (!AP && mqtt_config.mqtt) { device_dimmer_charge.send(String(config.charge));}
+    }
+   if (request->hasParam("charge2")) { 
+    config.charge2 = request->getParam("charge2")->value().toInt(); 
+    config.charge = config.charge1 + config.charge2 + config.charge3;
+    if (!AP && mqtt_config.mqtt) { device_dimmer_charge.send(String(config.charge));}
+    }
+   if (request->hasParam("charge3")) { 
+    config.charge3 = request->getParam("charge3")->value().toInt(); 
+    config.charge = config.charge1 + config.charge2 + config.charge3;
+    if (!AP && mqtt_config.mqtt) { device_dimmer_charge.send(String(config.charge));}
+    }
    if (request->hasParam("IDXAlarme")) { config.IDXAlarme = request->getParam("IDXAlarme")->value().toInt();}
    if (request->hasParam("IDX")) { config.IDX = request->getParam("IDX")->value().toInt();}
    if (request->hasParam("startingpow")) { config.startingpow = request->getParam("startingpow")->value().toInt();
@@ -432,10 +448,12 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     config.maxpow = request->getParam("maxpow")->value().toInt();
     if (!AP && mqtt_config.mqtt) { device_dimmer_maxpow.send(String(config.maxpow));}
    }
+/*
     if (request->hasParam("charge")) { 
     config.charge = request->getParam("charge")->value().toInt();
     if (!AP && mqtt_config.mqtt) { device_dimmer_charge.send(String(config.charge));}
    }
+*/
    if (request->hasParam("child")) { request->getParam("child")->value().toCharArray(config.child,15);  }
    if (request->hasParam("mode")) { 
     request->getParam("mode")->value().toCharArray(config.mode,10);  
@@ -519,7 +537,7 @@ String getState() {
       int instant_power= sysvar.puissance ;
     #endif
   #else
-  int instant_power= unified_dimmer.get_power(); 
+  float instant_power= unified_dimmer.get_power(); 
   #endif
 
   //state = String(instant_power) + "% " +  String(instant_power * config.charge) + "W"; 
@@ -527,10 +545,10 @@ String getState() {
   dtostrf(sysvar.celsius,2, 1, buffer); // conversion en n.1f 
   
   DynamicJsonDocument doc(192);
-    doc["dimmer"] = instant_power;
+    doc["dimmer"] = int(instant_power); // on le repasse un int pour éviter un affichage trop grand
     doc["temperature"] = buffer;
-    doc["power"] = (instant_power * config.charge/100);
-    doc["Ptotal"]  = sysvar.puissance_cumul + (instant_power * config.charge/100);
+    doc["power"] = int(instant_power * config.charge/100);
+    doc["Ptotal"]  = sysvar.puissance_cumul + int(instant_power * config.charge/100);
     // recupération de l'état de surchauffe
     doc["alerte"]  = security;
 #ifdef RELAY1    
@@ -588,6 +606,9 @@ String getconfig() {
     doc["dimmer_on_off"] = config.dimmer_on_off;
     doc["charge"] = config.charge;
     doc["dimmername"] = config.say_my_name;
+    doc["charge1"] = config.charge1;
+    doc["charge2"] = config.charge2;
+    doc["charge3"] = config.charge3;
   
   serializeJson(doc, configweb);
   return String(configweb);
