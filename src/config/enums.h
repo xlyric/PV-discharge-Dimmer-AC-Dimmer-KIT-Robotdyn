@@ -56,7 +56,14 @@ struct Config {
   char SubscribeTEMP[100];
   bool restart;
   int dimmer_on_off;
+/// @brief  // Somme des 3 charges déclarées dans la page web
   int charge;
+/// @brief  // Puissance de la charge 1 déclarée dans la page web
+  int charge1; 
+/// @brief  // Puissance de la charge 2 déclarée dans la page web
+  int charge2; 
+/// @brief  // Puissance de la charge 3 déclarée dans la page web
+  int charge3; 
   int dispo; 
   char say_my_name[32];
 };

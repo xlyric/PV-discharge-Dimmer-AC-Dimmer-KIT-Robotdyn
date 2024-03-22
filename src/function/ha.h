@@ -206,8 +206,7 @@ HA device_dimmer_power;
 HA device_dimmer_total_power;
 
 void devices_init(){
-  
-  /// création des sensors
+    /// création des sensors
   device_dimmer.Set_name("Puissance");
   device_dimmer.Set_object_id("power");
   device_dimmer.Set_unit_of_meas("%");

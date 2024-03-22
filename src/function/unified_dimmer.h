@@ -36,13 +36,94 @@ void set_power(float power){
 
   /// pour le dimmer robotdyn
   #ifdef ROBOTDYN
-    dimmer.setPower(int(power));
+    // On transforme la puissance totale à envoyer aux dimmers en watts pour mieux les répartir entre les 3 SSR
+    // Meilleure précision en float 
+    float tmp_pwr_watt = power * config.charge / 100; 
+    int dimmer1_pwr = 0;
+    int dimmer2_pwr = 0;
+    int dimmer3_pwr = 0;
+
+    // Calcul de la puissance à envoyer à chaque dimmer
+    if (tmp_pwr_watt <= config.charge1){ // Un seul dimmer à fournir
+      dimmer1_pwr = tmp_pwr_watt * 100 / config.charge1 ;
+      dimmer2_pwr = 0;
+      dimmer3_pwr = 0;
+    }
+
+    else if (tmp_pwr_watt <= (config.charge1+config.charge2)){ // 2 dimmers à fournir
+      if (config.charge1 != 0) { dimmer1_pwr = 100; } // Permet d'avoir le dimmer1 configuré à 0 dans l'interface web
+      if (config.charge2 != 0) { dimmer2_pwr = (tmp_pwr_watt - config.charge1 ) * 100 / config.charge2 ;} // Permet d'avoir le dimmer2 configuré à 0 dans l'interface web
+      dimmer3_pwr = 0;
+    }
+    else { // Les 3 dimmers à fournir
+      if (config.charge1 != 0) { dimmer1_pwr = 100; } // Permet d'avoir le dimmer1 configuré à 0 dans l'interface web
+      if (config.charge2 != 0) { dimmer2_pwr = 100; } // Permet d'avoir le dimmer2 configuré à 0 dans l'interface web
+      if (config.charge3 != 0) { dimmer3_pwr = (tmp_pwr_watt - (config.charge1 + config.charge2) ) * 100 / config.charge3; } else { dimmer3_pwr = 0;};
+    }
+    
+    
+    // Application de la puissance à chaque dimmer
+    // Dimmer1
+    if ( dimmer1_pwr != dimmer.getPower() ) {
+     if (dimmer1_pwr == 0 && dimmer.getState()==1) {
+      dimmer.setPower(0);
+      dimmer.setState(OFF);
+      logging.Set_log_init("Dimmer1 Off\r\n");
+      delay(50);
+     }
+     else if (dimmer1_pwr != 0 && dimmer.getState()==0) {
+      dimmer.setState(ON);
+      logging.Set_log_init("Dimmer1 On\r\n");
+      delay(50);
+      dimmer.setPower(dimmer1_pwr);
+     }
+     else { dimmer.setPower(dimmer1_pwr); }
+    }
+#ifdef outputPin2
+    // Dimmer2
+    if ( dimmer2_pwr != dimmer2.getPower() ) {
+     if (dimmer2_pwr == 0 && dimmer2.getState()==1) {
+      dimmer2.setPower(0);
+      dimmer2.setState(OFF);
+      logging.Set_log_init("Dimmer2 Off\r\n");
+      delay(50);
+     }     
+     else if (dimmer2_pwr != 0 && dimmer2.getState()==0) {
+      dimmer2.setState(ON);
+      logging.Set_log_init("Dimmer2 On\r\n");
+      delay(50);
+      dimmer2.setPower(dimmer2_pwr);
+     }
+     else { dimmer2.setPower(dimmer2_pwr); }
+    }
+    
+    // Dimmer3
+    if ( dimmer3_pwr != dimmer3.getPower() ) {  
+     if (dimmer3_pwr == 0 && dimmer3.getState()==1) {
+      dimmer3.setPower(0);
+      dimmer3.setState(OFF);
+      logging.Set_log_init("Dimmer3 Off\r\n");
+      delay(50);
+     }     
+     else if (dimmer3_pwr != 0 && dimmer3.getState()==0) {
+      dimmer3.setState(ON);
+      logging.Set_log_init("Dimmer3 On\r\n");
+      delay(50);
+      dimmer3.setPower(dimmer3_pwr);
+     }
+     else { dimmer3.setPower(dimmer3_pwr); }
+    }  
+#endif   
+    logging.Set_log_init("dimmer 1: " + String(dimmer1_pwr) + "%\r\n" );
+    #ifdef outputPin2
+    logging.Set_log_init("dimmer 2: " + String(dimmer2_pwr) + "%\r\n" );
+    logging.Set_log_init("dimmer 3: " + String(dimmer3_pwr) + "%\r\n" );
+    #endif
   #endif
-   
-}
+   }
 
 //getter
-int get_power(){
+float get_power(){
   // pour le ssr 
     #ifdef SSR_ZC
       power = ssr_burst.get_power();
@@ -54,7 +135,18 @@ int get_power(){
 
     // pour le dimmer robotdyn
     #ifdef ROBOTDYN
-      power = dimmer.getPower();
+      //power = dimmer.getPower();
+      int power1 = dimmer.getPower();
+      #ifdef outputPin2
+        int power2 = dimmer2.getPower();
+        int power3 = dimmer3.getPower();
+        power = ((float)(power1*config.charge1 + power2*config.charge2 + power3*config.charge3) / (float)config.charge) ;
+      #else
+        power = ((float)(power1*config.charge1 ) / (float)config.charge) ;
+      #endif
+      //logging.Set_log_init("P1: " + String(power1) + " P2: " + String(power2) + " P3: " + String(power3) );
+      //power = ((float)(power1*config.charge1 + power2*config.charge2 + power3*config.charge3) / (float)config.charge) ;
+      //logging.Set_log_init(" PTotale: " + String(power) + "\r\n" ); 
     #endif
   return power;
 }
@@ -63,20 +155,30 @@ int get_power(){
 
 void dimmer_on()
 {
+/*
+  // les tâches de démarrage des dimmers 2 & 3 sont reportées au besoin dans set_power()
   #ifdef ROBOTDYN
     if (dimmer.getState()==0) {
       dimmer.setState(ON);
       logging.Set_log_init("Dimmer On\r\n");
       delay(50);
     }
-    #ifdef outputPin2
+    
+    #ifdef MULTISSR // si on laisse ça les dimmers 2 & 3 clignotent à chaque changement de puissance, même si ils doivent rester à zéro
       if (dimmer2.getState()==0) {
         dimmer2.setState(ON);
         logging.Set_log_init("Dimmer2 On\r\n");
         delay(50);
       }  
+
+      if (dimmer3.getState()==0) {
+        dimmer3.setState(ON);
+        logging.Set_log_init("Dimmer3 On\r\n");
+        delay(50);
+      }  
     #endif
   #endif
+*/
 }
 
 void dimmer_off()
@@ -88,13 +190,28 @@ void dimmer_off()
       logging.Set_log_init("Dimmer Off\r\n");
       delay(50);
     }
-    #ifdef outputPin2 /// désactivé pour le moment
+    #ifdef outputPin2
+      if (dimmer2.getState()==1) {
       dimmer2.setPower(0);
       dimmer2.setState(OFF);
       logging.Set_log_init("Dimmer2 Off\r\n");
       delay(50);
+}
+    #endif
+    #ifdef outputPin3
+      if (dimmer3.getState()==1) {
+        dimmer3.setPower(0);
+        dimmer3.setState(OFF);
+        logging.Set_log_init("Dimmer3 Off\r\n");
+        delay(50);
+      }
     #endif
   #endif
+
+  #ifdef SSR_ZC
+    ssr_burst.set_power(0);
+  #endif
+
 }
 
 };

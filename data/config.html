@@ -151,7 +151,7 @@
                                             <div class="col mr-2">
                                                 <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Puissance</div>
                                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                                    <span id="state">%STATE%</span>(percent)
+                                                    <span id="state">%STATE%</span>(&#37;)
                                                     <span id="power">%POWER%</span>(W)
                                                 </div>
                                             </div>
@@ -170,7 +170,7 @@
                                             <div class="col mr-2">
                                                 <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Température</div>
                                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                                    <span id="sigma">%SIGMA%</span>
+                                                    <span id="sigma">%SIGMA%</span>(°C)
                                                 </div>
                                             </div>
                                             <div class="col-auto">
@@ -227,13 +227,12 @@
                                                     </div>
                                                     <div class="card-body">
                                                         <div class="form-group row">
-                                                            <div class="col-sm-3">Max Temp (°C)</div>
-                                                            <div class="col-sm-3">Min Power (percent)</div>
-                                                            <div class="col-sm-3">Max Power (percent)</div>
-                                                            <div class="col-sm-3">Charge (W)</div>
-                                                        </div>
+                                                            <div class="col-sm-4">Max Temp (°C)</div>
+                                                            <div class="col-sm-4">Min Power (percent)</div>
+                                                            <div class="col-sm-4">Max Power (percent)</div>
+                                                                                                                    </div>
                                                         <div class="form-group row">
-                                                            <div class="col-sm-3">
+                                                            <div class="col-sm-4">
                                                                 <input
                                                                     type="number"
                                                                     step="1"
@@ -242,7 +241,7 @@
                                                                     placeholder="%MAXTEMP%"
                                                                 >
                                                             </div>
-                                                            <div class="col-sm-3">
+                                                            <div class="col-sm-4">
                                                                 <input
                                                                     type="number"
                                                                     step="1"
@@ -251,7 +250,7 @@
                                                                     placeholder="%MINPOW%"
                                                                 >
                                                             </div>
-                                                            <div class="col-sm-3">
+                                                            <div class="col-sm-4">
                                                                 <input
                                                                     type="number"
                                                                     step="1"
@@ -260,13 +259,90 @@
                                                                     placeholder="%MAXPOW%"
                                                                 >
                                                             </div>
+</div>
+                                                    </div>
+                                                </div>
+                                                <br>
+                                                <div class="card position-relative">
+                                                    <div class="card-header py-3">
+                                                    <h6 class="m-0 font-weight-bold text-primary">Charges</h6>
+                                                        <span id="saveform"></span>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="form-group row">
+                                                            <div class="col-sm-4">Charge 1 (W)</div>
+                                                            <div class="col-sm-4">Charge 2 (W) ( FW Alone only )</div>
+                                                            <div class="col-sm-4">Charge 3 (W) ( FW Alone Only )</div>
+                                                        </div>
+                                                        <div class="form-group row">
+                                                            <div class="col-sm-4">
+                                                                <input
+                                                                    type="number"
+                                                                    step="1"
+                                                                    class="form-control form-control-user"
+                                                                    id="charge1"
+                                                                    placeholder="%CHARGE1%"
+                                                                >
+                                                            </div>
+                                                            <div class="col-sm-4">
+                                                                <input
+                                                                    type="number"
+                                                                    step="1"
+                                                                    class="form-control form-control-user"
+                                                                    id="charge2"
+                                                                    placeholder="%CHARGE2%"
+                                                                >
+                                                            </div>
+                                                            <div class="col-sm-4">
+                                                                <input
+                                                                    type="number"
+                                                                    step="1"
+                                                                    class="form-control form-control-user"
+                                                                    id="charge3"
+                                                                    placeholder="%CHARGE3%"
+                                                                >
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <br>
+                                                <div class="card position-relative">
+                                                    <div class="card-header py-3">
+                                                    <h6 class="m-0 font-weight-bold text-primary">Domoticz</h6>
+                                                        <span id="saveform"></span>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="form-group row">
+                                                            <div class="col-sm-3">IDX temp</div>
+                                                            <div class="col-sm-3">IDX pow</div>
+                                                            <div class="col-sm-3">IDX alarme</div>
+                                                        </div>
+                                                        <div class="form-group row">
                                                             <div class="col-sm-3">
                                                                 <input
                                                                     type="number"
                                                                     step="1"
                                                                     class="form-control form-control-user"
-                                                                    id="charge"
-                                                                    placeholder="%CHARGE%"
+                                                                    id="idxtemp"
+                                                                    placeholder="%IDXTEMP%"
+                                                                >
+                                                            </div>
+                                                            <div class="col-sm-3">
+                                                                <input
+                                                                    type="number"
+                                                                    step="1"
+                                                                    class="form-control form-control-user"
+                                                                    id="IDX"
+                                                                    placeholder="%IDX%"
+                                                                >
+                                                            </div>
+                                                            <div class="col-sm-3">
+                                                                <input
+                                                                    type="number"
+                                                                    step="1"
+                                                                    class="form-control form-control-user"
+                                                                    id="IDXAlarme"
+                                                                    placeholder="%IDXALARME%"
                                                                 >
                                                             </div>
                                                         </div>
@@ -466,7 +542,7 @@ $( "#save" ).click(function() {
 
 $( "#formulaire" ).submit(function() {
 
-	 var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(),'maxtemp':$('#maxtemp').val(),  'startingpow':$('#startingpow').val(), 'minpow':$('#minpow').val(), 'maxpow':$('#maxpow').val(), 'child':$('#child').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val(), 'mode':$('#delester').val() , 'charge':$('#charge').val(), 'dimmername':$('#dimmername').val() } 
+	 var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(),'maxtemp':$('#maxtemp').val(),  'startingpow':$('#startingpow').val(), 'minpow':$('#minpow').val(), 'maxpow':$('#maxpow').val(), 'child':$('#child').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val(), 'mode':$('#delester').val() , 'charge1':$('#charge1').val() , 'charge2':$('#charge2').val() , 'charge3':$('#charge3').val(), 'dimmername':$('#dimmername').val() } 
 
      $.ajax({
             type: "GET",

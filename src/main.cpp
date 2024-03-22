@@ -248,11 +248,15 @@ int childsend = 0;
 /***************************
  * init Dimmer
  **************************/
-#ifdef ROBOTDYN
-  
+#ifdef ROBOTDYN  
     dimmerLamp dimmer(outputPin, zerocross); //initialise port for dimmer for ESP8266, ESP32, Arduino due boards
+
   #ifdef outputPin2
     dimmerLamp dimmer2(outputPin2, zerocross); //initialise port for dimmer2 for ESP8266, ESP32, Arduino due boards
+  #endif
+
+  #ifdef outputPin3
+    dimmerLamp dimmer3(outputPin3, zerocross); //initialise port for dimmer3 for ESP8266, ESP32, Arduino due boards
   #endif
 #endif
 
@@ -340,10 +344,14 @@ void setup() {
   logging.Set_log_init("\r\n Start filesystem \r\n"); 
   #ifdef ROBOTDYN
   // configuration dimmer
-    #ifndef outputPin2
+    #ifdef outputPin
       dimmer.begin(NORMAL_MODE, ON); //dimmer initialisation: name.begin(MODE, STATE) 
-    #else 
-      dimmer2.begin(NORMAL_MODE, ON); //dimmer initialisation: name.begin(MODE, STATE) 
+    #endif
+    #ifdef outputPin2 
+      dimmer2.begin(NORMAL_MODE, ON); //dimmer2 initialisation: name.begin(MODE, STATE) 
+    #endif
+    #ifdef outputPin3
+      dimmer3.begin(NORMAL_MODE, ON); //dimmer3 initialisation: name.begin(MODE, STATE) 
     #endif
 
 
@@ -360,9 +368,14 @@ void setup() {
 #endif
 
   /// init de sécurité     
-  unified_dimmer.set_power(0); 
+#ifdef ROBOTDYN
+    dimmer.setState(OFF); 
+  #endif
   #ifdef outputPin2
-    dimmer2.setPower(0); 
+    dimmer2.setState(OFF);  
+  #endif
+  #ifdef outputPin3
+    dimmer3.setState(OFF);  
   #endif
     
   USE_SERIAL.println("Dimmer Program is starting...");
@@ -611,7 +624,7 @@ void loop() {
       if (programme.stop_progr()) { 
             // Robotdyn dimmer
             logging.Set_log_init("stop minuteur dimmer\r\n");
-            unified_dimmer.set_power(0); 
+            unified_dimmer.set_power(0); // necessaire pour les autres modes
             unified_dimmer.dimmer_off();
 
         DEBUG_PRINTLN("programme.run");
@@ -634,7 +647,7 @@ void loop() {
       sysvar.puissance=config.maxpow; 
           //// robotdyn dimmer
               logging.Set_log_init("start minuteur dimmer\r\n");
-              unified_dimmer.dimmer_on();
+              //unified_dimmer.dimmer_on(); // Tâche reportée à la demande dans unified_dimmer
               unified_dimmer.set_power(config.maxpow); 
               delay (50);
 
@@ -649,6 +662,7 @@ void loop() {
       offset_heure_ete(); // on corrige l'heure d'été si besoin
     }
   }
+
 
 #ifdef RELAY1
  //// relay 1 
@@ -755,9 +769,11 @@ void loop() {
           if (config.dimmer_on_off == 1){
             unified_dimmer.set_power(config.maxpow);
             DEBUG_PRINTLN("744------------------");
-            #ifdef outputPin2
-              dimmer2.setPower(config.maxpow);
-            #endif
+            // Modif RV - 20240310
+            // gestion des multiples dimmers reportée dans unified_dimmer, pas dans le code principal
+            //#ifdef outputPin2
+              //  dimmer2.setPower(config.maxpow);
+            //#endif
           }
           /// si on a une carte fille et qu'elle n'est pas configurée sur off, on envoie la commande 
           if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 && strcmp(config.mode,"off") != 0 ) {
@@ -777,9 +793,11 @@ void loop() {
         { 
         if (config.dimmer_on_off == 1){
           unified_dimmer.set_power(sysvar.puissance);
-          #ifdef outputPin2
-            dimmer2.setPower(sysvar.puissance);
-          #endif
+          // Modif RV - 20240310
+          // gestion des multiples dimmers reportée dans unified_dimmer, pas dans le code principal
+          //#ifdef outputPin2
+            //  dimmer2.setPower(sysvar.puissance);
+          //#endif
         }
           logging.Set_log_init("dimmer at " );
           logging.Set_log_init(String(sysvar.puissance).c_str()); 
@@ -796,7 +814,7 @@ void loop() {
             }  //si mode equal envoie de la commande vers la carte fille
             if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance <= config.maxpow) { 
               child_communication(0,false); 
-              //logging.Set_log_init("Child at 0\r\n"); 
+              logging.Set_log_init("Child at 0\r\n"); 
             }  //si mode délest envoie d'une commande à 0
 
             if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance > config.maxpow) { // si sysvar.puissance passe subitement au dessus de config.maxpow
@@ -853,7 +871,7 @@ void loop() {
     //// si la commande est trop faible on coupe tout partout
     else if ( sysvar.puissance <= config.minpow ){
         DEBUG_PRINTLN("commande est trop faible");
-        unified_dimmer.set_power(0);
+        unified_dimmer.set_power(0); // necessaire pour les autres modes
         unified_dimmer.dimmer_off();
               /// et sur les sous routeur 
         if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 ) {
@@ -874,9 +892,11 @@ void loop() {
               device_dimmer_power.send("0");
             }
 
-            #ifdef outputPin2
-              dimmer2.setPower(0);
-            #endif
+            // Modif RV - 20240310
+            // gestion des multiples dimmers reportée dans unified_dimmer, pas dans le code principal
+            //#ifdef outputPin2
+              //  dimmer2.setPower(0);
+            //#endif
         }
 
 
@@ -898,7 +918,7 @@ void loop() {
     //***********************************
 if ( sysvar.celsius >= config.maxtemp && security == 0 ) {
   security = 1 ; 
-  unified_dimmer.set_power(0);
+  unified_dimmer.set_power(0); // necessaire pour les autres modes
             unified_dimmer.dimmer_off();
   float temp = sysvar.celsius + 0.2; /// pour être sur que la dernière consigne envoyé soit au moins égale au max.temp  
   mqtt(String(config.IDXTemp), String(temp),"Temperature");  /// remonté MQTT de la température

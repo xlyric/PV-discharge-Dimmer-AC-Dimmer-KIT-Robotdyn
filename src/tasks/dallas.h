@@ -56,16 +56,18 @@ void mqttdallas() {
         // coupure du dimmer
         DEBUG_PRINTLN("détection sécurité température");
 
-        unified_dimmer.set_power(0);
+        //unified_dimmer.set_power(0); // Pas besoin, fait dans dimmer_off()
         unified_dimmer.dimmer_off();
         
       
-      if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 && strcmp(config.mode,"off") != 0){
+      if ( strcmp(config.child,"") != 0 && strcmp(config.mode,"off") != 0){
+//sysvar.puissance=0;
                 //logging.Set_log_init( "Consigne temp atteinte - Puissance locale à 0 - le reste va aux enfants\r\n" );
       }
       else {
         sysvar.puissance=0;
-        //unified_dimmer.set_power(0); // déjà fait 8 lignes au dessus
+        //unified_dimmer.set_power(0); // Mieux vaut faire un dimmer_off()
+        unified_dimmer.dimmer_off();
               //logging.Set_log_init( "Consigne temp atteinte - Puissance locale à 0 - pas d'enfant à servir\r\n" );
       }
 
@@ -91,7 +93,8 @@ void mqttdallas() {
     ///mise en sécurité
     sysvar.celsius = 99.9;  
     previous_celsius=sysvar.celsius;
-    unified_dimmer.set_power(0);
+    //unified_dimmer.set_power(0); // Mieux vaut faire un dimmer_off()
+    unified_dimmer.dimmer_off();
     }
 
 

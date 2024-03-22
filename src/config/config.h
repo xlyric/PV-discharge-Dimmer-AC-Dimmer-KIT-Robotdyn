@@ -10,7 +10,7 @@
 //#define MQTT_USER ""   //// not used, use mqtt.json file  --> to delete 01/23
 //#define MQTT_PASSWORD ""  //// not used, use mqtt.json file --> to delete 01/23
 
-#define VERSION "Version 20240316" 
+#define VERSION "Version 20240401" 
 
 /// default configuration for Dimmer with Power supply and D1 Mini on the board ( default : D0 - D1 )
 #ifdef  POWERSUPPLY
@@ -30,13 +30,45 @@
 
 //// configuration for Standalone boards ( personnalisation )
 #ifdef  STANDALONE
-#define outputPin  D5 
-//#define JOTTA  D1 // Utilisable pour un second dimmer en utilisant la pin DATA du JOTTA
-#define zerocross  D6 // for boards with CHANGEBLE input pins
+/* 
+// Official pin mapping
 #define ONE_WIRE_BUS D7 // Dallas 
+
+  #define zerocross  D6 // for boards with CHANGEBLE input pins
+  #define outputPin  D5  // use DIMMER/SSR1 output for 1st Robotdyn/Random SSR
+  #define outputPin2 D1  // use JOTTA/SSR2  output for 2nd Robotdyn/Random SSR
+  #define outputPin3 D0 // A venir avec la future carte v1.5 - // use SSR3 output for 3rd Robotdyn/Random SSR
+
 #define RELAY1 D3  // Spécial pour relay commandé 
-#define RELAY2 D2  //
+#define RELAY2 D2  // Normal pin for RELAY 2 - Temp. reused for SSR3
+
 #define COOLER  D8   /// 0 : off  -> 1 : On --> need a dry contact or opto
+*/
+
+// TMP RV - I use this one for my v1.4 dimmer boards
+  #define ONE_WIRE_BUS D7 // Dallas 
+
+  #define zerocross  D6   // for boards with CHANGEBLE input pins
+  #define outputPin  D5   // use DIMMER (SSR1) output for 1st Robotdyn/Random SSR
+  #define outputPin2 D1   // use JOTTA (SSR2) output for 2nd Robotdyn/Random SSR
+  //#define outputPin3  D0 // A venir avec la future carte v1.5 - // use SSR3 output for 3rd Robotdyn/Random SSR
+  #define outputPin3 D2   // En attendant pour la carte v1.4 // use RELAY2 output for 3rd Robotdyn/Random SSR
+  
+  #define RELAY1 D3     // Spécial pour relay commandé 
+  //#define RELAY2 D2   // Normal pin for RELAY 2 - Temp. reused for SSR3
+  #define RELAY2 D4     // D4 is wired to built-in led 
+  #define COOLER D8     /// 0 : off  -> 1 : On --> need a dry contact or opto
+  
+  /*
+  #ifdef MULTISSR - Test de multi SSR, intégré désormais dans la version STANDALONE
+  #define outputPin  D1  // use  JOTTA/SSR1 output for 1st Robotdyn/Random SSR
+  #define outputPin2 D8  // use RELAY1/SSR2 output for 2nd Robotdyn/Random SSR
+  #define outputPin3 D2  // use RELAY2/SSR3 output for 3rd Robotdyn/Random SSR
+  #define RELAY1 D4      // not wired // built-in led
+  #define RELAY2 D0      // not wired
+  #define COOLER D3      /// 0 : off  -> 1 : On --> need a dry contact or opto
+  #endif
+  */
 #endif
 
 //// configuration for Dimmer with Power supply and D1 Mini on the board and need TTL USB ( https://fr.aliexpress.com/item/1005003365062050.html ) 
@@ -53,30 +85,30 @@
 #endif
 
 #ifdef  SSR  /// même pin que le stand alone 
-#define JOTTA  D1 // for boards with CHANGEBLE input pins
-#define ONE_WIRE_BUS D7 // dallas 
-#define GRIDFREQ 50 ///PWM frequency
-#define outputPin  D5 
-#define zerocross  D6
-#define COOLER  D8   /// 0 : off  -> 1 : On --> need a dry contact or opto
-#define RELAY1 D3  // Spécial pour relay commandé 
-#define RELAY2 D2  //
+  #define JOTTA  D1 // for boards with CHANGEBLE input pins
+  #define ONE_WIRE_BUS D7 // dallas 
+  #define GRIDFREQ 50 ///PWM frequency
+  #define outputPin  D5 
+  #define zerocross  D6
+  #define COOLER  D8   /// 0 : off  -> 1 : On --> need a dry contact or opto
+  #define RELAY1 D3  // Spécial pour relay commandé 
+  #define RELAY2 D2  //
 #endif
 
 //// Dallas Configuration for Dimmer with Power supply and D1 Mini on the board
 #ifdef  POWERSUPPLY
-#define ONE_WIRE_BUS D2 // previously D2 was not working on old robotdyn card
-#define COOLER  D7   /// 0 : off  -> 1 : On --> need a dry contact or opto
+  #define ONE_WIRE_BUS D2 // previously D2 was not working on old robotdyn card
+  #define COOLER  D7   /// 0 : off  -> 1 : On --> need a dry contact or opto
 #endif
 
 #ifdef ESP32
-#define outputPin  14
-//#define outputPin2  27 /// désactivé pour le moment ne comprends pas pourquoi c'est arrivé dans le code. 
-#define zerocross  33
-#define ONE_WIRE_BUS 4 
-#define RELAY1 25 
-#define RELAY2 26 
-#define COOLER 17  
+  #define outputPin  14
+  //#define outputPin2  27 /// désactivé pour le moment ne comprends pas pourquoi c'est arrivé dans le code. 
+  #define zerocross  33
+  #define ONE_WIRE_BUS 4 
+  #define RELAY1 25 
+  #define RELAY2 26 
+  #define COOLER 17  
 #endif
 
 #ifdef ESP32ETH

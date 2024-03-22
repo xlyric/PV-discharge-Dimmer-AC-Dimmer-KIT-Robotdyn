@@ -27,6 +27,9 @@ extern dimmerLamp dimmer;
 #ifdef outputPin2
 extern dimmerLamp dimmer2;
 #endif
+#ifdef outputPin3
+extern dimmerLamp dimmer3;
+#endif
 
 ///déclaration des fonctions
 //void dimmer_on();

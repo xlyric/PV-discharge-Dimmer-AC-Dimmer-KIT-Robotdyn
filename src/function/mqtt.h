@@ -334,7 +334,9 @@ void child_communication(int delest_power, bool equal = false){
   /// Ajout de " delest_power != 0" pour ne pas envoyer une demande de puissance si on le passe de toutes façons à 0
   if (sysvar.puissance_dispo !=0 && delest_power != 0) {  
     baseurl.concat("&puissance=");
-    if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 && strcmp(config.mode,"equal") == 0 ) { tmp_puissance_dispo = sysvar.puissance_dispo/2;}
+    //if (strcmp(config.mode,"equal") == 0) { baseurl.concat(String(sysvar.puissance_dispo/2)); }
+    //else { baseurl.concat(String(sysvar.puissance_dispo)); }
+    if ( strcmp(config.child,"") != 0 && strcmp(config.mode,"equal") == 0 ) { tmp_puissance_dispo = sysvar.puissance_dispo/2;}
     else { tmp_puissance_dispo = sysvar.puissance_dispo; }
       baseurl.concat(String(tmp_puissance_dispo)); 
   }

@@ -82,7 +82,10 @@ void loadConfiguration(const char *filename, Config &config) {
   config.startingpow = doc["startingpow"] | 0; 
   config.minpow = doc["minpow"] | 5;
   config.maxpow = doc["maxpow"] | 50; 
-  config.charge = doc["charge"] | 1500; 
+  config.charge = doc["charge"] | 700; 
+  config.charge1 = doc["charge1"] | 700; 
+  config.charge2 = doc["charge2"] | 700; 
+  config.charge3 = doc["charge3"] | 700; 
   strlcpy(config.child,                  
           doc["child"] | "", 
           sizeof(config.child));         
@@ -144,6 +147,9 @@ void saveConfiguration(const char *filename, const Config &config) {
   doc["dimmer_on_off"] = config.dimmer_on_off;
   doc["charge"] = config.charge;
   doc["name"] = config.say_my_name;
+  doc["charge1"] = config.charge1;
+  doc["charge2"] = config.charge2;
+  doc["charge3"] = config.charge3;
 
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {
