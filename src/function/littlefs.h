@@ -82,10 +82,10 @@ void loadConfiguration(const char *filename, Config &config) {
   config.startingpow = doc["startingpow"] | 0; 
   config.minpow = doc["minpow"] | 5;
   config.maxpow = doc["maxpow"] | 50; 
-  config.charge = doc["charge"] | 700; 
-  config.charge1 = doc["charge1"] | 700; 
-  config.charge2 = doc["charge2"] | 700; 
-  config.charge3 = doc["charge3"] | 700; 
+  config.charge = doc["charge"] | 1000; 
+  config.charge1 = doc["charge1"] | 1000; 
+  config.charge2 = doc["charge2"] | 0; 
+  config.charge3 = doc["charge3"] | 0; 
   strlcpy(config.child,                  
           doc["child"] | "", 
           sizeof(config.child));         
