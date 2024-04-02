@@ -112,6 +112,7 @@ struct epoc {
   public:int jour;
   public:int mois;
   public:int annee;
+  public:int weekday;
 };
 
 

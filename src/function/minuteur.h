@@ -17,7 +17,7 @@
 
 //// NTP 
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP);
+NTPClient timeClient(ntpUDP, NTP_SERVER, NTP_OFFSET_SECONDS, NTP_UPDATE_INTERVAL_MS);
 
 #include "config/enums.h"
 #include "function/unified_dimmer.h"
@@ -54,22 +54,17 @@ void timeclientEpoch_to_date(time_t epoch)  { // convert epoch to date
 void offset_heure_ete() {
   timeclientEpoch_to_date(timeClient.getEpochTime());
 
-  // Date de début de l'heure d'été (dernier dimanche de mars)
-  int debut_heure_ete_jour = (31 - ((5 * actual_time.annee / 4 + 4) % 7));
-  if (actual_time.mois == 3 && actual_time.jour >= debut_heure_ete_jour && actual_time.heure >= 2) {
-    timeClient.setTimeOffset(7200); // Fuseau horaire (en secondes, ici GMT+2)
-    return;
-  }
-
-  // Date de fin de l'heure d'été (dernier dimanche d'octobre)
-  int fin_heure_ete_jour = (31 - ((5 * actual_time.annee / 4 + 1) % 7));
-  if (actual_time.mois == 10 && actual_time.jour >= fin_heure_ete_jour && actual_time.heure >= 3) {
-    timeClient.setTimeOffset(3600); // Fuseau horaire (en secondes, ici GMT+1)
-    return;
-  }
-
-  // Si on n'est ni en heure d'été ni en heure normale, le fuseau horaire standard est appliqué
-  timeClient.setTimeOffset(3600); // Fuseau horaire (en secondes, ici GMT+1)
+              //detection été /hiver
+            if (actual_time.mois > 10 || actual_time.mois < 3 
+            || (actual_time.mois == 10 && (actual_time.jour) > 22 && (actual_time.weekday == 7)) 
+            || (actual_time.mois == 3 && (actual_time.jour)<24) && (actual_time.weekday == 7) ){
+                //C'est l'hiver
+                timeClient.setTimeOffset(NTP_OFFSET_SECONDS*1); 
+                }
+                else{
+                //C'est l'été
+                timeClient.setTimeOffset(NTP_OFFSET_SECONDS*2); 
+            }
 }
 
 //////// structure pour les programmateurs. 
