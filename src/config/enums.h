@@ -13,27 +13,39 @@
 
 /// @brief  partie délicate car pas mal d'action sur la variable log_init et donc protection de la variable ( pour éviter les pb mémoire )
 struct Logs {
-  private:char log_init[LOG_MAX_STRING_LENGTH];
+private:
+      char log_init[LOG_MAX_STRING_LENGTH];
 
+public:
   ///setter log_init
-  public:void Set_log_init(String setter) {strcat(log_init,setter.c_str()); }
-
-  ///getter log_init
-  public:String Get_log_init() {return log_init; }
-
-  //clean log_init
-  public:void clean_log_init() {
-      if (strlen(log_init) > (LOG_MAX_STRING_LENGTH - (LOG_MAX_STRING_LENGTH/10)) ) {
-      log_init[0] = '\0';
-      strcat(log_init,"197}11}1");
+    void Set_log_init(String setter) { 
+        // Vérifier si la longueur de la chaîne ajoutée ne dépasse pas LOG_MAX_STRING_LENGTH
+        if ( strlen(setter.c_str()) + strlen(log_init) < LOG_MAX_STRING_LENGTH)  { 
+          strcat(log_init,setter.c_str());  
+        } else {  
+          // Si la taille est trop grande, réinitialiser le log_init
+          log_init[0] = '\0';
+          strcat(log_init,"197}11}1");
+        }     
       }
-  }
+
+    ///getter log_init
+    String Get_log_init() {return log_init; }
+
+    //clean log_init
+    void clean_log_init() {
+        // Vérifier si la longueur de log_init dépasse 80% de LOG_MAX_STRING_LENGTH
+        if (strlen(log_init) > (LOG_MAX_STRING_LENGTH - (LOG_MAX_STRING_LENGTH/5)) ) {
+        log_init[0] = '\0';
+        strcat(log_init,"197}11}1");
+        }
+    }
 
   //reset log_init
-  public:void reset_log_init() {
+    void reset_log_init() {
       log_init[0] = '\0';
       strcat(log_init,"197}11}1");
-  }
+    }
 
   
 };
