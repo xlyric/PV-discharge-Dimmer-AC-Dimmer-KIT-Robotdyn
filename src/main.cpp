@@ -342,6 +342,7 @@ void setup() {
   delay(1000);
   Serial.println("Demarrage file System");
   logging.Set_log_init("\r\n Start filesystem \r\n"); 
+  test_fs_version();
   #ifdef ROBOTDYN
   // configuration dimmer
     #ifdef outputPin

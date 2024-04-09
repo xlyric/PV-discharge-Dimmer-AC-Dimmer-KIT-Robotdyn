@@ -1,16 +1,8 @@
 #ifndef CONFIG
 #define CONFIG
 
-/**
- * MQTT credentials
- */
-
- 
-// #define MQTT_SEND true  //// set to false if not MQTT server is present ( automatic false on AP mode )---> configuration in web page --> to delete 01/23
-//#define MQTT_USER ""   //// not used, use mqtt.json file  --> to delete 01/23
-//#define MQTT_PASSWORD ""  //// not used, use mqtt.json file --> to delete 01/23
-
-#define VERSION "Version 20240402" 
+#define VERSION "Version 20240409" 
+#define FS_RELEASE "20240409" // date de la release
 
 /// default configuration for Dimmer with Power supply and D1 Mini on the board ( default : D0 - D1 )
 #ifdef  POWERSUPPLY
@@ -20,30 +12,8 @@
 //#define zerocross  5 // for boards with CHANGEBLE input pins
 #endif
 
-/*
-/// default configuration for Dimmer with Power supply and D1 Mini on the board
-#ifdef  POWERSUPPLY
-#define outputPin  D6 
-#define zerocross  D5 // for boards with CHANGEBLE input pins
-#endif
-*/
-
 //// configuration for Standalone boards ( personnalisation )
 #ifdef  STANDALONE
-/* 
-// Official pin mapping
-#define ONE_WIRE_BUS D7 // Dallas 
-
-  #define zerocross  D6 // for boards with CHANGEBLE input pins
-  #define outputPin  D5  // use DIMMER/SSR1 output for 1st Robotdyn/Random SSR
-  #define outputPin2 D1  // use JOTTA/SSR2  output for 2nd Robotdyn/Random SSR
-  #define outputPin3 D0 // A venir avec la future carte v1.5 - // use SSR3 output for 3rd Robotdyn/Random SSR
-
-#define RELAY1 D3  // Spécial pour relay commandé 
-#define RELAY2 D2  // Normal pin for RELAY 2 - Temp. reused for SSR3
-
-#define COOLER  D8   /// 0 : off  -> 1 : On --> need a dry contact or opto
-*/
 
 // TMP RV - I use this one for my v1.4 dimmer boards
   #define ONE_WIRE_BUS D7 // Dallas 
@@ -52,23 +22,13 @@
   #define outputPin  D5   // use DIMMER (SSR1) output for 1st Robotdyn/Random SSR
   #define outputPin2 D1   // use JOTTA (SSR2) output for 2nd Robotdyn/Random SSR
   //#define outputPin3  D0 // A venir avec la future carte v1.5 - // use SSR3 output for 3rd Robotdyn/Random SSR
-  #define outputPin3 D2   // En attendant pour la carte v1.4 // use RELAY2 output for 3rd Robotdyn/Random SSR
+  #define outputPin3 D2   // (SSR3) use RELAY2 output for 3rd Robotdyn/Random SSR ( for old boards )
   
-  #define RELAY1 D3     // Spécial pour relay commandé 
+  #define RELAY1 D3     // Spécial pour relay commandé Relay 1
   //#define RELAY2 D2   // Normal pin for RELAY 2 - Temp. reused for SSR3
-  #define RELAY2 D4     // D4 is wired to built-in led 
+  #define RELAY2 D0     // Relay 2 
   #define COOLER D8     /// 0 : off  -> 1 : On --> need a dry contact or opto
   
-  /*
-  #ifdef MULTISSR - Test de multi SSR, intégré désormais dans la version STANDALONE
-  #define outputPin  D1  // use  JOTTA/SSR1 output for 1st Robotdyn/Random SSR
-  #define outputPin2 D8  // use RELAY1/SSR2 output for 2nd Robotdyn/Random SSR
-  #define outputPin3 D2  // use RELAY2/SSR3 output for 3rd Robotdyn/Random SSR
-  #define RELAY1 D4      // not wired // built-in led
-  #define RELAY2 D0      // not wired
-  #define COOLER D3      /// 0 : off  -> 1 : On --> need a dry contact or opto
-  #endif
-  */
 #endif
 
 //// configuration for Dimmer with Power supply and D1 Mini on the board and need TTL USB ( https://fr.aliexpress.com/item/1005003365062050.html ) 

@@ -84,17 +84,20 @@ void mqttdallas() {
   previous_celsius=sysvar.celsius;
 
   // si trop d'erreur dallas, on remonte en mqtt
-// la tache Task_dallas tourne les 15s ... donc on accèpte 1m15' sans réponse de la sonde
+// la tache Task_dallas tourne les 15s ... donc on accèpte 5m' sans réponse de la sonde
   if ( dallas_error > 5 ) {
     DEBUG_PRINTLN("détection perte sonde dallas");
     mqtt(String(config.IDXAlarme), String("Dallas perdue"),"Dallas perdue");
     logging.Set_log_init("Dallas perdue !!!\r\n");
     dallas_error = 0; // remise à zéro du compteur d'erreur
     ///mise en sécurité
-    sysvar.celsius = 99.9;  
-    previous_celsius=sysvar.celsius;
+    //sysvar.celsius = sysvar.celsius + 1;  
+    //previous_celsius=sysvar.celsius;
     //unified_dimmer.set_power(0); // Mieux vaut faire un dimmer_off()
-    unified_dimmer.dimmer_off();
+       String temp_topic = "memory/" + String(config.say_my_name) + "/dallas" ;
+       String message = timeClient.getFormattedTime() + " Dallas perdue";
+       client.publish(temp_topic.c_str(), 0,true, message.c_str() );
+    unified_dimmer.dimmer_off();  /// mise en sécurité de l'ensemble
     }
 
 
@@ -126,7 +129,7 @@ void mqttdallas() {
 float CheckTemperature(String label, byte deviceAddress[12]){
 
   sensors.requestTemperatures();
-  delay(200);
+  delay(400);
   float tempC = sensors.getTempC(deviceAddress);
   Serial.print(label);
   if ( (tempC == -127.00) || (tempC == -255.00) ) {
