@@ -57,7 +57,7 @@ void offset_heure_ete() {
               //detection été /hiver
             if (actual_time.mois > 10 || actual_time.mois < 3 
             || (actual_time.mois == 10 && (actual_time.jour) > 22 && (actual_time.weekday == 7)) 
-            || (actual_time.mois == 3 && (actual_time.jour)<24) && (actual_time.weekday == 7) ){
+            || (actual_time.mois == 3 && (actual_time.jour)<24 && actual_time.weekday == 7) ){
                 //C'est l'hiver
                 timeClient.setTimeOffset(NTP_OFFSET_SECONDS*1); 
                 }

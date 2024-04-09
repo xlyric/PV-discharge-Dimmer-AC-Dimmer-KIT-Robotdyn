@@ -309,22 +309,24 @@ void savewifiIP(const char *wifi_conf, Wifi_struct &wifi_config_fixe) {
 }
 
 
-void test_fs_version() {
+bool test_fs_version() {
 
   // Open file for reading
 
   File file = LittleFS.open("/version", "r");
   if (!file) {
     logging.Set_log_init("FS version is missing please update\r\n");
-    return;
+    return false;
   }
    // comparaison entre le contenu du fichier et la version du code FS_RELEASE
   String version = file.readStringUntil('\n');
-  if (version != FS_RELEASE) {
+  file.close(); 
+  if (version.toInt() < String(FS_RELEASE).toInt() )  {
     logging.Set_log_init("FS version is not the same as code version please update FS\r\n");
-    return;
+    return false;
   }
-  file.close();
+  logging.Set_log_init("FS version Ok\r\n");
+  return true;
 }
 
 #endif
