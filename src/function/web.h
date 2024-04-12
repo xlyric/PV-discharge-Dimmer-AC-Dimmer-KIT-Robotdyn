@@ -243,6 +243,13 @@ void call_pages() {
   });
 
 
+  server.on("/all.css", HTTP_ANY, [](AsyncWebServerRequest *request){
+    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/css/all.css.gz", "text/css");
+    response->addHeader("Content-Encoding", "gzip");
+    request->send(response);
+  });
+
+
     server.on("/favicon.ico", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send(LittleFS, "/favicon.ico", "image/png");
   });
