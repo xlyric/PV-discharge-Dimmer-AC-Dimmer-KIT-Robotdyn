@@ -312,8 +312,11 @@
                                                     </div>
                                                     <div class="card-body">
                                                         <div class="form-group row">
-                                                            <div class="col-sm-6">Child Dimmer IP</div>
+                                                            <div class="col-sm-4">Child Dimmer IP</div>
                                                             <div class="col-sm-4">Child Dimmer Mode</div>
+                                                            <div class="col-sm-4" id="dimmer-url">
+                                                                <!-- L'url sera ajoutée ici -->
+                                                            </div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <div class="col-sm-6">
@@ -536,6 +539,16 @@ var recupconfig =  $.getJSON('/config', function(data) {
 });
 
             </script>
+
+    <script>
+        $(document).ready(function(){
+            $('#child').on('input', function() {
+                var dimmerValue = $(this).val();
+                var dimmerURL = "http://" + dimmerValue;
+                $('#dimmer-url').html('<a href="' + dimmerURL + '" target="_blank">' + dimmerURL + '</a>');
+            });
+        });
+    </script>
 
         </div>
     </div>
