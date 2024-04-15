@@ -523,32 +523,47 @@ $( "#formulaire" ).submit(function() {
 
 
 
+        $(document).ready(function(){
 
-var recupconfig =  $.getJSON('/config', function(data) {
-  for (var key in data) {
-    if (data.hasOwnProperty(key)) {
-      var element = document.getElementById(key);
-      if (element) {
-        element.value = data[key];
-        if (element.type === 'checkbox') {
-          element.checked = data[key];
+            function generateLink(dimmerValue) {
+                if (dimmerValue !== 'none') {
+                    var dimmerURL = "http://" + dimmerValue;
+                    $('#dimmer-url').html('<a href="' + dimmerURL + '" target="_blank">' + dimmerURL + '</a>');
+                }
+            }
+
+
+        var recupconfig =  $.getJSON('/config', function(data) {
+        for (var key in data) {
+            if (data.hasOwnProperty(key)) {
+            var element = document.getElementById(key);
+            if (element) {
+                element.value = data[key];
+                if (element.type === 'checkbox') {
+                element.checked = data[key];
+                }
+            }
+            }
         }
-      }
-    }
-  }
+
+            // Une fois la requête terminée
+            recupconfig.done(function() {
+                // Générer le lien avec la valeur initiale
+                var dimmerValue = $('#child').val();
+                generateLink(dimmerValue);
+            });
+
+            $('#child').on('input', function() {
+                var dimmerValue = $(this).val();
+                generateLink(dimmerValue);
+            });
+
+
+        });
+
 });
 
             </script>
-
-    <script>
-        $(document).ready(function(){
-            $('#child').on('input', function() {
-                var dimmerValue = $(this).val();
-                var dimmerURL = "http://" + dimmerValue;
-                $('#dimmer-url').html('<a href="' + dimmerURL + '" target="_blank">' + dimmerURL + '</a>');
-            });
-        });
-    </script>
 
         </div>
     </div>
