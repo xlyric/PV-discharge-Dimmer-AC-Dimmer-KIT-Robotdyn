@@ -1,8 +1,8 @@
 #ifndef CONFIG
 #define CONFIG
 
-#define VERSION "Version 20240409" 
-#define FS_RELEASE "20240409" // date de la release
+#define VERSION "Version 20240415" 
+#define FS_RELEASE "20240415" // date de la release
 
 /// default configuration for Dimmer with Power supply and D1 Mini on the board ( default : D0 - D1 )
 #ifdef  POWERSUPPLY
