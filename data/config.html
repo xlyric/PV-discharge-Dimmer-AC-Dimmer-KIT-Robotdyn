@@ -268,9 +268,9 @@
                                                     </div>
                                                     <div class="card-body">
                                                         <div class="form-group row">
-                                                            <div class="col-sm-4">Charge 1 (W)</div>
-                                                            <div class="col-sm-4">Charge 2 (W) ( FW Alone only )</div>
-                                                            <div class="col-sm-4">Charge 3 (W) ( FW Alone Only )</div>
+                                                            <div class="col-sm-4" data-toggle="popover" title="Aide" data-content="Charge branchée sur la sortie Robotdyn ou SSR 1 (GND et PWM pour le SSR + pontage pins synchro) ">Charge 1 (W) ℹ</div>
+                                                            <div class="col-sm-4" data-toggle="popover" title="Aide" data-content="Charge branchée sur la sortie Jotta ou SSR2 (pontage pins synchro) ">Charge 2 (W) ( FW Alone only ) ℹ</div>
+                                                            <div class="col-sm-4" data-toggle="popover" title="Aide" data-content="Charge branchée sur la sortie Relay 2 ou SSR 3 (pontage pins synchro) ">Charge 3 (W) ( FW Alone Only ) ℹ</div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <div class="col-sm-4">
@@ -454,6 +454,7 @@ function sendmode (mode) {
 
 }
 
+
 // function sendservermode (mode) {
 
 // 		$.get( "/get", { mode: mode } )
@@ -489,8 +490,13 @@ function save () {
                         document.write('<script src="/js/jquery.min.js"><\/script>');
                     }
             </script>
-            <script>
 
+
+
+            <script>
+    $(function () {
+        $('[data-toggle="popover"]').popover()
+    })
 
 <!--- sauvegarde de la configuration --> 
 $( "#save" ).click(function() {
