@@ -237,7 +237,7 @@ void call_pages() {
 
 //// compressé
   server.on("/all.min.css", HTTP_ANY, [](AsyncWebServerRequest *request){
-    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/css/all.min.css.gz", "text/css");
+    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/css/all.css.gz", "text/css");
     response->addHeader("Content-Encoding", "gzip");
     request->send(response);
   });
