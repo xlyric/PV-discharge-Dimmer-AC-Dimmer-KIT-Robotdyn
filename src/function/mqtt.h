@@ -403,7 +403,6 @@ void async_mqtt_init() {
   IPAddress ip;
   ip.fromString(config.hostname);
   DEBUG_PRINTLN(ip);
-  String node_id = config.say_my_name;
   client.setClientId(node_id.c_str());
   client.setKeepAlive(30);
   client.setCredentials(mqtt_config.username, mqtt_config.password);
