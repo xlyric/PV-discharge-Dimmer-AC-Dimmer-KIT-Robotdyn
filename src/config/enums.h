@@ -19,9 +19,13 @@ private:
 
 public:
   ///setter log_init
-    void Set_log_init(String setter) { 
+    public:void Set_log_init(String setter, bool logtime=false) {
         // Vérifier si la longueur de la chaîne ajoutée ne dépasse pas LOG_MAX_STRING_LENGTH
         if ( strlen(setter.c_str()) + strlen(log_init) < static_cast<size_t>(MaxString) )  { 
+            if (logtime) { 
+              if ( strlen(setter.c_str()) + strlen(log_init) + strlen(loguptime()) < static_cast<size_t>(MaxString))  { 
+                strcat(log_init,loguptime()); }
+              }
           strcat(log_init,setter.c_str());  
         } else {  
           // Si la taille est trop grande, réinitialiser le log_init
@@ -46,6 +50,14 @@ public:
         strcat(log_init,"197}11}1");
       }
 
+  char *loguptime() {
+      static char uptime_stamp[20]; // Vous devrez définir une taille suffisamment grande pour stocker votre temps
+      // snprintf(uptime_stamp, sizeof(uptime_stamp), "%s:%s:%s\t", timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec);
+      time_t maintenant;
+      time(&maintenant);
+      strftime(uptime_stamp, sizeof(uptime_stamp), "%H:%M:%S\t", localtime(&maintenant));
+      return uptime_stamp;
+    }
   
 };
 

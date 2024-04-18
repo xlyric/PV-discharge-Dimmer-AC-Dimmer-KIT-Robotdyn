@@ -90,7 +90,7 @@ void call_pages() {
   server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
     
     if  (LittleFS.exists("/index.html")) {
-      DEBUG_PRINTLN("91------------------");
+      DEBUG_PRINTLN(("%d------------------",__LINE__));
       DEBUG_PRINTLN(sysvar.puissance);
       /// si requete sur POWER
 
@@ -640,8 +640,8 @@ String getMinuteur(const Programme& minuteur) {
     doc["heure_demarrage"] = minuteur.heure_demarrage;
     doc["heure_arret"] = minuteur.heure_arret;
     doc["temperature"] = minuteur.temperature;
-    doc["heure"] = timeClient.getHours();
-    doc["minute"] = timeClient.getMinutes();
+    doc["heure"] = timeinfo.tm_hour;
+    doc["minute"] = timeinfo.tm_min;
     doc["seuil_start"] = minuteur.seuil_start;
     doc["seuil_stop"] = minuteur.seuil_stop;
     doc["seuil_temp"] = minuteur.seuil_temperature;
@@ -698,5 +698,4 @@ String getServermode(String Servermode) {
   if ( Servermode == "domoticz" ) {   mqtt_config.domoticz = !mqtt_config.domoticz; }
 return String(Servermode);
 }
-
 #endif
