@@ -277,7 +277,6 @@ unsigned long Timer_Cooler;
 IPAddress _ip,_gw,_sn,gatewayIP  ;
 
 
-
     //***********************************
     //************* Setup 
     //***********************************
@@ -300,6 +299,9 @@ void setup() {
   #endif
   #ifdef outputPin2
     pinMode(outputPin2, OUTPUT); 
+  #endif
+  #ifdef outputPin3
+    pinMode(outputPin3, OUTPUT); 
   #endif
 
   #ifdef POWERSUPPLY2022  
@@ -550,10 +552,31 @@ void setup() {
     connectToMqtt();
     delay(1000);  
     /// pour remonter un 0 sur le MQTT
-          device_dimmer.send("0");
-          device_dimmer_power.send("0"); 
-          device_dimmer_total_power.send("0");
-          device_cooler.send(stringbool(false)); 
+          if (config.HA || config.JEEDOM) {
+      // device_dimmer_on_off.send(String(config.dimmer_on_off));
+      device_dimmer.send(String(sysvar.puissance));
+      device_dimmer_send_power.send(String(sysvar.puissance));
+      device_dimmer_power.send(String(sysvar.puissance* config.charge/100));
+      device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
+      device_cooler.send(stringboolMQTT(false));
+      device_dimmer_starting_pow.send(String(config.startingpow));
+      device_dimmer_minpow.send(String(config.minpow));
+      device_dimmer_maxpow.send(String(config.maxpow));
+
+      device_dimmer_child_mode.send(String(config.mode));
+      device_dimmer_on_off.send(String(config.dimmer_on_off));
+      // device_dimmer_alarm_temp.send(stringboolMQTT(sysvar.security));
+
+
+      #ifdef RELAY1
+        int relaystate = digitalRead(RELAY1); 
+        device_relay1.send(String(relaystate));
+      #endif
+      #ifdef RELAY2
+        relaystate = digitalRead(RELAY2); 
+        device_relay2.send(String(relaystate));
+      #endif
+    }
   }
   
  
@@ -642,7 +665,9 @@ void loop() {
         Mqtt_send_DOMOTICZ(String(config.IDX), String(unified_dimmer.get_power()),"pourcent"); // remonté MQTT de la commande réelle
         if (config.HA) {
           int instant_power = unified_dimmer.get_power();
+          device_dimmer_on_off.send(String(config.dimmer_on_off));
           device_dimmer.send(String(instant_power));
+          device_dimmer_send_power.send(String(instant_power));
           device_dimmer_power.send(String(instant_power * config.charge/100)); 
           device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
         } 
@@ -665,7 +690,9 @@ void loop() {
       Mqtt_send_DOMOTICZ(String(config.IDX), String(unified_dimmer.get_power()),"pourcent"); // remonté MQTT de la commande réelle
       if (config.HA) {
         int instant_power = unified_dimmer.get_power();
+      device_dimmer_on_off.send(String(config.dimmer_on_off));
         device_dimmer.send(String(instant_power));
+      device_dimmer_send_power.send(String(instant_power));
         device_dimmer_power.send(String(instant_power * config.charge/100)); 
         device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
       } 
@@ -680,12 +707,15 @@ void loop() {
       if (programme_relay1.stop_progr()) { 
         logging.Set_log_init("stop minuteur relay1\r\n",true);
         digitalWrite(RELAY1 , LOW);
+        device_relay1.send(String(0));
+
       }
  }
  else {
       if (programme_relay1.start_progr()){ 
         logging.Set_log_init("start minuteur relay1\r\n",true);
         digitalWrite(RELAY1 , HIGH);
+        device_relay1.send(String(1));
       }
  }
 
@@ -693,12 +723,14 @@ void loop() {
       if (programme_relay2.stop_progr()) { 
         logging.Set_log_init("stop minuteur relay2\r\n",true);
         digitalWrite(RELAY2 , LOW);
+        device_relay2.send(String(0));
       }
  }
  else {
       if (programme_relay2.start_progr()){ 
         logging.Set_log_init("start minuteur relay2\r\n",true);
         digitalWrite(RELAY2 , HIGH);
+        device_relay2.send(String(1));
       }
  }
 #endif
@@ -742,12 +774,11 @@ void loop() {
         unified_dimmer.dimmer_off();
       }
   }
-  else 
-  {
+  else {
     alerte=false;
   }
 
-  ////////////////// control de la puissance /////////////////
+  ////////////////// controle de la puissance /////////////////
 
   if ( sysvar.change == 1  && programme.run == false ) {   /// si changement et pas de minuteur en cours
     // sysvar.change = 0; sisi, j'insiste, faut le mettre à la fin 
@@ -808,8 +839,6 @@ void loop() {
           //#endif
         }
 
-
-
           if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 ) {
              //int puissance_regulee = sysvar.puissance*FACTEUR_REGULATION;
               //if ( strcmp(config.mode,"equal") == 0) { child_communication(int(sysvar.puissance*FACTEUR_REGULATION),true); childsend = 0;}  //si mode equal envoie de la commande vers la carte fille
@@ -838,8 +867,10 @@ void loop() {
       if (!AP && mqtt_config.mqtt) { 
         if (config.dimmer_on_off == 0){
           Mqtt_send_DOMOTICZ(String(config.IDX), String("0"),"pourcent");  // remonté MQTT de la commande 0
-          if (config.HA) {device_dimmer.send(String("0"));  device_dimmer_power.send(String("0")); device_dimmer_total_power.send(String(sysvar.puissance_cumul)); 
-          }  // remonté MQTT HA de la commande 0 
+          device_dimmer.send("0");  // remonté MQTT HA de la commande 0
+          device_dimmer_send_power.send("0");
+          device_dimmer_power.send("0"); 
+
         }
         else if ( sysvar.puissance > config.maxpow ) {
           Mqtt_send_DOMOTICZ(String(config.IDX), String(config.maxpow),"pourcent");  // remonté MQTT de la commande max
