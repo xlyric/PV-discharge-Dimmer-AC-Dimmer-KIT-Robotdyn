@@ -693,9 +693,9 @@ String readmqttsave(){
 
 String getServermode(String Servermode) {
   if ( Servermode == "MQTT" ) {   mqtt_config.mqtt = !mqtt_config.mqtt; }
-  if ( Servermode == "HA" ) {   mqtt_config.HA = !mqtt_config.HA; }
-  if ( Servermode == "jeedom" ) {   mqtt_config.jeedom = !mqtt_config.jeedom; }
-  if ( Servermode == "domoticz" ) {   mqtt_config.domoticz = !mqtt_config.domoticz; }
+  if ( Servermode == "HA" ) {   config.HA = !config.HA; }
+  if ( Servermode == "jeedom" ) {   config.JEEDOM = !config.JEEDOM; }
+  if ( Servermode == "domoticz" ) {   config.DOMOTICZ = !config.DOMOTICZ; }
 return String(Servermode);
 }
 #endif

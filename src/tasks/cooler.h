@@ -37,7 +37,7 @@ void cooler() {
         if ( sysvar.cooler == 1 ) {
         digitalWrite(COOLER, HIGH);
         // envoie mqtt
-        if ( mqtt_config.HA ) {  device_cooler.send(stringbool(true));  }
+        if ( config.HA ) {  device_cooler.send(stringbool(true));  }
         } else {
         lastCoolerOffTime = millis(); // on enregistre le temps d'arret pour le cooldown
         }
@@ -47,7 +47,7 @@ void cooler() {
     if (sysvar.cooler == 0 && millis() - lastCoolerOffTime >= cooldownDuration && digitalRead(COOLER) == HIGH && programme.run == false) {
         digitalWrite(COOLER, LOW); // Éteindre le ventilateur après X secondes (cooldownDuration)
     
-        if ( mqtt_config.HA ) {  device_cooler.send(stringbool(false));  }
+        if ( config.HA ) {  device_cooler.send(stringbool(false));  }
         }
     
     

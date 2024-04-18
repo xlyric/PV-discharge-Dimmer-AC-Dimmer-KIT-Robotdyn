@@ -43,8 +43,8 @@ void mqttdallas() {
           if (mqtt_config.mqtt)  { 
             if ( sysvar.celsius != previous_celsius || sysvar.celsius != 0.99) {
               // envoie des infos en mqtt dans ce cas
-              mqtt(String(config.IDXTemp), String(sysvar.celsius),"Temperature");
-              if ( mqtt_config.HA ) { device_temp.send(String(sysvar.celsius)); }
+              Mqtt_send_DOMOTICZ(String(config.IDXTemp), String(sysvar.celsius),"Temperature");
+              if ( config.HA ) { device_temp.send(String(sysvar.celsius)); }
 
               logging.Set_log_init("Dallas temp : " + String(sysvar.celsius) + "\r\n");
 
@@ -73,9 +73,9 @@ void mqttdallas() {
 
         
       if ( mqtt_config.mqtt ) {
-        mqtt(String(config.IDX), "0","pourcent");
+        Mqtt_send_DOMOTICZ(String(config.IDX), "0","pourcent");
       }
-      if ( mqtt_config.HA ) { 
+      if ( config.HA ) { 
         device_dimmer.send("0"); 
         device_dimmer_power.send("0");
       }
@@ -87,7 +87,7 @@ void mqttdallas() {
 // la tache Task_dallas tourne les 15s ... donc on accèpte 5m' sans réponse de la sonde
   if ( dallas_error > 5 ) {
     DEBUG_PRINTLN("détection perte sonde dallas");
-    mqtt(String(config.IDXAlarme), String("Dallas perdue"),"Dallas perdue");
+    Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("Dallas perdue"),"Dallas perdue");
     logging.Set_log_init("Dallas perdue !!!\r\n",true);
     dallas_error = 0; // remise à zéro du compteur d'erreur
     ///mise en sécurité

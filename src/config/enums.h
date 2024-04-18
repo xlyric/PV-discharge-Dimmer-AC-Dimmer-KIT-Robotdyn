@@ -88,14 +88,19 @@ struct Config {
 /// @brief  // Puissance de la charge 3 déclarée dans la page web
   int charge3; 
   int dispo; 
+  bool HA;
+  bool JEEDOM;
+  bool DOMOTICZ;
+  char PVROUTER[5];
+  char DALLAS[17];
   char say_my_name[32];
 };
 
 struct Mqtt {
   public:bool mqtt;
-  public:bool HA;
-  public:bool jeedom;
-  public:bool domoticz;
+  // public:bool HA;
+  // public:bool jeedom;
+  // public:bool domoticz;
   public:char username[50];
   public:char password[50];
 };

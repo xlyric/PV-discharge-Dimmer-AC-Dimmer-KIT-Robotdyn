@@ -209,6 +209,7 @@ HA device_dimmer_child_mode;
 /// création binary_sensor
 HA device_dimmer_alarm_temp;
 HA device_cooler;
+HA device_dimmer_alarm_temp_clear;
 
 // creation remonté de puissance 
 HA device_dimmer_power;
@@ -355,10 +356,17 @@ void devices_init(){
   device_cooler.Set_entity_category("diagnostic");
   device_cooler.Set_dev_cla("running");
   device_cooler.Set_retain_flag(true);
+
+  device_dimmer_alarm_temp_clear.Set_name("Reset alarme");
+  device_dimmer_alarm_temp_clear.Set_object_id("reset_alarm");
+  device_dimmer_alarm_temp_clear.Set_entity_type("button");
+  device_dimmer_alarm_temp_clear.Set_entity_category("config");
+  device_dimmer_alarm_temp_clear.Set_entity_qos(0);
+  device_dimmer_alarm_temp_clear.Set_retain_flag(false);
 }
 
 void HA_discover(){
-  if (mqtt_config.HA){
+  if (config.HA){
           Serial.println("HA discovery" );
         /// création des binary_sensor et enregistrement sous HA  
         device_dimmer_on_off.HA_discovery();
