@@ -88,7 +88,7 @@ void mqttdallas() {
   if ( dallas_error > 5 ) {
     DEBUG_PRINTLN("détection perte sonde dallas");
     mqtt(String(config.IDXAlarme), String("Dallas perdue"),"Dallas perdue");
-    logging.Set_log_init("Dallas perdue !!!\r\n");
+    logging.Set_log_init("Dallas perdue !!!\r\n",true);
     dallas_error = 0; // remise à zéro du compteur d'erreur
     ///mise en sécurité
     //sysvar.celsius = sysvar.celsius + 1;  

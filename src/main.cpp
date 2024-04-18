@@ -77,7 +77,6 @@
 #endif
 // Web services
 #include <ESPAsyncWiFiManager.h> 
-
 #include <ESPAsyncWebServer.h>
 
 #include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
@@ -355,7 +354,6 @@ void setup() {
       dimmer3.begin(NORMAL_MODE, ON); //dimmer3 initialisation: name.begin(MODE, STATE) 
     #endif
 
-
   #ifdef POWERSUPPLY2022  
   /// correct bug board
   dimmer.setState(ON);
@@ -464,7 +462,6 @@ void setup() {
     DEBUG_PRINTLN("static adress: " + String(wifi_config_fixe.static_ip) + " mask: " + String(wifi_config_fixe.static_sn) + " GW: " + String(wifi_config_fixe.static_gw));
 
     savewifiIP(wifi_conf, wifi_config_fixe);
-
   
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
@@ -487,7 +484,8 @@ void setup() {
       Serial.println(WiFi.localIP());
 
       Serial.print("Application de la nouvelle configuration Ip   ");
-      ESP.restart();
+      // ESP.restart();
+      config.restart = true;
       }
   }
   //Si connexion affichage info dans console
@@ -567,6 +565,7 @@ void setup() {
     #endif
   #endif
 
+
 /// init du NTP
 ntpinit(); 
 
@@ -585,12 +584,13 @@ DEBUG_PRINTLN(ESP.getFreeHeap());
 
 /// affichage de l'heure  GMT +1 dans la log
 logging.Set_log_init("fin du demarrage: ");
-//logging.Set_log_init(timeClient.getFormattedTime());
+logging.Set_log_init("",true);
 logging.Set_log_init("\r\n");
 
 delay(1000);
 //Serial.println(frequency);
 }
+
 
 bool alerte=false;
 
@@ -615,7 +615,8 @@ void loop() {
   if (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print("NO WIFI - Restarting Dimmer");
-    ESP.restart();
+    // ESP.restart();
+    config.restart = true;
   }
 
   ///////////////// gestion des activité minuteur 
@@ -624,7 +625,7 @@ void loop() {
       //  minuteur en cours
       if (programme.stop_progr()) { 
             // Robotdyn dimmer
-            logging.Set_log_init("stop minuteur dimmer\r\n");
+      logging.Set_log_init("stop minuteur dimmer\r\n",true);
             unified_dimmer.set_power(0); // necessaire pour les autres modes
             unified_dimmer.dimmer_off();
 
@@ -640,6 +641,7 @@ void loop() {
         } 
         // réinint de la sécurité température 
         sysvar.security = 0 ;
+
       } 
   } 
   else { 
@@ -647,7 +649,7 @@ void loop() {
     if (programme.start_progr()){ 
       sysvar.puissance=config.maxpow; 
           //// robotdyn dimmer
-              logging.Set_log_init("start minuteur dimmer\r\n");
+              logging.Set_log_init("start minuteur dimmer\r\n",true);
               //unified_dimmer.dimmer_on(); // Tâche reportée à la demande dans unified_dimmer
               unified_dimmer.set_power(config.maxpow); 
               delay (50);
@@ -669,26 +671,26 @@ void loop() {
  //// relay 1 
  if (programme_relay1.run) { 
       if (programme_relay1.stop_progr()) { 
-        logging.Set_log_init("stop minuteur relay1\r\n");
+        logging.Set_log_init("stop minuteur relay1\r\n",true);
         digitalWrite(RELAY1 , LOW);
       }
  }
  else {
       if (programme_relay1.start_progr()){ 
-        logging.Set_log_init("start minuteur relay1\r\n");
+        logging.Set_log_init("start minuteur relay1\r\n",true);
         digitalWrite(RELAY1 , HIGH);
       }
  }
 
  if (programme_relay2.run) { 
       if (programme_relay2.stop_progr()) { 
-        logging.Set_log_init("stop minuteur relay2\r\n");
+        logging.Set_log_init("stop minuteur relay2\r\n",true);
         digitalWrite(RELAY2 , LOW);
       }
  }
  else {
       if (programme_relay2.start_progr()){ 
-        logging.Set_log_init("start minuteur relay2\r\n");
+        logging.Set_log_init("start minuteur relay2\r\n",true);
         digitalWrite(RELAY2 , HIGH);
       }
  }
@@ -712,7 +714,7 @@ void loop() {
   if ( security == 1 ) { 
       if (!alerte){
         Serial.println("Alert Temp");
-        logging.Set_log_init("Alert Temp\r\n");
+      logging.Set_log_init("Alert Temp\r\n",true);
       
         if (!AP && mqtt_config.mqtt ){
               mqtt(String(config.IDXAlarme), String("Ballon chaud " ),"Alerte");  ///send alert to MQTT
@@ -754,7 +756,7 @@ void loop() {
       if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 && strcmp(config.mode,"off") == 0 ) {
         child_communication(0,false); 
         // Du coup je force sysvar.puissance_cumul à 0 puisque Task_GET_POWER ne renverra plus rien désormais
-        // ça évitera dans rentrer dans cette boucle à l'infini en bombardant le dimmer d'ordres à 0 pour rien
+        // ça évitera de rentrer dans cette boucle à l'infini en bombardant le dimmer d'ordres à 0 pour rien
         sysvar.puissance_cumul = 0;
         //logging.Set_log_init("Child running and mode set to off - Child power at 0\r\n");
       }
@@ -769,12 +771,10 @@ void loop() {
         { 
           if (config.dimmer_on_off == 1){
             unified_dimmer.set_power(config.maxpow);
-            DEBUG_PRINTLN("744------------------");
-            // Modif RV - 20240310
-            // gestion des multiples dimmers reportée dans unified_dimmer, pas dans le code principal
-            //#ifdef outputPin2
-              //  dimmer2.setPower(config.maxpow);
-            //#endif
+            DEBUG_PRINTLN(("%d------------------",__LINE__));
+            // #ifdef outputPin2
+            //   dimmer2.setPower(config.maxpow);
+            // #endif
           }
           /// si on a une carte fille et qu'elle n'est pas configurée sur off, on envoie la commande 
           if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 && strcmp(config.mode,"off") != 0 ) {
@@ -800,9 +800,7 @@ void loop() {
             //  dimmer2.setPower(sysvar.puissance);
           //#endif
         }
-          logging.Set_log_init("dimmer at " );
-          logging.Set_log_init(String(sysvar.puissance).c_str()); 
-          logging.Set_log_init("%\r\n");
+
 
 
           if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 ) {
@@ -815,7 +813,7 @@ void loop() {
             }  //si mode equal envoie de la commande vers la carte fille
             if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance <= config.maxpow) { 
               child_communication(0,false); 
-              logging.Set_log_init("Child at 0\r\n"); 
+               logging.Set_log_init("Child at 0\r\n"); 
             }  //si mode délest envoie d'une commande à 0
 
             if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance > config.maxpow) { // si sysvar.puissance passe subitement au dessus de config.maxpow
