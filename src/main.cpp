@@ -585,7 +585,7 @@ DEBUG_PRINTLN(ESP.getFreeHeap());
 
 /// affichage de l'heure  GMT +1 dans la log
 logging.Set_log_init("fin du demarrage: ");
-logging.Set_log_init(timeClient.getFormattedTime());
+//logging.Set_log_init(timeClient.getFormattedTime());
 logging.Set_log_init("\r\n");
 
 delay(1000);
@@ -660,7 +660,7 @@ void loop() {
         device_dimmer_power.send(String(instant_power * config.charge/100)); 
         device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
       } 
-      offset_heure_ete(); // on corrige l'heure d'été si besoin
+      //offset_heure_ete(); // on corrige l'heure d'été si besoin
     }
   }
 
@@ -905,6 +905,7 @@ void loop() {
           int instant_power = unified_dimmer.get_power();
           mqtt(String(config.IDX), String(instant_power),"Watt");  // correction 19/04
           device_dimmer.send(String(instant_power));
+          device_dimmer_send_power.send(String(instant_power));
           device_dimmer_power.send(String(instant_power * config.charge/100)); 
           device_dimmer_total_power.send(String(sysvar.puissance_cumul + (instant_power*config.charge/100) ));
         }

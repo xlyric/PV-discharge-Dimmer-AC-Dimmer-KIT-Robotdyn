@@ -95,7 +95,7 @@ void mqttdallas() {
     //previous_celsius=sysvar.celsius;
     //unified_dimmer.set_power(0); // Mieux vaut faire un dimmer_off()
        String temp_topic = "memory/" + String(config.say_my_name) + "/dallas" ;
-       String message = timeClient.getFormattedTime() + " Dallas perdue";
+       String message = " Dallas perdue";
        client.publish(temp_topic.c_str(), 0,true, message.c_str() );
     unified_dimmer.dimmer_off();  /// mise en sécurité de l'ensemble
     }
