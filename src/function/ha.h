@@ -8,6 +8,9 @@ extern AsyncMqttClient  client;
 extern Config config;
 extern Mqtt mqtt_config;
 extern System sysvar;
+extern DeviceAddress addr[MAX_DALLAS];  // array of (up to) 15 temperature sensors
+extern String devAddrNames[MAX_DALLAS];  // array of (up to) 15 temperature sensors
+extern int deviceCount ; // nombre de sonde(s) dallas détectée(s)
 
 //extern dimmerLamp dimmer;
 String stringbool(bool mybool);
@@ -185,7 +188,7 @@ struct HA
 
 /// création des sensors
 HA device_dimmer; 
-HA device_temp; 
+HA device_temp[MAX_DALLAS]; 
 
 /// création des switchs
 HA device_relay1;
@@ -246,13 +249,16 @@ void devices_init(){
   device_dimmer_total_power.Set_retain_flag(true);
 
 
-  device_temp.Set_name("Température");
-  device_temp.Set_object_id("temperature");
-  device_temp.Set_unit_of_meas("°C");
-  device_temp.Set_stat_cla("measurement");
-  device_temp.Set_dev_cla("temperature");
-  device_temp.Set_entity_type("sensor");
-  device_temp.Set_retain_flag(true);
+    for (int i = 0; i < deviceCount; i++) {
+      device_temp[i].Set_name("Température");
+      device_temp[i].Set_object_id("temperature_"+ devAddrNames[i]);
+      device_temp[i].Set_unit_of_meas("°C");
+      device_temp[i].Set_stat_cla("measurement");
+      device_temp[i].Set_dev_cla("temperature");
+      device_temp[i].Set_entity_type("sensor");
+      device_temp[i].Set_entity_qos(1);
+      device_temp[i].Set_retain_flag(true);
+    }
   // device_dimmer.Set_expire_after(true);
 
   
@@ -384,7 +390,7 @@ void HA_discover(){
         device_cooler.HA_discovery();
         device_cooler.send(stringbool(false));
 
-        device_temp.HA_discovery(); // discovery fait à la 1ere réception sonde ou mqtt.
+        //device_temp.HA_discovery(); // discovery fait à la 1ere réception sonde ou mqtt.
 
 
         #ifdef RELAY1

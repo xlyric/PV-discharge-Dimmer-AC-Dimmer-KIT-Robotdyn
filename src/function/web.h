@@ -48,7 +48,7 @@ AsyncWiFiManager wifiManager(&server,&dns);
 extern bool AP; 
 
 extern HA device_dimmer; 
-extern HA device_temp; 
+extern HA device_temp[MAX_DALLAS]; 
 extern HA device_relay1;
 extern HA device_relay2;
 // extern HA device_cooler;
@@ -552,7 +552,7 @@ String getState() {
 
   //state = String(instant_power) + "% " +  String(instant_power * config.charge) + "W"; 
    
-  dtostrf(sysvar.celsius,2, 1, buffer); // conversion en n.1f 
+  dtostrf(sysvar.celsius[sysvar.dallas_maitre],2, 1, buffer); // conversion en n.1f 
   
   DynamicJsonDocument doc(192);
     doc["dimmer"] = int(instant_power); // on le repasse un int pour éviter un affichage trop grand

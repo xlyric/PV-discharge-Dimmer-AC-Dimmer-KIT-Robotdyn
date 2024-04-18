@@ -164,7 +164,7 @@ struct Programme {
 
 bool start_progr() {
   /// test de la sécurité avant relance
-  if (security && ( sysvar.celsius > float(temperature*0.95) ) )  { return false; }
+  if (security && ( sysvar.celsius[sysvar.dallas_maitre]> float(temperature*0.95) ) )  { return false; }
   security = false;
 
   int heures, minutes;
@@ -179,7 +179,7 @@ bool start_progr() {
   }
       
   if(getLocalTime(&timeinfo)) {
-    if (heures == timeinfo.tm_hour && minutes == timeinfo.tm_min && sysvar.celsius < temperature ) { // correction bug #19  
+    if (heures == timeinfo.tm_hour && minutes == timeinfo.tm_min && sysvar.celsius[sysvar.dallas_maitre]< temperature ) { // correction bug #19  
         commande_run();
         return true; 
     }
@@ -198,7 +198,7 @@ bool start_progr() {
   }
 
 
-  if (heure_passee && !heure_arret_passee && sysvar.celsius < temperature ) {
+  if (heure_passee && !heure_arret_passee && sysvar.celsius[sysvar.dallas_maitre]< temperature ) {
            commande_run();
             return true; 
   }
@@ -210,7 +210,7 @@ return false;
 bool stop_progr() {
   int heures, minutes;
   /// sécurité temp
-  if ( sysvar.celsius >= temperature ) { 
+  if ( sysvar.celsius[sysvar.dallas_maitre]>= temperature ) { 
     run=false; 
     security = true;
      // protection flicking
@@ -238,7 +238,7 @@ bool stop_progr() {
 }
     /// démarrage si le seuil est atteint 
   bool start_seuil() {
-    if ( unified_dimmer.get_power() >= seuil_start && sysvar.celsius < seuil_temperature && seuil_start != seuil_stop) { 
+    if ( unified_dimmer.get_power() >= seuil_start && sysvar.celsius[sysvar.dallas_maitre]< seuil_temperature && seuil_start != seuil_stop) { 
       return true;
     }
   return false; 
@@ -246,7 +246,7 @@ bool stop_progr() {
 
   /// arrêt si le seuil est atteint
   bool stop_seuil() {
-    if ( unified_dimmer.get_power() >= seuil_stop && seuil_start != seuil_stop && sysvar.celsius > seuil_temperature) { 
+    if ( unified_dimmer.get_power() >= seuil_stop && seuil_start != seuil_stop && sysvar.celsius[sysvar.dallas_maitre]> seuil_temperature) { 
       return true;
     }
   return false;
@@ -254,7 +254,7 @@ bool stop_progr() {
 
   /// arret si seuil temp est atteint
   bool stop_seuil_temp() {
-    if ( sysvar.celsius >= seuil_temperature && seuil_temperature != 0) { 
+    if ( sysvar.celsius[sysvar.dallas_maitre]>= seuil_temperature && seuil_temperature != 0) { 
       return true;
     }
   return false;

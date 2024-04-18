@@ -42,7 +42,7 @@ extern HA device_dimmer_power;
 extern HA device_dimmer_send_power; 
 extern HA device_dimmer_total_power;
 //extern HA device_dimmer_charge;
-//extern HA device_temp[15];
+extern HA device_temp[MAX_DALLAS];
 extern HA device_relay1;
 extern HA device_relay2;
 extern HA device_cooler;
@@ -54,7 +54,7 @@ extern bool alerte;
 extern byte security; // sécurité
 extern Logs logging; 
 //extern char buffer[1024];
-extern String devAddrNames[15];
+extern String devAddrNames[MAX_DALLAS];
 extern AsyncMqttClient client; 
 
 
@@ -115,29 +115,32 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
     }
   }
   /// @brief Enregistrement temperature
-  if (strcmp( Subscribedtopic, config.SubscribeTEMP ) == 0  && doc2.containsKey("temperature")) { 
-    float temperaturemqtt = doc2["temperature"]; 
+  if (strcmp( Subscribedtopic, config.SubscribeTEMP ) == 0 ){ // && doc2.containsKey("temperature")) { 
+    // float temperaturemqtt = doc2["temperature"]; 
+    float temperaturemqtt = doc2[0]; 
+    sysvar.dallas_maitre= deviceCount+1;
+    devAddrNames[deviceCount+1] = "MQTT";
     if (!discovery_temp) {
       discovery_temp = true;
       device_dimmer_alarm_temp.HA_discovery();
-      device_temp.HA_discovery();
+      device_temp[sysvar.dallas_maitre].HA_discovery();
       device_dimmer_maxtemp.HA_discovery();
       device_dimmer_alarm_temp.send(stringboolMQTT(sysvar.security));
       device_dimmer_maxtemp.send(String(config.maxtemp));
       device_dimmer_alarm_temp_clear.HA_discovery();
     }
-    device_temp.send(String(sysvar.celsius));
-    if (sysvar.celsius != temperaturemqtt ) {
-      sysvar.celsius = temperaturemqtt;
+    device_temp[sysvar.dallas_maitre].send(String(sysvar.celsius[sysvar.dallas_maitre]));
+    if (sysvar.celsius[sysvar.dallas_maitre] != temperaturemqtt ) {
+      sysvar.celsius[sysvar.dallas_maitre] = temperaturemqtt;
       logging.Set_log_init("MQTT temp at ");
-      logging.Set_log_init(String(sysvar.celsius).c_str());
+      logging.Set_log_init(String(sysvar.celsius[sysvar.dallas_maitre]));
       logging.Set_log_init("°C\r\n");
     }
   }
 
 //#ifdef  STANDALONE // désactivé sinon ne fonctionne pas avec ESP32
   /// @brief Enregistrement des requetes de commandes 
-  if (strcmp( Subscribedtopic, command_switch.c_str() ) == 0) { 
+  if (strstr( Subscribedtopic, command_switch.c_str() ) != NULL) { 
     #ifdef RELAY1
       if (doc2.containsKey("relay1")) { 
           int relay = doc2["relay1"]; 
@@ -170,8 +173,8 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
     }
   } 
 //#endif
-  //if (strcmp( Subscribedtopic, command_number.c_str() ) == 0) { 
-    /// Réglage des paramètres du dimmer
+  if (strstr( Subscribedtopic, command_number.c_str() ) != NULL) { 
+  // if (strcmp( Subscribedtopic, command_number.c_str() ) == 0) { 
     if (doc2.containsKey("starting_power")) { 
       int startingpow = doc2["starting_power"]; 
       if (config.startingpow != startingpow ) {
@@ -239,7 +242,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
         sysvar.change=1; 
       }
     }
-  //}
+  }
 //clear alarm & save
   if (strstr( Subscribedtopic, command_button.c_str() ) != NULL) { 
   // if (strcmp( Subscribedtopic, command_button.c_str() ) == 0) { 
@@ -331,9 +334,9 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
             device_relay2.send(String(relaystate));
           #endif
           if (discovery_temp) {
-            //for (int i = 0; i < deviceCount; i++) {
-              device_temp.send(String(sysvar.celsius));
-            //}
+            for (int i = 0; i < deviceCount; i++) {
+              device_temp[i].send(String(sysvar.celsius[i]));
+            }
             device_dimmer_alarm_temp.send(stringboolMQTT(sysvar.security));
             device_dimmer_maxtemp.send(String(config.maxtemp)); 
           }

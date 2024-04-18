@@ -19,7 +19,7 @@ public:float power;
 
 // setter
 void set_power(float power){
-  if ( sysvar.celsius > config.maxtemp ) { power = 0; } /// si la température est supérieur à la température max on coupe tout
+  if ( sysvar.celsius[sysvar.dallas_maitre]> config.maxtemp ) { power = 0; } /// si la température est supérieur à la température max on coupe tout
   else if ( power > config.maxpow )  { power = config.maxpow; }
 
   /// vérification de la température 

@@ -199,19 +199,20 @@ bool discovery_temp;
 
 OneWire  ds(ONE_WIRE_BUS);  //  (a 4.7K resistor is necessary - 5.7K work with 3.3 ans 5V power)
 DallasTemperature sensors(&ds);
-DeviceAddress insideThermometer;
-
+// DeviceAddress insideThermometer;
   
   byte present = 0;
   
   byte data[12];
-  byte addr[8];
+  //byte addr[8];
   //float celsius = 0.00;
-  float previous_celsius = 0.00;
+  float previous_celsius[MAX_DALLAS] = {0.00};
   byte security = 0;
   int refresh = 60;
   int refreshcount = 0; 
-
+int deviceCount = 0;
+DeviceAddress addr[MAX_DALLAS];  // array of (up to) 15 temperature sensors
+String devAddrNames[MAX_DALLAS];  // array of (up to) 15 temperature sensors
 /***************************
  * End Settings
  **************************/
@@ -535,6 +536,13 @@ void setup() {
     
   Serial.println("start 18b20");
   sensors.begin();
+  delay(250);
+  ds.reset_search();
+
+  deviceCount = sensors.getDeviceCount();
+
+  logging.Set_log_init(String(deviceCount)); 
+  logging.Set_log_init(" DALLAS detected\r\n");
     
   /// recherche d'une sonde dallas
   dallaspresent();
@@ -743,9 +751,10 @@ void loop() {
   }
 
   //// si la sécurité température est active on coupe le dimmer
-  if ( sysvar.celsius > ( config.maxtemp + 2) && (!alerte) ) { 
-            Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("Alert Temp :" + String(sysvar.celsius) ),"Alerte");  ///send alert to MQTT
-            device_dimmer_alarm_temp.send("Alert temp");
+  if ( sysvar.celsius[sysvar.dallas_maitre] > ( config.maxtemp + 2) && (!alerte) ) { 
+    // mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(sysvar.celsius) ),"Alerte");  ///send alert to MQTT
+    Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("Alert Temp :" + String(sysvar.celsius[sysvar.dallas_maitre]) ),"Alerte");  ///send alert to MQTT
+    // device_dimmer_alarm_temp.send("Alert temp");
             alerte=true;
             unified_dimmer.dimmer_off();
           }
@@ -763,7 +772,7 @@ void loop() {
         
       }
     //// Trigger de sécurité température
-      if ( sysvar.celsius <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
+      if ( sysvar.celsius[sysvar.dallas_maitre] <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
         security = 0 ;
                 if (!AP && mqtt_config.mqtt && config.HA) { device_dimmer_alarm_temp.send(stringbool(security)); 
                  Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("RAS" ),"Alerte");
@@ -954,14 +963,14 @@ void loop() {
     //***********************************
     //************* LOOP - Activation de la sécurité --> doublon partiel avec la fonction sécurité ?  
     //***********************************
-if ( sysvar.celsius >= config.maxtemp && security == 0 ) {
+if ( sysvar.celsius[sysvar.dallas_maitre] >= config.maxtemp && security == 0 ) {
   security = 1 ; 
   unified_dimmer.set_power(0); // necessaire pour les autres modes
             unified_dimmer.dimmer_off();
-  float temp = sysvar.celsius + 0.2; /// pour être sur que la dernière consigne envoyé soit au moins égale au max.temp  
+  float temp = sysvar.celsius[sysvar.dallas_maitre] + 0.2; /// pour être sur que la dernière consigne envoyé soit au moins égale au max.temp  
   Mqtt_send_DOMOTICZ(String(config.IDXTemp), String(temp),"Temperature");  /// remonté MQTT de la température
   if ( config.HA ) { 
-          device_temp.send(String(temp)); 
+          device_temp[sysvar.dallas_maitre].send(String(temp)); 
           device_dimmer_alarm_temp.send(stringbool(security));
           device_dimmer_power.send(String(0));
           device_dimmer_total_power.send(String(sysvar.puissance_cumul));
@@ -983,47 +992,43 @@ if ( sysvar.celsius >= config.maxtemp && security == 0 ) {
     //***********************************
 
 void dallaspresent () {
-  byte i;
-  byte type_s;
-
-if ( !ds.search(addr)) {
-    Serial.println("Dallas not connected");
-    logging.Set_log_init("Dallas not connected \r\n");
-    DEBUG_PRINTLN();
+  // byte type_s;
+  for (int i = 0; i < deviceCount; i++) {
+    if (!ds.search(addr[i])) {
+      logging.Set_log_init("Unable to find temperature sensors address \r\n",true);
     ds.reset_search();
     delay(250);
     return ;
   }
-  
-  Serial.print("ROM =");
-  for( i = 0; i < 8; i++) {
-    Serial.write(' ');
-    Serial.print(addr[i], HEX);
   }
-
+  for (int a = 0; a < deviceCount; a++) {
+    String address = "";
+  Serial.print("ROM =");
+    for (uint8_t i = 0; i < 8; i++) {
+      if (addr[0][i] < 16) address += "0";
+      address += String(addr[a][i], HEX);
+    Serial.write(' ');
+      Serial.print(addr[a][i], HEX);
+  }
+    devAddrNames[a] = address;
    Serial.println();
- 
-  // the first ROM byte indicates which chip
-  switch (addr[0]) {
-    case 0x10:
-      DEBUG_PRINTLN("  Chip = DS18S20");  // or old DS1820
-      type_s = 1;
-      break;
-    case 0x28:
-      DEBUG_PRINTLN("  Chip = DS18B20");
-      type_s = 0;
-      break;
-    case 0x22:
-      DEBUG_PRINTLN("  Chip = DS1822");
-      type_s = 0;
-      break;
-    default:
-      DEBUG_PRINTLN("Device is not a DS18x20 family device.");
-      return ;
-  } 
+    if (strcmp(address.c_str(), config.DALLAS) == 0) {
+      sysvar.dallas_maitre = a;
+      logging.Set_log_init("MAIN " );
+    }
+
+    logging.Set_log_init("Dallas sensor " );
+    logging.Set_log_init(String(a).c_str()); 
+    logging.Set_log_init(" found. Address : " );
+    logging.Set_log_init(String(address).c_str()); 
+    logging.Set_log_init("\r\n");
+
+    // delay(250);
+
+
 
   ds.reset();
-  ds.select(addr);
+    ds.select(addr[a]);
 
   ds.write(0x44, 1);        // start conversion, with parasite power on at the end
   
@@ -1031,14 +1036,18 @@ if ( !ds.search(addr)) {
   // we might do a ds.depower() here, but the reset will take care of it.
   
   present = ds.reset();    ///  byte 0 > 1 si present
-  ds.select(addr);    
+    ds.select(addr[a]);    
   ds.write(0xBE);         // Read Scratchpad
 
-  Serial.print("  present = ");
-  Serial.println(present, HEX);
-  logging.Set_log_init("Dallas present at "+ String(present, HEX)+"\r\n");
+    // Serial.print("  present = ");
+    // Serial.println(present, HEX);
+    // logging.Set_log_init("Dallas present at "+ String(present, HEX)+"\r\n");
 
-  return ;
+
+  }
+  ds.reset_search();
+  delay(250);
+
    
   }
 

@@ -9,6 +9,7 @@
   #include <ESP8266WiFi.h>
 #endif
 
+#define MAX_DALLAS 8
 //extern String logs;
 
 /// @brief  partie délicate car pas mal d'action sur la variable log_init et donc protection de la variable ( pour éviter les pb mémoire )
@@ -114,7 +115,8 @@ struct Wifi_struct {
 ///variables globales 
 struct System {
 /// @brief  température actuelle
-float celsius=20.00; 
+//float celsius=20.00; 
+float celsius[MAX_DALLAS] = {0.00};
 /// @brief  puissance actuelle en %
 float puissance; 
 /// @brief  puissance actuelle en Watt
@@ -130,6 +132,8 @@ bool cooler=0;
 /// @brief  puissance cumulée en Watt (remonté par l'enfant toute les 10 secondes)
 int puissance_cumul=0;
 /// @brief etat de la surchauffe
+int dallas_maitre=0;
+/// @brief sonde principale
 byte security=0;
 };
 
