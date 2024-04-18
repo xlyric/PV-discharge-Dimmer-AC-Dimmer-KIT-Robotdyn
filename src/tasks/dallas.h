@@ -94,9 +94,15 @@ void mqttdallas() {
     //sysvar.celsius = sysvar.celsius + 1;  
     //previous_celsius=sysvar.celsius;
     //unified_dimmer.set_power(0); // Mieux vaut faire un dimmer_off()
-       String temp_topic = "memory/" + String(config.say_my_name) + "/dallas" ;
-       String message = " Dallas perdue";
-       client.publish(temp_topic.c_str(), 0,true, message.c_str() );
+       String temp_topic = "topic_Xlyric/" + String(config.say_my_name) + "/dallas" ;
+       static char uptime_stamp[20]; // Vous devrez définir une taille suffisamment grande pour stocker votre temps
+      // snprintf(uptime_stamp, sizeof(uptime_stamp), "%s:%s:%s\t", timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec);
+      time_t maintenant;
+      time(&maintenant);
+      strftime(uptime_stamp, sizeof(uptime_stamp), "%H:%M:%S\t", localtime(&maintenant));
+
+       String message = String(uptime_stamp) + "Dallas maitre perdue";
+       client.publish(temp_topic.c_str(), 1,true, String(message).c_str() );
     unified_dimmer.dimmer_off();  /// mise en sécurité de l'ensemble
     }
 
@@ -116,7 +122,8 @@ void mqttdallas() {
 /// si GW perdu, reboot de l'ESP après 2 minutes
   if ( gw_error > 8 ) {
     DEBUG_PRINTLN("détection perte gateway");
-    ESP.restart();
+      // ESP.restart();
+      config.restart = true;
   }
 #endif
 

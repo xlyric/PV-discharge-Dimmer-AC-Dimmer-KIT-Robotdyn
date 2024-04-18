@@ -313,13 +313,13 @@ void setup() {
   #if defined(ESP32) || defined(ESP32ETH)
   esp_reset_reason_t reset_reason = esp_reset_reason();
   Serial.printf("Reason for reset: %d\n", reset_reason);
-  logging.Set_log_init("Reason for reset: ");
-  logging.Set_log_init(String(reset_reason).c_str());
+  logging.Set_log_init("-- Reason for reset: " + String(reset_reason) + " --\r\n" );
+  //logging.Set_log_init(String(reset_reason).c_str());/
   #else
   rst_info *reset_info = ESP.getResetInfoPtr();
   Serial.printf("Reason for reset: %d\n", reset_info->reason);
-  logging.Set_log_init("Reason for reset: ");
-  logging.Set_log_init(String(reset_info->reason).c_str());
+  logging.Set_log_init("-- Reason for reset: " + String(reset_info->reason) + " --\r\n");
+  //logging.Set_log_init(String(reset_info->reason).c_str());
   #endif
 
   #ifdef RELAY1 // permet de rajouter les relais en ne modifiant que config.h, et pas seulement en STANDALONE
@@ -340,7 +340,7 @@ void setup() {
   // correction d'erreur de chargement de FS 
   delay(1000);
   Serial.println("Demarrage file System");
-  logging.Set_log_init("\r\n Start filesystem \r\n"); 
+  logging.Set_log_init("Start filesystem \r\n"); 
   test_fs_version();
   #ifdef ROBOTDYN
   // configuration dimmer
