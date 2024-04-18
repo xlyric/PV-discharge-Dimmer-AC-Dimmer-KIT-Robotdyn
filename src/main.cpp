@@ -546,7 +546,14 @@ void setup() {
     
     /// Configuration et connexion MQTT 
     async_mqtt_init();
-    connect_and_subscribe() ;
+    //connect_and_subscribe() ;
+    connectToMqtt();
+    delay(1000);  
+    /// pour remonter un 0 sur le MQTT
+          device_dimmer.send("0");
+          device_dimmer_power.send("0"); 
+          device_dimmer_total_power.send("0");
+          device_cooler.send(stringbool(false)); 
   }
   
  

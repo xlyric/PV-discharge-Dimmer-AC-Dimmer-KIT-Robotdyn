@@ -430,17 +430,20 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
 if (request->hasParam("charge1")) { 
     config.charge1 = request->getParam("charge1")->value().toInt(); 
     config.charge = config.charge1 + config.charge2 + config.charge3;
-    if (!AP && mqtt_config.mqtt) { device_dimmer_charge.send(String(config.charge));}
+    if (!AP && mqtt_config.mqtt) { //device_dimmer_charge.send(String(config.charge));
+      }
     }
    if (request->hasParam("charge2")) { 
     config.charge2 = request->getParam("charge2")->value().toInt(); 
     config.charge = config.charge1 + config.charge2 + config.charge3;
-    if (!AP && mqtt_config.mqtt) { device_dimmer_charge.send(String(config.charge));}
+    if (!AP && mqtt_config.mqtt) {  //device_dimmer_charge.send(String(config.charge));
+      }
     }
    if (request->hasParam("charge3")) { 
     config.charge3 = request->getParam("charge3")->value().toInt(); 
     config.charge = config.charge1 + config.charge2 + config.charge3;
-    if (!AP && mqtt_config.mqtt) { device_dimmer_charge.send(String(config.charge));}
+    if (!AP && mqtt_config.mqtt) { //device_dimmer_charge.send(String(config.charge));
+      }
     }
    if (request->hasParam("IDXAlarme")) { config.IDXAlarme = request->getParam("IDXAlarme")->value().toInt();}
    if (request->hasParam("IDX")) { config.IDX = request->getParam("IDX")->value().toInt();}

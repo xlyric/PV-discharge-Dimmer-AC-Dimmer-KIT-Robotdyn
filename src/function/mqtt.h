@@ -41,7 +41,7 @@ extern HA device_dimmer_alarm_temp;
 extern HA device_dimmer_power;
 extern HA device_dimmer_send_power; 
 extern HA device_dimmer_total_power;
-extern HA device_dimmer_charge;
+//extern HA device_dimmer_charge;
 //extern HA device_temp[15];
 extern HA device_relay1;
 extern HA device_relay2;
@@ -88,6 +88,9 @@ String stringboolMQTT(bool mybool);
 void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
   //char* Subscribedtopic, byte* message, unsigned int length
   // logging.Set_log_init("Subscribedtopic : " + String(Subscribedtopic)+ "\r\n",true);
+  // debug
+  Serial.println("Subscribedtopic : " + String(Subscribedtopic));
+  Serial.println("payload : " + String(payload));
   String fixedpayload = ((String)payload).substring(0,len);
   // logging.Set_log_init("Payload : " + String(fixedpayload)+ "\r\n",true);
   StaticJsonDocument<1152> doc2;
@@ -167,7 +170,8 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
     }
   } 
 //#endif
-  if (strcmp( Subscribedtopic, command_number.c_str() ) == 0) { 
+  //if (strcmp( Subscribedtopic, command_number.c_str() ) == 0) { 
+    /// Réglage des paramètres du dimmer
     if (doc2.containsKey("starting_power")) { 
       int startingpow = doc2["starting_power"]; 
       if (config.startingpow != startingpow ) {
@@ -229,13 +233,13 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
       if (config.charge != charge ) {
         config.charge = charge;
         logging.Set_log_init("MQTT charge at ");
-        logging.Set_log_init("String(charge).c_str()");
+        logging.Set_log_init(String(charge).c_str());
         logging.Set_log_init("W\r\n");
-        device_dimmer_charge.send(String(charge));
+        //device_dimmer_charge.send(String(charge));
         sysvar.change=1; 
       }
     }
-  }
+  //}
 //clear alarm & save
   if (strstr( Subscribedtopic, command_button.c_str() ) != NULL) { 
   // if (strcmp( Subscribedtopic, command_button.c_str() ) == 0) { 
@@ -313,7 +317,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
           device_dimmer_starting_pow.send(String(config.startingpow));
           device_dimmer_minpow.send(String(config.minpow));
           device_dimmer_maxpow.send(String(config.maxpow));
-          device_dimmer_charge.send(String(config.charge));
+         //device_dimmer_charge.send(String(config.charge));
           device_dimmer_maxtemp.send(String(config.maxtemp));
           if (strcmp(String(config.PVROUTER).c_str() , "http") == 0) {device_dimmer_child_mode.send(String(config.mode));}
           device_dimmer_on_off.send(String(config.dimmer_on_off));
@@ -535,8 +539,12 @@ void onMqttConnect(bool sessionPresent) {
   client.subscribe((command_select + "/#").c_str(),1);
   client.subscribe((command_switch + "/#").c_str(),1);
   client.subscribe((HA_status).c_str(),1);
+  Serial.println((command_button + "/#").c_str());
+  Serial.println((command_number + "/#").c_str());
+  Serial.println((command_select + "/#").c_str());
+  Serial.println((command_switch + "/#").c_str());
   logging.Set_log_init("MQTT connected \r\n");
-  // mqttConnected = true;
+  mqttConnected = true;
 }
 
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {

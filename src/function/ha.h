@@ -175,11 +175,11 @@ struct HA
     }
 
     public:void send(String value){
-    //if (config.JEEDOM || config.HA) {
+    if (config.JEEDOM || config.HA) {
       String topic = "Xlyric/"+ node_id +"/sensors/";
       String message = "  { \""+object_id+"\" : \"" + value.c_str() + "\"  } ";
       client.publish(String(topic + object_id + "/state").c_str() ,qos, retain_flag , message.c_str());
-    //}
+    }
   } 
 };
 
@@ -201,7 +201,7 @@ HA device_dimmer_maxtemp;
 HA device_dimmer_minpow;
 HA device_dimmer_maxpow;
 HA device_dimmer_send_power;
-HA device_dimmer_charge;
+//HA device_dimmer_charge;
 
 /// création select
 HA device_dimmer_child_mode;
@@ -325,7 +325,7 @@ void devices_init(){
   device_dimmer_maxtemp.Set_entity_valuestep("1");
   device_dimmer_maxtemp.Set_retain_flag(true);
 
-  device_dimmer_charge.Set_name("Charge");
+  /*device_dimmer_charge.Set_name("Charge");
   device_dimmer_charge.Set_object_id("charge");
   device_dimmer_charge.Set_entity_type("number");
   device_dimmer_charge.Set_entity_category("config");
@@ -333,7 +333,7 @@ void devices_init(){
   device_dimmer_charge.Set_entity_valuemax("3000");
   device_dimmer_charge.Set_entity_valuestep("50");
   device_dimmer_charge.Set_retain_flag(true);
-
+*/
   /// création des select
   device_dimmer_child_mode.Set_name("Mode");
   device_dimmer_child_mode.Set_object_id("child_mode");
@@ -404,8 +404,8 @@ void HA_discover(){
         device_dimmer_maxpow.HA_discovery();
         device_dimmer_maxpow.send(String(config.maxpow));
 
-        device_dimmer_charge.HA_discovery();
-        device_dimmer_charge.send(String(config.charge));
+       // device_dimmer_charge.HA_discovery();
+       // device_dimmer_charge.send(String(config.charge));
 
         device_dimmer_send_power.HA_discovery();
         device_dimmer_send_power.send(String(sysvar.puissance));
