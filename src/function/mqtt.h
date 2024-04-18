@@ -98,9 +98,9 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
     float temperaturemqtt = doc2["temperature"]; 
     if (!discovery_temp) {
       discovery_temp = true;
-      device_dimmer_alarm_temp.discovery();
-      device_temp.discovery();
-      device_dimmer_maxtemp.discovery();
+      device_dimmer_alarm_temp.HA_discovery();
+      device_temp.HA_discovery();
+      device_dimmer_maxtemp.HA_discovery();
       device_dimmer_alarm_temp.send(stringbool(false));
       device_dimmer_maxtemp.send(String(config.maxtemp));
     }
