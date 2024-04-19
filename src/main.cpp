@@ -1003,19 +1003,19 @@ void dallaspresent () {
   }
   for (int a = 0; a < deviceCount; a++) {
     String address = "";
-  Serial.print("ROM =");
-    for (uint8_t i = 0; i < 8; i++) {
-      if (addr[0][i] < 16) address += "0";
-      address += String(addr[a][i], HEX);
-    Serial.write(' ');
-      Serial.print(addr[a][i], HEX);
-  }
+    Serial.print("ROM =");
+      for (uint8_t i = 0; i < 8; i++) {
+        if (addr[a][i] < 16) address += "0";
+        address += String(addr[a][i], HEX);
+        Serial.write(' ');
+        Serial.print(addr[a][i], HEX);
+      }
     devAddrNames[a] = address;
-   Serial.println();
-    if (strcmp(address.c_str(), config.DALLAS) == 0) {
-      sysvar.dallas_maitre = a;
-      logging.Set_log_init("MAIN " );
-    }
+    Serial.println();
+      if (strcmp(address.c_str(), config.DALLAS) == 0) {
+        sysvar.dallas_maitre = a;
+        logging.Set_log_init("MAIN " );
+      }
 
     logging.Set_log_init("Dallas sensor " );
     logging.Set_log_init(String(a).c_str()); 
@@ -1027,22 +1027,20 @@ void dallaspresent () {
 
 
 
-  ds.reset();
+    ds.reset();
     ds.select(addr[a]);
 
-  ds.write(0x44, 1);        // start conversion, with parasite power on at the end
+    ds.write(0x44, 1);        // start conversion, with parasite power on at the end
   
-  delay(1000);     // maybe 750ms is enough, maybe not
+    delay(1000);     // maybe 750ms is enough, maybe not
   // we might do a ds.depower() here, but the reset will take care of it.
   
-  present = ds.reset();    ///  byte 0 > 1 si present
+    present = ds.reset();    ///  byte 0 > 1 si present
     ds.select(addr[a]);    
-  ds.write(0xBE);         // Read Scratchpad
-
+    ds.write(0xBE);         // Read Scratchpad
     // Serial.print("  present = ");
     // Serial.println(present, HEX);
     // logging.Set_log_init("Dallas present at "+ String(present, HEX)+"\r\n");
-
 
   }
   ds.reset_search();

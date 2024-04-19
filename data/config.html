@@ -408,10 +408,34 @@
                                                                     <option value="0">off</option>
                                                                 </select>
                                                             </div>
+                                                        </div>
+                                                </div>
+                                            </div>
+                                            <br>
+                                            <div class="card position-relative" id="DALLAS-LOCAL">
+                                                <div class="card-header py-3">
+                                                    <h6 class="m-0 font-weight-bold text-primary">Dallas Local</h6>
+                                                    <span id="saveform"></span>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="form-group row">
+
+                                                        <div class="col-sm-6">
+                                                            Adresse sonde DALLAS maitre
+                                                            <br><br>
+                                                            <b>Sonde présentes: </b>
+                                                            <span id="dallas"></span>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <input
+                                                                type="text"
+                                                                class="form-control form-control-user"
+                                                                id="DALLAS"
+                                                                placeholder="%DALLAS%"
+                                                            >
                                                         </div>    
                                                     </div>
                                                 </div>
-                                     
                                             </div>
                                         </div>
                                     </div>
@@ -440,6 +464,30 @@ setInterval(function refreshsend( ) {
           document.getElementById("state").innerHTML = dimmer;
           document.getElementById("sigma").innerHTML = temperature;
           document.getElementById("power").innerHTML = power;
+          // affichage des dallas et les Température ( boucle sur les dallas )
+            var dallasData = {}; // Objet pour stocker les données des capteurs Dallas
+
+        // Extraction des données des capteurs Dallas du JSON
+        for (var key in data) {
+            if (key.startsWith('dallas')) {
+                var dallasNumber = key.substring(6); // Récupérer le numéro du capteur Dallas
+                var dallasTemperature = data[key];
+                var dallasAddressKey = 'addr' + dallasNumber;
+                var dallasAddress = data[dallasAddressKey];
+                dallasData[dallasNumber] = {
+                    temperature: dallasTemperature,
+                    address: dallasAddress
+                };
+            }
+        }
+
+                    // Affichage des données des capteurs Dallas dans la page HTML
+            var dallasHtml = '';
+            for (var dallasNumber in dallasData) {
+                dallasHtml += '<p>Dallas sensor ' + dallasNumber + ': ' + dallasData[dallasNumber].temperature + '°C <br>Address: ' + dallasData[dallasNumber].address + '</p>';
+            }
+            document.getElementById("dallas").innerHTML = dallasHtml;
+
           });
 }, 5000);
 	
@@ -512,7 +560,7 @@ $( "#save" ).click(function() {
 
 $( "#formulaire" ).submit(function() {
 
-	 var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(),'maxtemp':$('#maxtemp').val(),  'startingpow':$('#startingpow').val(), 'minpow':$('#minpow').val(), 'maxpow':$('#maxpow').val(), 'child':$('#child').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val(), 'mode':$('#delester').val() , 'charge1':$('#charge1').val() , 'charge2':$('#charge2').val() , 'charge3':$('#charge3').val(), 'dimmername':$('#dimmername').val() } 
+	 var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(),'maxtemp':$('#maxtemp').val(),  'startingpow':$('#startingpow').val(), 'minpow':$('#minpow').val(), 'maxpow':$('#maxpow').val(), 'child':$('#child').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val(), 'mode':$('#delester').val() , 'charge1':$('#charge1').val() , 'charge2':$('#charge2').val() , 'charge3':$('#charge3').val(), 'DALLAS':$('#DALLAS').val(), 'dimmername':$('#dimmername').val() } 
 
      $.ajax({
             type: "GET",
@@ -583,7 +631,7 @@ $( "#formulaire" ).submit(function() {
 <footer class="sticky-footer bg-white">
     <div class="container my-auto">
         <div class="copyright text-center my-auto">
-            <span>https://github.com/xlyric/  - 2023</span>
+            <span>https://github.com/xlyric/  - 2024</span>
         </div>
     </div>
 </footer>

@@ -60,7 +60,9 @@ extern HA device_dimmer_starting_pow;
 extern HA device_dimmer_maxtemp;
 
 
+extern String dimmername;
 
+extern DeviceAddress addr[MAX_DALLAS];
 
 const char* PARAM_INPUT_1 = "POWER"; /// paramettre de retour sendmode
 const char* PARAM_INPUT_2 = "OFFSET"; /// paramettre de retour sendmode
@@ -78,6 +80,7 @@ String switchstate(int state);
 String readmqttsave();
 String getMinuteur(const Programme& minuteur);
 extern Logs Logging; 
+extern String devAddrNames[MAX_DALLAS];
 
 #ifdef SSR_ZC
 extern SSR_BURST ssr_burst;
@@ -289,6 +292,10 @@ void call_pages() {
     request->send(LittleFS, "/wifi.json", "application/json");
   });
 
+  server.on("/programme.json", HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->send(LittleFS, "/programme.json", "application/json");
+  });
+
 //// compressé
   server.on("/mqtt.html", HTTP_ANY, [](AsyncWebServerRequest *request){
     AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/mqtt.html.gz", "text/html");
@@ -387,7 +394,8 @@ void call_pages() {
 
   server.on("/reset", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain","Restarting");
-    ESP.restart();
+    // ESP.restart();
+    config.restart = true;
   });
 
   server.on("/cs", HTTP_ANY, [](AsyncWebServerRequest *request){
@@ -478,9 +486,18 @@ if (request->hasParam("charge1")) {
     if (!AP && mqtt_config.mqtt) { device_dimmer_on_off.send(String(config.dimmer_on_off));}
    }
    if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,50);  }
-   if (request->hasParam("mqttpassword")) { request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,50);
-   savemqtt(mqtt_conf, mqtt_config); 
-   saveConfiguration(filename_conf, config);
+   if (request->hasParam("mqttpassword")) { 
+    request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,50);
+    savemqtt(mqtt_conf, mqtt_config); 
+    saveConfiguration(filename_conf, config);
+   }
+   if (request->hasParam("DALLAS")) { 
+    request->getParam("DALLAS")->value().toCharArray(config.DALLAS,17); 
+    // application de la modification sur la dallas master si existante
+    for (int i = 0; i < MAX_DALLAS; i++) {
+      if (strcmp(config.DALLAS,(devAddrNames[i]).c_str() ) == 0) { sysvar.dallas_maitre = i; }
+    
+    }
    }
 
 //// minuteur 
@@ -554,7 +571,7 @@ String getState() {
    
   dtostrf(sysvar.celsius[sysvar.dallas_maitre],2, 1, buffer); // conversion en n.1f 
   
-  DynamicJsonDocument doc(192);
+  DynamicJsonDocument doc(384);
     doc["dimmer"] = int(instant_power); // on le repasse un int pour éviter un affichage trop grand
     doc["temperature"] = buffer;
     doc["power"] = int(instant_power * config.charge/100);
@@ -569,6 +586,16 @@ String getState() {
     doc["relay2"]   = 0;
 #endif
     doc["minuteur"] = programme.run;
+    //affichage des température et adresse des sondes dallas 
+    for (int i = 0; i < MAX_DALLAS; i++) {
+      char buffer[5];
+      // affichage que si != 0 
+      if (sysvar.celsius[i] != 0) {
+        dtostrf(sysvar.celsius[i],2, 1, buffer); // conversion en n.1f 
+        doc["dallas"+String(i)] = buffer;
+        doc["addr"+String(i)] = devAddrNames[i];
+      }
+    }
   serializeJson(doc, state);
   return String(state);
 }
@@ -615,6 +642,7 @@ String getconfig() {
     doc["SubscribeTEMP"] = config.SubscribeTEMP;
     doc["dimmer_on_off"] = config.dimmer_on_off;
     doc["charge"] = config.charge;
+    doc["DALLAS"] = config.DALLAS;
     doc["dimmername"] = config.say_my_name;
     doc["charge1"] = config.charge1;
     doc["charge2"] = config.charge2;
@@ -665,6 +693,9 @@ String getmqtt() {
     doc["user"] = mqtt_config.username;
     doc["password"] = mqtt_config.password;
     doc["MQTT"] = mqtt_config.mqtt;
+    doc["HA"] = config.HA;
+    doc["JEEDOM"] = config.JEEDOM;
+    doc["DOMOTICZ"] = config.DOMOTICZ;
     doc["IDX"] = config.IDX;
     doc["idxtemp"] = config.IDXTemp;
     doc["IDXAlarme"] = config.IDXAlarme;
@@ -697,8 +728,9 @@ String readmqttsave(){
 String getServermode(String Servermode) {
   if ( Servermode == "MQTT" ) {   mqtt_config.mqtt = !mqtt_config.mqtt; }
   if ( Servermode == "HA" ) {   config.HA = !config.HA; }
-  if ( Servermode == "jeedom" ) {   config.JEEDOM = !config.JEEDOM; }
-  if ( Servermode == "domoticz" ) {   config.DOMOTICZ = !config.DOMOTICZ; }
+  if ( Servermode == "JEEDOM" ) {   config.JEEDOM = !config.JEEDOM; }
+  if ( Servermode == "DOMOTICZ" ) {   config.DOMOTICZ = !config.DOMOTICZ; }
+
 return String(Servermode);
 }
 #endif

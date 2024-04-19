@@ -27,7 +27,7 @@ extern Config config;
 //extern Programme programme; 
 
 extern Logs logging; 
-extern String node_mac;
+
 extern String node_id; 
 extern Wifi_struct  wifi_config_fixe; 
 
@@ -46,8 +46,6 @@ String loguptime(String log) {
   uptime_stamp = String(uptime::getDays())+":"+String(uptime::getHours())+":"+String(uptime::getMinutes())+":"+String(uptime::getSeconds())+ "\t"+log +"\r\n";
   return uptime_stamp;
 }
-
-
 
 // Loads the configuration from a file
 void loadConfiguration(const char *filename, Config &config) {
@@ -98,7 +96,16 @@ void loadConfiguration(const char *filename, Config &config) {
   strlcpy(config.SubscribeTEMP,                 
         doc["SubscribeTEMP"] | "none", 
         sizeof(config.SubscribeTEMP));
-  config.dimmer_on_off = doc["dimmer_on_off"] | 1; 
+  //config.dimmer_on_off = doc["dimmer_on_off"] | 1; 
+  config.HA = doc["HA"] | true; 
+  config.JEEDOM = doc["JEEDOM"] | true; 
+  config.DOMOTICZ = doc["DOMOTICZ"] | true; 
+  strlcpy(config.PVROUTER,
+        doc["PVROUTER"] | "mqtt", 
+        sizeof(config.PVROUTER)); 
+  strlcpy(config.DALLAS,
+        doc["DALLAS"] | "28b1255704e13c62", 
+        sizeof(config.DALLAS));   
   strlcpy(config.say_my_name,                 
         doc["name"] | "", 
         sizeof(config.say_my_name));
@@ -144,8 +151,13 @@ void saveConfiguration(const char *filename, const Config &config) {
   doc["mode"] = config.mode;
   doc["SubscribePV"] = config.SubscribePV;
   doc["SubscribeTEMP"] = config.SubscribeTEMP;
-  doc["dimmer_on_off"] = config.dimmer_on_off;
+//  doc["dimmer_on_off"] = config.dimmer_on_off;
   doc["charge"] = config.charge;
+  doc["HA"] = config.HA;
+  doc["JEEDOM"] = config.JEEDOM;
+  doc["DOMOTICZ"] = config.DOMOTICZ;
+  doc["PVROUTER"] = config.PVROUTER;
+  doc["DALLAS"] = config.DALLAS;
   doc["name"] = config.say_my_name;
   doc["charge1"] = config.charge1;
   doc["charge2"] = config.charge2;
@@ -200,9 +212,9 @@ bool loadmqtt(const char *filename, Mqtt &mqtt_config) {
           doc["MQTT_PASSWORD"] | "", // <- source
           sizeof(mqtt_config.password));         // <- destination's capacity
   mqtt_config.mqtt = doc["mqtt"] | true;
-  config.HA = doc["HA"] | true;
-  config.DOMOTICZ = doc["domoticz"] | true;
-  config.JEEDOM = doc["jeedom"] | true;
+  // mqtt_config.HA = doc["HA"] | true;
+  // mqtt_config.domoticz = doc["domoticz"] | true;
+  // mqtt_config.jeedom = doc["jeedom"] | true;
 
   configFile.close();
 
@@ -227,9 +239,9 @@ void savemqtt(const char *filename, const Mqtt &mqtt_config) {
   doc["MQTT_USER"] = mqtt_config.username;
   doc["MQTT_PASSWORD"] = mqtt_config.password;
   doc["mqtt"] = mqtt_config.mqtt;
-  doc["domoticz"] = config.DOMOTICZ;
-  doc["HA"] = config.HA;
-  doc["jeedom"] = config.JEEDOM;
+  // doc["domoticz"] = mqtt_config.domoticz;
+  // doc["HA"] = mqtt_config.HA;
+  // doc["jeedom"] = mqtt_config.jeedom;
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {
     Serial.println(F("Failed to write to file in function Save configuration "));
@@ -238,6 +250,7 @@ void savemqtt(const char *filename, const Mqtt &mqtt_config) {
 
   // Close the file
   configFile.close();
+  config.restart = true;
 }
 
 
