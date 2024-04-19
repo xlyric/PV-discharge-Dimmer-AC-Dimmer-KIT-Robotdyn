@@ -584,6 +584,7 @@ void setup() {
         relaystate = digitalRead(RELAY2); 
         device_relay2.send(String(relaystate));
       #endif
+      HA_discover();
     }
   }
   
@@ -971,6 +972,7 @@ if ( sysvar.celsius[sysvar.dallas_maitre] >= config.maxtemp && security == 0 ) {
   Mqtt_send_DOMOTICZ(String(config.IDXTemp), String(temp),"Temperature");  /// remonté MQTT de la température
   if ( config.HA ) { 
           device_temp[sysvar.dallas_maitre].send(String(temp)); 
+          device_temp_master.send(String(temp)); 
           device_dimmer_alarm_temp.send(stringbool(security));
           device_dimmer_power.send(String(0));
           device_dimmer_total_power.send(String(sysvar.puissance_cumul));

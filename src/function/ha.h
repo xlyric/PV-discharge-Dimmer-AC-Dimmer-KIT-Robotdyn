@@ -134,7 +134,7 @@ struct HA
     // setter mod_mac
     public:void Set_node_mac(String setter) {node_mac=setter; }
        
-    private:String node_id = String("Dimmer-") + node_mac; 
+    private:String node_id = String("dimmer-") + node_mac; 
     //private:String topic = "homeassistant/sensor/"+ node_id +"/";
     private:String topic_switch = "homeassistant/switch/"+ node_id +"/";
     private:String topic_switch_state = "homeassistant/switch/";
@@ -157,7 +157,7 @@ struct HA
     String topic_Xlyric = "Xlyric/"+ node_id +"/";
 
       String device= "{\"name\": \""+ name + "\"," 
-            "\"obj_id\": \"Dimmer-"+ object_id +"-"+ node_mac + "\"," 
+            "\"obj_id\": \"dimmer-"+ object_id +"-"+ node_mac + "\"," 
             "\"uniq_id\": \""+ node_mac + "-" + object_id +"\","
           "\"stat_t\": \""+ topic_Xlyric + "sensors/" + object_id +"/state\"," 
           "\"avty_t\": \""+ topic_Xlyric + "status\","
@@ -189,6 +189,7 @@ struct HA
 /// création des sensors
 HA device_dimmer; 
 HA device_temp[MAX_DALLAS]; 
+HA device_temp_master;
 
 /// création des switchs
 HA device_relay1;
@@ -250,7 +251,7 @@ void devices_init(){
 
 
     for (int i = 0; i < deviceCount; i++) {
-      device_temp[i].Set_name("Température");
+      device_temp[i].Set_name("Température" + String(i+1) );
       device_temp[i].Set_object_id("temperature_"+ devAddrNames[i]);
       device_temp[i].Set_unit_of_meas("°C");
       device_temp[i].Set_stat_cla("measurement");
@@ -260,7 +261,15 @@ void devices_init(){
       device_temp[i].Set_retain_flag(true);
     }
   // device_dimmer.Set_expire_after(true);
-
+ /// temp master 
+      device_temp_master.Set_name("Température master");
+      device_temp_master.Set_object_id("temperature");
+      device_temp_master.Set_unit_of_meas("°C");
+      device_temp_master.Set_stat_cla("measurement");
+      device_temp_master.Set_dev_cla("temperature");
+      device_temp_master.Set_entity_type("sensor");
+      device_temp_master.Set_entity_qos(1);
+      device_temp_master.Set_retain_flag(true);
   
   /// création des switch
   device_relay1.Set_name("Relais 1");
@@ -390,8 +399,8 @@ void HA_discover(){
         device_cooler.HA_discovery();
         device_cooler.send(stringbool(false));
 
-        //device_temp.HA_discovery(); // discovery fait à la 1ere réception sonde ou mqtt.
-
+        device_temp_master.HA_discovery(); // discovery fait à la 1ere réception sonde ou mqtt.
+        device_temp_master.send(String(0));
 
         #ifdef RELAY1
           device_relay1.HA_discovery();

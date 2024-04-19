@@ -43,10 +43,12 @@ extern HA device_dimmer_send_power;
 extern HA device_dimmer_total_power;
 //extern HA device_dimmer_charge;
 extern HA device_temp[MAX_DALLAS];
+extern HA device_temp_master;
 extern HA device_relay1;
 extern HA device_relay2;
 extern HA device_cooler;
 extern HA device_dimmer_alarm_temp_clear;
+
 
 extern bool HA_reconnected;
 extern bool discovery_temp; 
@@ -73,7 +75,7 @@ String stringboolMQTT(bool mybool);
 
   String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
   // String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-  String node_id = String("Dimmer-") + node_mac; 
+  String node_id = String("dimmer-") + node_mac; 
   
   // String topic = "homeassistant/sensor/"+ node_id +"/status";  
   String topic_Xlyric = "Xlyric/"+ node_id +"/";
@@ -124,12 +126,15 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
       discovery_temp = true;
       device_dimmer_alarm_temp.HA_discovery();
       device_temp[sysvar.dallas_maitre].HA_discovery();
+      device_temp_master.HA_discovery();
       device_dimmer_maxtemp.HA_discovery();
       device_dimmer_alarm_temp.send(stringboolMQTT(sysvar.security));
       device_dimmer_maxtemp.send(String(config.maxtemp));
       device_dimmer_alarm_temp_clear.HA_discovery();
     }
     device_temp[sysvar.dallas_maitre].send(String(sysvar.celsius[sysvar.dallas_maitre]));
+    Serial.println(sysvar.celsius[sysvar.dallas_maitre]);
+    device_temp_master.send(String(sysvar.celsius[sysvar.dallas_maitre]));
     if (sysvar.celsius[sysvar.dallas_maitre] != temperaturemqtt ) {
       sysvar.celsius[sysvar.dallas_maitre] = temperaturemqtt;
       logging.Set_log_init("MQTT temp at ");
@@ -317,6 +322,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
           if (strcmp(String(config.PVROUTER).c_str() , "http") == 0) { device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));}
           // int coolerstate = digitalRead(COOLER); 
           device_cooler.send(stringboolMQTT(sysvar.cooler));
+          device_temp_master.send(String(sysvar.celsius[sysvar.dallas_maitre]));
           device_dimmer_starting_pow.send(String(config.startingpow));
           device_dimmer_minpow.send(String(config.minpow));
           device_dimmer_maxpow.send(String(config.maxpow));
@@ -337,6 +343,8 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
             for (int i = 0; i < deviceCount; i++) {
               device_temp[i].send(String(sysvar.celsius[i]));
             }
+            device_temp_master.send(String(sysvar.celsius[sysvar.dallas_maitre]));
+            Serial.println(sysvar.celsius[sysvar.dallas_maitre]);
             device_dimmer_alarm_temp.send(stringboolMQTT(sysvar.security));
             device_dimmer_maxtemp.send(String(config.maxtemp)); 
           }

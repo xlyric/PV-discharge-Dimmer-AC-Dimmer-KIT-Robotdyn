@@ -53,20 +53,22 @@ void mqttdallas() {
         for (int i = 0; i < deviceCount; i++) {
           device_temp[i].HA_discovery();
         }
+        device_temp_master.HA_discovery();
         device_dimmer_maxtemp.HA_discovery();
         device_dimmer_alarm_temp.send(stringboolMQTT(sysvar.security));
         device_dimmer_maxtemp.send(String(config.maxtemp)); 
         device_dimmer_alarm_temp_clear.HA_discovery();
       }
 
-
-      for (int a = 0; a < deviceCount; a++) {
-        if ( sysvar.celsius[a] != previous_celsius[a] || sysvar.celsius[a] != 0.99) {
-          device_temp[a].send(String(sysvar.celsius[a]));
-          previous_celsius[a]=sysvar.celsius[a];
-          // logging.Set_log_init("Dallas " + String(a) + " temp : "+ String(sysvar.celsius[a]) +"\r\n");
+/// uniformisation des valeurs de température ( for en valeur I pour retrouver plus facilement)
+      for (int i = 0; i < deviceCount; i++) {
+        if ( sysvar.celsius[i] != previous_celsius[i] || sysvar.celsius[i] != 0.99) {
+          device_temp[i].send(String(sysvar.celsius[i]));
+          previous_celsius[i]=sysvar.celsius[i];
+          // logging.Set_log_init("Dallas " + String(i) + " temp : "+ String(sysvar.celsius[i]) +"\r\n");
         }
       }
+      device_temp_master.send(String(sysvar.celsius[sysvar.dallas_maitre]));
     }          
     // sysvar.celsius=CheckTemperature("Inside : ", addr); 
   
@@ -116,6 +118,7 @@ void mqttdallas() {
       if ( config.HA ) { 
         device_dimmer.send("0"); 
         device_dimmer_power.send("0");
+
       }
     }
   
