@@ -96,7 +96,7 @@ void loadConfiguration(const char *filename, Config &config) {
   strlcpy(config.SubscribeTEMP,                 
         doc["SubscribeTEMP"] | "none", 
         sizeof(config.SubscribeTEMP));
-  //config.dimmer_on_off = doc["dimmer_on_off"] | 1; 
+  config.dimmer_on_off = doc["dimmer_on_off"] | 1; 
   config.HA = doc["HA"] | true; 
   config.JEEDOM = doc["JEEDOM"] | true; 
   config.DOMOTICZ = doc["DOMOTICZ"] | true; 
@@ -151,7 +151,7 @@ void saveConfiguration(const char *filename, const Config &config) {
   doc["mode"] = config.mode;
   doc["SubscribePV"] = config.SubscribePV;
   doc["SubscribeTEMP"] = config.SubscribeTEMP;
-//  doc["dimmer_on_off"] = config.dimmer_on_off;
+  doc["dimmer_on_off"] = config.dimmer_on_off;
   doc["charge"] = config.charge;
   doc["HA"] = config.HA;
   doc["JEEDOM"] = config.JEEDOM;
