@@ -465,6 +465,13 @@ setInterval(function refreshsend( ) {
           document.getElementById("sigma").innerHTML = temperature;
           document.getElementById("power").innerHTML = power;
           // affichage des dallas et les Température ( boucle sur les dallas )
+          });
+}, 5000);
+
+
+setInterval(function refreshsend( ) {
+        $.getJSON('/state_dallas', function(data) {
+          // affichage des dallas et les Température ( boucle sur les dallas )
             var dallasData = {}; // Objet pour stocker les données des capteurs Dallas
 
         // Extraction des données des capteurs Dallas du JSON
@@ -480,7 +487,6 @@ setInterval(function refreshsend( ) {
                 };
             }
         }
-
                     // Affichage des données des capteurs Dallas dans la page HTML
             var dallasHtml = '';
             for (var dallasNumber in dallasData) {

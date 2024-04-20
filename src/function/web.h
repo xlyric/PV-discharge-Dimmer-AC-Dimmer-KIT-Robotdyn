@@ -72,6 +72,7 @@ const char* PARAM_INPUT_2 = "OFFSET"; /// paramettre de retour sendmode
 String getmqtt(); 
 String getconfig(); 
 String getState();
+String getState_dallas();
 String textnofiles();
 String processor(const String& var);
 String getServermode(String Servermode);
@@ -225,6 +226,10 @@ void call_pages() {
 
   server.on("/state", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain", getState().c_str());
+  });
+
+    server.on("/state_dallas", HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/plain", getState_dallas().c_str());
   });
 
   server.on("/resetwifi", HTTP_ANY, [](AsyncWebServerRequest *request){
@@ -554,6 +559,31 @@ if (request->hasParam("charge1")) {
 
 /// @brief Pages de traitement 
 /// @return 
+
+String getState_dallas() {
+  String state; 
+  char buffer[5];
+   
+  dtostrf(sysvar.celsius[sysvar.dallas_maitre],2, 1, buffer); // conversion en n.1f 
+  
+  DynamicJsonDocument doc(384);
+    doc["temperature"] = buffer;
+    
+    //affichage des température et adresse des sondes dallas 
+    for (int i = 0; i < MAX_DALLAS; i++) {
+      char buffer[5];
+      // affichage que si != 0 
+      if (sysvar.celsius[i] != 0) {
+        dtostrf(sysvar.celsius[i],2, 1, buffer); // conversion en n.1f 
+        doc["dallas"+String(i)] = buffer;
+        doc["addr"+String(i)] = devAddrNames[i];
+      }
+    }
+  serializeJson(doc, state);
+  return String(state);
+}
+
+
 String getState() {
   String state; 
   char buffer[5];
@@ -586,16 +616,6 @@ String getState() {
     doc["relay2"]   = 0;
 #endif
     doc["minuteur"] = programme.run;
-    //affichage des température et adresse des sondes dallas 
-    for (int i = 0; i < MAX_DALLAS; i++) {
-      char buffer[5];
-      // affichage que si != 0 
-      if (sysvar.celsius[i] != 0) {
-        dtostrf(sysvar.celsius[i],2, 1, buffer); // conversion en n.1f 
-        doc["dallas"+String(i)] = buffer;
-        doc["addr"+String(i)] = devAddrNames[i];
-      }
-    }
   serializeJson(doc, state);
   return String(state);
 }
