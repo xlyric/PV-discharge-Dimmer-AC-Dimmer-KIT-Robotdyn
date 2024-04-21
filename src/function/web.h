@@ -175,7 +175,8 @@ void call_pages() {
         sysvar.change=1; 
         }
         String pb=getState().c_str(); 
-        pb = pb +String(sysvar.puissance) +" " + String(input) +" " + String(sysvar.puissance_dispo) ;
+        // modif faite le 11 Juin 2023, pourquoi ? pas trouvé l'utilité, log ?
+        // pb = pb +String(sysvar.puissance) +" " + String(input) +" " + String(sysvar.puissance_dispo) ;
         request->send_P(200, "text/plain", pb.c_str() );  
       } 
       
@@ -603,6 +604,7 @@ String getState() {
   
   DynamicJsonDocument doc(384);
     doc["dimmer"] = int(instant_power); // on le repasse un int pour éviter un affichage trop grand
+    doc["commande"] = int(sysvar.puissance);
     doc["temperature"] = buffer;
     doc["power"] = int(instant_power * config.charge/100);
     doc["Ptotal"]  = sysvar.puissance_cumul + int(instant_power * config.charge/100);
