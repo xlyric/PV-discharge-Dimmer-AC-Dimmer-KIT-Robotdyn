@@ -689,6 +689,7 @@ String getminuteur(Programme name) {
 } */ 
 
 String getMinuteur(const Programme& minuteur) {
+    getLocalTime(&timeinfo);
     DynamicJsonDocument doc(256);
     doc["heure_demarrage"] = minuteur.heure_demarrage;
     doc["heure_arret"] = minuteur.heure_arret;
