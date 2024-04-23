@@ -80,6 +80,7 @@ String getServermode(String Servermode);
 String switchstate(int state);
 String readmqttsave();
 String getMinuteur(const Programme& minuteur);
+String getMinuteur();
 extern Logs Logging; 
 extern String devAddrNames[MAX_DALLAS];
 
@@ -336,7 +337,7 @@ void call_pages() {
     if (request->hasParam("dimmer")) { request->send(200, "application/json",  getMinuteur(programme));  }
     if (request->hasParam("relay1")) { request->send(200, "application/json",  getMinuteur(programme_relay1)); }
     if (request->hasParam("relay2")) { request->send(200, "application/json",  getMinuteur(programme_relay2)); }
-    
+    else { request->send(200, "application/json",  getMinuteur()); }
     //request->send(200, "application/json",  getminuteur(programme_relay2).c_str()); 
   });
 
@@ -688,7 +689,7 @@ String getminuteur(Programme name) {
   return String(retour) ;
 } */ 
 
-String getMinuteur(const Programme& minuteur) {
+String getMinuteur(const Programme& minuteur ) {
     getLocalTime(&timeinfo);
     DynamicJsonDocument doc(256);
     doc["heure_demarrage"] = minuteur.heure_demarrage;
@@ -705,6 +706,15 @@ String getMinuteur(const Programme& minuteur) {
     return retour;
 }
 
+String getMinuteur() {
+    getLocalTime(&timeinfo);
+    DynamicJsonDocument doc(256);
+    doc["heure"] = timeinfo.tm_hour;
+    doc["minute"] = timeinfo.tm_min;
+    String retour;
+    serializeJson(doc, retour);
+    return retour;
+}
 
 String getmqtt() {
     String retour;
