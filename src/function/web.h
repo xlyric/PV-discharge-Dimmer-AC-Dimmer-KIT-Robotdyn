@@ -361,6 +361,7 @@ void call_pages() {
             if (request->hasParam("temperature")) { programme_relay2.temperature = request->getParam("temperature")->value().toInt();  programme_relay2.saveProgramme(); }
       request->send(200, "application/json",  getMinuteur(programme_relay2)); 
     }
+    else { request->send(200, "application/json",  getMinuteur()); }
   });
 
   /// reglage des seuils relais
@@ -374,6 +375,7 @@ void call_pages() {
     server.on("/getseuil", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     if (request->hasParam("relay1")) { request->send(200, "application/json",  getMinuteur(programme_relay1)); }
     if (request->hasParam("relay2")) { request->send(200, "application/json",  getMinuteur(programme_relay2)); }
+    else { request->send(200, "application/json",  getMinuteur()); }
     //request->send(200, "application/json",  getminuteur(programme_relay2).c_str()); 
   });
 
@@ -391,6 +393,7 @@ void call_pages() {
             if (request->hasParam("temperature")) { programme_relay2.seuil_temperature = request->getParam("temperature")->value().toInt();  programme_relay2.saveProgramme(); }
       request->send(200, "application/json",  getMinuteur(programme_relay2)); 
     }
+    else { request->send(200, "application/json",  getMinuteur()); }
   });
 
 
