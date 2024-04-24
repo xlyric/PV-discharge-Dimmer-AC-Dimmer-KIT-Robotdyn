@@ -415,6 +415,10 @@ void call_pages() {
     logging.reset_log_init(); 
   });
 
+  server.on("/onoff", HTTP_ANY, [](AsyncWebServerRequest *request){
+      getServermode("ONOFF");
+      request->send(200, "text/html", config.dimmer_on_off ? "1" : "0");
+  });
 
 
   server.on("/save", HTTP_ANY, [](AsyncWebServerRequest *request){
@@ -622,6 +626,7 @@ String getState() {
     doc["relay2"]   = 0;
 #endif
     doc["minuteur"] = programme.run;
+    doc["onoff"] = config.dimmer_on_off;
   serializeJson(doc, state);
   return String(state);
 }
@@ -632,10 +637,7 @@ String textnofiles() {
 }
 
 String processor(const String& var){
-  // Serial.println(var);
-  /*if (var == "STATE"){
-    return getState();
-  } */
+
   if (var == "VERSION"){
     // affichage de la version et de l'environnement
     String VERSION_http = String(VERSION) + " " + String(COMPILE_NAME) ; 
@@ -654,7 +656,6 @@ String processor(const String& var){
 String getconfig() {
   String configweb;  
   DynamicJsonDocument doc(512);  
-  //   +  config.mode + ";" + config.SubscribePV + ";" + config.SubscribeTEMP + ";" + config.dimmer_on_off ;
     doc["maxtemp"] = config.maxtemp;
 
     doc["startingpow"] = config.startingpow;
@@ -677,20 +678,6 @@ String getconfig() {
   serializeJson(doc, configweb);
   return String(configweb);
 }
-/*
-String getminuteur(Programme name) {
-    String retour;
-    DynamicJsonDocument doc(128); 
-
-    doc["heure_demarrage"] = name.heure_demarrage;
-    doc["heure_arret"] = name.heure_arret;
-    doc["temperature"] = name.temperature;
-    doc["heure"] = timeClient.getHours();
-    doc["minute"] = timeClient.getMinutes();
-
-  serializeJson(doc, retour);
-  return String(retour) ;
-} */ 
 
 String getMinuteur(const Programme& minuteur ) {
     getLocalTime(&timeinfo);
@@ -766,6 +753,7 @@ String getServermode(String Servermode) {
   if ( Servermode == "HA" ) {   config.HA = !config.HA; }
   if ( Servermode == "JEEDOM" ) {   config.JEEDOM = !config.JEEDOM; }
   if ( Servermode == "DOMOTICZ" ) {   config.DOMOTICZ = !config.DOMOTICZ; }
+  if ( Servermode == "ONOFF" ) {   config.dimmer_on_off = !config.dimmer_on_off; }
 
 return String(Servermode);
 }
