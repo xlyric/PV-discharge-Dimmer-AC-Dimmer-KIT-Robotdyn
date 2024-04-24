@@ -51,12 +51,15 @@ public:
         strcat(log_init,"197}11}1");
       }
 
-  char *loguptime() {
+  char *loguptime(bool day=false) {
       static char uptime_stamp[20]; // Vous devrez définir une taille suffisamment grande pour stocker votre temps
-      // snprintf(uptime_stamp, sizeof(uptime_stamp), "%s:%s:%s\t", timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec);
-      time_t maintenant;
-      time(&maintenant);
-      strftime(uptime_stamp, sizeof(uptime_stamp), "%H:%M:%S\t", localtime(&maintenant));
+        time_t maintenant;
+        time(&maintenant);
+      if (day) {
+        strftime(uptime_stamp, sizeof(uptime_stamp), "%d/%m/%Y %H:%M:%S\t ", localtime(&maintenant));
+      } else {
+        strftime(uptime_stamp, sizeof(uptime_stamp), "%H:%M:%S\t ", localtime(&maintenant));
+      }
       return uptime_stamp;
     }
   
