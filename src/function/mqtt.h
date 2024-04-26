@@ -71,7 +71,7 @@ char buffer[1024];
   /// @param message 
   /// @param length 
 
-String stringboolMQTT(bool mybool);
+String stringBoolMQTT(bool mybool);
 
   String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
   // String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
@@ -128,7 +128,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
       device_temp[sysvar.dallas_maitre].HA_discovery();
       device_temp_master.HA_discovery();
       device_dimmer_maxtemp.HA_discovery();
-      device_dimmer_alarm_temp.send(stringboolMQTT(sysvar.security));
+      device_dimmer_alarm_temp.send(stringBoolMQTT(sysvar.security));
       device_dimmer_maxtemp.send(String(config.maxtemp));
       device_dimmer_alarm_temp_clear.HA_discovery();
     }
@@ -255,7 +255,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
       if (doc2["reset_alarm"] == "1" ) {
         logging.Set_log_init("Clear alarm temp \r\n",true);
         sysvar.security = 0 ;
-        device_dimmer_alarm_temp.send(stringboolMQTT(sysvar.security)); 
+        device_dimmer_alarm_temp.send(stringBoolMQTT(sysvar.security)); 
         sysvar.change = 1 ;
       }
     }
@@ -321,7 +321,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
           device_dimmer_power.send(String(sysvar.puissance* config.charge/100));
           if (strcmp(String(config.PVROUTER).c_str() , "http") == 0) { device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));}
           // int coolerstate = digitalRead(COOLER); 
-          device_cooler.send(stringboolMQTT(sysvar.cooler));
+          device_cooler.send(stringBoolMQTT(sysvar.cooler));
           device_temp_master.send(String(sysvar.celsius[sysvar.dallas_maitre]));
           device_dimmer_starting_pow.send(String(config.startingpow));
           device_dimmer_minpow.send(String(config.minpow));
@@ -345,7 +345,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
             }
             device_temp_master.send(String(sysvar.celsius[sysvar.dallas_maitre]));
             Serial.println(sysvar.celsius[sysvar.dallas_maitre]);
-            device_dimmer_alarm_temp.send(stringboolMQTT(sysvar.security));
+            device_dimmer_alarm_temp.send(stringBoolMQTT(sysvar.security));
             device_dimmer_maxtemp.send(String(config.maxtemp)); 
           }
         }
@@ -576,7 +576,7 @@ void onMqttSubscribe(uint16_t packetId, uint8_t qos) {
   DEBUG_PRINTLN("  qos: ");
   DEBUG_PRINTLN(qos);
 }
-String stringboolMQTT(bool mybool){
+String stringBoolMQTT(bool mybool){
   String truefalse = "true";
   if (mybool == false ) {truefalse = "false";}
   return String(truefalse);

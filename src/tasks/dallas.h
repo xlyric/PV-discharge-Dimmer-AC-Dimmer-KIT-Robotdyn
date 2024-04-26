@@ -55,7 +55,7 @@ void mqttdallas() {
         }
         device_temp_master.HA_discovery();
         device_dimmer_maxtemp.HA_discovery();
-        device_dimmer_alarm_temp.send(stringboolMQTT(sysvar.security));
+        device_dimmer_alarm_temp.send(stringBoolMQTT(sysvar.security));
         device_dimmer_maxtemp.send(String(config.maxtemp)); 
         device_dimmer_alarm_temp_clear.HA_discovery();
       }

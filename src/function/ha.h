@@ -13,7 +13,7 @@ extern String devAddrNames[MAX_DALLAS];  // array of (up to) 15 temperature sens
 extern int deviceCount ; // nombre de sonde(s) dallas détectée(s)
 
 //extern dimmerLamp dimmer;
-String stringbool(bool mybool);
+String stringBool(bool mybool);
 
 /// @brief déclaration des configurations HA et MQTT
 struct HA
@@ -397,7 +397,7 @@ void HA_discover(){
         device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
 
         device_cooler.HA_discovery();
-        device_cooler.send(stringbool(false));
+        device_cooler.send(stringBool(false));
 
         device_temp_master.HA_discovery(); // discovery fait à la 1ere réception sonde ou mqtt.
         device_temp_master.send(String(0));

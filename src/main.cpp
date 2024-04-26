@@ -231,7 +231,7 @@ Programme programme_relay2;
 String getmqtt(); 
 void savemqtt(const char *filename, const Mqtt &mqtt_config);
 bool pingIP(IPAddress ip) ;
-String stringbool(bool mybool);
+String stringBool(bool mybool);
 String getServermode(String Servermode);
 String switchstate(int state);
 
@@ -566,14 +566,14 @@ void setup() {
       device_dimmer_send_power.send(String(sysvar.puissance));
       device_dimmer_power.send(String(sysvar.puissance* config.charge/100));
       device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
-      device_cooler.send(stringboolMQTT(false));
+      device_cooler.send(stringBoolMQTT(false));
       device_dimmer_starting_pow.send(String(config.startingpow));
       device_dimmer_minpow.send(String(config.minpow));
       device_dimmer_maxpow.send(String(config.maxpow));
 
       device_dimmer_child_mode.send(String(config.mode));
       device_dimmer_on_off.send(String(config.dimmer_on_off));
-      // device_dimmer_alarm_temp.send(stringboolMQTT(sysvar.security));
+      // device_dimmer_alarm_temp.send(stringBoolMQTT(sysvar.security));
 
 
       #ifdef RELAY1
@@ -775,7 +775,7 @@ void loop() {
     //// Trigger de sécurité température
       if ( sysvar.celsius[sysvar.dallas_maitre] <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
         security = 0 ;
-                if (!AP && mqtt_config.mqtt && config.HA) { device_dimmer_alarm_temp.send(stringbool(security)); 
+                if (!AP && mqtt_config.mqtt && config.HA) { device_dimmer_alarm_temp.send(stringBool(security)); 
                  Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("RAS" ),"Alerte");
                 }
         sysvar.change = 1 ;
@@ -973,7 +973,7 @@ if ( sysvar.celsius[sysvar.dallas_maitre] >= config.maxtemp && security == 0 ) {
   if ( config.HA ) { 
           device_temp[sysvar.dallas_maitre].send(String(temp)); 
           device_temp_master.send(String(temp)); 
-          device_dimmer_alarm_temp.send(stringbool(security));
+          device_dimmer_alarm_temp.send(stringBool(security));
           device_dimmer_power.send(String(0));
           device_dimmer_total_power.send(String(sysvar.puissance_cumul));
           }  /// si HA remonté MQTT HA de la température
@@ -1052,9 +1052,7 @@ void dallaspresent () {
   }
 
 
-String stringbool(bool mybool){
-  String truefalse = "true";
-  if (mybool == false ) {truefalse = "false";}
-  return String(truefalse);
-  }
+String stringBool(bool myBool) {
+  return myBool ? "true" : "false";
+}
 
