@@ -93,18 +93,12 @@
                     <!-- Topbar -->
                     <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
                         <!-- Sidebar Toggle (Topbar) -->
-                        <!--       <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
-
-            <i class="fa fa-bars"></i>
-          </button>
-
-
 
           <!-- Topbar Navbar -->
                         <ul class="navbar-nav ml-auto">
                             <!-- Nav Item - Search Dropdown (Visible Only XS) -->
                             <li class="nav-item dropdown no-arrow d-sm-none">
-                                <a
+                                <button
                                     class="nav-link dropdown-toggle"
                                     href="#"
                                     id="searchDropdown"
@@ -114,18 +108,13 @@
                                     aria-expanded="false"
                                 >
                                     <i class="fas fa-search fa-fw"></i>
-                                </a>
+                                </button>
                                 <!-- Dropdown - Messages -->
                                 <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in" aria-labelledby="searchDropdown"></div>
                             </li>
                             <!-- Nav Item - Alerts -->
                             <li class="nav-item dropdown no-arrow mx-1">
-                                <!--    <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Transmission mode <i class="fas fa-bell fa-fw"></i>-->
-                                <!-- Counter - Alerts -->
-                                <!--                <span class="badge badge-danger badge-counter"><span id="sendmode2" onclick="sendmode(this.innerHTML);" >%SENDMODE%</span></span>
-              </a>
-            --></li>
+                            </li>
                             <div class="topbar-divider d-none d-sm-block"></div>
                         </ul>
                     </nav>
@@ -135,7 +124,7 @@
                         <!-- Page Heading -->
                         <h1 class="h3 mb-2 text-gray-800">Configuration</h1>
 						<p class="mb-4">Page de configuration de votre pv dimmer, pensez à sauvegarder votre configuration sur la flash après l'avoir appliquée.</p>
-                        <p class="mb-4">page rapide d'aide : <a href="https://wiki.apper-solaire.org/" target="_blank"> ici </a></p>
+                        <p class="mb-4">page rapide d'aide : <a href="https://wiki.apper-solaire.org/" target="_blank" rel="noopener"> ici </a></p>
 
  
 
@@ -384,8 +373,8 @@
                                                     </div>
                                                     <div class="card-body">
                                                         <div class="form-group row">
-                                                            <div class="col-sm-6"><a href="https://wiki.apper-solaire.org/index.php?page=adv-dimmer" target="_blank">MQTT state dimmer subscription (or : none)</a></div>
-                                                            <div class="col-sm-6"><a href="https://wiki.apper-solaire.org/index.php?page=adv-dimmer" target="_blank">MQTT dimmer temp subscription (or : none)</a></div>
+                                                            <div class="col-sm-6"><a href="https://wiki.apper-solaire.org/index.php?page=adv-dimmer" target="_blank" rel="noopener">MQTT state dimmer subscription (or : none)</a></div>
+                                                            <div class="col-sm-6"><a href="https://wiki.apper-solaire.org/index.php?page=adv-dimmer" target="_blank" rel="noopener">MQTT dimmer temp subscription (or : none)</a></div>
                                                         </div>
                                                         <div class="form-group row">
                                                             <div class="col-sm-6">
@@ -610,7 +599,7 @@ $( "#formulaire" ).submit(function() {
             function generateLink(dimmerValue) {
                 if (dimmerValue !== 'none') {
                     var dimmerURL = "http://" + dimmerValue;
-                    $('#dimmer-url').html('<a href="' + dimmerURL + '" target="_blank">' + dimmerURL + '</a>');
+                    $('#dimmer-url').html('<a href="' + dimmerURL + '" target="_blank" rel="noopener">' + dimmerURL + '</a>');
                 }
             }
 
@@ -650,10 +639,7 @@ $( "#formulaire" ).submit(function() {
         </div>
     </div>
 </div>
-<!-- </div>
-</div> -->
 <!-- /.container-fluid -->
-<!-- </div> -->
 <!-- End of Main Content -->
 <!-- Footer -->
 <footer class="sticky-footer bg-white">

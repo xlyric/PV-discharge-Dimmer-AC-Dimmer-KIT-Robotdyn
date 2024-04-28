@@ -17,10 +17,10 @@
   #include <LittleFS.h>
 #endif
 
-const char *mqtt_conf = "/mqtt.json";
-const char *filename_conf = "/config.json";
-const char *wifi_conf = "/wifi.json";
-const char *programme_conf = "/programme.json";
+constexpr const char *mqtt_conf = "/mqtt.json";
+constexpr const char *filename_conf = "/config.json";
+constexpr const char *wifi_conf = "/wifi.json";
+constexpr const char *programme_conf = "/programme.json";
 
 
 extern Config config; 
@@ -239,10 +239,6 @@ void savemqtt(const char *filename, const Mqtt &mqtt_config) {
   doc["MQTT_USER"] = mqtt_config.username;
   doc["MQTT_PASSWORD"] = mqtt_config.password;
   doc["mqtt"] = mqtt_config.mqtt;
-  // doc["domoticz"] = mqtt_config.domoticz;
-  // doc["HA"] = mqtt_config.HA;
-  // doc["jeedom"] = mqtt_config.jeedom;
-  // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {
     Serial.println(F("Failed to write to file in function Save configuration "));
     logging.Set_log_init("Failed to write MQTT config\r\n");
@@ -269,7 +265,6 @@ bool loadwifiIP(const char *wifi_conf, Wifi_struct &wifi_config_fixe) {
       DeserializationError error = deserializeJson(doc, configFile);
       if (error) {
         Serial.println(F("Failed to read wifi config"));
-       // return false;
       }
 
       

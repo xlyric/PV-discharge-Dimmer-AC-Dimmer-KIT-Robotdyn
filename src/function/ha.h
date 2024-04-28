@@ -1,7 +1,6 @@
 #ifndef HA_FUNCTIONS
 #define HA_FUNCTIONS
 
-//#include <PubSubClient.h>
 #include <AsyncMqttClient.h>
 
 extern AsyncMqttClient  client;
@@ -12,7 +11,6 @@ extern DeviceAddress addr[MAX_DALLAS];  // array of (up to) 15 temperature senso
 extern String devAddrNames[MAX_DALLAS];  // array of (up to) 15 temperature sensors
 extern int deviceCount ; // nombre de sonde(s) dallas détectée(s)
 
-//extern dimmerLamp dimmer;
 String stringBool(bool mybool);
 
 /// @brief déclaration des configurations HA et MQTT
@@ -42,7 +40,8 @@ struct HA
     public:void Set_entity_type(String setter) {entity_type=setter; }
 
     private:String icon; 
-    public:void Set_icon(String setter) {icon="\"ic\": \""+ setter +"\", "; }
+    public:void Set_icon(String setter) {icon=R"("ic": ")" + setter + R"(",)"; }
+    //{icon="\"ic\": \""+ setter +"\", "; }
 
     private:String min; 
     public:void Set_entity_valuemin(String setter) {min=setter; }
@@ -125,11 +124,7 @@ struct HA
     //bool cmd_t; 
 
   private:String IPaddress = WiFi.localIP().toString();
-
-    //private:String state_topic; 
-    //private:String stat_t; 
-    //private:String avty_t;
-   
+  
     private:String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
     // setter mod_mac
     public:void Set_node_mac(String setter) {node_mac=setter; }
@@ -229,7 +224,6 @@ void devices_init(){
   device_dimmer.Set_icon("mdi:percent");
   device_dimmer.Set_entity_type("sensor");
   device_dimmer.Set_retain_flag(true);
-  // device_dimmer.Set_expire_after(true);
 
   device_dimmer_power.Set_name("Watt");
   device_dimmer_power.Set_object_id("watt");
@@ -260,7 +254,6 @@ void devices_init(){
       device_temp[i].Set_entity_qos(1);
       device_temp[i].Set_retain_flag(true);
     }
-  // device_dimmer.Set_expire_after(true);
  /// temp master 
       device_temp_master.Set_name("Température master");
       device_temp_master.Set_object_id("temperature");
@@ -300,7 +293,7 @@ void devices_init(){
   device_dimmer_starting_pow.Set_entity_type("number");
   device_dimmer_starting_pow.Set_entity_category("config");
   device_dimmer_starting_pow.Set_entity_valuemin("-100");
-  device_dimmer_starting_pow.Set_entity_valuemax("500"); // trop? pas assez? TODO : test sans valeur max?
+  device_dimmer_starting_pow.Set_entity_valuemax("500"); 
   device_dimmer_starting_pow.Set_entity_valuestep("1");
   device_dimmer_starting_pow.Set_retain_flag(true);
 
@@ -309,7 +302,7 @@ void devices_init(){
   device_dimmer_minpow.Set_entity_type("number");
   device_dimmer_minpow.Set_entity_category("config");
   device_dimmer_minpow.Set_entity_valuemin("0");
-  device_dimmer_minpow.Set_entity_valuemax("100"); // trop? pas assez? TODO : test sans valeur max?
+  device_dimmer_minpow.Set_entity_valuemax("100"); 
   device_dimmer_minpow.Set_entity_valuestep("1");
   device_dimmer_minpow.Set_retain_flag(true);
 
@@ -318,7 +311,7 @@ void devices_init(){
   device_dimmer_maxpow.Set_entity_type("number");
   device_dimmer_maxpow.Set_entity_category("config");
   device_dimmer_maxpow.Set_entity_valuemin("0");
-  device_dimmer_maxpow.Set_entity_valuemax("100"); // trop? pas assez? TODO : test sans valeur max?
+  device_dimmer_maxpow.Set_entity_valuemax("100"); 
   device_dimmer_maxpow.Set_entity_valuestep("1");
   device_dimmer_maxpow.Set_retain_flag(true);
 
@@ -327,7 +320,7 @@ void devices_init(){
   device_dimmer_send_power.Set_entity_type("number");
   device_dimmer_send_power.Set_entity_category("config");
   device_dimmer_send_power.Set_entity_valuemin("0");
-  device_dimmer_send_power.Set_entity_valuemax("100"); // trop? pas assez? TODO : test sans valeur max?
+  device_dimmer_send_power.Set_entity_valuemax("100"); 
   device_dimmer_send_power.Set_entity_valuestep("1");
   device_dimmer_send_power.Set_retain_flag(true);
 
@@ -336,19 +329,10 @@ void devices_init(){
   device_dimmer_maxtemp.Set_entity_type("number");
   device_dimmer_maxtemp.Set_entity_category("config");
   device_dimmer_maxtemp.Set_entity_valuemin("0");
-  device_dimmer_maxtemp.Set_entity_valuemax("75"); // trop? pas assez? TODO : test sans valeur max?
+  device_dimmer_maxtemp.Set_entity_valuemax("75"); 
   device_dimmer_maxtemp.Set_entity_valuestep("1");
   device_dimmer_maxtemp.Set_retain_flag(true);
 
-  /*device_dimmer_charge.Set_name("Charge");
-  device_dimmer_charge.Set_object_id("charge");
-  device_dimmer_charge.Set_entity_type("number");
-  device_dimmer_charge.Set_entity_category("config");
-  device_dimmer_charge.Set_entity_valuemin("0");
-  device_dimmer_charge.Set_entity_valuemax("3000");
-  device_dimmer_charge.Set_entity_valuestep("50");
-  device_dimmer_charge.Set_retain_flag(true);
-*/
   /// création des select
   device_dimmer_child_mode.Set_name("Mode");
   device_dimmer_child_mode.Set_object_id("child_mode");
@@ -418,9 +402,6 @@ void HA_discover(){
 
         device_dimmer_maxpow.HA_discovery();
         device_dimmer_maxpow.send(String(config.maxpow));
-
-       // device_dimmer_charge.HA_discovery();
-       // device_dimmer_charge.send(String(config.charge));
 
         device_dimmer_send_power.HA_discovery();
         device_dimmer_send_power.send(String(sysvar.puissance));

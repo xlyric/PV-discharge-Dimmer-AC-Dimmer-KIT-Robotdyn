@@ -62,17 +62,12 @@
                 <div id="content">
                     <!-- Topbar -->
                     <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-                        <!-- Sidebar Toggle (Topbar) -->
-                        <!--       <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
-            <i class="fa fa-bars"></i>
-          </button>
-
 
 
           <!-- Topbar Navbar -->
                         <ul class="navbar-nav ml-auto">
                             <li class="nav-item dropdown no-arrow">
-                                <a
+                                <button 
                                     class="nav-link dropdown-toggle"
                                     href="#"
                                     id="userDropdown"
@@ -84,7 +79,7 @@
                                     <span class="mr-2 d-none d-lg-inline text-gray-600 small">
                                         <div id="time">%TIME%</div>
                                     </span>
-                                </a>
+                                </button>
                             </li>
                         </li>
                         <div class="topbar-divider d-none d-sm-block"></div>
@@ -120,7 +115,7 @@
                                 </div>
                                 <div class="card-body">
                                     <div id="curve_temp" style=" width: auto; height: 200px;"></div>
-                                    <h3 id="alerte"></h3>
+                                    <h3 id="alerte"> </h3>
                                 </div>
                             </div>
                         </div>
@@ -131,9 +126,9 @@
                                     <h6 class="m-0 font-weight-bold text-primary">Etats</h6>
                                 </div>
                                 <div class="card-body">
-                                <b>Etat Minuteur : </b><h4 id="minuteur"></h4>
-                                <b>Etat Relais 1 : </b><h4 id="relais 1"></h4>
-                                <b>Etat Relais 2 : </b><h4 id="relais 2"></h4>
+                                <b>Etat Minuteur : </b><h4 id="minuteur"> </h4>
+                                <b>Etat Relais 1 : </b><h4 id="relais 1"> </h4>
+                                <b>Etat Relais 2 : </b><h4 id="relais 2"> </h4>
 
                                 </div>
                             </div>
@@ -193,14 +188,14 @@
 	
 	<!-- mise à jour de la jauge  --> 	
 		var gaugePA = new google.visualization.Gauge(document.getElementById('curve_chart2'));
-	    dataGaugePA = new google.visualization.DataTable();
+	    var dataGaugePA = new google.visualization.DataTable();
 	    dataGaugePA.addColumn('string', 'Puissance');
 		dataGaugePA.addColumn('number', 'Value');
 		dataGaugePA.addRows(1);
 		
 	<!-- mise à jour de la jauge  --> 	
 		var gaugePAtemp = new google.visualization.Gauge(document.getElementById('curve_temp'));
-	    dataGaugePAtemp = new google.visualization.DataTable();
+	    var dataGaugePAtemp = new google.visualization.DataTable();
 	    dataGaugePAtemp.addColumn('string', 'Power');
 		dataGaugePAtemp.addColumn('number', 'Value');
 		dataGaugePAtemp.addRows(1);

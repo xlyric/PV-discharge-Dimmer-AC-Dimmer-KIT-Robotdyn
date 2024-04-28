@@ -11,7 +11,7 @@
         <link href="all.min.css" rel="stylesheet" type="text/css">
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
         <!-- Custom styles for this template-->
-        <link href="https://ota.apper-solaire.org/css/sb-admin-2.min.css" rel="stylesheet">
+        <link href="https://ota.apper-solaire.org/css/sb-admin-2.min.css"   rel="stylesheet">
     </head>
     <body id="page-top">
         <!-- Page Wrapper -->
@@ -88,17 +88,12 @@
                     <!-- Topbar -->
                     <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
                         <!-- Sidebar Toggle (Topbar) -->
-                        <!--       <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
-            <i class="fa fa-bars"></i>
-          </button>
-
-
 
           <!-- Topbar Navbar -->
                         <ul class="navbar-nav ml-auto">
                             <!-- Nav Item - Search Dropdown (Visible Only XS) -->
                             <li class="nav-item dropdown no-arrow d-sm-none">
-                                <a
+                                <button
                                     class="nav-link dropdown-toggle"
                                     href="#"
                                     id="searchDropdown"
@@ -108,13 +103,13 @@
                                     aria-expanded="false"
                                 >
                                     <i class="fas fa-search fa-fw"></i>
-                                </a>
+                                </button>
                                 <!-- Dropdown - Messages -->
                                 <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in" aria-labelledby="searchDropdown"></div>
                             </li>
                             <!-- Nav Item - Alerts -->
                             <li class="nav-item dropdown no-arrow mx-1">
-                                <a
+                                <button
                                     class="nav-link dropdown-toggle"
                                     href="#"
                                     id="alertsDropdown"
@@ -129,7 +124,7 @@
                                     <span class="badge badge-danger badge-counter">
                                         <span id="sendmode2" onclick="sendmode(this.innerHTML);"></span>
                                     </span>
-                                </a>
+                                </button>
                             </li>
                             <div class="topbar-divider d-none d-sm-block"></div>
                         </ul>
@@ -380,12 +375,14 @@ var recupconfig =  $.getJSON('/getmqtt', function(data) {
 </div>
 <!-- End of Page Wrapper -->
 <!-- Bootstrap core JavaScript-->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js" ></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.bundle.min.js" ></script>
 <!-- Core plugin JavaScript-->
-<script src="https://ota.apper-solaire.org/css/jquery.easing.min.js"></script>
+<script src="https://ota.apper-solaire.org/css/jquery.easing.min.js" ></script>
 <!-- Custom scripts for all pages-->
 <script src="https://ota.apper-solaire.org/css/sb-admin-2.js"></script>
 <script></script>
+
+
 </body>
 </html>
