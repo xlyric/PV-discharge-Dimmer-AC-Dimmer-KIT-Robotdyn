@@ -184,8 +184,7 @@ int timesync_refresh = 120;
 //************* Dallas
 //***********************************
 void dallaspresent ();
-//float CheckTemperature(String label, byte deviceAddress[12]);
-#define TEMPERATURE_PRECISION 10
+//#define TEMPERATURE_PRECISION 10  // non utilisé ? 
 
 
 ////////////////////////////////////
@@ -199,20 +198,18 @@ bool discovery_temp;
 
 OneWire  ds(ONE_WIRE_BUS);  //  (a 4.7K resistor is necessary - 5.7K work with 3.3 ans 5V power)
 DallasTemperature sensors(&ds);
-// DeviceAddress insideThermometer;
+
   
   byte present = 0;
   
   byte data[12];
-  //byte addr[8];
-  //float celsius = 0.00;
   float previous_celsius[MAX_DALLAS] = {0.00};
   byte security = 0;
   int refresh = 60;
   int refreshcount = 0; 
 int deviceCount = 0;
-DeviceAddress addr[MAX_DALLAS];  // array of (up to) 15 temperature sensors
-String devAddrNames[MAX_DALLAS];  // array of (up to) 15 temperature sensors
+DeviceAddress addr[MAX_DALLAS];  // array of (up to) MAX_DALLAS temperature sensors
+String devAddrNames[MAX_DALLAS];  // array of (up to) MAX_DALLAS temperature sensors
 /***************************
  * End Settings
  **************************/
@@ -238,12 +235,8 @@ String switchstate(int state);
 /// @brief  declaration des logs 
 Logs logging;/// declare logs 
 
-//String loginit; 
-//String logs="197}11}1"; 
-//String getlogs(); 
 int childsend = 0; 
 
-//char buffer[1024];
 
 /***************************
  * init Dimmer
@@ -317,12 +310,12 @@ void setup() {
   esp_reset_reason_t reset_reason = esp_reset_reason();
   Serial.printf("Reason for reset: %d\n", reset_reason);
   logging.Set_log_init("-- Reason for reset: " + String(reset_reason) + " --\r\n" );
-  //logging.Set_log_init(String(reset_reason).c_str());/
+
   #else
   rst_info *reset_info = ESP.getResetInfoPtr();
   Serial.printf("Reason for reset: %d\n", reset_info->reason);
   logging.Set_log_init("-- Reason for reset: " + String(reset_info->reason) + " --\r\n");
-  //logging.Set_log_init(String(reset_info->reason).c_str());
+
   #endif
 
   #ifdef RELAY1 // permet de rajouter les relais en ne modifiant que config.h, et pas seulement en STANDALONE
@@ -522,8 +515,7 @@ void setup() {
     //***********************************
     //************* Setup - Web pages
     //***********************************
-  //server.serveStatic("/css/", LittleFS, "/css/");
-  //.setAuthentication("user", "pass");
+
 
   //chargement des url des pages
   call_pages();
@@ -556,12 +548,12 @@ void setup() {
     
     /// Configuration et connexion MQTT 
     async_mqtt_init();
-    //connect_and_subscribe() ;
+
     connectToMqtt();
     delay(1000);  
     /// pour remonter un 0 sur le MQTT
           if (config.HA || config.JEEDOM) {
-      // device_dimmer_on_off.send(String(config.dimmer_on_off));
+
       device_dimmer.send(String(sysvar.puissance));
       device_dimmer_send_power.send(String(sysvar.puissance));
       device_dimmer_power.send(String(sysvar.puissance* config.charge/100));
@@ -573,7 +565,7 @@ void setup() {
 
       device_dimmer_child_mode.send(String(config.mode));
       device_dimmer_on_off.send(String(config.dimmer_on_off));
-      // device_dimmer_alarm_temp.send(stringBoolMQTT(sysvar.security));
+
 
 
       #ifdef RELAY1
@@ -627,7 +619,7 @@ logging.Set_log_init("",true);
 logging.Set_log_init("\r\n");
 
 delay(1000);
-//Serial.println(frequency);
+
 }
 
 
@@ -637,8 +629,7 @@ bool alerte=false;
 /// LOOP 
 /////////////////////
 void loop() {
-  //Serial.print(frequency);Serial.print(" ");
-  //Serial.print(time_tempo);Serial.print("-");
+
 
   /// connexion MQTT
   if (!mqttConnected) {
@@ -654,7 +645,7 @@ void loop() {
   if (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print("NO WIFI - Restarting Dimmer");
-    // ESP.restart();
+
     config.restart = true;
   }
 
@@ -691,7 +682,7 @@ void loop() {
       sysvar.puissance=config.maxpow; 
           //// robotdyn dimmer
               logging.Set_log_init("start minuteur dimmer\r\n",true);
-              //unified_dimmer.dimmer_on(); // Tâche reportée à la demande dans unified_dimmer
+
               unified_dimmer.set_power(config.maxpow); 
               delay (50);
 
@@ -705,7 +696,7 @@ void loop() {
         device_dimmer_power.send(String(instant_power * config.charge/100)); 
         device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
       } 
-      //offset_heure_ete(); // on corrige l'heure d'été si besoin
+
     }
   }
 
@@ -753,9 +744,9 @@ void loop() {
 
   //// si la sécurité température est active on coupe le dimmer
   if ( sysvar.celsius[sysvar.dallas_maitre] > ( config.maxtemp + 2) && (!alerte) ) { 
-    // mqtt(String(config.IDXAlarme), String("Alert Temp :" + String(sysvar.celsius) ),"Alerte");  ///send alert to MQTT
+
     Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("Alert Temp :" + String(sysvar.celsius[sysvar.dallas_maitre]) ),"Alerte");  ///send alert to MQTT
-    // device_dimmer_alarm_temp.send("Alert temp");
+
             alerte=true;
             unified_dimmer.dimmer_off();
           }
@@ -791,7 +782,7 @@ void loop() {
   ////////////////// controle de la puissance /////////////////
 
   if ( sysvar.change == 1  && programme.run == false ) {   /// si changement et pas de minuteur en cours
-    // sysvar.change = 0; sisi, j'insiste, faut le mettre à la fin 
+
     if (config.dimmer_on_off == 0){
               unified_dimmer.dimmer_off();
     }
@@ -806,7 +797,7 @@ void loop() {
         // Du coup je force sysvar.puissance_cumul à 0 puisque Task_GET_POWER ne renverra plus rien désormais
         // ça évitera de rentrer dans cette boucle à l'infini en bombardant le dimmer d'ordres à 0 pour rien
         sysvar.puissance_cumul = 0;
-        //logging.Set_log_init("Child running and mode set to off - Child power at 0\r\n");
+
       }
     }    
     if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && security == 0) 
@@ -820,13 +811,11 @@ void loop() {
           if (config.dimmer_on_off == 1){
             unified_dimmer.set_power(config.maxpow);
             DEBUG_PRINTLN(("%d------------------",__LINE__));
-            // #ifdef outputPin2
-            //   dimmer2.setPower(config.maxpow);
-            // #endif
+
           }
           /// si on a une carte fille et qu'elle n'est pas configurée sur off, on envoie la commande 
           if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 && strcmp(config.mode,"off") != 0 ) {
-              //if ( strcmp(config.mode,"delester") == 0 ) { child_communication(int((sysvar.puissance-config.maxpow)*FACTEUR_REGULATION),true ); } // si mode délest, envoi du surplus
+              
               if ( strcmp(config.mode,"delester") == 0 ) { 
                 child_communication(int((sysvar.puissance-config.maxpow)),true );  // si mode délest, envoi du surplus
               }
@@ -842,20 +831,13 @@ void loop() {
         { 
         if (config.dimmer_on_off == 1){
           unified_dimmer.set_power(sysvar.puissance);
-          // Modif RV - 20240310
-          // gestion des multiples dimmers reportée dans unified_dimmer, pas dans le code principal
-          //#ifdef outputPin2
-            //  dimmer2.setPower(sysvar.puissance);
-          //#endif
         }
 
           if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 ) {
-             //int puissance_regulee = sysvar.puissance*FACTEUR_REGULATION;
-              //if ( strcmp(config.mode,"equal") == 0) { child_communication(int(sysvar.puissance*FACTEUR_REGULATION),true); childsend = 0;}  //si mode equal envoie de la commande vers la carte fille
-            //if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance < config.maxpow) { child_communication(0,false); childsend = 0; }  //si mode délest envoie d'une commande à 0
+            
             if ( strcmp(config.mode,"equal") == 0) { 
               child_communication(int(sysvar.puissance),true); 
-             // logging.Set_log_init("Child at " + String(sysvar.puissance) + "%\r\n"); 
+            
             }  //si mode equal envoie de la commande vers la carte fille
             if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance <= config.maxpow) { 
               child_communication(0,false); 
@@ -864,7 +846,7 @@ void loop() {
 
             if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance > config.maxpow) { // si sysvar.puissance passe subitement au dessus de config.maxpow
               child_communication(int((sysvar.puissance-config.maxpow)),true );
-              //logging.Set_log_init("===> Cas oublié <===\r\n");
+              
             }
               DEBUG_PRINTLN(("%d  -----------------",__LINE__));
               DEBUG_PRINTLN(sysvar.puissance);
@@ -889,7 +871,6 @@ void loop() {
             /// Modif RV - 20240219
             /// Oubli d'envoie "device_dimmer_power.send" + correction de "device_dimmer_total_power.send"
             device_dimmer_power.send(String(config.maxpow * config.charge/100)); 
-            //device_dimmer_total_power.send(String(sysvar.puissance_cumul + config.maxpow)); }  // remonté MQTT HA de la commande max
             device_dimmer_total_power.send(String(sysvar.puissance_cumul + (config.maxpow * config.charge/100))); }  // remonté MQTT HA de la commande max
 
         }
@@ -939,11 +920,6 @@ void loop() {
               device_dimmer_power.send("0");
             }
 
-            // Modif RV - 20240310
-            // gestion des multiples dimmers reportée dans unified_dimmer, pas dans le code principal
-            //#ifdef outputPin2
-              //  dimmer2.setPower(0);
-            //#endif
         }
 
 
@@ -981,7 +957,7 @@ if ( sysvar.celsius[sysvar.dallas_maitre] >= config.maxtemp && security == 0 ) {
 
 
 
-  //DEBUG_PRINTLN(sysvar.puissance);
+
  delay(100);  // 24/01/2023 changement 500 à 100ms pour plus de réactivité
 }
 
@@ -994,7 +970,7 @@ if ( sysvar.celsius[sysvar.dallas_maitre] >= config.maxtemp && security == 0 ) {
     //***********************************
 
 void dallaspresent () {
-  // byte type_s;
+
   for (int i = 0; i < deviceCount; i++) {
     if (!ds.search(addr[i])) {
       logging.Set_log_init("Unable to find temperature sensors address \r\n",true);
@@ -1040,9 +1016,6 @@ void dallaspresent () {
     present = ds.reset();    ///  byte 0 > 1 si present
     ds.select(addr[a]);    
     ds.write(0xBE);         // Read Scratchpad
-    // Serial.print("  present = ");
-    // Serial.println(present, HEX);
-    // logging.Set_log_init("Dallas present at "+ String(present, HEX)+"\r\n");
 
   }
   ds.reset_search();

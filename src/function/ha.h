@@ -58,11 +58,11 @@ struct HA
     private:bool retain_flag; 
     public:void Set_retain_flag(bool setter) {retain_flag=setter; }
 
-  private:int qos; 
-  public:void Set_entity_qos(int setter) {qos; }
+    private:int qos; 
+    public:void Set_entity_qos(int setter) {qos=setter; }
 
-  private:String retain; 
-  public:void Set_retain(bool setter) {
+    private:String retain; 
+    public:void Set_retain(bool setter) {
     if (setter) {retain="\"ret\":true,"; }
   }
 
@@ -121,7 +121,7 @@ struct HA
       return info;
     }
 
-    //bool cmd_t; 
+
 
   private:String IPaddress = WiFi.localIP().toString();
   
@@ -130,7 +130,6 @@ struct HA
     public:void Set_node_mac(String setter) {node_mac=setter; }
        
     private:String node_id = String("dimmer-") + node_mac; 
-    //private:String topic = "homeassistant/sensor/"+ node_id +"/";
     private:String topic_switch = "homeassistant/switch/"+ node_id +"/";
     private:String topic_switch_state = "homeassistant/switch/";
     private:String HA_device_declare() { 
@@ -200,7 +199,6 @@ HA device_dimmer_maxtemp;
 HA device_dimmer_minpow;
 HA device_dimmer_maxpow;
 HA device_dimmer_send_power;
-//HA device_dimmer_charge;
 
 /// création select
 HA device_dimmer_child_mode;

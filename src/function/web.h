@@ -1,13 +1,9 @@
 #ifndef WEB_FUNCTIONS
 #define WEB_FUNCTIONS
 
-// #include <ESP8266WiFi.h>
-//#include <ESPAsyncWiFiManager.h> 
 #include <stdlib.h>
 
-// #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-// #include <ESP8266HTTPClient.h> 
 #include "config/config.h"
 #include "function/littlefs.h"
 #include "function/ha.h"
@@ -35,7 +31,6 @@ extern Programme programme_relay1;
 extern Programme programme_relay2; 
 extern gestion_puissance unified_dimmer; 
 
-//extern dimmerLamp dimmer; 
 extern DNSServer dns;
 extern byte security; 
 
@@ -51,7 +46,6 @@ extern HA device_dimmer;
 extern HA device_temp[MAX_DALLAS]; 
 extern HA device_relay1;
 extern HA device_relay2;
-// extern HA device_cooler;
 extern HA device_dimmer_on_off;
 extern HA device_dimmer_child_mode;
 extern HA device_dimmer_maxpow;
@@ -67,7 +61,6 @@ extern DeviceAddress addr[MAX_DALLAS];
 constexpr const char* PARAM_INPUT_1 = "POWER"; /// paramettre de retour sendmode
 constexpr const char* PARAM_INPUT_2 = "OFFSET"; /// paramettre de retour sendmode
  
-//extern char buffer[1024];
 
 String getmqtt(); 
 String getconfig(); 
@@ -176,8 +169,6 @@ void call_pages() {
         sysvar.change=1; 
         }
         String pb=getState().c_str(); 
-        // modif faite le 11 Juin 2023, pourquoi ? pas trouvé l'utilité, log ?
-        // pb = pb +String(sysvar.puissance) +" " + String(input) +" " + String(sysvar.puissance_dispo) ;
         request->send_P(200, "text/plain", pb.c_str() );  
       } 
       
@@ -213,7 +204,6 @@ void call_pages() {
         if (!AP) {
             request->send(LittleFS, "/config.html", String(), false, processor);
 
-            //request->send(LittleFS, "/config.html", "text/html");
         }
         else {
             request->send(LittleFS, "/config-AP.html", String(), false, processor);
@@ -308,12 +298,10 @@ void call_pages() {
     AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/mqtt.html.gz", "text/html");
     response->addHeader("Content-Encoding", "gzip");
     request->send(response);
-   // request->send(LittleFS, "/mqtt.html", "text/html");
   });
 
 //// compressé
   server.on("/log.html", HTTP_ANY, [](AsyncWebServerRequest *request){
-    //request->send(LittleFS, "/log.html", "text/html");
         AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/log.html.gz", "text/html");
         response->addHeader("Content-Encoding", "gzip");
         request->send(response);
@@ -327,9 +315,7 @@ void call_pages() {
 /////////// minuteur 
   server.on("/minuteur.html", HTTP_ANY, [](AsyncWebServerRequest *request){
     AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/minuteur.html", "text/html");
-    //response->addHeader("Content-Encoding", "gzip");
     request->send(response);
-   // request->send(LittleFS, "/mqtt.html", "text/html");
   });
 
 
@@ -338,7 +324,6 @@ void call_pages() {
     if (request->hasParam("relay1")) { request->send(200, "application/json",  getMinuteur(programme_relay1)); }
     if (request->hasParam("relay2")) { request->send(200, "application/json",  getMinuteur(programme_relay2)); }
     else { request->send(200, "application/json",  getMinuteur()); }
-    //request->send(200, "application/json",  getminuteur(programme_relay2).c_str()); 
   });
 
   server.on("/setminiteur", HTTP_ANY, [] (AsyncWebServerRequest *request) {
@@ -367,16 +352,13 @@ void call_pages() {
   /// reglage des seuils relais
     server.on("/relai.html", HTTP_ANY, [](AsyncWebServerRequest *request){
     AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/relai.html", "text/html");
-    //response->addHeader("Content-Encoding", "gzip");
     request->send(response);
-   // request->send(LittleFS, "/mqtt.html", "text/html");
   });
 
     server.on("/getseuil", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     if (request->hasParam("relay1")) { request->send(200, "application/json",  getMinuteur(programme_relay1)); }
     if (request->hasParam("relay2")) { request->send(200, "application/json",  getMinuteur(programme_relay2)); }
     else { request->send(200, "application/json",  getMinuteur()); }
-    //request->send(200, "application/json",  getminuteur(programme_relay2).c_str()); 
   });
 
   server.on("/setseuil", HTTP_ANY, [] (AsyncWebServerRequest *request) {
@@ -404,7 +386,6 @@ void call_pages() {
 
   server.on("/reset", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain","Restarting");
-    // ESP.restart();
     config.restart = true;
   });
 
@@ -448,7 +429,6 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     config.maxtemp = request->getParam("maxtemp")->value().toInt();
     if (!AP && mqtt_config.mqtt) { device_dimmer_maxtemp.send(String(config.maxtemp));}
    }
-   //if (request->hasParam("charge")) { config.charge = request->getParam("charge")->value().toInt();}
 if (request->hasParam("charge1")) { 
     config.charge1 = request->getParam("charge1")->value().toInt(); 
     config.charge = config.charge1 + config.charge2 + config.charge3;
@@ -480,12 +460,7 @@ if (request->hasParam("charge1")) {
     config.maxpow = request->getParam("maxpow")->value().toInt();
     if (!AP && mqtt_config.mqtt) { device_dimmer_maxpow.send(String(config.maxpow));}
    }
-/*
-    if (request->hasParam("charge")) { 
-    config.charge = request->getParam("charge")->value().toInt();
-    if (!AP && mqtt_config.mqtt) { device_dimmer_charge.send(String(config.charge));}
-   }
-*/
+
    if (request->hasParam("child")) { request->getParam("child")->value().toCharArray(config.child,15);  }
    if (request->hasParam("mode")) { 
     request->getParam("mode")->value().toCharArray(config.mode,10);  
@@ -522,7 +497,7 @@ if (request->hasParam("charge1")) {
 
 
   //Ajout des relais
-  // #ifdef STANDALONE
+
   #ifdef RELAY1
    if (request->hasParam("relay1")) { int relay = request->getParam("relay1")->value().toInt(); 
 
@@ -606,7 +581,6 @@ String getState() {
   float instant_power= unified_dimmer.get_power(); 
   #endif
 
-  //state = String(instant_power) + "% " +  String(instant_power * config.charge) + "W"; 
    
   dtostrf(sysvar.celsius[sysvar.dallas_maitre],2, 1, buffer); // conversion en n.1f 
   
@@ -740,8 +714,6 @@ String getcomplement() {
 
 
 String readmqttsave(){
-        //String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-        //String node_id = String("dimmer-") + node_mac; 
         String node_id = config.say_my_name;
         String save_command = String("Xlyric/sauvegarde/"+ node_id );
         client.subscribe(save_command.c_str(),1);

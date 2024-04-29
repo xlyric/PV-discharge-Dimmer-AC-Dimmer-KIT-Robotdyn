@@ -16,10 +16,6 @@
   #include <LittleFS.h>
 #endif
 
-//// NTP 
-// WiFiUDP ntpUDP;
-// NTPClient timeClient(ntpUDP);
-
 #include "config/enums.h"
 #include "function/unified_dimmer.h"
 
@@ -27,50 +23,17 @@ extern System sysvar;
 extern Config config;
 extern gestion_puissance unified_dimmer; 
 
-// void offset_heure_ete();
-// void timeclientEpoch_to_date(time_t epoch) ;
 struct tm timeinfo;
 epoc actual_time; 
 
 /// @brief ///////init du NTP 
 void ntpinit() {
       // Configurer le serveur NTP et le fuseau horaire
-  // timeClient.begin();
-  // timeClient.update();
-  //Serial.println(timeClient.getFormattedTime());
-  // offset_heure_ete();
   configTzTime("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", NTP_SERVER);  //Voir Time-Zone: https://sites.google.com/a/usapiens.com/opnode/time-zones
-  // Serial.println(timeClient.getFormattedTime());
   getLocalTime( &timeinfo );
   Serial.println(asctime(&timeinfo));
   
 }
-
-// void timeclientEpoch_to_date(time_t epoch)  { // convert epoch to date  
-//   actual_time.mois = month(epoch);
-//   actual_time.jour = day(epoch);
-//   actual_time.heure = hour(epoch);
-//   DEBUG_PRINTLN(actual_time.mois);
-//   DEBUG_PRINTLN(actual_time.jour);
-//   DEBUG_PRINTLN(actual_time.heure);
-//   }
-
-
-// void offset_heure_ete() {
-//   timeclientEpoch_to_date(timeClient.getEpochTime());
-
-//               //detection été /hiver
-//             if (actual_time.mois > 10 || actual_time.mois < 3 
-//             || (actual_time.mois == 10 && (actual_time.jour) > 22 && (actual_time.weekday == 7)) 
-//             || (actual_time.mois == 3 && (actual_time.jour)<24 && actual_time.weekday == 7) ){
-//                 //C'est l'hiver
-//                 timeClient.setTimeOffset(NTP_OFFSET_SECONDS*1); 
-//                 }
-//                 else{
-//                 //C'est l'été
-//                 timeClient.setTimeOffset(NTP_OFFSET_SECONDS*2); 
-//             }
-// }
 
 //////// structure pour les programmateurs. 
 struct Programme {
@@ -158,7 +121,6 @@ struct Programme {
 
  void commande_run(){
         run=true; 
-        // timeClient.update();
 
   }
 
@@ -229,8 +191,6 @@ bool stop_progr() {
   if(getLocalTime(&timeinfo)) {
     if (heures == timeinfo.tm_hour && minutes == timeinfo.tm_min) {
         run=false; 
-        // timeClient.update();
-        // offset_heure_ete();     
         return true; 
     }
   }

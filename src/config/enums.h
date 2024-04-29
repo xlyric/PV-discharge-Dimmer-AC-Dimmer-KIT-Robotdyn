@@ -9,7 +9,7 @@
   #include <ESP8266WiFi.h>
 #endif
 
-#define MAX_DALLAS 8
+constexpr const int MAX_DALLAS=8; // nombre de sonde Dallas
 
 
 /// @brief  partie délicate car pas mal d'action sur la variable log_init et donc protection de la variable ( pour éviter les pb mémoire )

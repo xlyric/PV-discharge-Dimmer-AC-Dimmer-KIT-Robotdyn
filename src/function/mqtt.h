@@ -2,10 +2,7 @@
 #define MQTT_FUNCTIONS
 
 // Web services
-// #include <ESP8266WiFi.h>
-// #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-//#include <ESP8266HTTPClient.h> 
 #include <ArduinoJson.h> 
 #include "config/config.h"
 #include "function/unified_dimmer.h"
@@ -22,7 +19,6 @@
   #include <ESP8266HTTPClient.h> 
 #endif
 
-//extern gestion_puissance unified_dimmer; 
 extern Config config; 
 extern System sysvar;
 extern HTTPClient http;
@@ -41,7 +37,6 @@ extern HA device_dimmer_alarm_temp;
 extern HA device_dimmer_power;
 extern HA device_dimmer_send_power; 
 extern HA device_dimmer_total_power;
-//extern HA device_dimmer_charge;
 extern HA device_temp[MAX_DALLAS];
 extern HA device_temp_master;
 extern HA device_relay1;
@@ -55,7 +50,6 @@ extern bool discovery_temp;
 extern bool alerte; 
 extern byte security; // sécurité
 extern Logs logging; 
-//extern char buffer[1024];
 extern String devAddrNames[MAX_DALLAS];
 extern AsyncMqttClient client; 
 
@@ -74,10 +68,8 @@ char buffer[1024];
 String stringBoolMQTT(bool mybool);
 
   String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-  // String node_ids = WiFi.macAddress().substring(0,2)+ WiFi.macAddress().substring(4,6)+ WiFi.macAddress().substring(8,10) + WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
   String node_id = String("dimmer-") + node_mac; 
   
-  // String topic = "homeassistant/sensor/"+ node_id +"/status";  
   String topic_Xlyric = "Xlyric/"+ node_id +"/";
 
   String command_switch = String(topic_Xlyric + "command/switch");
@@ -88,13 +80,10 @@ String stringBoolMQTT(bool mybool);
   String command_save = String("Xlyric/sauvegarde/"+ node_id );
 
 void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
-  //char* Subscribedtopic, byte* message, unsigned int length
-  // logging.Set_log_init("Subscribedtopic : " + String(Subscribedtopic)+ "\r\n",true);
   // debug
   Serial.println("Subscribedtopic : " + String(Subscribedtopic));
   Serial.println("payload : " + String(payload));
   String fixedpayload = ((String)payload).substring(0,len);
-  // logging.Set_log_init("Payload : " + String(fixedpayload)+ "\r\n",true);
   StaticJsonDocument<1152> doc2;
   deserializeJson(doc2, payload);
   /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remontées par MQTT
@@ -102,12 +91,8 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
     int puissancemqtt = doc2["power"]; 
     puissancemqtt = puissancemqtt - config.startingpow;
     if (puissancemqtt < 0) puissancemqtt = 0;
-    //if (puissancemqtt > config.maxpow) puissancemqtt = config.maxpow;
     if (sysvar.puissance != puissancemqtt ) {
       sysvar.puissance = puissancemqtt;
-      // logging.Set_log_init("MQTT power at "); 
-      // logging.Set_log_init(String(sysvar.puissance).c_str());
-      // logging.Set_log_init("%\r\n");
       sysvar.change=1; 
     }
     else if (config.dimmer_on_off == 1){
@@ -118,7 +103,6 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
   }
   /// @brief Enregistrement temperature
   if (strcmp( Subscribedtopic, config.SubscribeTEMP ) == 0 ){ // && doc2.containsKey("temperature")) { 
-    // float temperaturemqtt = doc2["temperature"]; 
     float temperaturemqtt = doc2[0]; 
     sysvar.dallas_maitre= deviceCount+1;
     devAddrNames[deviceCount+1] = "MQTT";
@@ -143,7 +127,6 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
     }
   }
 
-//#ifdef  STANDALONE // désactivé sinon ne fonctionne pas avec ESP32
   /// @brief Enregistrement des requetes de commandes 
   if (strstr( Subscribedtopic, command_switch.c_str() ) != NULL) { 
     #ifdef RELAY1
@@ -177,9 +160,8 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
         sysvar.change=1; 
     }
   } 
-//#endif
+
   if (strstr( Subscribedtopic, command_number.c_str() ) != NULL) { 
-  // if (strcmp( Subscribedtopic, command_number.c_str() ) == 0) { 
     if (doc2.containsKey("starting_power")) { 
       int startingpow = doc2["starting_power"]; 
       if (config.startingpow != startingpow ) {
@@ -243,14 +225,12 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
         logging.Set_log_init("MQTT charge at ");
         logging.Set_log_init(String(charge).c_str());
         logging.Set_log_init("W\r\n");
-        //device_dimmer_charge.send(String(charge));
         sysvar.change=1; 
       }
     }
   }
 //clear alarm & save
   if (strstr( Subscribedtopic, command_button.c_str() ) != NULL) { 
-  // if (strcmp( Subscribedtopic, command_button.c_str() ) == 0) { 
     if (doc2.containsKey("reset_alarm")) { 
       if (doc2["reset_alarm"] == "1" ) {
         logging.Set_log_init("Clear alarm temp \r\n",true);
@@ -272,7 +252,6 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
 
 //child mode
   if (strstr( Subscribedtopic, command_select.c_str() ) != NULL) { 
-  // if (strcmp( Subscribedtopic, command_select.c_str() ) == 0) { 
     if (doc2.containsKey("child_mode")) { 
       String childmode = doc2["child_mode"]; 
       if (config.mode != doc2["child_mode"] ) {
@@ -320,13 +299,11 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
           device_dimmer_send_power.send(String(sysvar.puissance));
           device_dimmer_power.send(String(sysvar.puissance* config.charge/100));
           if (strcmp(String(config.PVROUTER).c_str() , "http") == 0) { device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));}
-          // int coolerstate = digitalRead(COOLER); 
           device_cooler.send(stringBoolMQTT(sysvar.cooler));
           device_temp_master.send(String(sysvar.celsius[sysvar.dallas_maitre]));
           device_dimmer_starting_pow.send(String(config.startingpow));
           device_dimmer_minpow.send(String(config.minpow));
           device_dimmer_maxpow.send(String(config.maxpow));
-         //device_dimmer_charge.send(String(config.charge));
           device_dimmer_maxtemp.send(String(config.maxtemp));
           if (strcmp(String(config.PVROUTER).c_str() , "http") == 0) {device_dimmer_child_mode.send(String(config.mode));}
           device_dimmer_on_off.send(String(config.dimmer_on_off));
@@ -352,56 +329,6 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
   }
 }
 
-
-
-
-
-
-//// envoie de commande MQTT 
-// void mqtt(String idx, String value, String name="")
-// {
-
-//   if (idx != "0" || idx != "" ) { // Autant vérifier qu'une seule fois?
-    
-//   // Grace a l'ajout de "exp_aft" sur le discovery, 
-//   // je préfère envoyer power et temp séparément, à chaque changement de valeur.
-//   // MQTT_INTERVAL à affiner, mais OK selon mes tests.
-//   // Si pas de valeur publiée dans ce délai, la valeur sur HA passe en indisponible.
-//   // Permet de détecter un problème
-
-//     // StaticJsonDocument<256> infojson;
-//     // infojson["power"] = String(puissance);
-//     // infojson["temperature"] = String(celsius);
-//     // char json_string[256];
-//     // serializeJson(infojson, json_string);
-//     // device_dimmer.send2(json_string);
-    
-//     if (mqtt_config.domoticz){
-//       String nvalue = "0" ; 
-//       String retour; 
-//       DynamicJsonDocument doc(128);
-//       if ( value != "0" ) { nvalue = "2" ; }
-//       doc["idx"] = idx.toInt();
-//       doc["nvalue"] = nvalue.toInt();
-//       doc["svalue"] = value;
-//       doc["name"] = name;
-//       serializeJson(doc, retour);
-// //      String message = "  { \"idx\" : \"" + idx +"\" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
-//       //client.loop();
-//       //client.publish(config.Publish, 0,true, String(message).c_str());   
-//       // si config.Publish est vide, on ne publie pas
-//       if (strlen(config.Publish) != 0 ) {
-//         client.publish(config.Publish, 0,true, retour.c_str());
-//       }
-//     }
-
-//     if (mqtt_config.jeedom){
-//       if (strlen(config.Publish) != 0 ) {
-//          String jdompub = String(config.Publish) + "/"+idx ;
-//           client.publish(jdompub.c_str() ,0,true, value.c_str());
-//       }
-//       //client.loop();
-
 void Mqtt_send_DOMOTICZ(String idx, String value, String name="")
 {
 
@@ -415,9 +342,6 @@ void Mqtt_send_DOMOTICZ(String idx, String value, String name="")
       doc["svalue"] = value;
       doc["name"] = name;
       serializeJson(doc, retour);
-//      String message = "  { \"idx\" : \"" + idx +"\" ,   \"svalue\" : \"" + value + "\",  \"nvalue\" : " + nvalue + "  } ";
-      //client.loop();
-      //client.publish(config.Publish, 0,true, String(message).c_str());   
       // si config.Publish est vide, on ne publie pas
       if (strlen(config.Publish) != 0 ) {
         client.publish(config.Publish, 0,true, retour.c_str());
@@ -441,24 +365,15 @@ void child_communication(int delest_power, bool equal = false){
   /// Ajout de " delest_power != 0" pour ne pas envoyer une demande de puissance si on le passe de toutes façons à 0
   if (sysvar.puissance_dispo !=0 && delest_power != 0) {  
     baseurl.concat("&puissance=");
-    //if (strcmp(config.mode,"equal") == 0) { baseurl.concat(String(sysvar.puissance_dispo/2)); }
-    //else { baseurl.concat(String(sysvar.puissance_dispo)); }
     if ( strcmp(config.child,"") != 0 && strcmp(config.mode,"equal") == 0 ) { tmp_puissance_dispo = sysvar.puissance_dispo/2;}
     else { tmp_puissance_dispo = sysvar.puissance_dispo; }
       baseurl.concat(String(tmp_puissance_dispo)); 
   }
-  //else {  }  /// ça posera problème si il y a pas de commandes de puissance en W comme le 2eme dimmer se calque sur la puissance du 1er 
-
+  
   http.begin(domotic_client,config.child,80,baseurl); 
   http.GET();
   http.end(); 
-  /*
-  logging.Set_log_init("child at ");
-  logging.Set_log_init(String(delest_power).c_str());
-  logging.Set_log_init("% _ ");
-  logging.Set_log_init(String(tmp_puissance_dispo).c_str());
-  logging.Set_log_init("W\r\n");
-  */
+
 }
 
 
@@ -476,7 +391,7 @@ void connect_and_subscribe() {
       
       if (mqttConnected) {
         logging.Set_log_init("Subscribe and publish to MQTT topics\r\n");
-        //client.publish(String(topic).c_str() ,0,true, "online"); // status Online
+       
         Serial.println("connected");
         logging.Set_log_init("Connected\r\n");
 
@@ -493,11 +408,9 @@ void connect_and_subscribe() {
         client.subscribe(command_select.c_str(),1);
         client.subscribe(command_button.c_str(),1);
 
-        //String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-        //String node_id = String("dimmer-") + node_mac; 
         String node_id = config.say_my_name;
         String save_command = String("Xlyric/sauvegarde/"+ node_id );
-        //client.subscribe(save_command.c_str());
+
         int instant_power = sysvar.puissance;  // 
         Mqtt_send_DOMOTICZ(String(config.IDX), String(String(instant_power)));   /// correction 19/04 valeur remonté au dessus du max conf
         device_dimmer.send(String(instant_power)); 
@@ -531,7 +444,7 @@ void connectToMqtt() {
   DEBUG_PRINTLN("Connecting to MQTT...");
     logging.Set_log_init("Connecting to MQTT... \r\n");
   client.connect();
-    // client.setKeepAlive(60);
+
   }
   
 }
@@ -561,7 +474,6 @@ void onMqttConnect(bool sessionPresent) {
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
   Serial.println("Disconnected from MQTT.");
   logging.Set_log_init("MQTT disconnected \r\n",true);
-  // mqttConnected = false;
 
   if (WiFi.isConnected()) {
     connectToMqtt();

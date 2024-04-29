@@ -24,7 +24,6 @@ constexpr const char *programme_conf = "/programme.json";
 
 
 extern Config config; 
-//extern Programme programme; 
 
 extern Logs logging; 
 
@@ -55,7 +54,6 @@ void loadConfiguration(const char *filename, Config &config) {
    // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/v6/assistant to compute the capacity.
-  //StaticJsonDocument<1024> doc;
   DynamicJsonDocument doc(2048);
 
   // Deserialize the JSON document
@@ -133,7 +131,6 @@ void saveConfiguration(const char *filename, const Config &config) {
   // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/assistant to compute the capacity.
-  //StaticJsonDocument<1024> doc;
   DynamicJsonDocument doc(2048);
 
   // Set the values in the document
@@ -212,9 +209,6 @@ bool loadmqtt(const char *filename, Mqtt &mqtt_config) {
           doc["MQTT_PASSWORD"] | "", // <- source
           sizeof(mqtt_config.password));         // <- destination's capacity
   mqtt_config.mqtt = doc["mqtt"] | true;
-  // mqtt_config.HA = doc["HA"] | true;
-  // mqtt_config.domoticz = doc["domoticz"] | true;
-  // mqtt_config.jeedom = doc["jeedom"] | true;
 
   configFile.close();
 
