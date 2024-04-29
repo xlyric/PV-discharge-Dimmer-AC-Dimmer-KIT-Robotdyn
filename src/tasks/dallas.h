@@ -22,6 +22,7 @@ int dallas_error[MAX_DALLAS] = {0}; // compteur d'erreur dallas
 int gw_error = 0;   // compteur d'erreur gateway
 
 float CheckTemperature(String label, byte deviceAddress[12]);
+void restart_dallas();
 void dallaspresent ();
 
 /// @brief / task executé toute les n secondes pour publier la température ( voir déclaration task dans main )
@@ -162,6 +163,22 @@ float CheckTemperature(String label, byte deviceAddress[12]){
   }  
   return (tempC); 
 }
+
+/// fonction pour relancer une détection de la dallas en cas de perte ou de non détection
+void restart_dallas() {
+  if (deviceCount == 0 ) {
+    sensors.begin();
+    deviceCount = sensors.getDeviceCount();
+    if ( deviceCount > 0 )  {
+      present = 1;
+      logging.Set_log_init(String(deviceCount)); 
+      logging.Set_log_init(" DALLAS detected\r\n");
+    }
+
+    dallaspresent();
+  }
+}
+
 
 
 #endif

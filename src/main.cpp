@@ -528,9 +528,9 @@ void setup() {
     
   Serial.println("start 18b20");
   sensors.begin();
-  delay(250);
-  ds.reset_search();
-
+  delay(1000);
+  //ds.reset_search();
+  //delay(450);
   deviceCount = sensors.getDeviceCount();
 
   logging.Set_log_init(String(deviceCount)); 
@@ -955,7 +955,8 @@ if ( sysvar.celsius[sysvar.dallas_maitre] >= config.maxtemp && security == 0 ) {
           }  /// si HA remonté MQTT HA de la température
 }
 
-
+//// protection contre la perte de la sonde dallas
+  restart_dallas();
 
 
  delay(100);  // 24/01/2023 changement 500 à 100ms pour plus de réactivité
@@ -1018,8 +1019,8 @@ void dallaspresent () {
     ds.write(0xBE);         // Read Scratchpad
 
   }
-  ds.reset_search();
-  delay(350);
+  //ds.reset_search();
+  //delay(350);
 
    
   }
