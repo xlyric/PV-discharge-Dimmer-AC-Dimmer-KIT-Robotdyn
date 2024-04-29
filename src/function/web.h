@@ -64,9 +64,9 @@ extern String dimmername;
 
 extern DeviceAddress addr[MAX_DALLAS];
 
-const char* PARAM_INPUT_1 = "POWER"; /// paramettre de retour sendmode
-const char* PARAM_INPUT_2 = "OFFSET"; /// paramettre de retour sendmode
-
+constexpr const char* PARAM_INPUT_1 = "POWER"; /// paramettre de retour sendmode
+constexpr const char* PARAM_INPUT_2 = "OFFSET"; /// paramettre de retour sendmode
+ 
 //extern char buffer[1024];
 
 String getmqtt(); 

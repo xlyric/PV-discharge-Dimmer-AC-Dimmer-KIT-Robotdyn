@@ -13,7 +13,7 @@ extern byte security;
 extern Programme programme;
 
 unsigned long lastCoolerOffTime = 0;
-const unsigned long cooldownDuration = 60 * 1000; // 1 minute en millisecondes
+constexpr const unsigned long cooldownDuration = 60 * 1000; // 1 minute en millisecondes
 
 void cooler() {
                       
