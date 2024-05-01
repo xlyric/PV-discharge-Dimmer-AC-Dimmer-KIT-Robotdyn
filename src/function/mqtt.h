@@ -348,6 +348,14 @@ void Mqtt_send_DOMOTICZ(String idx, String value, String name="")
       }
     }
 
+    if (config.JEEDOM) {
+      String jeedom_publish = String(config.Publish) + "/" + idx ; 
+      // si config.Publish est vide, on ne publie pas
+      if (strlen(config.Publish) != 0 ) {
+        client.publish(jeedom_publish.c_str(), 0,true, value.c_str());
+      }
+    }
+
     Serial.println("MQTT SENT");
 
 }
