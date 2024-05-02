@@ -8,7 +8,6 @@
 #include "function/littlefs.h"
 #include "function/ha.h"
 #include "function/minuteur.h"
-//#include "function/jotta.h"
 #include "function/unified_dimmer.h"
 
 #if defined(ESP32) || defined(ESP32ETH)
@@ -410,6 +409,33 @@ void call_pages() {
     request->send_P(200, "text/html", readmqttsave().c_str());
     });
 
+/////////////////////////
+////// déclaration des pages html compressé pour les utilisateurs de safari... 
+/////////////////////////
+
+  server.on("/log.html.gz", HTTP_ANY, [](AsyncWebServerRequest *request){
+        AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/log.html.gz", "text/html");
+        response->addHeader("Content-Encoding", "gzip");
+        request->send(response);
+  });
+
+  server.on("/mqtt.html.gz", HTTP_ANY, [](AsyncWebServerRequest *request){
+        AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/mqtt.html.gz", "text/html");
+        response->addHeader("Content-Encoding", "gzip");
+        request->send(response);
+  });
+
+  server.on("/jquery.easing.min.js.gz", HTTP_ANY, [](AsyncWebServerRequest *request){
+        AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/jquery.easing.min.js.gz", "text/html");
+        response->addHeader("Content-Encoding", "gzip");
+        request->send(response);
+  });
+
+    server.on("/all.css.gz", HTTP_ANY, [](AsyncWebServerRequest *request){
+        AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/css/all.css.gz", "text/html");
+        response->addHeader("Content-Encoding", "gzip");
+        request->send(response);
+  });
 
 /////////////////////////
 ////// mise à jour parametre d'envoie vers domoticz et récupération des modifications de configurations
