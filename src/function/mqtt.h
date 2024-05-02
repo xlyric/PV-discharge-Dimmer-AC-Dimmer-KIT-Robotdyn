@@ -420,7 +420,7 @@ void connect_and_subscribe() {
         String save_command = String("Xlyric/sauvegarde/"+ node_id );
 
         int instant_power = sysvar.puissance;  // 
-        Mqtt_send_DOMOTICZ(String(config.IDX), String(String(instant_power)));   /// correction 19/04 valeur remonté au dessus du max conf
+        Mqtt_send_DOMOTICZ(String(config.IDX), String (sysvar.puissance * config.charge/100));   /// correction 19/04 valeur remonté au dessus du max conf
         device_dimmer.send(String(instant_power)); 
         device_dimmer_power.send(String(instant_power * config.charge/100)); 
       }

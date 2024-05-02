@@ -92,7 +92,7 @@ void mqttdallas() {
 
         
       if ( mqtt_config.mqtt ) {
-        Mqtt_send_DOMOTICZ(String(config.IDX), "0","pourcent");
+        Mqtt_send_DOMOTICZ(String(config.IDX), "0");
       }
       if ( config.HA ) { 
         device_dimmer.send("0"); 
