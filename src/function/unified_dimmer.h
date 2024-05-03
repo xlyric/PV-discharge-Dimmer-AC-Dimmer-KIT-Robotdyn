@@ -58,7 +58,7 @@ void set_power(float power){
     else { // Les 3 dimmers à fournir
       if (config.charge1 != 0) { dimmer1_pwr = 100; } // Permet d'avoir le dimmer1 configuré à 0 dans l'interface web
       if (config.charge2 != 0) { dimmer2_pwr = 100; } // Permet d'avoir le dimmer2 configuré à 0 dans l'interface web
-      if (config.charge3 != 0) { dimmer3_pwr = (tmp_pwr_watt - (config.charge1 + config.charge2) ) * 100 / config.charge3; } else { dimmer3_pwr = 0;};
+      if (config.charge3 != 0) { dimmer3_pwr = (tmp_pwr_watt - (config.charge1 + config.charge2) ) * 100 / config.charge3; } else { dimmer3_pwr = 0;}
     }
     
     
@@ -135,7 +135,6 @@ float get_power(){
 
     // pour le dimmer robotdyn
     #ifdef ROBOTDYN
-      //power = dimmer.getPower();
       int power1 = dimmer.getPower();
       #ifdef outputPin2
         int power2 = dimmer2.getPower();
@@ -144,42 +143,11 @@ float get_power(){
       #else
         power = ((float)(power1*config.charge1 ) / (float)config.charge) ;
       #endif
-      //logging.Set_log_init("P1: " + String(power1) + " P2: " + String(power2) + " P3: " + String(power3) );
-      //power = ((float)(power1*config.charge1 + power2*config.charge2 + power3*config.charge3) / (float)config.charge) ;
-      //logging.Set_log_init(" PTotale: " + String(power) + "\r\n" ); 
     #endif
   return power;
 }
 
 /// @brief  migration des function de coupures des dimmers Robotdyn 
-
-void dimmer_on()
-{
-/*
-  // les tâches de démarrage des dimmers 2 & 3 sont reportées au besoin dans set_power()
-  #ifdef ROBOTDYN
-    if (dimmer.getState()==0) {
-      dimmer.setState(ON);
-      logging.Set_log_init("Dimmer On\r\n");
-      delay(50);
-    }
-    
-    #ifdef MULTISSR // si on laisse ça les dimmers 2 & 3 clignotent à chaque changement de puissance, même si ils doivent rester à zéro
-      if (dimmer2.getState()==0) {
-        dimmer2.setState(ON);
-        logging.Set_log_init("Dimmer2 On\r\n");
-        delay(50);
-      }  
-
-      if (dimmer3.getState()==0) {
-        dimmer3.setState(ON);
-        logging.Set_log_init("Dimmer3 On\r\n");
-        delay(50);
-      }  
-    #endif
-  #endif
-*/
-}
 
 void dimmer_off()
 {

@@ -246,22 +246,22 @@
                         </div>
                         <!-- Content Row -->
                         <script type="text/javascript"> 
+      //<!-- rafraichissement valeurs -->
 setInterval(function refreshsend( ) {
-var xhttpstate = $.get ({
-		url : '/state',
-		type : 'GET',
-		dataType: "text",
-		success: function ( result ) { 
-		var config = result.split(";");
-		
-		document.getElementById("state").innerHTML = config[0];
-		document.getElementById("sigma").innerHTML = config[1];
-		
-		
-	
-		},
-		async: true });
-  }, 5000 ) ;
+        $.getJSON('/state', function(data) {
+          // Récupérer les données du JSON
+            var dimmer = data.dimmer;
+            var temperature = data.temperature;
+            var power= data.power;
+            var onoff = data.onoff;
+          document.getElementById("state").innerHTML = dimmer;
+          document.getElementById("sigma").innerHTML = temperature;
+          document.getElementById("power").innerHTML = power;
+          onoff = onoff ? "ON" : "OFF";
+          $("#ONOFF").text(onoff);
+          
+          });
+}, 5000);
 
 
 	
@@ -329,35 +329,34 @@ $( "#formulaire" ).submit(function() {
   return false;
 });
 
+var recupconfig =  $.getJSON('/config', function(data) {
+        for (var key in data) {
+            if (data.hasOwnProperty(key)) {
+            var element = document.getElementById(key);
+            if (element) {
+                element.value = data[key];
+                if (element.type === 'checkbox') {
+                element.checked = data[key];
+                }
+            }
+            }
+        }
+
+            // Une fois la requête terminée
+            recupconfig.done(function() {
+                // Générer le lien avec la valeur initiale
+                var dimmerValue = $('#child').val();
+                generateLink(dimmerValue);
+            });
+
+            $('#child').on('input', function() {
+                var dimmerValue = $(this).val();
+                generateLink(dimmerValue);
+            });
 
 
+        });
 
-var recupconfig = $.get ({
-		url : '/config',
-		type : 'GET',
-		dataType: "text",
-		async: false }).responseText; 
-				  
-        var config = recupconfig.split(";");
-    i=0;
-    i++; 
-    i++;
-    i++;
-    i++;
-		document.getElementById("maxtemp").value = config[i];
-    i++;
-    i++;
-    i++;
-    i++;	
-        document.getElementById("minpow").value = config[i];
-    i++;		
-		document.getElementById("maxpow").value = config[i];
-    i++;		
-		document.getElementById("child").value = config[i];
-    i++;
-        document.getElementById("delester").value = config[i];
-    i++;		
-    i++;		
 
                         </script>
                     </div>

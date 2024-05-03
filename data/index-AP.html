@@ -153,23 +153,16 @@
 				  <script type='text/javascript'> 
 				  
 
-  setInterval(function refreshsend( ) {
-    var xhttpstate = $.get ({
-		url : '/state',
-		type : 'GET',
-		dataType: "text",
-		success: function ( result ) { 
-		var config = result.split(";");
-		
-		document.getElementById("state").innerHTML = config[0];
-		document.getElementById("sigma").innerHTML = config[1];
-		
-		
-	
-		},
-		async: true });
-  }, 5000 ) ;	
-				  
+setInterval(function ( ) {
+
+    $.getJSON('/state', function(data) {
+    // Récupérer les données du JSON
+
+        document.getElementById("state").innerHTML = data.power;
+        document.getElementById("sigma").innerHTML = data.temperature;
+
+      });
+}, 2000);
 
 		
 		</script >

@@ -118,6 +118,7 @@
                                     <h6 class="m-0 font-weight-bold text-primary">Etats</h6>
                                 </div>
                                 <div class="card-body">
+                                <b>Etat Ballon : </b><h4 id="alerte">N/A</h4>
                                 <b>Etat Minuteur : </b><h4 id="minuteur">N/A</h4>
                                 <b>Etat Relais 1 : </b><h4 id="relais 1">N/A</h4>
                                 <b>Etat Relais 2 : </b><h4 id="relais 2">N/A</h4>
@@ -178,14 +179,14 @@
           
         };
 	
-	<!-- mise à jour de la jauge  --> 	
+	// mise à jour de la jauge  --> 	
 		var gaugePA = new google.visualization.Gauge(document.getElementById('curve_chart2'));
 	    var dataGaugePA = new google.visualization.DataTable();
 	    dataGaugePA.addColumn('string', 'Puissance');
 		dataGaugePA.addColumn('number', 'Value');
 		dataGaugePA.addRows(1);
 		
-	<!-- mise à jour de la jauge  --> 	
+	// mise à jour de la jauge  --> 	
 		var gaugePAtemp = new google.visualization.Gauge(document.getElementById('curve_temp'));
 	    var dataGaugePAtemp = new google.visualization.DataTable();
 	    dataGaugePAtemp.addColumn('string', 'Power');
@@ -193,9 +194,8 @@
 		dataGaugePAtemp.addRows(1);
 
 
-	<!-- récupération valeur sigma et State -->
+	// récupération valeur sigma et State -->
 				  
-////
 setInterval(function ( ) {
 
 $.getJSON('/state', function(data) {
@@ -229,7 +229,7 @@ $.getJSON('/state', function(data) {
         if (alerte == 1) {
             document.getElementById("alerte").innerHTML = "Refroidissement";
         } else {
-            document.getElementById("alerte").innerHTML = "";
+            document.getElementById("alerte").innerHTML = "Normal";
         }
 
     // ecriture de "minuteur" dans le div minuteur si l'état est à 1

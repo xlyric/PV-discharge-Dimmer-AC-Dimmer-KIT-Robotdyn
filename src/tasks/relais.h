@@ -2,6 +2,7 @@
 #define TASK_RELAIS
 
 #include "function/minuteur.h"    
+#include "Arduino.h"
 
 extern Programme programme_relay1; 
 extern Programme programme_relay2; 
@@ -9,7 +10,7 @@ extern Programme programme_relay2;
 
 /// création de la task de controle pour les relais ( 15 s )
 
-#include "Arduino.h"
+
 
 void relais_controle() {
     

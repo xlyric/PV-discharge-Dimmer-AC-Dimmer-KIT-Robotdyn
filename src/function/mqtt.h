@@ -59,7 +59,7 @@ void onMqttConnect(bool sessionPresent);
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
 void onMqttSubscribe(uint16_t packetId, uint8_t qos);
 void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total);
-char buffer[1024];
+char buffer[1024];// NOSONAR
   /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remonté par MQTT
   /// @param Subscribedtopic 
   /// @param message 
@@ -102,7 +102,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
     }
   }
   /// @brief Enregistrement temperature
-  if (strcmp( Subscribedtopic, config.SubscribeTEMP ) == 0 ){ // && doc2.containsKey("temperature")) { 
+  if (strcmp( Subscribedtopic, config.SubscribeTEMP ) == 0 ){ 
     float temperaturemqtt = doc2[0]; 
     sysvar.dallas_maitre= deviceCount+1;
     devAddrNames[deviceCount+1] = "MQTT";
@@ -241,8 +241,8 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
     }
     else if (doc2.containsKey("save")) { 
       if (doc2["save"] == "1" ) {
-        logging.Set_log_init("MQTT save command \r\n");
-        saveConfiguration(filename_conf, config);  
+        logging.Set_log_init(config.saveConfiguration()); //sauvegarde de la configuration
+          
       }
     }
 
@@ -279,7 +279,6 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
         strlcpy(config.mode , doc2["mode"], sizeof(config.mode)) ;
         strlcpy(config.SubscribePV , doc2["SubscribePV"], sizeof(config.SubscribePV));
         strlcpy(config.SubscribeTEMP , doc2["SubscribeTEMP"], sizeof(config.SubscribeTEMP));
-        //saveConfiguration(filename_conf, config);  
         Serial.println("sauvegarde conf mqtt ");
         serializeJson(doc2, buffer);
         Serial.println(config.hostname);
@@ -317,7 +316,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
             device_relay2.send(String(relaystate));
           #endif
           if (discovery_temp) {
-            for (int i = 0; i < deviceCount; i++) {
+            for (int i = 0; i < deviceCount; i++) {  //NOSONAR
               device_temp[i].send(String(sysvar.celsius[i]));
             }
             device_temp_master.send(String(sysvar.celsius[sysvar.dallas_maitre]));
@@ -427,7 +426,7 @@ void connect_and_subscribe() {
   } else {  Serial.println(" Filesystem not present "); delay(5000); }
 }
 //#define MQTT_HOST IPAddress(192, 168, 1, 20)
-char arrayWill[64];
+char arrayWill[64];// NOSONAR
 void async_mqtt_init() {
 	const String LASTWILL_TOPIC = topic_Xlyric + "status";
 	LASTWILL_TOPIC.toCharArray(arrayWill, 64);
@@ -451,8 +450,8 @@ void connectToMqtt() {
   if (!client.connected() ) {
   DEBUG_PRINTLN("Connecting to MQTT...");
     logging.Set_log_init("Connecting to MQTT... \r\n");
-  client.connect();
-
+    delay(1000); // pour laisser le temps de se connecter au wifi ou ne pas spam le serveur
+    client.connect();
   }
   
 }

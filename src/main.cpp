@@ -116,16 +116,6 @@
 #include "tasks/get_power.h"
 #include "tasks/relais.h"
 
-
-// taches
-Task Task_dallas(15000, TASK_FOREVER, &mqttdallas);
-Task Task_Cooler(15000, TASK_FOREVER, &cooler);
-Task Task_GET_POWER(10000, TASK_FOREVER, &get_dimmer_child_power);
-#ifdef RELAY1
-Task Task_relay(20000, TASK_FOREVER, &relais_controle);
-#endif
-Scheduler runner;
-
 #if defined(ESP32) || defined(ESP32ETH)
 // Web services
   #include "WiFi.h"
@@ -143,12 +133,23 @@ Scheduler runner;
   #include <ESPAsyncTCP.h>
   #include <ESP8266HTTPClient.h> 
 // File System
-  #include <LittleFS.h>
+  #include <LittleFS.h> // NOSONAR
 #endif
 
 #ifdef ESP32ETH
   #include <ETH.h>
 #endif
+
+// taches
+Task Task_dallas(15000, TASK_FOREVER, &mqttdallas);
+Task Task_Cooler(15000, TASK_FOREVER, &cooler);
+Task Task_GET_POWER(10000, TASK_FOREVER, &get_dimmer_child_power);
+#ifdef RELAY1
+Task Task_relay(20000, TASK_FOREVER, &relais_controle);
+#endif
+Scheduler runner;
+
+
 
 /***************************
  * Begin Settings
@@ -202,14 +203,14 @@ DallasTemperature sensors(&ds);
   
   byte present = 0;
   
-  byte data[12];
-  float previous_celsius[MAX_DALLAS] = {0.00};
+  byte data[12]; //NOSONAR
+  float previous_celsius[MAX_DALLAS] = {0.00}; // NOSONAR
   byte security = 0;
   int refresh = 60;
   int refreshcount = 0; 
 int deviceCount = 0;
-DeviceAddress addr[MAX_DALLAS];  // array of (up to) MAX_DALLAS temperature sensors
-String devAddrNames[MAX_DALLAS];  // array of (up to) MAX_DALLAS temperature sensors
+DeviceAddress addr[MAX_DALLAS];  // array of (up to) MAX_DALLAS temperature sensors NOSONAR
+String devAddrNames[MAX_DALLAS];  // array of (up to) MAX_DALLAS temperature sensors NOSONAR
 /***************************
  * End Settings
  **************************/
@@ -226,7 +227,7 @@ Programme programme_relay1;
 Programme programme_relay2;
 
 String getmqtt(); 
-void savemqtt(const char *filename, const Mqtt &mqtt_config);
+void savemqtt(const char *filename, const Mqtt &mqtt_config); // NOSONAR
 bool pingIP(IPAddress ip) ;
 String stringBool(bool mybool);
 String getServermode(String Servermode);
@@ -268,7 +269,7 @@ gestion_puissance unified_dimmer;
 
 unsigned long Timer_Cooler;
 
-IPAddress _ip,_gw,_sn,gatewayIP  ;
+IPAddress _ip,_gw,_sn,gatewayIP  ; // NOSONAR
 
 
     //***********************************
@@ -387,15 +388,14 @@ void setup() {
   // Should load default config if run for the first time
   Serial.println(F("Loading configuration..."));
   logging.Set_log_init("Load config \r\n"); 
-  loadConfiguration(filename_conf, config);
+  logging.Set_log_init(config.loadConfiguration()); // charge la configuration
 
-  // Create configuration file
-  Serial.println(F("Saving configuration..."));
-  logging.Set_log_init("Apply config \r\n"); 
-  saveConfiguration(filename_conf, config);
-
+  // Load configuration file mqtt 
   Serial.println(F("Loading mqtt_conf configuration..."));
-  loadmqtt(mqtt_conf, mqtt_config);
+  logging.Set_log_init("Load config MQTT\r\n"); 
+  logging.Set_log_init(mqtt_config.loadmqtt());  /// charge la configuration mqtt
+
+  /// chargement des conf de wifi
   Serial.println(F("Loading wifi configuration..."));
   loadwifiIP(wifi_conf, wifi_config_fixe);
  
@@ -460,7 +460,7 @@ void setup() {
 
     DEBUG_PRINTLN("static adress: " + String(wifi_config_fixe.static_ip) + " mask: " + String(wifi_config_fixe.static_sn) + " GW: " + String(wifi_config_fixe.static_gw));
 
-    savewifiIP(wifi_conf, wifi_config_fixe);
+    //savewifiIP(wifi_conf, wifi_config_fixe); // NOSONAR je doute que ça soit utilisé vu que c'est en autoconnect, seul le chargement est necessaire
   
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
@@ -475,7 +475,7 @@ void setup() {
 
    /// restart si la configuration OP static est différente ip affectée suite changement ip Autoconf
   if ( !strcmp(wifi_config_fixe.static_ip, "" ) == 0 )  {
-         char IP[] = "xxx.xxx.xxx.xxx"; 
+         char IP[] = "xxx.xxx.xxx.xxx";  // NOSONAR
          IPAddress ip = WiFi.localIP();
          ip.toString().toCharArray(IP, 16);
         if (!strcmp(wifi_config_fixe.static_ip,IP) == 0) {
@@ -483,7 +483,6 @@ void setup() {
       Serial.println(WiFi.localIP());
 
       Serial.print("Application de la nouvelle configuration Ip   ");
-      // ESP.restart();
       config.restart = true;
       }
   }
@@ -532,8 +531,6 @@ void setup() {
   Serial.println("start 18b20");
   sensors.begin();
   delay(1000);
-  //ds.reset_search();
-  //delay(450);
   deviceCount = sensors.getDeviceCount();
 
   logging.Set_log_init(String(deviceCount)); 
@@ -552,6 +549,7 @@ void setup() {
     /// Configuration et connexion MQTT 
     async_mqtt_init();
 
+    delay(1000);  
     connectToMqtt();
     delay(1000);  
     /// pour remonter un 0 sur le MQTT
@@ -806,8 +804,6 @@ void loop() {
     if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && security == 0) 
     {
          DEBUG_PRINTLN(("%d------------------",__LINE__));
-        if (config.dimmer_on_off == 1){unified_dimmer.dimmer_on();}  // if off, switch on 
-         DEBUG_PRINTLN(("%d------------------",__LINE__));
         /// si au dessus de la consigne max configurée alors config.maxpow. 
         if ( sysvar.puissance > config.maxpow ) //|| sysvar.puissance_cumul > sysvar.puissancemax )  
         { 
@@ -1022,9 +1018,6 @@ void dallaspresent () {
     ds.write(0xBE);         // Read Scratchpad
 
   }
-  //ds.reset_search();
-  //delay(350);
-
    
   }
 

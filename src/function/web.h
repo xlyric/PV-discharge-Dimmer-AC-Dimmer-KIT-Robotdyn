@@ -22,6 +22,9 @@
   #include <ESP8266HTTPClient.h> 
 #endif
 
+#include "StreamConcat.h"
+
+
 extern Mqtt mqtt_config; 
 extern Config config; 
 extern System sysvar;
@@ -82,6 +85,19 @@ extern SSR_BURST ssr_burst;
 
 
 void call_pages() {
+  // pages Statiques voir compressées
+  server.serveStatic("/all.min.css", LittleFS, "/css/all.css");
+  server.serveStatic("/all.css", LittleFS, "/css/all.css");
+  server.serveStatic("/favicon.ico", LittleFS, "/favicon.ico");
+  server.serveStatic("/fa-solid-900.woff2", LittleFS, "/css/fa-solid-900.woff2");
+  server.serveStatic("/sb-admin-2.js", LittleFS, "/js/sb-admin-2.js");
+  server.serveStatic("/sb-admin-2.min.css", LittleFS, "/css/sb-admin-2.min.css");
+  server.serveStatic("/jquery.easing.min.js", LittleFS, "/js/jquery.easing.min.js");
+  server.serveStatic("/log.html", LittleFS, "/log.html");
+  server.serveStatic("/mqtt.html", LittleFS, "/mqtt.html");
+  server.serveStatic("/minuteur.html", LittleFS, "/minuteur.html");
+  server.serveStatic("/relai.html", LittleFS, "/relai.html");
+  server.serveStatic("/jquery.easing.min.js", LittleFS, "/js/jquery.easing.min.js");
 
 /// page de index et récupération des requetes de puissance
   server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
@@ -115,10 +131,7 @@ void call_pages() {
             sysvar.puissance_dispo = 0;         // En W
             sysvar.change = 0; // par sécurité, au cas ou le main n'aurait pas fini
           }
-                  
-        // Modif RV - correction bug si dimmer configuré mais pas allumé ou planté
-          else if (sysvar.change == 1){}
-                      
+                     
 /// si remontée de puissance dispo alors prioritaire
           else if (request->hasParam("puissance")) {
 /// on recupère la puissance disponible  
@@ -234,48 +247,6 @@ void call_pages() {
     config.restart = true;
   });
 
-//// compressé
-  server.on("/all.min.css", HTTP_ANY, [](AsyncWebServerRequest *request){
-    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/css/all.css.gz", "text/css");
-    response->addHeader("Content-Encoding", "gzip");
-    request->send(response);
-  });
-
-
-  server.on("/all.css", HTTP_ANY, [](AsyncWebServerRequest *request){
-    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/css/all.css.gz", "text/css");
-    response->addHeader("Content-Encoding", "gzip");
-    request->send(response);
-  });
-
-
-    server.on("/favicon.ico", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/favicon.ico", "image/png");
-  });
-
-///déja compressé
-  server.on("/fa-solid-900.woff2", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/css/fa-solid-900.woff2", "text/css");
-  });
-  
-    server.on("/sb-admin-2.js", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/js/sb-admin-2.js", "text/javascript");
-  });
-
-//// compressé
-  server.on("/sb-admin-2.min.css", HTTP_ANY, [](AsyncWebServerRequest *request){
-    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/css/sb-admin-2.min.css.gz", "text/css");
-    response->addHeader("Content-Encoding", "gzip");
-    request->send(response);
-  });
-  
-//// compressé
-  server.on("/jquery.easing.min.js", HTTP_ANY, [](AsyncWebServerRequest *request){
-    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/js/jquery.easing.min.js.gz", "text/javascript");
-    response->addHeader("Content-Encoding", "gzip");
-    request->send(response);
-  });
-
   server.on("/config.json", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send(LittleFS, "/config.json", "application/json");
   });
@@ -292,31 +263,9 @@ void call_pages() {
     request->send(LittleFS, "/programme.json", "application/json");
   });
 
-//// compressé
-  server.on("/mqtt.html", HTTP_ANY, [](AsyncWebServerRequest *request){
-    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/mqtt.html.gz", "text/html");
-    response->addHeader("Content-Encoding", "gzip");
-    request->send(response);
-  });
-
-//// compressé
-  server.on("/log.html", HTTP_ANY, [](AsyncWebServerRequest *request){
-        AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/log.html.gz", "text/html");
-        response->addHeader("Content-Encoding", "gzip");
-        request->send(response);
-  });
-
   server.on("/getmqtt", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     request->send(200, "text/plain",  getmqtt().c_str()); 
   });
-
-
-/////////// minuteur 
-  server.on("/minuteur.html", HTTP_ANY, [](AsyncWebServerRequest *request){
-    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/minuteur.html", "text/html");
-    request->send(response);
-  });
-
 
   server.on("/getminiteur", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     if (request->hasParam("dimmer")) { request->send(200, "application/json",  getMinuteur(programme));  }
@@ -349,10 +298,6 @@ void call_pages() {
   });
 
   /// reglage des seuils relais
-    server.on("/relai.html", HTTP_ANY, [](AsyncWebServerRequest *request){
-    AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/relai.html", "text/html");
-    request->send(response);
-  });
 
     server.on("/getseuil", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     if (request->hasParam("relay1")) { request->send(200, "application/json",  getMinuteur(programme_relay1)); }
@@ -409,42 +354,16 @@ void call_pages() {
     request->send_P(200, "text/html", readmqttsave().c_str());
     });
 
-/////////////////////////
-////// déclaration des pages html compressé pour les utilisateurs de safari... 
-/////////////////////////
 
-  server.on("/log.html.gz", HTTP_ANY, [](AsyncWebServerRequest *request){
-        AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/log.html.gz", "text/html");
-        response->addHeader("Content-Encoding", "gzip");
-        request->send(response);
-  });
-
-  server.on("/mqtt.html.gz", HTTP_ANY, [](AsyncWebServerRequest *request){
-        AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/mqtt.html.gz", "text/html");
-        response->addHeader("Content-Encoding", "gzip");
-        request->send(response);
-  });
-
-  server.on("/jquery.easing.min.js.gz", HTTP_ANY, [](AsyncWebServerRequest *request){
-        AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/jquery.easing.min.js.gz", "text/html");
-        response->addHeader("Content-Encoding", "gzip");
-        request->send(response);
-  });
-
-    server.on("/all.css.gz", HTTP_ANY, [](AsyncWebServerRequest *request){
-        AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/css/all.css.gz", "text/html");
-        response->addHeader("Content-Encoding", "gzip");
-        request->send(response);
-  });
 
 /////////////////////////
 ////// mise à jour parametre d'envoie vers domoticz et récupération des modifications de configurations
 /////////////////////////
 
 server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
-      ///   /get?paramettre=xxxx
+      ///  fonction  /get?paramettre=xxxx
     if (request->hasParam("save")) { Serial.println(F("Saving configuration..."));
-                          saveConfiguration(filename_conf, config);   
+                          logging.Set_log_init(config.saveConfiguration());    //sauvegarde de la configuration
                             }
                           
    if (request->hasParam("hostname")) { request->getParam("hostname")->value().toCharArray(config.hostname,16);  }
@@ -458,20 +377,14 @@ server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
 if (request->hasParam("charge1")) { 
     config.charge1 = request->getParam("charge1")->value().toInt(); 
     config.charge = config.charge1 + config.charge2 + config.charge3;
-    if (!AP && mqtt_config.mqtt) { //device_dimmer_charge.send(String(config.charge));
-      }
     }
    if (request->hasParam("charge2")) { 
     config.charge2 = request->getParam("charge2")->value().toInt(); 
     config.charge = config.charge1 + config.charge2 + config.charge3;
-    if (!AP && mqtt_config.mqtt) {  //device_dimmer_charge.send(String(config.charge));
-      }
     }
    if (request->hasParam("charge3")) { 
     config.charge3 = request->getParam("charge3")->value().toInt(); 
     config.charge = config.charge1 + config.charge2 + config.charge3;
-    if (!AP && mqtt_config.mqtt) { //device_dimmer_charge.send(String(config.charge));
-      }
     }
    if (request->hasParam("IDXAlarme")) { config.IDXAlarme = request->getParam("IDXAlarme")->value().toInt();}
    if (request->hasParam("IDX")) { config.IDX = request->getParam("IDX")->value().toInt();}
@@ -503,8 +416,8 @@ if (request->hasParam("charge1")) {
    if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,50);  }
    if (request->hasParam("mqttpassword")) { 
     request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,50);
-    savemqtt(mqtt_conf, mqtt_config); 
-    saveConfiguration(filename_conf, config);
+    logging.Set_log_init(config.saveConfiguration()); //sauvegarde de la configuration
+    logging.Set_log_init(mqtt_config.savemqtt());  // sauvegarde et récupération de la log MQTT
    }
    if (request->hasParam("DALLAS")) { 
     request->getParam("DALLAS")->value().toCharArray(config.DALLAS,17); 
@@ -531,7 +444,7 @@ if (request->hasParam("charge1")) {
         else if (relay == 1) { digitalWrite(RELAY1 , HIGH); } 
         else if (relay == 2) { digitalWrite(RELAY1, !digitalRead(RELAY1)); }
         int relaystate = digitalRead(RELAY1); 
-        char str[8];
+        char str[8];// NOSONAR
         itoa( relaystate, str, 10 );
         request->send(200, "text/html", str );
         if (!AP && mqtt_config.mqtt) { device_relay1.send(String(relaystate));}
@@ -544,7 +457,7 @@ if (request->hasParam("charge1")) {
         else if (relay == 1) { digitalWrite(RELAY2 , HIGH); } 
         else if (relay == 2) { digitalWrite(RELAY2, !digitalRead(RELAY2)); }
         int relaystate = digitalRead(RELAY2); 
-        char str[8];
+        char str[8];// NOSONAR
         itoa( relaystate, str, 10 );
         request->send(200, "text/html", str );
         if (!AP && mqtt_config.mqtt) { device_relay2.send(String(relaystate));}
@@ -555,14 +468,12 @@ if (request->hasParam("charge1")) {
    if (request->hasParam("servermode")) {String inputMessage = request->getParam("servermode")->value();
                                             getServermode(inputMessage);
                                             request->send(200, "text/html", getconfig().c_str());
-                                            saveConfiguration(filename_conf, config);
-                                            savemqtt(mqtt_conf, mqtt_config); 
+                                            logging.Set_log_init(config.saveConfiguration()); //sauvegarde de la configuration
+                                            logging.Set_log_init(mqtt_config.savemqtt());  // sauvegarde et récupération de la log MQTT  
                                         }
 
    request->send(200, "text/html", getconfig().c_str());
   });
-  
-
 
 }
 
@@ -572,7 +483,7 @@ if (request->hasParam("charge1")) {
 
 String getState_dallas() {
   String state; 
-  char buffer[5];
+  char buffer[5];// NOSONAR
    
   dtostrf(sysvar.celsius[sysvar.dallas_maitre],2, 1, buffer); // conversion en n.1f 
   
@@ -581,7 +492,7 @@ String getState_dallas() {
     
     //affichage des température et adresse des sondes dallas 
     for (int i = 0; i < MAX_DALLAS; i++) {
-      char buffer[5];
+      char buffer[5];// NOSONAR
       // affichage que si != 0 
       if (sysvar.celsius[i] != 0) {
         dtostrf(sysvar.celsius[i],2, 1, buffer); // conversion en n.1f 
@@ -596,7 +507,7 @@ String getState_dallas() {
 
 String getState() {
   String state; 
-  char buffer[5];
+  char buffer[5];// NOSONAR
   #ifdef  SSR
     #ifdef SSR_ZC
       int instant_power= unified_dimmer.get_power(); 

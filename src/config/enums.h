@@ -9,6 +9,14 @@
   #include <ESP8266WiFi.h>
 #endif
 
+#if defined(ESP32) || defined(ESP32ETH)
+  #include <FS.h>
+  #include "SPIFFS.h"
+  #define LittleFS SPIFFS // Fonctionne, mais est-ce correct? 
+#else
+  #include <LittleFS.h> // NOSONAR
+#endif
+
 constexpr const int MAX_DALLAS=8; // nombre de sonde Dallas
 
 
@@ -16,7 +24,7 @@ constexpr const int MAX_DALLAS=8; // nombre de sonde Dallas
 struct Logs {
 private:
      
-      char log_init[LOG_MAX_STRING_LENGTH];
+      char log_init[LOG_MAX_STRING_LENGTH]; // NOSONAR
       int MaxString = LOG_MAX_STRING_LENGTH * .9 ;
 
 public:
@@ -68,7 +76,9 @@ public:
 
 
 struct Config {
+    
   public:
+    const char *filename_conf = "/config.json";
     char hostname[16];
     int port;
     char Publish[100];
@@ -82,7 +92,7 @@ struct Config {
     int minpow;
     int startingpow;
     char SubscribePV[100];
-    char SubscribeTEMP[100];
+    char SubscribeTEMP[100]; // NOSONAR
     bool restart;
     bool dimmer_on_off;
   /// @brief  // Somme des 3 charges déclarées dans la page web
@@ -99,14 +109,214 @@ struct Config {
     bool DOMOTICZ;
     char PVROUTER[5];
     char DALLAS[17];
-    char say_my_name[32];
+    char say_my_name[32]; // NOSONAR
+
+// Loads the configuration from a file
+String loadConfiguration() {
+  String message = "";
+  // Open file for reading
+  File configFile = LittleFS.open(filename_conf, "r");
+
+   // Allocate a temporary JsonDocument
+  // Don't forget to change the capacity to match your requirements.
+  // Use arduinojson.org/v6/assistant to compute the capacity.
+  DynamicJsonDocument doc(2048);
+
+  // Deserialize the JSON document
+  DeserializationError error = deserializeJson(doc, configFile);
+  if (error) {
+    Serial.println(F("Failed to read configuration file, using default configuration"));
+    message = "Failed to read file config File, use default\r\n" ;
+    }
+  // Copy values from the JsonDocument to the Config
+
+/// en cas de reboot étranges, il sera bon de passer sur un format de type doc["hostname"].as<String>().c_str() pour éviter les problèmes de mémoire  
+/// --> Exception 9: LoadStoreAlignmentCause: Load or store to an unaligned address. cas survenu avec les configuration MQTT
+  strlcpy(hostname,                  // <- destination
+          doc["hostname"] | "192.168.1.22", // <- source // NOSONAR
+          sizeof(hostname));         // <- destination's capacity
+  port = doc["port"] | 1883;
+  strlcpy(Publish,                 
+          doc["Publish"] | "domoticz/in", 
+          sizeof(Publish));        
+  IDXTemp = doc["IDXTemp"] | 200; 
+  maxtemp = doc["maxtemp"] | 60; 
+  IDXAlarme = doc["IDXAlarme"] | 202; 
+  IDX = doc["IDX"] | 201; 
+  startingpow = doc["startingpow"] | 0; 
+  minpow = doc["minpow"] | 5;
+  maxpow = doc["maxpow"] | 50; 
+  charge = doc["charge"] | 1000; 
+  charge1 = doc["charge1"] | 1000; 
+  charge2 = doc["charge2"] | 0; 
+  charge3 = doc["charge3"] | 0; 
+  strlcpy(child,                  
+          doc["child"] | "", 
+          sizeof(child));         
+  strlcpy(mode,                  
+          doc["mode"] | "off", 
+          sizeof(mode));
+  strlcpy(SubscribePV,                 
+        doc["SubscribePV"] | "none", 
+        sizeof(SubscribePV));    
+  strlcpy(SubscribeTEMP,                 
+        doc["SubscribeTEMP"] | "none", 
+        sizeof(SubscribeTEMP));
+  dimmer_on_off = doc["dimmer_on_off"] | 1; 
+  HA = doc["HA"] | true; 
+  JEEDOM = doc["JEEDOM"] | true; 
+  DOMOTICZ = doc["DOMOTICZ"] | true; 
+  strlcpy(PVROUTER,
+        doc["PVROUTER"] | "mqtt", 
+        sizeof(PVROUTER)); 
+  strlcpy(DALLAS,
+        doc["DALLAS"] | "to_define", 
+        sizeof(DALLAS));   
+  strlcpy(say_my_name,                 
+        doc["name"] | "", 
+        sizeof(say_my_name));
+
+  configFile.close();
+
+  return message;  
+}
+
+//***********************************
+//************* Gestion de la configuration - sauvegarde du fichier de configuration
+//***********************************
+
+String saveConfiguration() {
+  String message = "";
+  // Open file for writing
+   File configFile = LittleFS.open(filename_conf, "w");
+  if (!configFile) {
+    Serial.println(F("Failed to open config file for writing"));
+    return "Failed to open config file for writing\r\n";
+  }
+
+  // Allocate a temporary JsonDocument
+  // Don't forget to change the capacity to match your requirements.
+  // Use arduinojson.org/assistant to compute the capacity.
+  DynamicJsonDocument doc(2048);
+
+  // Set the values in the document
+  doc["hostname"] = hostname;
+  doc["port"] = port;
+  doc["Publish"] = Publish;
+  doc["IDXTemp"] = IDXTemp;
+  doc["maxtemp"] = maxtemp;
+  doc["IDXAlarme"] = IDXAlarme;
+  doc["IDX"] = IDX;  
+  doc["startingpow"] = startingpow;
+  doc["minpow"] = minpow;
+  doc["maxpow"] = maxpow;
+  doc["child"] = child;
+  doc["mode"] = mode;
+  doc["SubscribePV"] = SubscribePV;
+  doc["SubscribeTEMP"] = SubscribeTEMP;
+  doc["dimmer_on_off"] = dimmer_on_off;
+  doc["charge"] = charge;
+  doc["HA"] = HA;
+  doc["JEEDOM"] = JEEDOM;
+  doc["DOMOTICZ"] = DOMOTICZ;
+  doc["PVROUTER"] = PVROUTER;
+  doc["DALLAS"] = DALLAS;
+  doc["name"] = say_my_name;
+  doc["charge1"] = charge1;
+  doc["charge2"] = charge2;
+  doc["charge3"] = charge3;
+
+  // Serialize JSON to file
+  if (serializeJson(doc, configFile) == 0) {
+    Serial.println(F("Failed to write to file"));
+    message = "Failed to write to file\r\n";
+  }
+  
+  /// Publish on MQTT 
+  //char buffer[1024];// NOSONAR
+  //serializeJson(doc, buffer);
+  //client.publish(("Xlyric/sauvegarde/"+ node_id).c_str() ,0,true, buffer);
+  
+  // Close the file
+  configFile.close();
+  return message;
+}
+
+
+
 };
+
+///// structure MQTT 
 
 struct Mqtt {
   public:
+    const char *filename_mqtt = "/mqtt.json";
     bool mqtt;
-    char username[50];
-    char password[50];
+    char username[50] = "mosquitto"; // NOSONAR
+    char password[50] = "mosquitto"; // NOSONAR
+
+  String loadmqtt() {
+    // Open file for reading
+    String message = "";
+    File configFile = LittleFS.open(filename_mqtt, "r");
+
+    // Allocate a temporary JsonDocument
+    // Don't forget to change the capacity to match your requirements.
+    // Use arduinojson.org/v6/assistant to compute the capacity.
+    DynamicJsonDocument doc(512);
+
+    // Deserialize the JSON document
+    DeserializationError error = deserializeJson(doc, configFile);
+    if (error) {
+      Serial.println(F("Failed to read MQTT config "));
+      return message = "Failed to read MQTT config\r\n";
+    }
+
+    
+    // Copy values from the JsonDocument to the Config
+    String usernameValue = doc["MQTT_USER"].as<String>();
+    strlcpy(username, usernameValue.c_str(), sizeof(username));
+
+    String passwordValue = doc["MQTT_PASSWORD"].as<String>();
+    strlcpy(password, passwordValue.c_str(), sizeof(password));
+
+    mqtt = doc["mqtt"] | true;
+
+    configFile.close();
+
+  return message;    
+  }
+
+  String savemqtt() {
+    // Open file for writing
+    File configFile = LittleFS.open(filename_mqtt, "w");
+    String message = filename_mqtt;
+    if (!configFile) {
+      Serial.println(F("Failed to open config file for writing in function Save configuration"));
+      return "Failed to open config file for writing in function Save configuration\r\n";
+    } 
+
+      // Allocate a temporary JsonDocument
+    // Don't forget to change the capacity to match your requirements.
+    // Use arduinojson.org/assistant to compute the capacity.
+    DynamicJsonDocument doc(512);
+
+    // Set the values in the document
+    doc["MQTT_USER"] = username;
+    doc["MQTT_PASSWORD"] = password;
+    doc["mqtt"] = mqtt;
+    if (serializeJson(doc, configFile) == 0) {
+      Serial.println(F("Failed to write to file in function Save configuration "));
+      message = "Failed to write MQTT config\r\n";
+    }
+
+    // Close the file
+    configFile.close();
+    //config.restart = true; /// à voir si on rajoute pour reboot après config MQTT
+    return message;
+  }
+
+
 };
 
 struct Wifi_struct {

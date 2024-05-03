@@ -6,27 +6,27 @@
 Pinger pinger;
 #endif
 
-extern AsyncMqttClient  client;
+extern AsyncMqttClient  client; 
 extern DallasTemperature sensors;
 extern bool AP; // mode point d'accès
 extern Mqtt mqtt_config; // configuration mqtt
 extern byte present; // capteur dallas présent ou non 
 extern String logs; // logs
 extern byte security; // sécurité
-extern DeviceAddress addr[MAX_DALLAS]; 
-extern float previous_celsius[MAX_DALLAS]; // température précédente
+extern DeviceAddress addr[MAX_DALLAS];  // NOSONAR
+extern float previous_celsius[MAX_DALLAS]; // température précédente //NOSONAR
 extern IPAddress gatewayIP;
-extern HA devicetemp[MAX_DALLAS];
+extern HA devicetemp[MAX_DALLAS]; // NOSONAR
 extern int deviceCount; // nombre de sonde(s) dallas détectée(s)
-int dallas_error[MAX_DALLAS] = {0}; // compteur d'erreur dallas
+int dallas_error[MAX_DALLAS] = {0}; // compteur d'erreur dallas // NOSONAR
 int gw_error = 0;   // compteur d'erreur gateway
 
-float CheckTemperature(String label, byte deviceAddress[12]);
+float CheckTemperature(String label, byte deviceAddress[12]); // NOSONAR
 void restart_dallas();
 void dallaspresent ();
 
 /// @brief / task executé toute les n secondes pour publier la température ( voir déclaration task dans main )
-void mqttdallas() {
+void mqttdallas() { 
         if ( present == 1 ) {
     sensors.requestTemperatures();
     delay(400);
@@ -66,7 +66,6 @@ void mqttdallas() {
         if ( sysvar.celsius[i] != previous_celsius[i] || sysvar.celsius[i] != 0.99) {
           device_temp[i].send(String(sysvar.celsius[i]));
           previous_celsius[i]=sysvar.celsius[i];
-          // logging.Set_log_init("Dallas " + String(i) + " temp : "+ String(sysvar.celsius[i]) +"\r\n");
         }
       }
       device_temp_master.send(String(sysvar.celsius[sysvar.dallas_maitre]));
@@ -83,7 +82,7 @@ void mqttdallas() {
         
       
       if ( strcmp(config.child,"") != 0 && strcmp(config.mode,"off") != 0){
-
+            // si ça n'est pas le cas, on ne fait rien ... c'est bien parfois de ne rien faire 
       }
       else {
         sysvar.puissance=0;      
@@ -117,7 +116,6 @@ void mqttdallas() {
       previous_celsius[a]=sysvar.celsius[a];
       if (a == sysvar.dallas_maitre) {
        String temp_topic = "topic_Xlyric/" + String(config.say_my_name) + "/dallas" ;
-       static char uptime_stamp[20]; // Vous devrez définir une taille suffisamment grande pour stocker votre temps
 
        String message = String(logging.loguptime()) + "Dallas maitre perdue";
        client.publish((topic_Xlyric+"memory").c_str(),1,true, String(message).c_str());
@@ -150,7 +148,7 @@ void mqttdallas() {
     //************* récupération d'une température du 18b20
     //***********************************
 
-float CheckTemperature(String label, byte deviceAddress[12]){
+float CheckTemperature(String label, byte deviceAddress[12]){ // NOSONAR
 
 
   float tempC = sensors.getTempC(deviceAddress);
@@ -161,7 +159,7 @@ float CheckTemperature(String label, byte deviceAddress[12]){
      /// attente de 187ms ( temps de réponse de la sonde )
     tempC = sensors.getTempC(deviceAddress);
   }  
-  return (tempC); 
+  return tempC; 
 }
 
 /// fonction pour relancer une détection de la dallas en cas de perte ou de non détection

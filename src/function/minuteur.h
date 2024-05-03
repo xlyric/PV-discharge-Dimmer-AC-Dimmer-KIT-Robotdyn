@@ -3,9 +3,7 @@
 
 #include <ArduinoJson.h> // ArduinoJson : https://github.com/bblanchon/ArduinoJson
 
-// #include <NTPClient.h>
 #include <WiFiUdp.h>
-// #include <TimeLib.h>
 #include "config/enums.h"
 
 #if defined(ESP32) || defined(ESP32ETH)
@@ -13,7 +11,7 @@
   #include "SPIFFS.h"
   #define LittleFS SPIFFS // Fonctionne, mais est-ce correct? 
 #else
-  #include <LittleFS.h>
+  #include <LittleFS.h> // NOSONAR
 #endif
 
 #include "config/enums.h"
@@ -37,23 +35,26 @@ void ntpinit() {
 
 //////// structure pour les programmateurs. 
 struct Programme {
-  public:char heure_demarrage[6];
-  public:char heure_arret[6];
-  public:int temperature=50;
-  public:bool run; 
-  public:int heure;
-  public:int minute;
-  public:String name;
-  public:int seuil_start;
-  public:int seuil_stop;
-  public:int seuil_temperature;
-  private:bool security = false;
+  public: 
+    char heure_demarrage[6];// NOSONAR
+    char heure_arret[6];// NOSONAR
+    int temperature=50;
+    bool run; 
+    int heure;
+    int minute;
+    String name;
+    int seuil_start;
+    int seuil_stop;
+    int seuil_temperature;
+
+  private:
+    bool security = false;
 
 
   /// @brief sauvegarde
   /// @param programme_conf 
   public:void saveProgramme() {
-        const char * c_file = name.c_str();
+        const char * c_file = name.c_str();// NOSONAR
         DynamicJsonDocument doc(256);
 
       ////vérification cohérence des données
@@ -88,7 +89,7 @@ struct Programme {
   
 
   public:bool loadProgramme() {
-        const char * c_file = name.c_str();
+        const char * c_file = name.c_str();// NOSONAR
         File configFile = LittleFS.open(c_file, "r");
 
         // Allocate a temporary JsonDocument
@@ -129,10 +130,14 @@ bool start_progr() {
   if (security && ( sysvar.celsius[sysvar.dallas_maitre]> float(temperature*0.95) ) )  { return false; }
   security = false;
 
-  int heures, minutes;
+  int heures;
+  int minutes;
+
   sscanf(heure_demarrage, "%d:%d", &heures, &minutes);
 
-  int heures_fin, minutes_fin;
+  int heures_fin;
+  int minutes_fin;
+
   sscanf(heure_arret, "%d:%d", &heures_fin, &minutes_fin);
 
   // si heure_demarrage == heure_arret alors on retourne false ( correction du bug si pas de programmation)
@@ -170,7 +175,8 @@ return false;
 }
 
 bool stop_progr() {
-  int heures, minutes;
+  int heures;
+  int minutes;
   /// sécurité temp
   if ( sysvar.celsius[sysvar.dallas_maitre]>= temperature ) { 
     run=false; 
@@ -222,7 +228,8 @@ bool stop_progr() {
 
  /// vérification de la conformité de la donnée heure_demarrage[6]; 
  bool check_data(char data[6]){
-  int heures, minutes;
+  int heures;
+  int minutes;
   int result = sscanf(data, "%d:%d", &heures, &minutes);
   if (result != 2) {
     Serial.println("Erreur de lecture de l'heure");

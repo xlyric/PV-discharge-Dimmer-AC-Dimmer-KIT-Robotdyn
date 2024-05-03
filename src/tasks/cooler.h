@@ -12,7 +12,7 @@ extern HA device_cooler;
 extern byte security;
 extern Programme programme;
 
-unsigned long lastCoolerOffTime = 0;
+unsigned long lastCoolerOffTime = 0; // NOSONAR
 constexpr const unsigned long cooldownDuration = 60 * 1000; // 1 minute en millisecondes
 
 void cooler() {
@@ -21,16 +21,14 @@ void cooler() {
 
     /// controle du cooler 
     if (config.dimmer_on_off == 1){
-        //if ( ( sysvar.puissance > config.minpow && sysvar.celsius[sysvar.dallas_maitre]< config.maxtemp && security == 0 ) || ( programme.run == true )) {
         if ( ( sysvar.puissance > config.minpow && sysvar.celsius[sysvar.dallas_maitre]< config.maxtemp && security == 0 ) || ( programme.run == true )) {
-        ///if ( unified_dimmer.get_power() > 0 ) {
-            sysvar.cooler = 1;
+            sysvar.cooler = true;
         } else {
-            sysvar.cooler = 0;
+            sysvar.cooler = false;
         }
     } 
     else {
-        sysvar.cooler = 0;
+        sysvar.cooler = false;
     }
 
     if ( cooler_change != sysvar.cooler ) {
@@ -49,11 +47,6 @@ void cooler() {
     
         if ( config.HA ) {  device_cooler.send(stringBool(false));  }
         }
-    
-    
-    ///ajout d'envoie MQTT pour test fuite mémoire
-   // String temp_topic = "memory/" + String(config.say_my_name);
-   //client.publish(temp_topic.c_str(), 0,true, String(ESP.getFreeHeap()).c_str());
 
  // pas besoin de tempo pour l'arret, vu que c'est toute les 15 secondes la task 
 }

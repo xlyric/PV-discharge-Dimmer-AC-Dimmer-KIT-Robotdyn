@@ -10,7 +10,7 @@
     struct SSR_BURST
     {
       /* data */
-      public:char sequence_result[102];
+      public:char sequence_result[102];// NOSONAR
       private:int power;
 
       // getter puissance 
@@ -102,11 +102,11 @@
 #endif 
   // Configuration de la broche comme sortie
 
-int time_sync = 0;  // Variable utilisée pour stocker le temps 
-int frequency = 0;  // Variable utilisée pour stocker la fréquence du réseau
-int time_tempo = 0;  // Variable utilisée pour stocker le temps temporaire
-int jotta_pow = 0;  // Variable utilisée pour stocker la commande de dimmer
-int avance_phase = 20;  // Variable utilisée pour stocker l'avance de phase
+int time_sync = 0;  // Variable utilisée pour stocker le temps  // NOSONAR
+int frequency = 0;  // Variable utilisée pour stocker la fréquence du réseau // NOSONAR
+int time_tempo = 0;  // Variable utilisée pour stocker le temps temporaire // NOSONAR
+int jotta_pow = 0;  // Variable utilisée pour stocker la commande de dimmer // NOSONAR
+int avance_phase = 20;  // Variable utilisée pour stocker l'avance de phase // NOSONAR
 
 // 15 perfect pour moi, mais pour titi faut test 20
 //>13
@@ -126,7 +126,7 @@ IRAM_ATTR void jotta_run(){
 }
 
 
-int timeoutPinjotta = 498; // 100 us
+constexpr int timeoutPinjotta = 498; // 100 us 
 IRAM_ATTR void jotta_ISR()
 {
 
