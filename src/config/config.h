@@ -4,13 +4,6 @@
 #define VERSION "Version 20240501" 
 #define FS_RELEASE "20240501" // date de la release
 
-/// default configuration for Dimmer with Power supply and D1 Mini on the board ( default : D0 - D1 )
-#ifdef  POWERSUPPLY
-#define outputPin  D0 
-#define zerocross  D1 // for boards with CHANGEBLE input pins
-//#define outputPin  4
-//#define zerocross  5 // for boards with CHANGEBLE input pins
-#endif
 
 //// configuration for Standalone boards ( personnalisation )
 #ifdef  STANDALONE
@@ -55,11 +48,6 @@
   #define RELAY2 D2  //
 #endif
 
-//// Dallas Configuration for Dimmer with Power supply and D1 Mini on the board
-#ifdef  POWERSUPPLY
-  #define ONE_WIRE_BUS D2 // previously D2 was not working on old robotdyn card
-  #define COOLER  D7   /// 0 : off  -> 1 : On --> need a dry contact or opto
-#endif
 
 #ifdef ESP32
   #define outputPin  14
@@ -113,6 +101,16 @@
 #define NTP_TIME_SYNC_ENABLED true
 #define NTP_SERVER "europe.pool.ntp.org"
 #define NTP_UPDATE_INTERVAL_MS 3600000 /// synch de l'heure toute les heures
+
+/// deprecated description old version Robotdyn card 2021 ( With wemos D1 mini plugged on the board)
+//// configuration for Dimmer with Power supply and D1 Mini on the board and need TTL USB ( https://fr.aliexpress.com/item/1005003365062050.html ) 
+#ifdef  POWERSUPPLY
+#define outputPin  D0 
+#define zerocross  D1 // for boards with CHANGEBLE input pins
+#define ONE_WIRE_BUS D2 // previously D2 was not working on old robotdyn card
+#define COOLER  D7   /// 0 : off  -> 1 : On --> need a dry contact or opto
+#endif
+
 
 #endif
 
