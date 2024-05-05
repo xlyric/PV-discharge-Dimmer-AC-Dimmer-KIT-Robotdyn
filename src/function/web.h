@@ -99,6 +99,7 @@ void call_pages() {
   server.serveStatic("/relai.html", LittleFS, "/relai.html");
   server.serveStatic("/jquery.easing.min.js", LittleFS, "/js/jquery.easing.min.js");
 
+
 /// page de index et récupération des requetes de puissance
   server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
     
@@ -297,6 +298,25 @@ void call_pages() {
     else { request->send(200, "application/json",  getMinuteur()); }
   });
 
+/*
+  server.on("/test2.html", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+     Serial.println(ESP.getFreeHeap());
+    File header = LittleFS.open("/index.html", "r");
+     Serial.println(ESP.getFreeHeap());
+    File body = LittleFS.open("/config.html", "r");
+     Serial.println(ESP.getFreeHeap());
+    StreamConcat stream1(&header, &body);
+     Serial.println(ESP.getFreeHeap());
+
+    File footer = LittleFS.open("/mqtt.json", "r");
+     Serial.println(ESP.getFreeHeap());
+
+    StreamConcat stream3 = StreamConcat(&stream1, &footer);
+     Serial.println(ESP.getFreeHeap());
+    request->send(stream3, "text/html", stream3.available());
+  });
+*/
+
   /// reglage des seuils relais
 
     server.on("/getseuil", HTTP_ANY, [] (AsyncWebServerRequest *request) {
@@ -353,7 +373,6 @@ void call_pages() {
   server.on("/readmqtt", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/html", readmqttsave().c_str());
     });
-
 
 
 /////////////////////////

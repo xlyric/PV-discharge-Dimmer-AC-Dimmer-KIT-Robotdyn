@@ -442,12 +442,7 @@ void setup() {
           Serial.print(String(wifi_config_fixe.static_ip));
     }
 
-    if (strcmp(config.say_my_name, "") == 0) {
-      strcpy(config.say_my_name, ("Dimmer-"+WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17)).c_str());
-    }
     wifiManager.autoConnect(config.say_my_name);
-    
-    
     
     DEBUG_PRINTLN("end Wifiautoconnect");
     wifiManager.setSaveConfigCallback(saveConfigCallback);

@@ -18,27 +18,27 @@ struct gestion_puissance
 public:float power;
 
 // setter
-void set_power(float power){
-  if ( sysvar.celsius[sysvar.dallas_maitre]> config.maxtemp ) { power = 0; } /// si la température est supérieur à la température max on coupe tout
-  else if ( power > config.maxpow )  { power = config.maxpow; }
+void set_power(float is_set_power){
+  if ( sysvar.celsius[sysvar.dallas_maitre]> config.maxtemp ) { is_set_power = 0; } /// si la température est supérieur à la température max on coupe tout
+  else if ( is_set_power > config.maxpow )  { is_set_power = config.maxpow; }
 
   /// vérification de la température 
   
-  this->power = power;
+  this->power = is_set_power;
   /// pour le SSR
   #ifdef SSR_ZC
-    ssr_burst.set_power(int(power));
+    ssr_burst.set_power(int(is_set_power));
   #endif
  
   #ifdef SSR_RANDOM
-    jotta_command(int(power));
+    jotta_command(int(is_set_power));
   #endif
 
   /// pour le dimmer robotdyn
   #ifdef ROBOTDYN
     // On transforme la puissance totale à envoyer aux dimmers en watts pour mieux les répartir entre les 3 SSR
     // Meilleure précision en float 
-    float tmp_pwr_watt = power * config.charge / 100; 
+    float tmp_pwr_watt = is_set_power * config.charge / 100; 
     int dimmer1_pwr = 0;
     int dimmer2_pwr = 0;
     int dimmer3_pwr = 0;

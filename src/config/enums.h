@@ -79,37 +79,37 @@ struct Config {
     
   public:
     const char *filename_conf = "/config.json";
-    char hostname[16];
-    int port;
-    char Publish[100];
-    int IDXTemp;
-    int maxtemp;
-    int IDXAlarme;
-    int IDX;
-    int maxpow;
-    char child[16];
-    char mode[10];
-    int minpow;
-    int startingpow;
-    char SubscribePV[100];
-    char SubscribeTEMP[100]; // NOSONAR
+    char hostname[16] = "192.168.1.22"; // NOSONAR
+    int port = 1883 ;
+    char Publish[100] = "domoticz/in"; // NOSONAR 
+    int IDXTemp = 200;
+    int IDXAlarme = 202;
+    int IDX = 201; 
+    int maxtemp = 60;
+    int maxpow = 50;
+    char child[16] = "";
+    char mode[10] = "off";
+    int minpow = 5;
+    int startingpow = 0;
+    char SubscribePV[100] = "none";
+    char SubscribeTEMP[100] ="none" ; // NOSONAR
     bool restart;
-    bool dimmer_on_off;
+    bool dimmer_on_off = true;
   /// @brief  // Somme des 3 charges déclarées dans la page web
-    int charge;
+    int charge = 1000;
   /// @brief  // Puissance de la charge 1 déclarée dans la page web
-    int charge1; 
+    int charge1 = 1000; 
   /// @brief  // Puissance de la charge 2 déclarée dans la page web
-    int charge2; 
+    int charge2 = 0; 
   /// @brief  // Puissance de la charge 3 déclarée dans la page web
-    int charge3; 
-    int dispo; 
-    bool HA;
-    bool JEEDOM;
-    bool DOMOTICZ;
-    char PVROUTER[5];
-    char DALLAS[17];
-    char say_my_name[32]; // NOSONAR
+    int charge3 = 0; 
+    int dispo = 0; 
+    bool HA = true;
+    bool JEEDOM = true;
+    bool DOMOTICZ = true;
+    char PVROUTER[5] = "mqtt";
+    char DALLAS[17]   = "to_define";
+    char say_my_name[32]  ; // NOSONAR
 
 // Loads the configuration from a file
 String loadConfiguration() {
@@ -132,13 +132,14 @@ String loadConfiguration() {
 
 /// en cas de reboot étranges, il sera bon de passer sur un format de type doc["hostname"].as<String>().c_str() pour éviter les problèmes de mémoire  
 /// --> Exception 9: LoadStoreAlignmentCause: Load or store to an unaligned address. cas survenu avec les configuration MQTT
-  strlcpy(hostname,                  // <- destination
-          doc["hostname"] | "192.168.1.22", // <- source // NOSONAR
-          sizeof(hostname));         // <- destination's capacity
+  String hostnamevalue = doc["hostname"].as<String>();
+  strlcpy(hostname, hostnamevalue.c_str(), sizeof(hostname));
+
   port = doc["port"] | 1883;
-  strlcpy(Publish,                 
-          doc["Publish"] | "domoticz/in", 
-          sizeof(Publish));        
+
+  String PublishValue = doc["Publish"].as<String>();
+  strlcpy(Publish, PublishValue.c_str(), sizeof(Publish));
+  
   IDXTemp = doc["IDXTemp"] | 200; 
   maxtemp = doc["maxtemp"] | 60; 
   IDXAlarme = doc["IDXAlarme"] | 202; 
@@ -150,31 +151,35 @@ String loadConfiguration() {
   charge1 = doc["charge1"] | 1000; 
   charge2 = doc["charge2"] | 0; 
   charge3 = doc["charge3"] | 0; 
-  strlcpy(child,                  
-          doc["child"] | "", 
-          sizeof(child));         
-  strlcpy(mode,                  
-          doc["mode"] | "off", 
-          sizeof(mode));
-  strlcpy(SubscribePV,                 
-        doc["SubscribePV"] | "none", 
-        sizeof(SubscribePV));    
-  strlcpy(SubscribeTEMP,                 
-        doc["SubscribeTEMP"] | "none", 
-        sizeof(SubscribeTEMP));
+
+  String Publishchild = doc["child"].as<String>();
+  strlcpy(child, Publishchild.c_str(), sizeof(child));
+  
+  String Publishmode = doc["mode"].as<String>();
+  strlcpy(mode, Publishmode.c_str(), sizeof(mode));
+  
+  String PublishSubscribePV = doc["SubscribePV"].as<String>();
+  strlcpy(SubscribePV, PublishSubscribePV.c_str(), sizeof(SubscribePV));
+
+  String PublishSubscribeTEMP = doc["SubscribeTEMP"].as<String>();   
+  strlcpy(SubscribeTEMP, PublishSubscribeTEMP.c_str(), sizeof(SubscribeTEMP));
+  
   dimmer_on_off = doc["dimmer_on_off"] | 1; 
   HA = doc["HA"] | true; 
   JEEDOM = doc["JEEDOM"] | true; 
   DOMOTICZ = doc["DOMOTICZ"] | true; 
-  strlcpy(PVROUTER,
-        doc["PVROUTER"] | "mqtt", 
-        sizeof(PVROUTER)); 
-  strlcpy(DALLAS,
-        doc["DALLAS"] | "to_define", 
-        sizeof(DALLAS));   
-  strlcpy(say_my_name,                 
-        doc["name"] | "", 
-        sizeof(say_my_name));
+
+  String PublishPVROUTER = doc["PVROUTER"].as<String>();
+  strlcpy(PVROUTER, PublishPVROUTER.c_str(), sizeof(PVROUTER));
+
+  String PublishDALLAS = doc["DALLAS"].as<String>();
+  strlcpy(DALLAS, PublishDALLAS.c_str(), sizeof(DALLAS));
+
+  String Publishsay_my_name = doc["name"].as<String>();
+  if (strcmp(Publishsay_my_name.c_str(), "") == 0) {
+      strcpy(say_my_name, ("dimmer-"+WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17)).c_str());
+    }
+  else strlcpy(say_my_name, Publishsay_my_name.c_str(), sizeof(say_my_name));
 
   configFile.close();
 

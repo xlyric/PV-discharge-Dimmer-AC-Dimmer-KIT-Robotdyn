@@ -70,7 +70,7 @@ String stringBoolMQTT(bool mybool);
   String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
   String node_id = String("dimmer-") + node_mac; 
   
-  String topic_Xlyric = "Xlyric/"+ node_id +"/";
+  String topic_Xlyric = "Xlyric/" + String(config.say_my_name) +"/";
 
   String command_switch = String(topic_Xlyric + "command/switch");
   String command_number = String(topic_Xlyric + "command/number");
@@ -428,6 +428,7 @@ void connect_and_subscribe() {
 //#define MQTT_HOST IPAddress(192, 168, 1, 20)
 char arrayWill[64];// NOSONAR
 void async_mqtt_init() {
+  String topic_Xlyric = "Xlyric/" + String(config.say_my_name) +"/";
 	const String LASTWILL_TOPIC = topic_Xlyric + "status";
 	LASTWILL_TOPIC.toCharArray(arrayWill, 64);
   IPAddress ip;
@@ -461,6 +462,7 @@ void onMqttConnect(bool sessionPresent) {
   logging.Set_log_init("Connected to MQTT.\r\n");
   Serial.print("Session present: ");
   Serial.println(sessionPresent);
+  String topic_Xlyric = "Xlyric/" + String(config.say_my_name) +"/";
   client.publish(String(topic_Xlyric +"status").c_str(),1,true, "online");         // Once connected, publish online to the availability topic
   
   if (strcmp(config.PVROUTER, "mqtt") == 0 && strlen(config.SubscribePV) !=0 ) {client.subscribe(config.SubscribePV,1);}

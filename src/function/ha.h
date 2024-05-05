@@ -151,7 +151,7 @@ struct HA
 
   public:void HA_discovery(){
       String topic = "homeassistant/"+ entity_type +"/"+ node_id +"/";
-    String topic_Xlyric = "Xlyric/"+ node_id +"/";
+      String topic_Xlyric = "Xlyric/"+ node_id +"/";
 
     String device = R"(
         {
