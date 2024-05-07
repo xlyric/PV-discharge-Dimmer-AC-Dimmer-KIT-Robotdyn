@@ -82,23 +82,23 @@ struct HA
             + R"("value_template": "{{ value_json.)" + object_id + R"( }}",)";
       }
           else if (entity_type == "switch") { 
-              info =         "\"val_tpl\": \"{{ value_json."+ object_id +" }}\","
-            "\"pl\":  \"{{ value_json."+ object_id +" }}\","
-            "\"pl_on\": \"{ \\\""+object_id+"\\\" : \\\"1\\\"  } \","
-            "\"pl_off\": \"{ \\\""+object_id+"\\\" : \\\"0\\\"  } \","
-            "\"stat_on\":1,"
-            "\"stat_off\":0,"
-          "\"qos\":1,"
-          "\"cmd_t\": \""+ topic_Xlyric + "command/" +  entity_type + "/" + object_id + "\",";
+              info =         R"("val_tpl": "{{ value_json.)"  + object_id +  R"( }}", )"
+                + R"("pl": "{{ value_json.)"  + object_id +  R"( }}", )"
+                + R"("pl_on": { )" + object_id + R"( : 1 }, )"
+                + R"("pl_off": { )" + object_id + R"( : 0 }, )"
+                + R"("stat_on":1,
+                "stat_off":0,
+                "qos":1,
+                "cmd_t": ")" + topic_Xlyric + "command/" +  entity_type + "/" + object_id + R"(", )";
       } 
       else if (entity_type == "number") { 
-            info =         "\"val_tpl\": \"{{ value_json."+ object_id +" }}\","
-          "\"cmd_t\": \""+ topic_Xlyric + "command/" +  entity_type + "/" + object_id + "\","
-            "\"cmd_tpl\": \"{ \\\""+object_id+"\\\" : {{ value }} } \"," 
-          "\"entity_category\": \""+ entity_category + "\","
-          "\"max\": \""+max+"\","
-          "\"min\": \""+min+"\","
-          "\"step\": \""+step+"\",";
+            info =      R"("val_tpl": "{{ value_json.)" + object_id + R"( }}",)"
+            + R"("cmd_t": ")" + topic_Xlyric + "command/" + entity_type + "/" + object_id + R"(",)"
+            + R"("cmd_tpl": { ")" + object_id + R"(" : {{ value }} }, )"
+            + R"("entity_category": ")" + entity_category + R"(",)"
+            + R"("min": )" + min + R"(,)"
+            + R"("max": )" + max + R"(,)"  
+            + R"("step": )" + step + R"(,)";
       }
       else if (entity_type == "select") { 
           info = R"("val_tpl": "{{ value_json.)" + object_id + R"( }}",)"
@@ -341,7 +341,7 @@ void devices_init(){
   device_dimmer_child_mode.Set_object_id("child_mode");
   device_dimmer_child_mode.Set_entity_type("select");
   device_dimmer_child_mode.Set_entity_category("config");
-  device_dimmer_child_mode.Set_entity_option(R"("off","delester","equal")");
+  device_dimmer_child_mode.Set_entity_option(R"( "off","delester","equal" )");
   device_dimmer_child_mode.Set_retain_flag(true);
 
   // création des binary_sensor
