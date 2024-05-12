@@ -627,8 +627,8 @@ bool alerte=false;
 void loop() {
 
 
-  /// connexion MQTT
-  if (!mqttConnected) {
+  /// connexion MQTT dans les cas de conf mqtt et perte de connexion
+  if (!mqttConnected && !AP && mqtt_config.mqtt) {
     connect_and_subscribe();
   }
 
