@@ -426,14 +426,14 @@ void setup() {
 
     AsyncWiFiManagerParameter custom_IP_Address("server", "IP", wifi_config_fixe.static_ip, 16);
     wifiManager.addParameter(&custom_IP_Address);
-    AsyncWiFiManagerParameter custom_IP_gateway("gateway", "gateway", wifi_config_fixe.static_gw, 16);
-    wifiManager.addParameter(&custom_IP_gateway);
     AsyncWiFiManagerParameter custom_IP_mask("mask", "mask", wifi_config_fixe.static_sn, 16);
     wifiManager.addParameter(&custom_IP_mask);
+    AsyncWiFiManagerParameter custom_IP_gateway("gateway", "gateway", wifi_config_fixe.static_gw, 16);
+    wifiManager.addParameter(&custom_IP_gateway);
 
     _ip.fromString(wifi_config_fixe.static_ip);
-    _gw.fromString(wifi_config_fixe.static_gw);
     _sn.fromString(wifi_config_fixe.static_sn);
+    _gw.fromString(wifi_config_fixe.static_gw);
 
     if ( !strcmp(wifi_config_fixe.static_ip, "") == 0) {
           //set static ip
@@ -450,7 +450,7 @@ void setup() {
  
 
    strcpy(wifi_config_fixe.static_ip, custom_IP_Address.getValue());
-    strcpy(wifi_config_fixe.static_sn, custom_IP_mask.getValue());
+   strcpy(wifi_config_fixe.static_sn, custom_IP_mask.getValue());
    strcpy(wifi_config_fixe.static_gw, custom_IP_gateway.getValue());
 
     DEBUG_PRINTLN("static adress: " + String(wifi_config_fixe.static_ip) + " mask: " + String(wifi_config_fixe.static_sn) + " GW: " + String(wifi_config_fixe.static_gw));
