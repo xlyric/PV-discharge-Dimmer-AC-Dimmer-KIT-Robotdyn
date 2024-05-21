@@ -115,6 +115,7 @@
 #include "tasks/cooler.h"
 #include "tasks/get_power.h"
 #include "tasks/relais.h"
+#include "tasks/ping.h"
 
 #if defined(ESP32) || defined(ESP32ETH)
 // Web services
@@ -147,6 +148,8 @@ Task Task_GET_POWER(10000, TASK_FOREVER, &get_dimmer_child_power);
 #ifdef RELAY1
 Task Task_relay(20000, TASK_FOREVER, &relais_controle);
 #endif
+/// @brief  task de ping 
+Task Task_ping(180000, TASK_FOREVER, &ping);
 Scheduler runner;
 
 
@@ -606,6 +609,9 @@ Task_Cooler.enable();
 
 runner.addTask(Task_GET_POWER);
 Task_GET_POWER.enable();
+
+runner.addTask(Task_ping);
+Task_ping.enable();
 
 DEBUG_PRINTLN(ESP.getFreeHeap());
 

@@ -248,6 +248,15 @@ void call_pages() {
     config.restart = true;
   });
 
+    server.on("/disconnect", HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->redirect("/");
+    WiFi.disconnect();
+  });
+
+  server.on("/ping", HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->send(200, "text/plain", "pong");   
+  });
+
   server.on("/config.json", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send(LittleFS, "/config.json", "application/json");
   });

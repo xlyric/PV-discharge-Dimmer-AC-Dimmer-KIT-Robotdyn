@@ -353,6 +353,10 @@ int puissance_cumul=0;
 int dallas_maitre=0;
 /// @brief sonde principale
 byte security=0;
+/// @brief  état ping
+bool ping=false;
+const char pingurl[35] = "ota.apper-solaire.org";
+int pingfail=0;
 };
 
 struct epoc {
