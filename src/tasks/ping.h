@@ -30,6 +30,7 @@ void ping() {
             Serial.printf("[HTTP PING] GET... code: %d\n", httpCode);
             if (httpCode == HTTP_CODE_OK) {
                 sysvar.ping = true;
+                sysvar.pingfail = 0;
             }
         } else {
             Serial.printf("[HTTP PING] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
