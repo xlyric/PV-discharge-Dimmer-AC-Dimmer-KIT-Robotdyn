@@ -149,7 +149,7 @@ Task Task_GET_POWER(10000, TASK_FOREVER, &get_dimmer_child_power);
 Task Task_relay(20000, TASK_FOREVER, &relais_controle);
 #endif
 /// @brief  task de ping 
-Task Task_ping(180000, TASK_FOREVER, &ping);
+Task Task_ping(120000, TASK_FOREVER, &ping);
 Scheduler runner;
 
 

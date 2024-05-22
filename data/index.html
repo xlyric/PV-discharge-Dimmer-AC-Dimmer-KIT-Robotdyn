@@ -228,29 +228,37 @@ $.getJSON('/state', function(data) {
     // ecriture de "refroidissement" dans le div alerte si l'état est à 1
         if (alerte == 1) {
             document.getElementById("alerte").innerHTML = "Refroidissement";
+            document.getElementById("alerte").style.color = "red";
         } else {
             document.getElementById("alerte").innerHTML = "Normal";
+            document.getElementById("alerte").style.color = "";
         }
 
     // ecriture de "minuteur" dans le div minuteur si l'état est à 1
         if (minuteur == 1) {
             document.getElementById("minuteur").innerHTML = "Minuteur";
+            document.getElementById("minuteur").style.color = "red";
         } else {
             document.getElementById("minuteur").innerHTML = "Non actif";
+            document.getElementById("minuteur").style.color = "";
         }
     
     // ecriture de "ON" dans le div relais 1 si l'état est à 1
         if (relais1 == 1) {
             document.getElementById("relais 1").innerHTML = "ON";
+            document.getElementById("relais 1").style.color = "red";
         } else {
             document.getElementById("relais 1").innerHTML = "OFF";
+            document.getElementById("relais 1").style.color = "";
         }
 
     // ecriture de "ON" dans le div relais 2 si l'état est à 1
         if (relais2 == 1) {
             document.getElementById("relais 2").innerHTML = "ON";
+            document.getElementById("relais 2").style.color = "red";
         } else {
             document.getElementById("relais 2").innerHTML = "OFF";
+            document.getElementById("relais 2").style.color = "";
         }
 
   });

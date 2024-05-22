@@ -36,6 +36,7 @@ void ping() {
             Serial.printf("[HTTP PING] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
             sysvar.pingfail ++;
             if (sysvar.pingfail > 3 && sysvar.ping == true) {
+                Serial.print("[HTTP PING] connexion lost reboot ");
                 ESP.restart();
             }
         }
