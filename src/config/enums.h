@@ -109,7 +109,7 @@ struct Config {
     bool DOMOTICZ = true;
     char PVROUTER[5] = "mqtt";
     char DALLAS[17]   = "to_define";
-    char say_my_name[32]  ; // NOSONAR
+    char say_my_name[32] = "" ; // NOSONAR
 
 // Loads the configuration from a file
 String loadConfiguration() {
@@ -176,7 +176,7 @@ String loadConfiguration() {
   strlcpy(DALLAS, PublishDALLAS.c_str(), sizeof(DALLAS));
 
   String Publishsay_my_name = doc["name"].as<String>();
-  if (strcmp(Publishsay_my_name.c_str(), "") == 0) {
+  if (strcmp(Publishsay_my_name.c_str(), "") == 0 || strcmp(Publishsay_my_name.c_str(), "null" ) == 0 ) {
       strcpy(say_my_name, ("dimmer-"+WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17)).c_str());
     }
   else strlcpy(say_my_name, Publishsay_my_name.c_str(), sizeof(say_my_name));
@@ -247,7 +247,9 @@ String saveConfiguration() {
   return message;
 }
 
-
+  void calcul_charge() {
+    charge = charge1 + charge2 + charge3;
+  }
 
 };
 

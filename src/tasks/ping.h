@@ -7,12 +7,11 @@
 #if defined(ESP32) || defined(ESP32ETH)
 // Web services
   #include "WiFi.h"
-  #include <AsyncTCP.h>
   #include "HTTPClient.h"
 #else
 // Web services
   #include <ESP8266WiFi.h>
-  #include <ESPAsyncTCP.h>
+  //#include <ESPAsyncTCP.h>
   #include <ESP8266HTTPClient.h> 
 #endif
 

@@ -1,9 +1,9 @@
 #ifndef HA_FUNCTIONS
 #define HA_FUNCTIONS
 
-#include <AsyncMqttClient.h>
+  #include <PubSubClient.h>
 
-extern AsyncMqttClient  client;
+extern PubSubClient client;
 extern Config config; // NOSONAR
 extern Mqtt mqtt_config; // NOSONAR
 extern System sysvar;
@@ -75,49 +75,48 @@ struct HA
       String topic = "homeassistant/"+ entity_type +"/"+ node_id +"/";
       String topic_Xlyric = "Xlyric/"+ node_id +"/";
       String info;
-      if (entity_type == "sensor") {
-            info = R"("dev_cla": ")" + dev_cla + R"(",)" 
-            + R"("unit_of_meas": ")" + unit_of_meas + R"(",)"
-            + R"("stat_cla": ")" + stat_cla + R"(",)"
-            + R"("value_template": "{{ value_json.)" + object_id + R"( }}",)";
+       if (entity_type == "sensor") {
+              info =         "\"dev_cla\": \""+dev_cla+"\","
+            "\"unit_of_meas\": \""+unit_of_meas+"\","
+            "\"stat_cla\": \""+stat_cla+"\"," 
+            "\"value_template\": \"{{ value_json."+ object_id +" }}\","; 
       }
-          else if (entity_type == "switch") { 
-              info =         R"("val_tpl": "{{ value_json.)"  + object_id +  R"( }}", )"
-                + R"("pl": "{{ value_json.)"  + object_id +  R"( }}", )"
-                + R"("pl_on": { )" + object_id + R"( : 1 }, )"
-                + R"("pl_off": { )" + object_id + R"( : 0 }, )"
-                + R"("stat_on":1,
-                "stat_off":0,
-                "qos":1,
-                "cmd_t": ")" + topic_Xlyric + "command/" +  entity_type + "/" + object_id + R"(", )";
+      else if (entity_type == "switch") { 
+              info =         "\"val_tpl\": \"{{ value_json."+ object_id +" }}\","
+            "\"pl\":  \"{{ value_json."+ object_id +" }}\","
+            "\"pl_on\": \"{ \\\""+object_id+"\\\" : \\\"1\\\"  } \","
+            "\"pl_off\": \"{ \\\""+object_id+"\\\" : \\\"0\\\"  } \","
+            "\"stat_on\":1,"
+            "\"stat_off\":0,"
+          "\"qos\":1,"
+          "\"cmd_t\": \""+ topic_Xlyric + "command/" +  entity_type + "/" + object_id + "\",";
       } 
       else if (entity_type == "number") { 
-            info =      R"("val_tpl": "{{ value_json.)" + object_id + R"( }}",)"
-            + R"("cmd_t": ")" + topic_Xlyric + "command/" + entity_type + "/" + object_id + R"(",)"
-            + R"("cmd_tpl": { ")" + object_id + R"(" : {{ value }} }, )"
-            + R"("entity_category": ")" + entity_category + R"(",)"
-            + R"("min": )" + min + R"(,)"
-            + R"("max": )" + max + R"(,)"  
-            + R"("step": )" + step + R"(,)";
-      }
+            info =         "\"val_tpl\": \"{{ value_json."+ object_id +" }}\","
+          "\"cmd_t\": \""+ topic_Xlyric + "command/" +  entity_type + "/" + object_id + "\","
+            "\"cmd_tpl\": \"{ \\\""+object_id+"\\\" : {{ value }} } \"," 
+          "\"entity_category\": \""+ entity_category + "\","
+          "\"max\": \""+max+"\","
+          "\"min\": \""+min+"\","
+          "\"step\": \""+step+"\",";
+      } 
       else if (entity_type == "select") { 
-          info = R"("val_tpl": "{{ value_json.)" + object_id + R"( }}",)"
-          + R"("cmd_t": ")" + topic_Xlyric + "command/" + entity_type + "/" + object_id + R"(",)"
-          + R"("cmd_tpl": ")" + object_id+ R"({{ value }} ", )"
-          + R"("entity_category": ")" + entity_category + R"(",)"
-          + R"("options": [)" + entity_option + R"(],)";
+            info =         "\"val_tpl\": \"{{ value_json."+ object_id +" }}\","
+          "\"cmd_t\": \""+ topic_Xlyric + "command/" +  entity_type + "/" + object_id + "\","
+            "\"cmd_tpl\": \"{ \\\""+object_id+"\\\" : \\\"{{ value }}\\\" } \"," 
+          "\"entity_category\": \""+ entity_category + "\","
+          "\"options\": ["+ entity_option + "],";
       } 
       else if (entity_type == "binary_sensor") { 
-          info = R"("dev_cla": ")" + dev_cla + R"(",)"
-          + R"("pl_on":"true",)"
-          + R"("pl_off":"false",)"
-          + R"("val_tpl": "{{ value_json.)" + object_id + R"( }}",)";
+              info =         "\"dev_cla\": \""+dev_cla+"\","
+            "\"pl_on\":\"true\","
+            "\"pl_off\":\"false\","
+            "\"val_tpl\": \"{{ value_json."+ object_id +" }}\",";
       }
       else if (entity_type == "button") { 
-          info = R"("entity_category": ")" + entity_category + R"(",)"
-          + R"("cmd_t": ")" + topic_Xlyric + "command/" + entity_type + "/" + object_id + R"(",)"
-          + R"("pl_prs": "{ \"" + object_id + R"\" : \"" + "1\"  } ",)";
-
+            info =            "\"entity_category\": \""+ entity_category + "\","
+          "\"cmd_t\": \""+ topic_Xlyric + "command/" +  entity_type + "/" + object_id + "\","
+            "\"pl_prs\": \"{ \\\""+object_id+"\\\" : \\\"1\\\"  } \",";
       }
       return info;
     }
@@ -168,10 +167,10 @@ struct HA
             "}";
 
        if (strlen(object_id.c_str()) > 0) {
-       client.publish(String(topic+object_id+"/config").c_str() ,1,true, device.c_str()); // déclaration autoconf dimmer
+       client.publish(String(topic+object_id+"/config").c_str(), device.c_str(),true); // déclaration autoconf dimmer
        }  
        else {
-        client.publish(String(topic+"config").c_str() ,1,true, device.c_str()); // déclaration autoconf dimmer
+        client.publish(String(topic+"config").c_str(), device.c_str(),true); // déclaration autoconf dimmer
        }
  
     }
@@ -180,7 +179,7 @@ struct HA
     if (config.JEEDOM || config.HA) {
       String topic = "Xlyric/"+ node_id +"/sensors/";
       String message = "  { \""+object_id+"\" : \"" + value.c_str() + "\"  } ";
-      client.publish(String(topic + object_id + "/state").c_str() ,qos, retain_flag , message.c_str());
+      client.publish(String(topic + object_id + "/state").c_str(), message.c_str(), retain_flag);
     }
   } 
 };

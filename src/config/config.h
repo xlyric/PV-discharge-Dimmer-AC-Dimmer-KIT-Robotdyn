@@ -1,7 +1,7 @@
 #ifndef CONFIG
 #define CONFIG
 
-#define VERSION "Version 20240601" 
+#define VERSION "Version 20240603" 
 #define FS_RELEASE "20240601" // date de la release
 
 
@@ -50,13 +50,16 @@
 
 
 #ifdef ESP32
-  #define outputPin  14
-  //#define outputPin2  27 /// désactivé pour le moment ne comprends pas pourquoi c'est arrivé dans le code. 
-  #define zerocross  33
-  #define ONE_WIRE_BUS 4 
-  #define RELAY1 25 
   #define RELAY2 26 
-  #define COOLER 17  
+  #define outputPin  18 // PSM on board
+  #define zerocross  19 // for boards with CHANGEBLE input pins // ZC on board
+  #define ONE_WIRE_BUS  23 // Dallas
+  #define COOLER 5 // Pin for COOLER. (switch on dimmer)
+  
+  #define outputPin2 22 // use JOTTA/SSR2 (SSR2) output for 2nd Robotdyn/Random SSR
+  #define outputPin3 21  // (SSR3) use RELAY2/SSR3 output for 3rd Robotdyn/Random SSR ( for old boards )
+  #define RELAY1 17 
+  
 #endif
 
 #ifdef ESP32ETH

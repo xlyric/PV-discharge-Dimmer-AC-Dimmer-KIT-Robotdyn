@@ -10,12 +10,11 @@
 #if defined(ESP32) || defined(ESP32ETH)
 // Web services
   #include "WiFi.h"
-  #include <AsyncTCP.h>
   #include "HTTPClient.h"
 #else
 // Web services
   #include <ESP8266WiFi.h>
-  #include <ESPAsyncTCP.h>
+  //#include <ESPAsyncTCP.h>
   #include <ESP8266HTTPClient.h> 
 #endif
 
@@ -51,17 +50,16 @@ extern bool alerte;
 extern byte security; // sécurité
 extern Logs logging; 
 extern String devAddrNames[MAX_DALLAS];
-extern AsyncMqttClient client; 
+extern   PubSubClient client; 
 
 
 void connectToMqtt();
 void onMqttConnect(bool sessionPresent);
-void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
 void onMqttSubscribe(uint16_t packetId, uint8_t qos);
-void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total);
+
 char buffer[1024];// NOSONAR
   /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remonté par MQTT
-  /// @param Subscribedtopic 
+  /// @param topic 
   /// @param message 
   /// @param length 
 
@@ -79,15 +77,23 @@ String stringBoolMQTT(bool mybool);
   const String HA_status = String("homeassistant/status");
   String command_save = String("Xlyric/sauvegarde/"+ node_id );
 
-void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
+void callback(char* topic, byte* payload, unsigned int length) {
+  char arrivage[length+1]; // Ajout d'un espace pour le caractère nul // NOSONAR
+  int recup = 0;
+
+    for (int i=0;i<length;i++) {
+      arrivage[i] = (char)payload[i];
+    }
+  arrivage[length] = '\0'; // Ajouter le caractère nul à la fin
+
   // debug
-  Serial.println("Subscribedtopic : " + String(Subscribedtopic));
-  Serial.println("payload : " + String(payload));
-  String fixedpayload = ((String)payload).substring(0,len);
+  Serial.println("topic : " + String(topic));
+  Serial.println("payload : " + String(arrivage));
+  String fixedpayload = ((String)arrivage).substring(0,length);
   StaticJsonDocument<1152> doc2;
-  deserializeJson(doc2, payload);
+  deserializeJson(doc2, arrivage);
   /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remontées par MQTT
-  if (strcmp( Subscribedtopic, config.SubscribePV ) == 0 && doc2.containsKey("power")) { 
+  if (strcmp( topic, config.SubscribePV ) == 0 && doc2.containsKey("power")) { 
     int puissancemqtt = doc2["power"]; 
     puissancemqtt = puissancemqtt - config.startingpow;
     if (puissancemqtt < 0) puissancemqtt = 0;
@@ -102,7 +108,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
     }
   }
   /// @brief Enregistrement temperature
-  if (strcmp( Subscribedtopic, config.SubscribeTEMP ) == 0 ){ 
+  if (strcmp( topic, config.SubscribeTEMP ) == 0 ){ 
     float temperaturemqtt = doc2[0]; 
     sysvar.dallas_maitre= deviceCount+1;
     devAddrNames[deviceCount+1] = "MQTT";
@@ -128,7 +134,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
   }
 
   /// @brief Enregistrement des requetes de commandes 
-  if (strstr( Subscribedtopic, command_switch.c_str() ) != NULL) { 
+  if (strstr( topic, command_switch.c_str() ) != NULL) { 
     #ifdef RELAY1
       if (doc2.containsKey("relay1")) { 
           int relay = doc2["relay1"]; 
@@ -161,7 +167,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
     }
   } 
 
-  if (strstr( Subscribedtopic, command_number.c_str() ) != NULL) { 
+  if (strstr( topic, command_number.c_str() ) != NULL) { 
     if (doc2.containsKey("starting_power")) { 
       int startingpow = doc2["starting_power"]; 
       if (config.startingpow != startingpow ) {
@@ -230,7 +236,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
     }
   }
 //clear alarm & save
-  if (strstr( Subscribedtopic, command_button.c_str() ) != NULL) { 
+  if (strstr( topic, command_button.c_str() ) != NULL) { 
     if (doc2.containsKey("reset_alarm")) { 
       if (doc2["reset_alarm"] == "1" ) {
         logging.Set_log_init("Clear alarm temp \r\n",true);
@@ -251,7 +257,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
 
 
 //child mode
-  if (strstr( Subscribedtopic, command_select.c_str() ) != NULL) { 
+  if (strstr( topic, command_select.c_str() ) != NULL) { 
     if (doc2.containsKey("child_mode")) { 
       String childmode = doc2["child_mode"]; 
       if (config.mode != doc2["child_mode"] ) {
@@ -264,7 +270,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
       }
     }
   }
-  if (strcmp( Subscribedtopic, command_save.c_str() ) == 0) { 
+  if (strcmp( topic, command_save.c_str() ) == 0) { 
         strlcpy(config.hostname , doc2["hostname"], sizeof(config.hostname));
         config.port = doc2["port"];
         strlcpy(config.Publish , doc2["Publish"], sizeof(config.Publish));
@@ -286,7 +292,7 @@ void callback(char* Subscribedtopic, char* payload, AsyncMqttClientMessageProper
   }
 
 
-  if (strcmp( Subscribedtopic, HA_status.c_str() ) == 0) { 
+  if (strcmp( topic, HA_status.c_str() ) == 0) { 
         logging.Set_log_init("MQTT HA_status ",true);
         logging.Set_log_init(fixedpayload);
         logging.Set_log_init("\r\n");
@@ -343,7 +349,7 @@ void Mqtt_send_DOMOTICZ(String idx, String value, String name="")
       serializeJson(doc, retour);
       // si config.Publish est vide, on ne publie pas
       if (strlen(config.Publish) != 0 ) {
-        client.publish(config.Publish, 0,true, retour.c_str());
+        client.publish(config.Publish, retour.c_str(), true);
       }
     }
 
@@ -351,7 +357,7 @@ void Mqtt_send_DOMOTICZ(String idx, String value, String name="")
       String jeedom_publish = String(config.Publish) + "/" + idx ; 
       // si config.Publish est vide, on ne publie pas
       if (strlen(config.Publish) != 0 ) {
-        client.publish(jeedom_publish.c_str(), 0,true, value.c_str());
+        client.publish(jeedom_publish.c_str(), value.c_str(), true);
       }
     }
 
@@ -390,7 +396,7 @@ void connect_and_subscribe() {
   if  (LittleFS.exists("/mqtt.json"))
   {
       if (!client.connected() && WiFi.isConnected()) {
-        Serial.print("Attempting MQTT connection...");
+        Serial.print("Attempting MQTT connection...\n");
         connectToMqtt();
         delay(1000); // Attente d'avoir le callback de connexion MQTT avant de faire les subscriptions
       }
@@ -398,7 +404,7 @@ void connect_and_subscribe() {
       
       if (mqttConnected) {
         logging.Set_log_init("Subscribe and publish to MQTT topics\r\n");
-       
+
         Serial.println("connected");
         logging.Set_log_init("Connected\r\n");
 
@@ -434,27 +440,47 @@ void async_mqtt_init() {
   IPAddress ip;
   ip.fromString(config.hostname);
   DEBUG_PRINTLN(ip);
-  client.setClientId(node_id.c_str());
-  client.setKeepAlive(30);
-  client.setWill(arrayWill, 2, true, "offline");
-  client.setCredentials(mqtt_config.username, mqtt_config.password);
-  client.onDisconnect(onMqttDisconnect);
-  client.onSubscribe(onMqttSubscribe);
-  client.onMessage(callback);
+  //client.setClientId(node_id.c_str());
+  
+  //client.setWill(arrayWill, 2, true, "offline");
+ // client.setCredentials(mqtt_config.username, mqtt_config.password);
+  //client.onDisconnect(onMqttDisconnect);
+  //client.onSubscribe(onMqttSubscribe);
+  //client.onMessage(callback);
+
+  //client.setServer(ip, config.port);
+ // client.setMaxTopicLength(768); // 1024 -> 768 
+ // 
 
   client.setServer(ip, config.port);
-  client.setMaxTopicLength(768); // 1024 -> 768 
-  client.onConnect(onMqttConnect);
+  client.setCallback(callback);
+  connectToMqtt();
+  
   }
 
 void connectToMqtt() {
   if (!client.connected() ) {
   DEBUG_PRINTLN("Connecting to MQTT...");
-    logging.Set_log_init("Connecting to MQTT... \r\n");
-    delay(1000); // pour laisser le temps de se connecter au wifi ou ne pas spam le serveur
-    client.connect();
+    logging.Set_log_init("Connecting to MQTT..." + String(config.say_my_name) + " \r\n");
+    delay(500); // pour laisser le temps de se connecter au wifi ou ne pas spam le serveur
+    Serial.println(config.hostname);
+    IPAddress ip;
+    ip.fromString(config.hostname);
+    client.setServer(ip, config.port);
+    client.setCallback(callback);
+    client.setKeepAlive(120);
+    client.setBufferSize(1024);
+    client.connect(config.say_my_name, mqtt_config.username, mqtt_config.password, arrayWill, 2, true, "offline");
+    
   }
-  
+  // affig en debug k'état de client.connected
+  if (client.connected()) {
+    Serial.println("Connected to MQTT.");
+    logging.Set_log_init("Connected to MQTT.\r\n");
+    /// discovery HA
+    HA_discover();
+    onMqttConnect(true);
+  } 
 }
 
 void onMqttConnect(bool sessionPresent) {
@@ -463,7 +489,7 @@ void onMqttConnect(bool sessionPresent) {
   Serial.print("Session present: ");
   Serial.println(sessionPresent);
   String topic_Xlyric = "Xlyric/" + String(config.say_my_name) +"/";
-  client.publish(String(topic_Xlyric +"status").c_str(),1,true, "online");         // Once connected, publish online to the availability topic
+  client.publish(String(topic_Xlyric +"status").c_str(),"online",true);         // Once connected, publish online to the availability topic
   
   if (strcmp(config.PVROUTER, "mqtt") == 0 && strlen(config.SubscribePV) !=0 ) {client.subscribe(config.SubscribePV,1);}
   if (strcmp(config.PVROUTER, "mqtt") == 0 && strlen(config.SubscribeTEMP) != 0 ) {client.subscribe(config.SubscribeTEMP,1);}
@@ -478,15 +504,6 @@ void onMqttConnect(bool sessionPresent) {
   Serial.println((command_switch + "/#").c_str());
   logging.Set_log_init("MQTT connected \r\n");
   mqttConnected = true;
-}
-
-void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
-  Serial.println("Disconnected from MQTT.");
-  logging.Set_log_init("MQTT disconnected \r\n",true);
-
-  if (WiFi.isConnected()) {
-    connectToMqtt();
-  }
 }
 
 

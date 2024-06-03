@@ -13,12 +13,11 @@
 #if defined(ESP32) || defined(ESP32ETH)
 // Web services
   #include "WiFi.h"
-  #include <AsyncTCP.h>
   #include "HTTPClient.h"
 #else
 // Web services
   #include <ESP8266WiFi.h>
-  #include <ESPAsyncTCP.h>
+  //#include <ESPAsyncTCP.h>
   #include <ESP8266HTTPClient.h> 
 #endif
 
@@ -76,6 +75,7 @@ String switchstate(int state);
 String readmqttsave();
 String getMinuteur(const Programme& minuteur);
 String getMinuteur();
+
 extern Logs Logging; 
 extern String devAddrNames[MAX_DALLAS];
 
@@ -307,25 +307,6 @@ void call_pages() {
     else { request->send(200, "application/json",  getMinuteur()); }
   });
 
-/*
-  server.on("/test2.html", HTTP_ANY, [] (AsyncWebServerRequest *request) {
-     Serial.println(ESP.getFreeHeap());
-    File header = LittleFS.open("/index.html", "r");
-     Serial.println(ESP.getFreeHeap());
-    File body = LittleFS.open("/config.html", "r");
-     Serial.println(ESP.getFreeHeap());
-    StreamConcat stream1(&header, &body);
-     Serial.println(ESP.getFreeHeap());
-
-    File footer = LittleFS.open("/mqtt.json", "r");
-     Serial.println(ESP.getFreeHeap());
-
-    StreamConcat stream3 = StreamConcat(&stream1, &footer);
-     Serial.println(ESP.getFreeHeap());
-    request->send(stream3, "text/html", stream3.available());
-  });
-*/
-
   /// reglage des seuils relais
 
     server.on("/getseuil", HTTP_ANY, [] (AsyncWebServerRequest *request) {
@@ -382,6 +363,8 @@ void call_pages() {
   server.on("/readmqtt", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/html", readmqttsave().c_str());
     });
+
+
 
 
 /////////////////////////
@@ -694,4 +677,8 @@ String getServermode(String Servermode) {
 
 return String(Servermode);
 }
+
+
+
+
 #endif
