@@ -56,6 +56,7 @@ extern   PubSubClient client;
 void connectToMqtt();
 void onMqttConnect(bool sessionPresent);
 void onMqttSubscribe(uint16_t packetId, uint8_t qos);
+void recreate_topic();
 
 char buffer[1024];// NOSONAR
   /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remonté par MQTT
@@ -69,7 +70,7 @@ String stringBoolMQTT(bool mybool);
   String node_id = String("dimmer-") + node_mac; 
   
   String topic_Xlyric = "Xlyric/" + String(config.say_my_name) +"/";
-
+  
   String command_switch = String(topic_Xlyric + "command/switch");
   String command_number = String(topic_Xlyric + "command/number");
   String command_select = String(topic_Xlyric + "command/select");
@@ -80,11 +81,11 @@ String stringBoolMQTT(bool mybool);
 void callback(char* topic, byte* payload, unsigned int length) {
   char arrivage[length+1]; // Ajout d'un espace pour le caractère nul // NOSONAR
   int recup = 0;
-
+  
     for (int i=0;i<length;i++) {
       arrivage[i] = (char)payload[i];
     }
-  arrivage[length] = '\0'; // Ajouter le caractère nul à la fin
+   arrivage[length] = '\0'; // Ajouter le caractère nul à la fin
 
   // debug
   Serial.println("topic : " + String(topic));
@@ -158,13 +159,17 @@ void callback(char* topic, byte* payload, unsigned int length) {
       }
     #endif
     if (doc2.containsKey("on_off")) { 
-        config.dimmer_on_off = doc2["on_off"]; 
+        int relay = doc2["on_off"]; 
+        if ( relay == 0) { config.dimmer_on_off = false; }
+          else { config.dimmer_on_off = true; }
         logging.Set_log_init("Dimmer ON_OFF at ");
         logging.Set_log_init(String(config.dimmer_on_off).c_str());
         logging.Set_log_init("\r\n"); 
         device_dimmer_on_off.send(String(config.dimmer_on_off));      
         sysvar.change=1; 
+        
     }
+    
   } 
 
   if (strstr( topic, command_number.c_str() ) != NULL) { 
@@ -403,6 +408,7 @@ void connect_and_subscribe() {
       
       
       if (mqttConnected) {
+        recreate_topic();
         logging.Set_log_init("Subscribe and publish to MQTT topics\r\n");
 
         Serial.println("connected");
@@ -478,8 +484,10 @@ void connectToMqtt() {
     Serial.println("Connected to MQTT.");
     logging.Set_log_init("Connected to MQTT.\r\n");
     /// discovery HA
+    recreate_topic();
     HA_discover();
     onMqttConnect(true);
+    client.setCallback(callback);
   } 
 }
 
@@ -519,4 +527,14 @@ String stringBoolMQTT(bool mybool){
   if (mybool == false ) {truefalse = "false";}
   return String(truefalse);
 }
+void recreate_topic(){
+  String topic_Xlyric = "Xlyric/" + String(config.say_my_name) +"/";
+  Serial.println("test "+String(config.say_my_name));
+  command_switch = String(topic_Xlyric + "command/switch");
+  command_number = String(topic_Xlyric + "command/number");
+  command_select = String(topic_Xlyric + "command/select");
+  command_button = String(topic_Xlyric + "command/button");
+  command_save = String("Xlyric/sauvegarde/"+ node_id );
+}
+
 #endif
