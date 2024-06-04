@@ -33,7 +33,7 @@ extern Programme programme_relay2;
 extern gestion_puissance unified_dimmer; 
 
 extern DNSServer dns;
-extern byte security; 
+//extern byte security; 
 
 AsyncWebServer server(80);
 
@@ -152,7 +152,7 @@ void call_pages() {
 
             // on égalise
             if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 && strcmp(config.mode,"equal") == 0  ) {
-              if ( (security == 1) || (unified_dimmer.get_power() >= config.maxpow) ) {
+              if ( (sysvar.security == 1) || (unified_dimmer.get_power() >= config.maxpow) ) {
                 sysvar.puissance = sysvar.puissance + dispo;          // En %
                 sysvar.puissance_dispo = sysvar.puissance_dispo * 2 ; //  En W - On multiplie par 2 car la fonction child_communication() fera / 2
                               }
@@ -539,7 +539,7 @@ String getState() {
     doc["power"] = int(instant_power * config.charge/100);
     doc["Ptotal"]  = sysvar.puissance_cumul + int(instant_power * config.charge/100);
     // recupération de l'état de surchauffe
-    doc["alerte"]  = security;
+    doc["alerte"]  = sysvar.security;
 #ifdef RELAY1    
     doc["relay1"]   = digitalRead(RELAY1);
     doc["relay2"]   = digitalRead(RELAY2);

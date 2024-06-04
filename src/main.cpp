@@ -216,7 +216,7 @@ DallasTemperature sensors(&ds);
   
   byte data[12]; //NOSONAR
   float previous_celsius[MAX_DALLAS] = {0.00}; // NOSONAR
-  byte security = 0;
+  //byte security = 0;
   int refresh = 60;
   int refreshcount = 0; 
 int deviceCount = 0;
@@ -768,7 +768,7 @@ void loop() {
             unified_dimmer.dimmer_off();
           }
 
-  if ( security == 1 ) { 
+  if ( sysvar.security == 1 ) { 
       if (!alerte){
         Serial.println("Alert Temp");
       logging.Set_log_init("Alert Temp\r\n",true);
@@ -782,8 +782,8 @@ void loop() {
       }
     //// Trigger de sécurité température
       if ( sysvar.celsius[sysvar.dallas_maitre] <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
-        security = 0 ;
-                if (!AP && mqtt_config.mqtt && config.HA) { device_dimmer_alarm_temp.send(stringBool(security)); 
+        sysvar.security = 0 ;
+                if (!AP && mqtt_config.mqtt && config.HA) { device_dimmer_alarm_temp.send(stringBool(sysvar.security)); 
                  Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("RAS" ),"Alerte");
                 }
         sysvar.change = 1 ;
@@ -817,7 +817,7 @@ void loop() {
 
       }
     }    
-    if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && security == 0) 
+    if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && sysvar.security == 0) 
     {
          DEBUG_PRINTLN(("%d------------------",__LINE__));
         /// si au dessus de la consigne max configurée alors config.maxpow. 
@@ -901,7 +901,7 @@ void loop() {
       }
     }
     /// si la sécurité est active on déleste 
-    else if ( sysvar.puissance != 0 && security == 1)
+    else if ( sysvar.puissance != 0 && sysvar.security == 1)
     {
 
       if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0  && strcmp(config.mode,"off") != 0) {
@@ -955,8 +955,8 @@ void loop() {
     //***********************************
     //************* LOOP - Activation de la sécurité --> doublon partiel avec la fonction sécurité ?  
     //***********************************
-if ( sysvar.celsius[sysvar.dallas_maitre] >= config.maxtemp && security == 0 ) {
-  security = 1 ; 
+if ( sysvar.celsius[sysvar.dallas_maitre] >= config.maxtemp && sysvar.security == 0 ) {
+  sysvar.security = 1 ; 
   unified_dimmer.set_power(0); // necessaire pour les autres modes
             unified_dimmer.dimmer_off();
   float temp = sysvar.celsius[sysvar.dallas_maitre] + 0.2; /// pour être sur que la dernière consigne envoyé soit au moins égale au max.temp  
@@ -964,7 +964,7 @@ if ( sysvar.celsius[sysvar.dallas_maitre] >= config.maxtemp && security == 0 ) {
   if ( config.HA ) { 
           device_temp[sysvar.dallas_maitre].send(String(temp)); 
           device_temp_master.send(String(temp)); 
-          device_dimmer_alarm_temp.send(stringBool(security));
+          device_dimmer_alarm_temp.send(stringBool(sysvar.security));
           device_dimmer_power.send(String(0));
           device_dimmer_total_power.send(String(sysvar.puissance_cumul));
           }  /// si HA remonté MQTT HA de la température

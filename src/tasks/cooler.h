@@ -9,7 +9,7 @@ extern Mqtt mqtt_config;
 extern String logs;
 extern bool AP; // mode point d'accès
 extern HA device_cooler;
-extern byte security;
+//extern byte security;
 extern Programme programme;
 
 unsigned long lastCoolerOffTime = 0; // NOSONAR
@@ -21,7 +21,7 @@ void cooler() {
 
     /// controle du cooler 
     if (config.dimmer_on_off == 1){
-        if ( ( sysvar.puissance > config.minpow && sysvar.celsius[sysvar.dallas_maitre]< config.maxtemp && security == 0 ) || ( programme.run == true )) {
+        if ( ( sysvar.puissance > config.minpow && sysvar.celsius[sysvar.dallas_maitre]< config.maxtemp && sysvar.security == 0 ) || ( programme.run == true )) {
             sysvar.cooler = true;
         } else {
             sysvar.cooler = false;

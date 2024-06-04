@@ -12,7 +12,7 @@ extern bool AP; // mode point d'accès
 extern Mqtt mqtt_config; // configuration mqtt
 extern byte present; // capteur dallas présent ou non 
 extern String logs; // logs
-extern byte security; // sécurité
+//extern byte security; // sécurité
 extern DeviceAddress addr[MAX_DALLAS];  // NOSONAR
 extern float previous_celsius[MAX_DALLAS]; // température précédente //NOSONAR
 extern IPAddress gatewayIP;
