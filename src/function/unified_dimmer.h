@@ -41,14 +41,20 @@ void set_power(float is_set_power){
     // On transforme la puissance totale à envoyer aux dimmers en watts pour mieux les répartir entre les 3 SSR
     // Meilleure précision en float 
     config.calcul_charge();
-    float tmp_pwr_watt = is_set_power * config.charge / 100; 
+    /// eviter les divisions par 0 
+    float tmp_pwr_watt = 0;
+    if ( int(is_set_power) >= 0 ) { tmp_pwr_watt = is_set_power * config.charge / 100; } 
+
+
     int dimmer1_pwr = 0;
     int dimmer2_pwr = 0;
     int dimmer3_pwr = 0;
 
     // Calcul de la puissance à envoyer à chaque dimmer
     if (tmp_pwr_watt <= config.charge1){ // Un seul dimmer à fournir
-      dimmer1_pwr = tmp_pwr_watt * 100 / config.charge1 ;
+      if ( tmp_pwr_watt > 0 ) { dimmer1_pwr = tmp_pwr_watt * 100 / config.charge1 ; } 
+      else 
+      { dimmer1_pwr = 0; }        
       dimmer2_pwr = 0;
       dimmer3_pwr = 0;
     }
@@ -64,7 +70,7 @@ void set_power(float is_set_power){
       if (config.charge3 != 0) { dimmer3_pwr = (tmp_pwr_watt - (config.charge1 + config.charge2) ) * 100 / config.charge3; } else { dimmer3_pwr = 0;}
     }
     
-    
+    Serial.println("power1" + String(dimmer1_pwr));
     // Application de la puissance à chaque dimmer
     // Dimmer1
     if ( dimmer1_pwr != dimmer.getPower() ) {
@@ -159,7 +165,7 @@ void dimmer_off()
     if (dimmer.getState()) {
       dimmer.setPower(0);
       dimmer.setState(OFF);
-      logging.Set_log_init("Dimmer Off\r\n");
+      logging.Set_log_init("Dimmer1 Off\r\n");
       delay(50);
     }
     #ifdef outputPin2
