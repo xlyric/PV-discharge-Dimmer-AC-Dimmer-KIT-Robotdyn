@@ -1,7 +1,7 @@
 #ifndef CONFIG
 #define CONFIG
 
-#define VERSION "Version 20240605" 
+#define VERSION "Version 20240606" 
 #define FS_RELEASE "20240601" // date de la release
 
 

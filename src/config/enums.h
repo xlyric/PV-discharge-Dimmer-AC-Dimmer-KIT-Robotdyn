@@ -259,8 +259,8 @@ struct Mqtt {
   public:
     const char *filename_mqtt = "/mqtt.json";
     bool mqtt;
-    char username[50] = "mosquitto"; // NOSONAR
-    char password[50] = "mosquitto"; // NOSONAR
+    char username[64] = "mosquitto"; // NOSONAR
+    char password[64] = "mosquitto"; // NOSONAR
 
   String loadmqtt() {
     // Open file for reading
