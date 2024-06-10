@@ -192,6 +192,19 @@
                                                     </div>
                                                 </div>
                                                 <div class="form-group row">
+                                                    <div class="col-sm-3">Trigger</div>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <div class="col-sm-3">
+                                                        <input
+                                                            type="text"
+                                                            class="form-control form-control-user"
+                                                            id="trigger"
+                                                            placeholder="%TRIGGER%"
+                                                        >
+                                                    </div>
+                                                </div>
+                                                <div class="form-group row">
                                                     <div class="col-sm-3">max pow</div>
                                                     <div class="col-sm-3">min pow</div>
                                                 </div>
@@ -311,7 +324,7 @@ $( "#save" ).click(function() {
 
 $( "#formulaire" ).submit(function() {
 
-    var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(), 'idxtemp':$('#idxtemp').val(), 'maxtemp':$('#maxtemp').val(), 'IDXAlarme':$('#IDXAlarme').val(), 'IDX':$('#IDX').val(), 'startingpow':$('#startingpow').val(), 'minpow':$('#minpow').val(), 'maxpow':$('#maxpow').val(), 'child':$('#child').val(), 'mode':$('#delester').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val() } 
+    var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(), 'idxtemp':$('#idxtemp').val(), 'maxtemp':$('#maxtemp').val(), 'IDXAlarme':$('#IDXAlarme').val(), 'IDX':$('#IDX').val(), 'startingpow':$('#startingpow').val(), 'minpow':$('#minpow').val(), 'maxpow':$('#maxpow').val(), 'child':$('#child').val(), 'mode':$('#delester').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val(), 'trigger':$('#trigger').val() } 
 
 
 		

@@ -220,12 +220,13 @@
                                                     </div>
                                                     <div class="card-body">
                                                         <div class="form-group row">
-                                                            <div class="col-sm-4">Max Temp (°C)</div>
-                                                            <div class="col-sm-4">Min Power (&percnt;)</div>
-                                                            <div class="col-sm-4">Max Power (&percnt;)</div>
+                                                            <div class="col-sm-3">Max Temp (°C)</div>
+                                                            <div class="col-sm-3">Trigger (&percnt;)</div>
+                                                            <div class="col-sm-3">Min Power (&percnt;)</div>
+                                                            <div class="col-sm-3">Max Power (&percnt;)</div>
                                                                                                                     </div>
                                                         <div class="form-group row">
-                                                            <div class="col-sm-4">
+                                                            <div class="col-sm-3">
                                                                 <input
                                                                     type="number"
                                                                     step="1"
@@ -234,7 +235,16 @@
                                                                     placeholder="%MAXTEMP%"
                                                                 >
                                                             </div>
-                                                            <div class="col-sm-4">
+                                                            <div class="col-sm-3">
+                                                                <input
+                                                                    type="number"
+                                                                    step="1"
+                                                                    class="form-control form-control-user"
+                                                                    id="trigger"
+                                                                    placeholder="%TRIGGER%"
+                                                                >
+                                                            </div>
+                                                            <div class="col-sm-3">
                                                                 <input
                                                                     type="number"
                                                                     step="1"
@@ -243,7 +253,7 @@
                                                                     placeholder="%MINPOW%"
                                                                 >
                                                             </div>
-                                                            <div class="col-sm-4">
+                                                            <div class="col-sm-3">
                                                                 <input
                                                                     type="number"
                                                                     step="1"
@@ -568,7 +578,7 @@ $( "#ONOFF" ).click(function() {
 
 $( "#formulaire" ).submit(function() {
 
-	 var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(),'maxtemp':$('#maxtemp').val(),  'startingpow':$('#startingpow').val(), 'minpow':$('#minpow').val(), 'maxpow':$('#maxpow').val(), 'child':$('#child').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val(), 'mode':$('#delester').val() , 'charge1':$('#charge1').val() , 'charge2':$('#charge2').val() , 'charge3':$('#charge3').val(), 'DALLAS':$('#DALLAS').val(), 'dimmername':$('#dimmername').val() } 
+	 var data = {'hostname':$('#hostname').val(), 'port':$('#port').val(), 'Publish':$('#Publish').val(),'maxtemp':$('#maxtemp').val(),  'startingpow':$('#startingpow').val(), 'minpow':$('#minpow').val(), 'maxpow':$('#maxpow').val(), 'child':$('#child').val(), 'SubscribePV':$('#SubscribePV').val(), 'SubscribeTEMP':$('#SubscribeTEMP').val(), 'mode':$('#delester').val() , 'charge1':$('#charge1').val() , 'charge2':$('#charge2').val() , 'charge3':$('#charge3').val(), 'DALLAS':$('#DALLAS').val(), 'dimmername':$('#dimmername').val(), 'trigger':$('#trigger').val()} 
 
      $.ajax({
             type: "GET",

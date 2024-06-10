@@ -110,6 +110,12 @@ struct Config {
     char PVROUTER[5] = "mqtt";
     char DALLAS[17]   = "to_define";
     char say_my_name[32] = "" ; // NOSONAR
+    int trigger = 0;
+
+  void check_trigger() {
+    if (trigger < 0) { trigger = 0; }
+    if (trigger > 100) { trigger = 100; }
+  }
 
 // Loads the configuration from a file
 String loadConfiguration() {
@@ -151,6 +157,8 @@ String loadConfiguration() {
   charge1 = doc["charge1"] | 1000; 
   charge2 = doc["charge2"] | 0; 
   charge3 = doc["charge3"] | 0; 
+  trigger = doc["trigger"] | 10;
+  check_trigger();
 
   String Publishchild = doc["child"].as<String>();
   strlcpy(child, Publishchild.c_str(), sizeof(child));
@@ -192,6 +200,7 @@ String loadConfiguration() {
 
 String saveConfiguration() {
   String message = "";
+  check_trigger();
   // Open file for writing
    File configFile = LittleFS.open(filename_conf, "w");
   if (!configFile) {
@@ -230,6 +239,7 @@ String saveConfiguration() {
   doc["charge1"] = charge1;
   doc["charge2"] = charge2;
   doc["charge3"] = charge3;
+  doc["trigger"] = trigger;
 
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {

@@ -79,8 +79,9 @@ String stringBoolMQTT(bool mybool);
   String command_save = String("Xlyric/sauvegarde/"+ node_id );
 
 void callback(char* topic, byte* payload, unsigned int length) {
-  char arrivage[length+1]; // Ajout d'un espace pour le caractère nul // NOSONAR
-  int recup = 0;
+  //char arrivage[length+1]; // Ajout d'un espace pour le caractère nul // NOSONAR
+  //int recup = 0;
+  char* arrivage = new char[length + 1];
   
     for (int i=0;i<length;i++) {
       arrivage[i] = (char)payload[i];
@@ -88,6 +89,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
    arrivage[length] = '\0'; // Ajouter le caractère nul à la fin
 
   // debug
+  Serial.println("length : " + String(length));
   Serial.println("topic : " + String(topic));
   Serial.println("payload : " + String(arrivage));
   String fixedpayload = ((String)arrivage).substring(0,length);
@@ -337,6 +339,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
           }
         }
   }
+  delete[] arrivage;
 }
 
 void Mqtt_send_DOMOTICZ(String idx, String value, String name="")

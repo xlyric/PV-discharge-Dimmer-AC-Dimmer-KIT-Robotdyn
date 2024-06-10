@@ -444,6 +444,8 @@ if (request->hasParam("charge1")) {
    if (request->hasParam("heure_arret")) { request->getParam("heure_arret")->value().toCharArray(programme.heure_arret,6);  }
    if (request->hasParam("temperature")) { programme.temperature = request->getParam("temperature")->value().toInt();  programme.saveProgramme(); }
 
+// trigger
+   if (request->hasParam("trigger")) { config.trigger = request->getParam("trigger")->value().toInt();}
 
 
   //Ajout des relais
@@ -596,6 +598,7 @@ String getconfig() {
     doc["charge1"] = config.charge1;
     doc["charge2"] = config.charge2;
     doc["charge3"] = config.charge3;
+    doc["trigger"] = config.trigger;
   
   serializeJson(doc, configweb);
   return String(configweb);

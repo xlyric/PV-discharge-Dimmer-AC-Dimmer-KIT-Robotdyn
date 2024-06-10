@@ -781,7 +781,7 @@ void loop() {
         
       }
     //// Trigger de sécurité température
-      if ( sysvar.celsius[sysvar.dallas_maitre] <= (config.maxtemp - (config.maxtemp*TRIGGER/100)) ) {  
+      if ( sysvar.celsius[sysvar.dallas_maitre] <= (config.maxtemp - (config.maxtemp*config.trigger/100)) ) {  
         sysvar.security = 0 ;
                 if (!AP && mqtt_config.mqtt && config.HA) { device_dimmer_alarm_temp.send(stringBool(sysvar.security)); 
                  Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("RAS" ),"Alerte");
