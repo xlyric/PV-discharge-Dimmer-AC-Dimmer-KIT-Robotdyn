@@ -996,6 +996,7 @@ bool dallaspresent () {
       logging.Set_log_init("Alerte Dallas non trouvée\r\n");
       Mqtt_send_DOMOTICZ(String(config.IDXTemp), String("Alerte Dallas non trouvée"),"Alerte");  ///send alert to MQTT
       device_dimmer_alarm_temp.send("Alerte Dallas non trouvée");
+      logging.Set_alerte_web("Dallas Maitre non trouvée");
       devicealerte++;
     }
     else {
@@ -1006,6 +1007,8 @@ bool dallaspresent () {
     }
     return false;
   }
+  
+  logging.Set_alerte_web("");
 
   for (int i = 0; i < deviceCount; i++) {
     int attempts = 0;

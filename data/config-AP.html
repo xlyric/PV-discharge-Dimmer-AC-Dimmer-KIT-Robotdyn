@@ -81,6 +81,7 @@
                 <div id="content">
                     <!-- Topbar -->
                     <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                        <div class="alert alert-danger" id="alertBox" ><span class="mr-2 d-none d-lg-inline text-gray-600"></span><p role="alert" id="alertContainer"> </p ></span></div>
                         <!-- Sidebar Toggle (Topbar) -->
           <!-- Topbar Navbar -->
                         <ul class="navbar-nav ml-auto">
@@ -272,6 +273,14 @@ setInterval(function refreshsend( ) {
           document.getElementById("power").innerHTML = power;
           onoff = onoff ? "ON" : "OFF";
           $("#ONOFF").text(onoff);
+
+          if (data.alerte && data.alerte.trim() != "" ) {
+            const alertContainer = document.getElementById("alertContainer");
+            alertContainer.innerHTML = "Alerte : " + data.alerte;
+                    $('#alertBox').fadeIn();
+            } else {
+                    $('#alertBox').fadeOut();
+            }
           
           });
 }, 5000);

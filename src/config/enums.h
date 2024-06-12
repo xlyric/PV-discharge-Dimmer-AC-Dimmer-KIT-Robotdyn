@@ -26,8 +26,17 @@ private:
      
       char log_init[LOG_MAX_STRING_LENGTH]; // NOSONAR
       int MaxString = LOG_MAX_STRING_LENGTH * .9 ;
+      String alerte_web = "";
 
 public:
+    /// setter alerte_web
+    void Set_alerte_web(String setter) {
+        alerte_web = setter;
+    }
+    /// getter alerte_web 
+    String Get_alerte_web() { return alerte_web; }
+
+
   ///setter log_init
     public:void Set_log_init(String setter, bool logtime=false) {
         // Vérifier si la longueur de la chaîne ajoutée ne dépasse pas LOG_MAX_STRING_LENGTH

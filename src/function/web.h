@@ -551,6 +551,7 @@ String getState() {
 #endif
     doc["minuteur"] = programme.run;
     doc["onoff"] = config.dimmer_on_off;
+    doc["alerte"] = logging.Get_alerte_web();
   serializeJson(doc, state);
   return String(state);
 }
