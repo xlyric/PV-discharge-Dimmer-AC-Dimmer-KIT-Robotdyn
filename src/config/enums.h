@@ -108,7 +108,7 @@ struct Config {
     bool JEEDOM = true;
     bool DOMOTICZ = true;
     char PVROUTER[5] = "mqtt";
-    char DALLAS[17]   = "to_define";
+    char DALLAS[17]   = "none";
     char say_my_name[32] = "" ; // NOSONAR
     int trigger = 0;
 

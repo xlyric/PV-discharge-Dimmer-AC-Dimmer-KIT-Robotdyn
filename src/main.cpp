@@ -195,7 +195,7 @@ int timesync_refresh = 120;
 //***********************************
 //************* Dallas
 //***********************************
-void dallaspresent ();
+bool dallaspresent ();
 //#define TEMPERATURE_PRECISION 10  // non utilisé ? 
 
 
@@ -220,6 +220,7 @@ DallasTemperature sensors(&ds);
   int refresh = 60;
   int refreshcount = 0; 
 int deviceCount = 0;
+int devicealerte=0;
 DeviceAddress addr[MAX_DALLAS];  // array of (up to) MAX_DALLAS temperature sensors NOSONAR
 String devAddrNames[MAX_DALLAS];  // array of (up to) MAX_DALLAS temperature sensors NOSONAR
 /***************************
@@ -546,6 +547,7 @@ void setup() {
   sensors.begin();
   delay(1000);
   deviceCount = sensors.getDeviceCount();
+
 
   logging.Set_log_init(String(deviceCount)); 
   logging.Set_log_init(" DALLAS detected\r\n");
@@ -985,21 +987,53 @@ if ( sysvar.celsius[sysvar.dallas_maitre] >= config.maxtemp && sysvar.security =
     //************* Test de la présence d'une 18b20 
     //***********************************
 
-void dallaspresent () {
+bool dallaspresent () {
+
+  /// alerte d'une deection de dallas passée non trouvée 
+  if (deviceCount == 0 && ( strcmp("null", config.DALLAS) != 0 || strcmp("none", config.DALLAS) != 0 )){
+    /// remonter l'alerte une fois toute les 10 secondes 
+    if (devicealerte == 0) {
+      logging.Set_log_init("Alerte Dallas non trouvée\r\n");
+      Mqtt_send_DOMOTICZ(String(config.IDXTemp), String("Alerte Dallas non trouvée"),"Alerte");  ///send alert to MQTT
+      device_dimmer_alarm_temp.send("Alerte Dallas non trouvée");
+      devicealerte++;
+    }
+    else {
+      devicealerte ++;
+      if (devicealerte > 10) {
+        devicealerte = 0;
+      }
+    }
+    return false;
+  }
 
   for (int i = 0; i < deviceCount; i++) {
-    if (!ds.search(addr[i])) {
-      logging.Set_log_init("Unable to find temperature sensors address \r\n",true);
-      ds.reset_search();
-      delay(350);
-      return ;
+    int attempts = 0;
+    bool sensorFound = false;
+  /// cas pour les sondes les plus lentes 
+    while (!sensorFound) {
+      if (!ds.search(addr[i])) {
+        delay(200); // try again after a short delay
+        attempts++;
+        if (attempts > 5) { // timeout: 5 attempts * 200ms each
+          break;
+        }
+      } else {
+        sensorFound = true;
       }
+    }
+
+    if (!sensorFound) {
+      logging.Set_log_init("Unable to find temperature sensors address \r\n", true);
+      return false;
+    }
   }
+
   for (int a = 0; a < deviceCount; a++) {
     String address = "";
     Serial.print("ROM =");
       for (uint8_t i = 0; i < 8; i++) {
-        if (addr[a][i] < 16) address += "0";
+        if (addr[a][i] < 0x10) address += "0";
         address += String(addr[a][i], HEX);
         Serial.write(' ');
         Serial.print(addr[a][i], HEX);
@@ -1009,6 +1043,15 @@ void dallaspresent () {
       if (strcmp(address.c_str(), config.DALLAS) == 0) {
         sysvar.dallas_maitre = a;
         logging.Set_log_init("MAIN " );
+      }
+
+// détection de la 1ere présence d'une dallas 
+      if (strcmp("none", config.DALLAS) == 0 || strcmp("null", config.DALLAS) == 0 ) {
+        sysvar.dallas_maitre = a;
+        logging.Set_log_init("Default MAIN " );
+        // sauvegarde de l'adresse de la sonde maitre
+        strcpy(config.DALLAS, address.c_str());
+        config.saveConfiguration();
       }
 
     logging.Set_log_init("Dallas sensor " );
@@ -1034,7 +1077,7 @@ void dallaspresent () {
     ds.write(0xBE);         // Read Scratchpad
 
   }
-   
+   return true;
   }
 
 

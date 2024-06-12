@@ -23,7 +23,7 @@ int gw_error = 0;   // compteur d'erreur gateway
 
 float CheckTemperature(String label, byte deviceAddress[12]); // NOSONAR
 void restart_dallas();
-void dallaspresent ();
+bool dallaspresent ();
 
 /// @brief / task executé toute les n secondes pour publier la température ( voir déclaration task dans main )
 void mqttdallas() { 
@@ -173,7 +173,10 @@ void restart_dallas() {
       logging.Set_log_init(" DALLAS detected\r\n");
     }
 
-    dallaspresent();
+    if (!dallaspresent()) {
+     delay(3000);
+    }
+
   }
 }
 

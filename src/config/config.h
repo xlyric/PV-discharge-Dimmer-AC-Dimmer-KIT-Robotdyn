@@ -88,7 +88,7 @@
 #endif
 
 /// Trigger for temp limit in percent
-#define TRIGGER 10   /// 
+//#define TRIGGER 10   /// 
 #define TIMERDELAY 5 // delay before switch off
 
 #define LOG_MAX_STRING_LENGTH 1500 // taille max des logs stockées

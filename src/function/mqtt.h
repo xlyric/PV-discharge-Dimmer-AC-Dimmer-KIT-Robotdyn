@@ -83,7 +83,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   //int recup = 0;
   char* arrivage = new char[length + 1];
   
-    for (int i=0;i<length;i++) {
+    for (unsigned int i=0;i<length;i++) {
       arrivage[i] = (char)payload[i];
     }
    arrivage[length] = '\0'; // Ajouter le caractère nul à la fin
