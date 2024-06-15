@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="utf-8">
@@ -6,10 +5,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <meta name="description" content="">
         <meta name="author" content="">
-        <title>Pv Dimmer %NAME% - Configuration</title>
-
+        <title>Pv Dimmer %NAME% - Dashboard</title>
+        
         <!-- Custom styles for this template-->
-        <link href="/all.css" rel="stylesheet">
+        <link href="all.css" rel="stylesheet">
     </head>
     <body id="page-top">
         <!-- Page Wrapper -->
@@ -40,15 +39,14 @@
                 <!-- Heading -->
                 <div class="sidebar-heading">
                     Interface
-                </div>
-                <!-- Nav Item - Pages Collapse Menu -->
+                </div><!-- Nav Item - Pages Collapse Menu -->
                 <li class="nav-item active">
                     <a class="nav-link" href="/">
                         <i class="fas fa-fw fa-cog"></i>
                         <span>Retour Index</span>
                     </a>
                 </li>
-                <li class="nav-item active">
+                <li class="nav-item active" id="menu_mqtt" >
                     <a class="nav-link" href="/mqtt.html">
                         <i class="fas fa-fw fa-book"></i>
                         <span>Configuration MQTT</span>
@@ -85,8 +83,7 @@
                     <button class="rounded-circle border-0" id="sidebarToggle"></button>
                 </div>
             </ul>
-            <!-- End of Sidebar -->
-            <!-- Content Wrapper -->
+            <!-- End of Sidebar --><!-- Content Wrapper -->
             <div id="content-wrapper" class="d-flex flex-column">
                 <!-- Main Content -->
                 <div id="content">
@@ -372,9 +369,9 @@
                                                     </div>
                                                 </div>
                                                 <br>
-                                                <div class="card position-relative">
+                                                <div class="card position-relative" id="menu_mqtt">
                                                     <div class="card-header py-3">
-                                                    <h6 class="m-0 font-weight-bold text-primary">Pilote MQTT</h6>
+                                                    <h6 class="m-0 font-weight-bold text-primary" >Pilote MQTT</h6>
                                                         <span id="saveform"></span>
                                                     </div>
                                                     <div class="card-body">
@@ -650,30 +647,22 @@ $( "#formulaire" ).submit(function() {
     </div>
 </div>
 <!-- /.container-fluid -->
-<!-- End of Main Content -->
-<!-- Footer -->
+<!-- End of Main Content --><!-- Footer -->
 <footer class="sticky-footer bg-white">
     <div class="container my-auto">
         <div class="copyright text-center my-auto">
-            <span>https://github.com/xlyric/  - 2024</span>
+            <span>https://github.com/xlyric/  - 2020</span>
         </div>
     </div>
 </footer>
 <!-- End of Footer -->
+</div>
+<!-- Bootstrap core JavaScript-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.bundle.min.js"></script>
 <!-- Core plugin JavaScript-->
 <script src="https://ota.apper-solaire.org/css/jquery.easing.min.js"></script>
 <!-- Custom scripts for all pages-->
 <script src="https://ota.apper-solaire.org/css/sb-admin-2.js"></script>
-<script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
-<script>
-  kofiWidgetOverlay.draw('clyric', {
-    'type': 'floating-chat',
-    'floating-chat.donateButton.text': 'Support me',
-    'floating-chat.donateButton.background-color': '#00b9fe',
-    'floating-chat.donateButton.text-color': '#fff'
-  });
-</script>
 </body>
 </html>
