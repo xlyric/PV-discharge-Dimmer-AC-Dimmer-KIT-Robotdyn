@@ -29,7 +29,7 @@ bool dallaspresent ();
 void mqttdallas() { 
         if ( present == 1 ) {
     sensors.requestTemperatures();
-    delay(400);
+    delay(450);
     for (int a = 0; a < deviceCount; a++) {
       sysvar.celsius[a]=CheckTemperature("temp_" + devAddrNames[a],addr[a]);
       //gestion des erreurs DS18B20
@@ -154,7 +154,7 @@ float CheckTemperature(String label, byte deviceAddress[12]){ // NOSONAR
   float tempC = sensors.getTempC(deviceAddress);
 
   if ( (tempC == -127.00) || (tempC == -255.00) ) {
-    delay(250);
+    delay(500);
     //// cas d'une sonde trop longue à préparer les valeurs 
      /// attente de 187ms ( temps de réponse de la sonde )
     tempC = sensors.getTempC(deviceAddress);
