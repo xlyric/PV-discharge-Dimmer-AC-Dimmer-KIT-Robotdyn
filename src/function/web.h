@@ -75,6 +75,7 @@ String switchstate(int state);
 String readmqttsave();
 String getMinuteur(const Programme& minuteur);
 String getMinuteur();
+String replaceSpacesWithHyphens(String input);
 
 extern Logs Logging; 
 extern String devAddrNames[MAX_DALLAS];
@@ -417,7 +418,11 @@ if (request->hasParam("charge1")) {
     if (!AP && mqtt_config.mqtt) { device_dimmer_child_mode.send(String(config.mode));}
    }
 
-   if (request->hasParam("dimmername")) { request->getParam("dimmername")->value().toCharArray(config.say_my_name,100);}
+   if (request->hasParam("dimmername")) { request->getParam("dimmername")->value().toCharArray(config.say_my_name,100);
+   String temp_dimmer_name = replaceSpacesWithHyphens(config.say_my_name);
+    // copie du nom du dimmer dans le nom de l'entité
+    temp_dimmer_name.toCharArray(config.say_my_name,100);
+   }
    if (request->hasParam("SubscribePV")) { request->getParam("SubscribePV")->value().toCharArray(config.SubscribePV,100);}
    if (request->hasParam("SubscribeTEMP")) { request->getParam("SubscribeTEMP")->value().toCharArray(config.SubscribeTEMP,100);}
    if (request->hasParam("dimmer_on_off")) { 
@@ -683,7 +688,10 @@ String getServermode(String Servermode) {
 return String(Servermode);
 }
 
-
+String replaceSpacesWithHyphens(String input) {
+  input.replace(' ', '-');
+  return input;
+}
 
 
 #endif
