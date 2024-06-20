@@ -96,7 +96,7 @@ struct Config {
     int IDX = 201; 
     int maxtemp = 60;
     int maxpow = 50;
-    char child[16] = "";
+    char child[64] = "";
     char mode[10] = "off";
     int minpow = 5;
     int startingpow = 0;

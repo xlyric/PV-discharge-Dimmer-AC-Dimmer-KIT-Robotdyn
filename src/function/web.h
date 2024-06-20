@@ -411,7 +411,7 @@ if (request->hasParam("charge1")) {
     if (!AP && mqtt_config.mqtt) { device_dimmer_maxpow.send(String(config.maxpow));}
    }
 
-   if (request->hasParam("child")) { request->getParam("child")->value().toCharArray(config.child,15);  }
+   if (request->hasParam("child")) { request->getParam("child")->value().toCharArray(config.child,64);  }
    if (request->hasParam("mode")) { 
     request->getParam("mode")->value().toCharArray(config.mode,10);  
     if (!AP && mqtt_config.mqtt) { device_dimmer_child_mode.send(String(config.mode));}
@@ -569,7 +569,8 @@ String processor(const String& var){
     return (VERSION_http);
   } 
   if (var == "NAME"){
-    return (config.say_my_name);
+    String name = String(config.say_my_name) + ".local";
+    return (name);
   } 
   if (var == "RSSI"){
     return (String(WiFi.RSSI()));
