@@ -535,7 +535,9 @@ void setup() {
     }
   }
   Serial.println("mDNS responder started");
-  MDNS.addService("http", "tcp", 80);
+  //MDNS.addService("http", "tcp", 80);
+  MDNS.addService("http", "tcp", 1308);
+
   logging.Set_log_init("mDNS responder started \r\n");
   logging.Set_log_init(String(config.say_my_name) + ".local \r\n");
 
