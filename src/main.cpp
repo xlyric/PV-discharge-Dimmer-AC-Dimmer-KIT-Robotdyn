@@ -132,14 +132,17 @@ extern "C" {
   #include "SPIFFS.h"
   #define LittleFS SPIFFS // Fonctionne, mais est-ce correct? 
   #include <esp_system.h>
+  #include <ESPmDNS.h>
 
 #else
 // Web services
   #include <ESP8266WiFi.h>
+  #include <ESP8266mDNS.h>
   //#include <ESPAsyncTCP.h>
   #include <ESP8266HTTPClient.h> 
 // File System
   #include <LittleFS.h> // NOSONAR
+
 #endif
 
 #ifdef ESP32ETH
@@ -523,7 +526,19 @@ void setup() {
       AP = true; 
   }
 
-  
+    // Initialize mDNS
+    //config.say_my_name)
+  if (!MDNS.begin(config.say_my_name)) {   
+    Serial.println("Error setting up MDNS responder!");
+    while(1) {
+      delay(1000);
+    }
+  }
+  Serial.println("mDNS responder started");
+  MDNS.addService("http", "tcp", 80);
+
+
+
     //***********************************
     //************* Setup - OTA 
     //***********************************
@@ -649,6 +664,11 @@ bool alerte=false;
 /////////////////////
 void loop() {
   client.loop();
+
+  #if !defined(ESP32) && !defined(ESP32ETH)
+  /// update mdns
+  MDNS.update();
+  #endif
 
   /// connexion MQTT dans les cas de conf mqtt et perte de connexion
   if (!mqttConnected && !AP && mqtt_config.mqtt) {
