@@ -28,8 +28,8 @@ bool dallaspresent ();
 /// @brief / task executé toute les n secondes pour publier la température ( voir déclaration task dans main )
 void mqttdallas() { 
         if ( present == 1 ) {
-    sensors.requestTemperatures();
-    delay(450);
+    // delai plu utile vu que demande de relevé fait il y a 15 sec 
+    //delay(450);
     for (int a = 0; a < deviceCount; a++) {
       sysvar.celsius[a]=CheckTemperature("temp_" + devAddrNames[a],addr[a]);
       //gestion des erreurs DS18B20
@@ -70,7 +70,8 @@ void mqttdallas() {
       }
       device_temp_master.send(String(sysvar.celsius[sysvar.dallas_maitre]));
     }          
-    
+    /// on demande la température suivante pour le prochain cycle
+    sensors.requestTemperatures();
          } 
     //// détection sécurité température
   if  ( sysvar.celsius[sysvar.dallas_maitre] >= config.maxtemp ) {

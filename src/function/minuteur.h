@@ -42,13 +42,19 @@ struct Programme {
     bool run; 
     int heure;
     int minute;
-    String name;
+    
     int seuil_start;
     int seuil_stop;
     int seuil_temperature;
 
   private:
     bool security = false;
+    String name;
+
+    /// setter pour le nom du programme
+    public:void set_name(String name) {
+      this->name = name;
+    }
 
 
   /// @brief sauvegarde
