@@ -117,8 +117,8 @@
                                 <div class="card-body">
                                 <b>Etat Ballon : </b><h4 id="alerte">N/A</h4>
                                 <b>Etat Minuteur : </b><h4 id="minuteur">N/A</h4>
-                                <b>Etat Relais 1 : </b><h4 id="relais 1">N/A</h4>
-                                <b>Etat Relais 2 : </b><h4 id="relais 2">N/A</h4>
+                                <b>Etat Relais 1 : </b><h4 id="relais 1" style="cursor:pointer;">N/A</h4>
+                                <b>Etat Relais 2 : </b><h4 id="relais 2" style="cursor:pointer;">N/A</h4>
 
                                 </div>
                             </div>
@@ -205,7 +205,7 @@
 
 	// récupération valeur sigma et State -->
 				  
-setInterval(function ( ) {
+function refreshvalue( ) {
 
 $.getJSON('/state', function(data) {
 // Récupérer les données du JSON
@@ -281,9 +281,33 @@ $.getJSON('/state', function(data) {
 
 
   });
-}, 5000);
+}
  			
-		  
+	setInterval(refreshvalue, 5000); // Rafraîchir les données toutes les 5 secondes
+
+        document.getElementById('relais 1').addEventListener('click', function() {
+            fetch('/get?relay1=2')
+                .then(response => response.text())
+                .then(data => {
+                    console.log('Response:', data);
+                    setTimeout(refreshvalue, 500);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+
+        document.getElementById('relais 2').addEventListener('click', function() {
+            fetch('/get?relay2=2')
+                .then(response => response.text())
+                .then(data => {
+                   console.log('Response:', data);
+                   setTimeout(refreshvalue, 500);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }); 
  
 }
 
@@ -300,7 +324,7 @@ function horloge(el) {
   setInterval(actualiser,1000);
 }
 
-setInterval(function refreshsend( ) {
+function refresh_temp() {
         $.getJSON('/state_dallas', function(data) {
           // affichage des dallas et les Température ( boucle sur les dallas )
             var dallasData = {}; // Objet pour stocker les données des capteurs Dallas
@@ -326,9 +350,12 @@ setInterval(function refreshsend( ) {
             document.getElementById("dallas").innerHTML = dallasHtml;
 
           });
-}, 5000);
+}
 
-                    </script >
+        setInterval(refresh_temp, 5000);   // Rafraîchir les données toutes les 5 secondes
+
+
+</script>
                     <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
                     <script>
                     if (typeof jQuery == 'undefined') {
