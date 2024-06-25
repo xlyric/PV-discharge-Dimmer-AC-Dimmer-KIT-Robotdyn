@@ -20,6 +20,7 @@ extern HA devicetemp[MAX_DALLAS]; // NOSONAR
 extern int deviceCount; // nombre de sonde(s) dallas détectée(s)
 int dallas_error[MAX_DALLAS] = {0}; // compteur d'erreur dallas // NOSONAR
 int gw_error = 0;   // compteur d'erreur gateway
+int dallas_wait_log; // NOSONAR
 
 float CheckTemperature(String label, byte deviceAddress[12]); // NOSONAR
 void restart_dallas();
@@ -28,7 +29,7 @@ bool dallaspresent ();
 /// @brief / task executé toute les n secondes pour publier la température ( voir déclaration task dans main )
 void mqttdallas() { 
         if ( present == 1 ) {
-    // delai plu utile vu que demande de relevé fait il y a 15 sec 
+    // delai plu utile vu que demande de relevé fait il y a ~15 sec 
     //delay(450);
     for (int a = 0; a < deviceCount; a++) {
       sysvar.celsius[a]=CheckTemperature("temp_" + devAddrNames[a],addr[a]);
@@ -62,12 +63,21 @@ void mqttdallas() {
       }
 
 /// uniformisation des valeurs de température ( for en valeur I pour retrouver plus facilement)
+      dallas_wait_log ++;
       for (int i = 0; i < deviceCount; i++) {
+        
         if ( sysvar.celsius[i] != previous_celsius[i] || sysvar.celsius[i] != 0.99) {
           device_temp[i].send(String(sysvar.celsius[i]));
           previous_celsius[i]=sysvar.celsius[i];
+          
+          if ( dallas_wait_log > 5 ) { /// limitation de l'affichage des logs de température
+            logging.Set_log_init("Dallas" + String(i) + " : " + String(sysvar.celsius[i]) + "\r\n",false);
+          }
+          
         }
       }
+      if ( dallas_wait_log > 5 ) { dallas_wait_log = 0 ; } 
+      
       device_temp_master.send(String(sysvar.celsius[sysvar.dallas_maitre]));
     }          
     /// on demande la température suivante pour le prochain cycle
@@ -172,6 +182,7 @@ void restart_dallas() {
       present = 1;
       logging.Set_log_init(String(deviceCount)); 
       logging.Set_log_init(" DALLAS detected\r\n");
+      
     }
 
     if (!dallaspresent()) {
