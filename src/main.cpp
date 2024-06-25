@@ -354,6 +354,8 @@ void setup() {
   pinMode(COOLER, OUTPUT); 
   digitalWrite(COOLER, LOW);
 
+  logging.Set_log_init("-- " + String(VERSION) + " --\r\n");
+
   //démarrage file system
   LittleFS.begin();
   // correction d'erreur de chargement de FS 
@@ -566,7 +568,10 @@ void setup() {
   sensors.begin();
   delay(1000);
   deviceCount = sensors.getDeviceCount();
-
+  if (deviceCount == 0 ) {
+    delay(1000);
+    deviceCount = sensors.getDeviceCount();
+  }
 
   logging.Set_log_init(String(deviceCount)); 
   logging.Set_log_init(" DALLAS detected\r\n");
