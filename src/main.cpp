@@ -150,7 +150,7 @@ extern "C" {
 #endif
 
 // taches
-Task Task_dallas(12000, TASK_FOREVER, &mqttdallas);
+Task Task_dallas(8000, TASK_FOREVER, &mqttdallas);
 Task Task_Cooler(15000, TASK_FOREVER, &cooler);
 Task Task_GET_POWER(10000, TASK_FOREVER, &get_dimmer_child_power);
 #ifdef RELAY1
@@ -297,7 +297,9 @@ void setup() {
   Serial.begin(115200);
 
   /// reset du bus one Wire
-  ds.reset();
+  // ds.reset(); 
+  /// initialisation des dallas 
+  sensors.begin();
 
   #ifdef ESP32ETH
     ETH.begin(ETH_ADDR, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_TYPE, ETH_CLK_MODE);
@@ -564,11 +566,13 @@ void setup() {
   Serial.println("start server");
   server.begin(); 
     
+
+  //// récupération des dallas .  
   Serial.println("start 18b20");
-  sensors.begin();
-  delay(1000);
+  
+  // delay(2000);
   deviceCount = sensors.getDeviceCount();
-  if (deviceCount == 0 ) {
+  if (deviceCount == 0 ) { //si toujours pas trouvé 
     delay(1000);
     deviceCount = sensors.getDeviceCount();
   }
@@ -727,11 +731,14 @@ void loop() {
   else { 
     // minuteur à l'arret
     if (programme.start_progr()){ 
-      sysvar.puissance=config.maxpow; 
+      // definition de la puissance à appliquer 
+      if ( programme.puissance > config.maxpow ) {     sysvar.puissance=config.maxpow; }
+      else { sysvar.puissance = programme.puissance; }  
+       
           //// robotdyn dimmer
               logging.Set_log_init("start minuteur dimmer\r\n",true);
 
-              unified_dimmer.set_power(config.maxpow); 
+              unified_dimmer.set_power(sysvar.puissance); 
               delay (50);
 
       Serial.print("start minuteur ");
@@ -1039,11 +1046,13 @@ bool dallaspresent () {
   
   logging.Set_alerte_web("");
 
+  //// recherche des adresses des sondes
+
   for (int i = 0; i < deviceCount; i++) {
-    int attempts = 0;
-    bool sensorFound = false;
+    //int attempts = 0;
+    //bool sensorFound = false;
   /// cas pour les sondes les plus lentes 
-    while (!sensorFound) {
+ /*   while (!sensorFound) {
       if (!ds.search(addr[i])) {
         delay(200); // try again after a short delay
         attempts++;
@@ -1055,9 +1064,15 @@ bool dallaspresent () {
       }
     }
 
+    /// si pas de sonde trouvée
     if (!sensorFound) {
       logging.Set_log_init("Unable to find temperature sensors address \r\n", true);
       return false;
+    }*/
+
+  if (!sensors.getAddress(addr[i], i)) Serial.println("Unable to find address for Device 1");
+  else {
+    sensors.setResolution(addr[i], TEMPERATURE_PRECISION);
     }
   }
 
@@ -1092,10 +1107,8 @@ bool dallaspresent () {
     logging.Set_log_init(String(address).c_str()); 
     logging.Set_log_init("\r\n");
     present = 1 ; 
+    /*
     delay(250);
-
-
-
     ds.reset();
     ds.select(addr[a]);
 
@@ -1109,6 +1122,7 @@ bool dallaspresent () {
 
     ds.select(addr[a]);    
     ds.write(0xBE);         // Read Scratchpad
+  */
 
   }
    return true;

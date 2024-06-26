@@ -290,6 +290,7 @@ void call_pages() {
     if (request->hasParam("dimmer")) { 
             if (request->hasParam("heure_demarrage")) { request->getParam("heure_demarrage")->value().toCharArray(programme.heure_demarrage,6);  }
             if (request->hasParam("heure_arret")) { request->getParam("heure_arret")->value().toCharArray(programme.heure_arret,6);  }
+            if (request->hasParam("puissance")) { programme.puissance = request->getParam("puissance")->value().toInt(); }
             if (request->hasParam("temperature")) { programme.temperature = request->getParam("temperature")->value().toInt();  programme.saveProgramme(); }
        request->send(200, "application/json",  getMinuteur(programme));  
     }
@@ -622,6 +623,7 @@ String getMinuteur(const Programme& minuteur ) {
     doc["seuil_start"] = minuteur.seuil_start;
     doc["seuil_stop"] = minuteur.seuil_stop;
     doc["seuil_temp"] = minuteur.seuil_temperature;
+    doc["puissance"] = minuteur.puissance;
 
     String retour;
     serializeJson(doc, retour);

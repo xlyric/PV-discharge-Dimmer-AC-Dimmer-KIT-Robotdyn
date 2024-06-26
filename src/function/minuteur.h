@@ -46,6 +46,7 @@ struct Programme {
     int seuil_start;
     int seuil_stop;
     int seuil_temperature;
+    int puissance=100;
 
   private:
     bool security = false;
@@ -74,6 +75,7 @@ struct Programme {
         doc["seuil_start"] = seuil_start;
         doc["seuil_stop"] = seuil_stop;
         doc["seuil_temperature"] = seuil_temperature;
+        doc["puissance"] = puissance;
                 
           // Open file for writing
         File configFile = LittleFS.open(c_file, "w");
@@ -121,6 +123,7 @@ struct Programme {
         seuil_start = doc["seuil_start"] | 0 ; /// defaut à 0 %°
         seuil_stop = doc["seuil_stop"] | 0 ; /// defaut à sans arret %
         seuil_temperature = doc["seuil_temperature"] | 0 ; /// defaut à 0 °
+        puissance = doc["puissance"] | 100 ; /// defaut à 100 %
 
         configFile.close();
       return true;    
