@@ -93,7 +93,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.println("topic : " + String(topic));
   Serial.println("payload : " + String(arrivage));
   String fixedpayload = ((String)arrivage).substring(0,length);
-  StaticJsonDocument<1152> doc2;
+  JsonDocument doc2;
   deserializeJson(doc2, arrivage);
   /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remontées par MQTT
   if (strcmp( topic, config.SubscribePV ) == 0 && doc2.containsKey("power")) { 
@@ -348,7 +348,7 @@ void Mqtt_send_DOMOTICZ(String idx, String value, String name="")
   if (config.DOMOTICZ) {
       String nvalue = "0" ; 
       String retour; 
-      DynamicJsonDocument doc(128);
+      JsonDocument doc;
       if ( value != "0" ) { nvalue = "2" ; }
       doc["idx"] = idx.toInt();
       doc["nvalue"] = nvalue.toInt();

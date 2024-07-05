@@ -62,7 +62,7 @@ struct Programme {
   /// @param programme_conf 
   public:void saveProgramme() {
         const char * c_file = name.c_str();// NOSONAR
-        DynamicJsonDocument doc(256);
+        JsonDocument doc;
 
       ////vérification cohérence des données
       if (check_data(heure_demarrage)) {strcpy(heure_demarrage, "00:00"); }
@@ -103,7 +103,7 @@ struct Programme {
         // Allocate a temporary JsonDocument
         // Don't forget to change the capacity to match your requirements.
         // Use arduinojson.org/v6/assistant to compute the capacity.
-        DynamicJsonDocument doc(256);
+        JsonDocument doc;
 
         // Deserialize the JSON document
         DeserializationError error = deserializeJson(doc, configFile);

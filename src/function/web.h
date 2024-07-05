@@ -183,14 +183,14 @@ void call_pages() {
         sysvar.change=1; 
         }
         String pb=getState().c_str(); 
-        request->send_P(200, "text/plain", pb.c_str() );  
+        request->send(200, "text/plain", pb.c_str() );  
       } 
       
               else if (request->hasParam(PARAM_INPUT_2)) { 
         config.startingpow = request->getParam(PARAM_INPUT_2)->value().toInt(); 
         logging.Set_log_init("HTTP power at " + String(config.startingpow)+"W\r\n");
         sysvar.change=1; 
-        request->send_P(200, "text/plain", getState().c_str());
+        request->send(200, "text/plain", getState().c_str());
       }
 
       else  { 
@@ -205,7 +205,7 @@ void call_pages() {
     }
     else
     { 
-      request->send_P(200, "text/html", textnofiles().c_str());
+      request->send(200, "text/html", textnofiles().c_str());
     }
     
     DEBUG_PRINTLN(sysvar.puissance);
@@ -226,20 +226,20 @@ void call_pages() {
     }
     else
     { 
-      request->send_P(200, "text/plain", textnofiles().c_str());
+      request->send(200, "text/plain", textnofiles().c_str());
     }
   });
 
   server.on("/state", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", getState().c_str());
+    request->send(200, "text/plain", getState().c_str());
   });
 
     server.on("/state_dallas", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", getState_dallas().c_str());
+    request->send(200, "text/plain", getState_dallas().c_str());
   });
 
   server.on("/resetwifi", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", "Resetting Wifi and reboot");
+    request->send(200, "text/plain", "Resetting Wifi and reboot");
     wifiManager.resetSettings();
     config.restart = true;
   });
@@ -337,17 +337,17 @@ void call_pages() {
 
 
   server.on("/config", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", getconfig().c_str());
+    request->send(200, "text/plain", getconfig().c_str());
   });
 
   server.on("/reset", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain","Restarting");
+    request->send(200, "text/plain","Restarting");
     config.restart = true;
   });
 
   server.on("/cs", HTTP_ANY, [](AsyncWebServerRequest *request){
     logging.Set_log_init("}1");
-    request->send_P(200, "text/plain", logging.Get_log_init().c_str());
+    request->send(200, "text/plain", logging.Get_log_init().c_str());
     // reinit de logging.log_init 
     logging.reset_log_init(); 
   });
@@ -363,7 +363,7 @@ void call_pages() {
   });
 
   server.on("/readmqtt", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/html", readmqttsave().c_str());
+    request->send(200, "text/html", readmqttsave().c_str());
     });
 
 
@@ -506,7 +506,7 @@ String getState_dallas() {
    
   dtostrf(sysvar.celsius[sysvar.dallas_maitre],2, 1, buffer); // conversion en n.1f 
   
-  DynamicJsonDocument doc(384);
+  JsonDocument doc;
     doc["temperature"] = buffer;
     
     //affichage des température et adresse des sondes dallas 
@@ -540,7 +540,7 @@ String getState() {
    
   dtostrf(sysvar.celsius[sysvar.dallas_maitre],2, 1, buffer); // conversion en n.1f 
   
-  DynamicJsonDocument doc(384);
+  JsonDocument doc;
     doc["dimmer"] = int(instant_power); // on le repasse un int pour éviter un affichage trop grand
     doc["commande"] = int(sysvar.puissance);
     doc["temperature"] = buffer;
@@ -587,7 +587,7 @@ String processor(const String& var){
 
 String getconfig() {
   String configweb;  
-  DynamicJsonDocument doc(512);  
+  JsonDocument doc;  
     doc["maxtemp"] = config.maxtemp;
 
     doc["startingpow"] = config.startingpow;
@@ -614,7 +614,7 @@ String getconfig() {
 
 String getMinuteur(const Programme& minuteur ) {
     getLocalTime(&timeinfo);
-    DynamicJsonDocument doc(256);
+    JsonDocument doc;
     doc["heure_demarrage"] = minuteur.heure_demarrage;
     doc["heure_arret"] = minuteur.heure_arret;
     doc["temperature"] = minuteur.temperature;
@@ -632,7 +632,7 @@ String getMinuteur(const Programme& minuteur ) {
 
 String getMinuteur() {
     getLocalTime(&timeinfo);
-    DynamicJsonDocument doc(256);
+    JsonDocument doc;
     doc["heure"] = timeinfo.tm_hour;
     doc["minute"] = timeinfo.tm_min;
     String retour;
@@ -642,7 +642,7 @@ String getMinuteur() {
 
 String getmqtt() {
     String retour;
-  DynamicJsonDocument doc(512); 
+  JsonDocument doc; 
 
     doc["server"] = config.hostname;
     doc["port"] = config.port;
@@ -662,7 +662,7 @@ String getmqtt() {
 
 String getcomplement() {
   String retour;
-  DynamicJsonDocument doc(64); 
+  JsonDocument doc; 
 
     doc["hdebut"] = config.hostname;
     doc["hfin"] = config.port;

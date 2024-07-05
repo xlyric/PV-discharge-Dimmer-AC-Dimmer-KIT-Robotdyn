@@ -25,13 +25,14 @@ int dallas_wait_log; // NOSONAR
 float CheckTemperature(String label, byte deviceAddress[12]); // NOSONAR
 void restart_dallas();
 bool dallaspresent ();
+int timer_dallas = 500; // timer pour la dallas
 
 /// @brief / task executé toute les n secondes pour publier la température ( voir déclaration task dans main )
 void mqttdallas() { 
         if ( present == 1 ) {
       sensors.requestTemperatures();
     // delai plu utile vu que demande de relevé fait il y a ~15 sec 
-    //delay(450);
+    delay(timer_dallas);
     for (int a = 0; a < deviceCount; a++) {
       sysvar.celsius[a]=CheckTemperature("temp_" + devAddrNames[a],addr[a]);
       //gestion des erreurs DS18B20
@@ -39,6 +40,7 @@ void mqttdallas() {
         sysvar.celsius[a]=previous_celsius[a];
         dallas_error[a] ++; // incrémente le compteur d'erreur
         logging.Set_log_init("Dallas" + String(a) + " : échec "+ String(dallas_error[a]) + "\r\n",true);
+        if ( timer_dallas < 1500 )  { timer_dallas = timer_dallas + 100;  } // on augmente le timer pour la prochaine lecture 
           }
           else { 
         sysvar.celsius[a] = (roundf(sysvar.celsius[a] * 10) / 10 ) + 0.1; // pour les valeurs min
@@ -184,7 +186,8 @@ void restart_dallas() {
       present = 1;
       logging.Set_log_init(String(deviceCount)); 
       logging.Set_log_init(" DALLAS detected\r\n");
-      
+      devices_init(); // initialisation des devices HA
+       
     }
 
     if (!dallaspresent()) {

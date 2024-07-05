@@ -26,7 +26,7 @@ void get_dimmer_child_power (){
         http.end();
         
         if (httpResponseCode==200) {
-            DynamicJsonDocument doc(128);
+            JsonDocument doc;
             deserializeJson(doc, dimmerstate);
             sysvar.puissance_cumul = doc["Ptotal"];
   
