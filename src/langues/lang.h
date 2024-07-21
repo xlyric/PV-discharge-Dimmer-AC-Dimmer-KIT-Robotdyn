@@ -14,7 +14,6 @@
 #elif defined(LANG_UA)
     #include "lang_ua.h"
 #else
-    #error "Langue non définie ou non prise en charge"
     #include "lang_fr.h"
 #endif
 
