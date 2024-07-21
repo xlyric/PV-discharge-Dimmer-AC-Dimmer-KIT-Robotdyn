@@ -685,7 +685,10 @@ void loop() {
   #endif
 
   /// connexion MQTT dans les cas de conf mqtt et perte de connexion
-  if (!mqttConnected && !AP && mqtt_config.mqtt) {
+   if (!client.connected() ) { 
+    mqttConnected = false;
+   }
+      if (!mqttConnected && !AP && mqtt_config.mqtt) {
     connect_and_subscribe();
   }
 
@@ -1010,7 +1013,9 @@ if ( sysvar.celsius[sysvar.dallas_maitre] >= config.maxtemp && sysvar.security =
 }
 
 //// protection contre la perte de la sonde dallas
-  restart_dallas();
+  if (strlen(config.SubscribeTEMP) == 0 ) {
+    restart_dallas();
+  }
 
 
  delay(100);  // 24/01/2023 changement 500 à 100ms pour plus de réactivité
