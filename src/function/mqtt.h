@@ -507,8 +507,11 @@ void onMqttConnect(bool sessionPresent) {
 
   client.publish(String(topic_Xlyric +"status").c_str(),"online",true);         // Once connected, publish online to the availability topic
   
-  if (strcmp(config.PVROUTER, "mqtt") == 0 && strlen(config.SubscribePV) !=0 ) {client.subscribe(config.SubscribePV,1);}
-  if (strcmp(config.PVROUTER, "mqtt") == 0 && strlen(config.SubscribeTEMP) != 0 ) {client.subscribe(config.SubscribeTEMP,1);}
+  if ( strlen(config.SubscribePV) !=0 ) {client.subscribe(config.SubscribePV,1);}
+  if (strlen(config.SubscribeTEMP) != 0 ) {
+      client.subscribe(config.SubscribeTEMP,1);
+      Serial.println(config.SubscribeTEMP);
+      }
   client.subscribe((command_button + "/#").c_str(),1);
   client.subscribe((command_number + "/#").c_str(),1);
   client.subscribe((command_select + "/#").c_str(),1);
