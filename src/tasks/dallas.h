@@ -39,7 +39,7 @@ void mqttdallas() {
       if ( (sysvar.celsius[a] == DEVICE_DISCONNECTED_C) || (sysvar.celsius[a] == -255.00) || (sysvar.celsius[a] > 200.00) ) {
         sysvar.celsius[a]=previous_celsius[a];
         dallas_error[a] ++; // incrémente le compteur d'erreur
-        logging.Set_log_init("Dallas" + String(a) + " : échec "+ String(dallas_error[a]) + "\r\n",true);
+        logging.Set_log_init("Dallas " + String(a) + " : échec "+ String(dallas_error[a]) + "\r\n",true);
         if ( timer_dallas < 1500 )  { timer_dallas = timer_dallas + 100;  } // on augmente le timer pour la prochaine lecture 
           }
           else { 
@@ -74,7 +74,7 @@ void mqttdallas() {
           previous_celsius[i]=sysvar.celsius[i];
           
           if ( dallas_wait_log > 5 ) { /// limitation de l'affichage des logs de température
-            logging.Set_log_init("Dallas" + String(i) + " : " + String(sysvar.celsius[i]) + "\r\n",false);
+            logging.Set_log_init("Dallas " + String(i) + " : " + String(sysvar.celsius[i]) + "\r\n",false);
           }
           
         }
@@ -121,8 +121,8 @@ void mqttdallas() {
     if ( dallas_error[a] > 5 ) {
     DEBUG_PRINTLN("détection perte sonde dallas");
 
-    Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("Dallas perdue"),"Dallas perdue");
-    logging.Set_log_init("Dallas perdue !!!\r\n",true);
+    Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String(Dallas_lost),"Dallas perdue");
+    logging.Set_log_init(String(Dallas_lost) + "\r\n",true);
       dallas_error[a] = 0; // remise à zéro du compteur d'erreur
     ///mise en sécurité
       sysvar.celsius[a] = 99.9; 

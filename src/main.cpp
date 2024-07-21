@@ -1,4 +1,3 @@
-#include "Arduino.h"
 /**************
  *  numeric Dimmer  ( using robodyn dimmer = 
  *  **************
@@ -71,6 +70,10 @@
  **************************/
 
 #include <Arduino.h>
+
+//#include "Arduino.h"
+
+
 #ifdef ROBOTDYN
   // Dimmer librairy 
   #include <RBDdimmer.h>   /// the corrected librairy  in personal depot , the original has a bug
@@ -92,6 +95,7 @@
 //mqtt
   #include <PubSubClient.h>
 /// config
+#include "langues/lang.h"
 #include "config/config.h"
 #include "config/enums.h"
 #include "function/web.h"
@@ -333,12 +337,12 @@ void setup() {
   #if defined(ESP32) || defined(ESP32ETH)
   esp_reset_reason_t reset_reason = esp_reset_reason();
   Serial.printf("Reason for reset: %d\n", reset_reason);
-  logging.Set_log_init("-- Reason for reset: " + String(reset_reason) + " --\r\n" );
+  logging.Set_log_init(String(Reason_for_reset) + String(reset_reason) + " --\r\n" );
 
   #else
   rst_info *reset_info = ESP.getResetInfoPtr();
   Serial.printf("Reason for reset: %d\n", reset_info->reason);
-  logging.Set_log_init("-- Reason for reset: " + String(reset_info->reason) + " --\r\n");
+  logging.Set_log_init(String(Reason_for_reset) + String(reset_info->reason) + " --\r\n");
 
   #endif
 
@@ -362,7 +366,7 @@ void setup() {
   // correction d'erreur de chargement de FS 
   delay(1000);
   Serial.println("Demarrage file System");
-  logging.Set_log_init("Start filesystem \r\n"); 
+  logging.Set_log_init(Start_filesystem); 
   test_fs_version();
 #ifdef ROBOTDYN
   // configuration dimmer
@@ -410,12 +414,12 @@ void setup() {
   #endif
   // Should load default config if run for the first time
   Serial.println(F("Loading configuration..."));
-  logging.Set_log_init("Load config \r\n"); 
+  logging.Set_log_init(Load_configuration); 
   logging.Set_log_init(config.loadConfiguration()); // charge la configuration
 
   // Load configuration file mqtt 
   Serial.println(F("Loading mqtt_conf configuration..."));
-  logging.Set_log_init("Load config MQTT\r\n"); 
+  logging.Set_log_init(Load_configuration_MQTT); 
   logging.Set_log_init(mqtt_config.loadmqtt());  /// charge la configuration mqtt
 
   /// chargement des conf de wifi
@@ -441,7 +445,7 @@ void setup() {
     //************* Setup - Connexion Wifi
     //***********************************
   Serial.print("start Wifiautoconnect");
-  logging.Set_log_init("Start Wifiautoconnect \r\n"); 
+  logging.Set_log_init(Start_Wifiautoconnect); 
 
     //WiFi.setPhyMode(WIFI_PHY_MODE_11N);
     //wifi_set_phy_mode(PHY_MODE_11N);
@@ -541,7 +545,7 @@ void setup() {
   //MDNS.addService("http", "tcp", 80);
   MDNS.addService("http", "tcp", 1308);
 
-  logging.Set_log_init("mDNS responder started \r\n");
+  logging.Set_log_init(mDNS_Responder_Started);
   logging.Set_log_init(String(config.say_my_name) + ".local \r\n");
 
 
@@ -579,7 +583,7 @@ void setup() {
   }
 
   logging.Set_log_init(String(deviceCount)); 
-  logging.Set_log_init(" DALLAS detected\r\n");
+  logging.Set_log_init(DALLAS_detected);
     
   /// recherche d'une sonde dallas
   dallaspresent();
@@ -589,7 +593,7 @@ void setup() {
   /// MQTT 
   if (!AP && mqtt_config.mqtt) {
     Serial.println("Connection MQTT" );
-    logging.Set_log_init("Attempting MQTT connexion \r\n"); 
+    logging.Set_log_init(Attempting_MQTT_connexion); 
     
     /// Configuration et connexion MQTT 
     async_mqtt_init();
@@ -663,7 +667,7 @@ Task_ping.enable();
 DEBUG_PRINTLN(ESP.getFreeHeap());
 
 /// affichage de l'heure  GMT +1 dans la log
-logging.Set_log_init("fin du demarrage: ");
+logging.Set_log_init(End_Start);
 logging.Set_log_init("",true);
 logging.Set_log_init("\r\n");
 
@@ -708,13 +712,13 @@ void loop() {
       //  minuteur en cours
       if (programme.stop_progr()) { 
             // Robotdyn dimmer
-      logging.Set_log_init("stop minuteur dimmer\r\n",true);
+      logging.Set_log_init(Stop_minuteur,true);
             unified_dimmer.set_power(0); // necessaire pour les autres modes
             unified_dimmer.dimmer_off();
 
         DEBUG_PRINTLN("programme.run");
         sysvar.puissance=0;
-        Serial.print("stop minuteur dimmer");
+        Serial.print(Stop_minuteur);
         Mqtt_send_DOMOTICZ(String(config.IDX), String (sysvar.puissance * config.charge/100) ); // remonté MQTT de la commande réelle
         if (config.HA) {
           int instant_power = unified_dimmer.get_power();
@@ -737,12 +741,12 @@ void loop() {
       else { sysvar.puissance = programme.puissance; }  
        
           //// robotdyn dimmer
-              logging.Set_log_init("start minuteur dimmer\r\n",true);
+              logging.Set_log_init(Start_minuteur,true);
 
               unified_dimmer.set_power(sysvar.puissance); 
               delay (50);
 
-      Serial.print("start minuteur ");
+      Serial.print(Start_minuteur);
       Mqtt_send_DOMOTICZ(String(config.IDX), String (sysvar.puissance * config.charge/100) ); // remonté MQTT de la commande réelle
       if (config.HA) {
         int instant_power = unified_dimmer.get_power();
@@ -761,7 +765,7 @@ void loop() {
  //// relay 1 
  if (programme_relay1.run) { 
       if (programme_relay1.stop_progr()) { 
-        logging.Set_log_init("stop minuteur relay1\r\n",true);
+        logging.Set_log_init(Stop_minuteur_relay1,true);
         digitalWrite(RELAY1 , LOW);
         device_relay1.send(String(0));
 
@@ -769,7 +773,7 @@ void loop() {
  }
  else {
       if (programme_relay1.start_progr()){ 
-        logging.Set_log_init("start minuteur relay1\r\n",true);
+        logging.Set_log_init(Start_minuteur_relay1,true);
         digitalWrite(RELAY1 , HIGH);
         device_relay1.send(String(1));
       }
@@ -777,14 +781,14 @@ void loop() {
 
  if (programme_relay2.run) { 
       if (programme_relay2.stop_progr()) { 
-        logging.Set_log_init("stop minuteur relay2\r\n",true);
+        logging.Set_log_init(Stop_minuteur_relay2,true);
         digitalWrite(RELAY2 , LOW);
         device_relay2.send(String(0));
       }
  }
  else {
       if (programme_relay2.start_progr()){ 
-        logging.Set_log_init("start minuteur relay2\r\n",true);
+        logging.Set_log_init(Start_minuteur_relay2,true);
         digitalWrite(RELAY2 , HIGH);
         device_relay2.send(String(1));
       }
@@ -810,7 +814,7 @@ void loop() {
   if ( sysvar.security == 1 ) { 
       if (!alerte){
         Serial.println("Alert Temp");
-      logging.Set_log_init("Alert Temp\r\n",true);
+      logging.Set_log_init(Alert_Temp,true);
       
         if (!AP && mqtt_config.mqtt ){
               Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("Ballon chaud " ),"Alerte");  ///send alert to MQTT
@@ -895,7 +899,7 @@ void loop() {
             }  //si mode equal envoie de la commande vers la carte fille
             if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance <= config.maxpow) { 
               child_communication(0,false); 
-               logging.Set_log_init("Child at 0\r\n"); 
+               logging.Set_log_init(Child_at_zero); 
             }  //si mode délest envoie d'une commande à 0
 
             if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance > config.maxpow) { // si sysvar.puissance passe subitement au dessus de config.maxpow
@@ -1030,7 +1034,7 @@ bool dallaspresent () {
   if (deviceCount == 0 && ( strcmp("null", config.DALLAS) != 0 || strcmp("none", config.DALLAS) != 0 )){
     /// remonter l'alerte une fois toute les 10 secondes 
     if (devicealerte == 0) {
-      logging.Set_log_init("Alerte Dallas non trouvée\r\n");
+      logging.Set_log_init(Alerte_Dallas_not_found);
       Mqtt_send_DOMOTICZ(String(config.IDXTemp), String("Alerte Dallas non trouvée"),"Alerte");  ///send alert to MQTT
       device_dimmer_alarm_temp.send("Alerte Dallas non trouvée");
       logging.Set_alerte_web("Dallas Maitre non trouvée");
@@ -1102,9 +1106,9 @@ bool dallaspresent () {
         config.saveConfiguration();
       }
 
-    logging.Set_log_init("Dallas sensor " );
+    logging.Set_log_init(Dallas_sensor);
     logging.Set_log_init(String(a).c_str()); 
-    logging.Set_log_init(" found. Address : " );
+    logging.Set_log_init(found_Address);
     logging.Set_log_init(String(address).c_str()); 
     logging.Set_log_init("\r\n");
     present = 1 ; 

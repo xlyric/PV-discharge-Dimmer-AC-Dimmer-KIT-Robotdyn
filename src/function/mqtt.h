@@ -246,7 +246,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   if (strstr( topic, command_button.c_str() ) != NULL) { 
     if (doc2.containsKey("reset_alarm")) { 
       if (doc2["reset_alarm"] == "1" ) {
-        logging.Set_log_init("Clear alarm temp \r\n",true);
+        logging.Set_log_init(Clear_alarm_temp,true);
         sysvar.security = 0 ;
         device_dimmer_alarm_temp.send(stringBoolMQTT(sysvar.security)); 
         sysvar.change = 1 ;
@@ -412,7 +412,7 @@ void connect_and_subscribe() {
       
       if (mqttConnected) {
         recreate_topic();
-        logging.Set_log_init("Subscribe and publish to MQTT topics\r\n");
+        logging.Set_log_init(Subscribe_MQTT);
 
         Serial.println("connected");
         logging.Set_log_init("Connected\r\n");
@@ -471,8 +471,8 @@ void async_mqtt_init() {
 
 void connectToMqtt() {
   if (!client.connected() ) {
-  DEBUG_PRINTLN("Connecting to MQTT...");
-    logging.Set_log_init("Connecting to MQTT..." + String(config.say_my_name) + " \r\n");
+  DEBUG_PRINTLN(Connecting_MQTT);
+    logging.Set_log_init(String(Connecting_MQTT) + String(config.say_my_name) + " \r\n");
     delay(500); // pour laisser le temps de se connecter au wifi ou ne pas spam le serveur
     Serial.println(config.hostname);
     IPAddress ip;
@@ -518,7 +518,7 @@ void onMqttConnect(bool sessionPresent) {
   Serial.println((command_number + "/#").c_str());
   Serial.println((command_select + "/#").c_str());
   Serial.println((command_switch + "/#").c_str());
-  logging.Set_log_init("MQTT connected \r\n");
+  logging.Set_log_init(MQTT_connected);
   mqttConnected = true;
 }
 

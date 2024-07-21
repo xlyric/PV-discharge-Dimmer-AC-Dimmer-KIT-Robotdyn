@@ -109,7 +109,7 @@ void savewifiIP(const char *wifi_conf, Wifi_struct &wifi_config_fixe) {
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {
     Serial.println(F("Failed to write to file in function Save configuration "));
-    logging.Set_log_init("Failed to write wifi config\r\n");
+    logging.Set_log_init(Failed_write_wifi_config);
   }
 
   // Close the file
@@ -123,17 +123,17 @@ bool test_fs_version() {
 
   File file = LittleFS.open("/version", "r");
   if (!file) {
-    logging.Set_log_init("FS version is missing please update\r\n");
+    logging.Set_log_init(FS_version_is_missing);
     return false;
   }
    // comparaison entre le contenu du fichier et la version du code FS_RELEASE
   String version = file.readStringUntil('\n');
   file.close(); 
   if (version.toInt() < String(FS_RELEASE).toInt() )  {
-    logging.Set_log_init("FS version is not the same as code version please update FS\r\n");
+    logging.Set_log_init(FS_version_is_not_same);
     return false;
   }
-  logging.Set_log_init("FS version Ok\r\n");
+  logging.Set_log_init(FS_version_is_same);
   return true;
 }
 

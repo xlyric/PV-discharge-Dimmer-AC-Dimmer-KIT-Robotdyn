@@ -67,6 +67,7 @@ String getmqtt();
 String getconfig(); 
 String getState();
 String getState_dallas();
+
 String textnofiles();
 String processor(const String& var);
 String getServermode(String Servermode);
@@ -99,6 +100,7 @@ void call_pages() {
   server.serveStatic("/minuteur.html", LittleFS, "/minuteur.html");
   server.serveStatic("/relai.html", LittleFS, "/relai.html");
   server.serveStatic("/jquery.easing.min.js", LittleFS, "/js/jquery.easing.min.js");
+  server.serveStatic("/lang.json", LittleFS, "/lang.json");
 
 
 /// page de index et récupération des requetes de puissance
@@ -233,6 +235,8 @@ void call_pages() {
   server.on("/state", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send(200, "text/plain", getState().c_str());
   });
+
+
 
     server.on("/state_dallas", HTTP_ANY, [](AsyncWebServerRequest *request){
     request->send(200, "text/plain", getState_dallas().c_str());
