@@ -18,7 +18,7 @@ struct HA
 {
     private:int MQTT_INTERVAL = 60;
     /* MQTT */
-    private:String name; 
+    private:String name="none"; 
     public:void Set_name(String setter) {name=setter; }
 
     private:String object_id; 
@@ -36,7 +36,7 @@ struct HA
     private:String entity_category; 
     public:void Set_entity_category(String setter) {entity_category=setter; }
     
-    private:String entity_type; 
+    private:String entity_type="sensor"; 
     public:void Set_entity_type(String setter) {entity_type=setter; }
 
     private:String icon; 
@@ -149,6 +149,10 @@ struct HA
 
 
   public:void HA_discovery(){
+
+      //protection contre les variables non définies
+      if (name == "none") {return; }
+
       String topic = "homeassistant/"+ entity_type +"/"+ node_id +"/";
       String topic_Xlyric = "Xlyric/"+ node_id +"/";
 
