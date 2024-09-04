@@ -1113,7 +1113,7 @@ bool dallaspresent () {
     logging.Set_log_init(String(address).c_str()); 
     logging.Set_log_init("\r\n");
     present = 1 ; 
-    /*
+    
     delay(250);
     ds.reset();
     ds.select(addr[a]);
@@ -1128,7 +1128,7 @@ bool dallaspresent () {
 
     ds.select(addr[a]);    
     ds.write(0xBE);         // Read Scratchpad
-  */
+  
 
   }
    return true;
