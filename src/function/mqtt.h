@@ -111,8 +111,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }
   }
   /// @brief Enregistrement temperature
-  if (strcmp( topic, config.SubscribeTEMP ) == 0 ){ 
-    float temperaturemqtt = doc2[0]; 
+  if (strcmp( topic, config.SubscribeTEMP ) == 0 && doc2.containsKey("temperature")){ 
+    Serial.println("lecture temperature MQTT ");
+    float temperaturemqtt = doc2["temperature"]; 
+    Serial.println(temperaturemqtt);
     sysvar.dallas_maitre= deviceCount+1;
     devAddrNames[deviceCount+1] = "MQTT";
     if (!discovery_temp) {
@@ -507,11 +509,14 @@ void onMqttConnect(bool sessionPresent) {
 
   client.publish(String(topic_Xlyric +"status").c_str(),"online",true);         // Once connected, publish online to the availability topic
   
-  if ( strlen(config.SubscribePV) !=0 ) {client.subscribe(config.SubscribePV,1);}
+  if (strlen(config.SubscribePV) !=0 ) {
+    client.subscribe(config.SubscribePV,1);
+    Serial.println(config.SubscribePV);
+    }
   if (strlen(config.SubscribeTEMP) != 0 ) {
-      client.subscribe(config.SubscribeTEMP,1);
-      Serial.println(config.SubscribeTEMP);
-      }
+    client.subscribe(config.SubscribeTEMP,1);
+    Serial.println(config.SubscribeTEMP);
+    }
   client.subscribe((command_button + "/#").c_str(),1);
   client.subscribe((command_number + "/#").c_str(),1);
   client.subscribe((command_select + "/#").c_str(),1);
