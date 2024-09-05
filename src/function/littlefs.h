@@ -123,7 +123,7 @@ bool test_fs_version() {
 
   File file = LittleFS.open("/version", "r");
   if (!file) {
-    logging.Set_log_init("FS version is missing please update\r\n");
+    logging.Set_log_init("FS version is missing please update or reboot for activate after ota\r\n");
     return false;
   }
    // comparaison entre le contenu du fichier et la version du code FS_RELEASE
