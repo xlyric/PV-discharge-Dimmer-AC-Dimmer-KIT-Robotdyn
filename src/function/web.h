@@ -282,14 +282,14 @@ void call_pages() {
     request->send(200, "text/plain",  getmqtt().c_str()); 
   });
 
-  server.on("/getminiteur", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+  server.on("/getminuteur", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     if (request->hasParam("dimmer")) { request->send(200, "application/json",  getMinuteur(programme));  }
     if (request->hasParam("relay1")) { request->send(200, "application/json",  getMinuteur(programme_relay1)); }
     if (request->hasParam("relay2")) { request->send(200, "application/json",  getMinuteur(programme_relay2)); }
     else { request->send(200, "application/json",  getMinuteur()); }
   });
 
-  server.on("/setminiteur", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+  server.on("/setminuteur", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     String name; 
     if (request->hasParam("dimmer")) { 
             if (request->hasParam("heure_demarrage")) { request->getParam("heure_demarrage")->value().toCharArray(programme.heure_demarrage,6);  }
