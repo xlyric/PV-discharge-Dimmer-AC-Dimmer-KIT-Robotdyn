@@ -17,11 +17,11 @@ echo "langue = $langue"
 
 
 if [ "$langue" = "UA" ]; then
-    cp lang_ua.json ../../data/lang.json
+  cp lang_ua.json ../../data/lang.json
 elif [ "$langue" = "EN" ]; then
-    cp lang_en.json ../../data/lang.json
+  cp lang_en.json ../../data/lang.json
 elif [ "$langue" = "FR" ]; then
-    cp lang_fr.json ../../data/lang.json
+  cp lang_fr.json ../../data/lang.json
 fi
 
 echo "fin de la construction des pages"

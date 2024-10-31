@@ -82,22 +82,22 @@
                         </div>
                         <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
                         <script type="text/javascript"> 
-				  
-	window.onload=function() {
+                  
+    window.onload=function() {
   horloge('time');
-};			 
-				  
-				  google.charts.load('current', {'packages':['corechart','gauge']}); 
-				  google.charts.setOnLoadCallback(drawChart);
-				  
-				  var chart ;
-				  var options = { title: 'Oscilloscope Mode', curveType: 'function', legend: { position: 'bottom' } };
-				  var data ;
-				  var inc;
-				  
-				  function drawChart() {    
+};             
+                  
+                  google.charts.load('current', {'packages':['corechart','gauge']}); 
+                  google.charts.setOnLoadCallback(drawChart);
+                  
+                  var chart ;
+                  var options = { title: 'Oscilloscope Mode', curveType: 'function', legend: { position: 'bottom' } };
+                  var data ;
+                  var inc;
+                  
+                  function drawChart() {    
 
-					var optionsGauge = {           
+                    var optionsGauge = {           
           redFrom: 75, 
           redTo: 100,
            
@@ -106,16 +106,16 @@
            
           greenFrom: 0, 
           greenTo: 50, 
-		  	  
+                
           minorTicks: 4,
-		  
+          
           min: 0, 
           max: 100, 
            
           
         };
        
-	   	   var optionsGaugetemp = {           
+              var optionsGaugetemp = {           
           redFrom: 80, 
           redTo: 100,
            
@@ -124,32 +124,32 @@
            
           greenFrom: 0, 
           greenTo: 70, 
-		  	  
+                
           minorTicks: 5,
-		  
+          
           min: 0, 
           max: 100, 
            
           
         };
-	
-	// mise à jour de la jauge  --> 	
-		var gaugePA = new google.visualization.Gauge(document.getElementById('curve_chart2'));
-	    var dataGaugePA = new google.visualization.DataTable();
-	    dataGaugePA.addColumn('string', 'Puissance');
-		dataGaugePA.addColumn('number', 'Value');
-		dataGaugePA.addRows(1);
-		
-	// mise à jour de la jauge  --> 	
-		var gaugePAtemp = new google.visualization.Gauge(document.getElementById('curve_temp'));
-	    var dataGaugePAtemp = new google.visualization.DataTable();
-	    dataGaugePAtemp.addColumn('string', 'Power');
-		dataGaugePAtemp.addColumn('number', 'Value');
-		dataGaugePAtemp.addRows(1);
+    
+    // mise à jour de la jauge  -->     
+        var gaugePA = new google.visualization.Gauge(document.getElementById('curve_chart2'));
+        var dataGaugePA = new google.visualization.DataTable();
+        dataGaugePA.addColumn('string', 'Puissance');
+        dataGaugePA.addColumn('number', 'Value');
+        dataGaugePA.addRows(1);
+        
+    // mise à jour de la jauge  -->     
+        var gaugePAtemp = new google.visualization.Gauge(document.getElementById('curve_temp'));
+        var dataGaugePAtemp = new google.visualization.DataTable();
+        dataGaugePAtemp.addColumn('string', 'Power');
+        dataGaugePAtemp.addColumn('number', 'Value');
+        dataGaugePAtemp.addRows(1);
 
 
-	// récupération valeur sigma et State -->
-				  
+    // récupération valeur sigma et State -->
+                  
 function refreshvalue( ) {
 
 $.getJSON('/state', function(data) {
@@ -164,18 +164,18 @@ $.getJSON('/state', function(data) {
 
     // Mettre à jour les éléments HTML
         dataGaugePA.setValue(0, 0, "Power (W)"); 
-		dataGaugePA.setValue(0, 1, power);
+        dataGaugePA.setValue(0, 1, power);
         var pmaxtemp = parseInt(power *100 / dimmer ); 
         let pmax = isNaN(pmaxtemp) ? 1000 : pmaxtemp;
         optionsGauge.max = pmax;
         optionsGauge.redTo = pmax;
         optionsGauge.redFrom = parseInt(pmax/2);
         optionsGauge.yellowTo = parseInt(pmax/2); 
-		gaugePA.draw(dataGaugePA,optionsGauge);
-		
-		dataGaugePAtemp.setValue(0, 0, "Temp °C"); 
-		dataGaugePAtemp.setValue(0, 1, temperature);
-		gaugePAtemp.draw(dataGaugePAtemp,optionsGaugetemp);
+        gaugePA.draw(dataGaugePA,optionsGauge);
+        
+        dataGaugePAtemp.setValue(0, 0, "Temp °C"); 
+        dataGaugePAtemp.setValue(0, 1, temperature);
+        gaugePAtemp.draw(dataGaugePAtemp,optionsGaugetemp);
 
     // recupération de l'état de sécurité
         
@@ -227,8 +227,8 @@ $.getJSON('/state', function(data) {
 
   });
 }
- 			
-	setInterval(refreshvalue, 5000); // Rafraîchir les données toutes les 5 secondes
+             
+    setInterval(refreshvalue, 5000); // Rafraîchir les données toutes les 5 secondes
 
         document.getElementById('relais 1').addEventListener('click', function() {
             fetch('/get?relay1=2')
@@ -290,7 +290,7 @@ function refresh_temp() {
                     // Affichage des données des capteurs Dallas dans la page HTML
             var dallasHtml = '';
             for ( dallasNumber in dallasData) {
-                dallasHtml += '<p>Dallas sensor ' + dallasNumber + ': ' + dallasData[dallasNumber].temperature + '°C <br>Address: ' + dallasData[dallasNumber].address + '</p>';
+                dallasHtml += '<p>Dallas sensor ' + dallasNumber + ': ' + dallasData[dallasNumber].temperature + '°C <br/>Address: ' + dallasData[dallasNumber].address + '</p>';
             }
             document.getElementById("dallas").innerHTML = dallasHtml;
 

@@ -67,13 +67,13 @@
          
 
 
-				
-				
+                
+                
 
-				<script type='text/javascript' src='https://www.gstatic.com/charts/loader.js'></script> 
-				
-				  <script type='text/javascript'> 
-				  
+                <script type='text/javascript' src='https://www.gstatic.com/charts/loader.js'></script> 
+                
+                  <script type='text/javascript'> 
+                  
 
 setInterval(function ( ) {
 
@@ -86,22 +86,22 @@ setInterval(function ( ) {
       });
 }, 2000);
 
-		
-		</script >
-		
+        
+        </script >
+        
 <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
 <script>
 
 </script>
 
             
-				  
-				  </div>
-				  
+                  
+                  </div>
+                  
                   
 
-				   
-				  
+                   
+                  
                 </div>
               </div>
             </div>

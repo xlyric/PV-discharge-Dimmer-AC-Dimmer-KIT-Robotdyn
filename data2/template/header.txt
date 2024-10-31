@@ -29,9 +29,9 @@
                     <a class="nav-link" href="/">
                         <i class="fas fa-fw fa-tachometer-alt"></i>
                         <span>Dashboard</span>
-                        <br>
-                        <span id="version">%VERSION%</span><br>
-                        <span id="RSSI">RSSI : %RSSI% dBm</span><br>
+                        <br/>
+                        <span id="version">%VERSION%</span><br/>
+                        <span id="RSSI">RSSI : %RSSI% dBm</span><br/>
                         <span>%NAME%</span>
                     </a>
                 </li>

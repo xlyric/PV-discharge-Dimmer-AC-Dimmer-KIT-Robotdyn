@@ -1,325 +1,320 @@
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <meta name="description" content="">
-        <meta name="author" content="">
-        <title>Pv Dimmer %NAME% - Dashboard</title>
-        
-        <!-- Custom styles for this template-->
-        <link href="all.css" rel="stylesheet">
-    </head>
-    <body id="page-top">
-        <!-- Page Wrapper -->
-        <div id="wrapper">
-            <!-- Sidebar -->
-            <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
-                <!-- Sidebar - Brand -->
-                <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/">
-                    <div class="sidebar-brand-icon rotate-n-15">
-                        <i class="fas fa-laugh-wink"></i>
-                    </div>
-                    <div class="sidebar-brand-text mx-3">Pv Dimmer %NAME%</div>
-                </a>
-                <!-- Divider -->
-                <hr class="sidebar-divider my-0">
-                <!-- Nav Item - Dashboard -->
-                <li class="nav-item active">
-                    <a class="nav-link" href="/">
-                        <i class="fas fa-fw fa-tachometer-alt"></i>
-                        <span>Dashboard</span>
-                        <br>
-                        <span id="version">%VERSION%</span>
-                        <span id="RSSI">RSSI : %RSSI% dBm</span>
-                    </a>
-                </li>
-                <!-- Divider -->
-                <hr class="sidebar-divider">
-                <!-- Heading -->
-                <div class="sidebar-heading">
-                    Interface
-                </div>                <!-- Nav Item - Pages Collapse Menu -->
-                <li class="nav-item active">
-                    <a class="nav-link" href="config.html">
-                        <i class="fas fa-fw fa-cog"></i>
-                        <span>Configuration</span>
-                    </a>
-                </li>
-                <!-- Divider -->
-                <hr class="sidebar-divider">
-                <!-- Sidebar Toggler (Sidebar) -->
-                <div class="text-center d-none d-md-inline">
-                    <button class="rounded-circle border-0" id="sidebarToggle"></button>
-                </div>
-            </ul>
-            <!-- End of Sidebar --><!-- Content Wrapper -->
-            <div id="content-wrapper" class="d-flex flex-column">
-                <!-- Main Content -->
-                <div id="content">
-                    <!-- Topbar -->
-                    <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-                        <div class="alert alert-danger" id="alertBox" ><span class="mr-2 d-none d-lg-inline text-gray-600"></span><p role="alert" id="alertContainer"> </p ></span></div>
-
-          <!-- Topbar Navbar -->
-                        <ul class="navbar-nav ml-auto">
-                            <li class="nav-item dropdown no-arrow">
-
-                                    <span class="mr-2 d-none d-lg-inline text-gray-600 small">
-                                        <div id="time">%TIME%</div>
-                                    </span>
-
-                            </li>
-                        </li>
-                        <div class="topbar-divider d-none d-sm-block"></div>
-                    </ul>
-                </nav>
-                <!-- End of Topbar -->
-                <!-- Begin Page Content -->
-                <div class="container-fluid">
-                    <!-- Page Heading -->
-                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
-                    </div>
-                    <!-- Content Row -->
-                    <div class="row">
-                        <!-- Area Chart -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card shadow mb-4">
-                                <!-- Card Header - Dropdown -->
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Dimmer</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div id="curve_chart2" style=" width: auto; height: 200px;"></div>
-
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card shadow mb-4">
-                                <!-- Card Header - Dropdown -->
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Température</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div id="curve_temp" style=" width: auto; height: 200px;"></div>
-
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card shadow mb-4">
-                                <!-- Card Header - Dropdown -->
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Etats</h6>
-                                </div>
-                                <div class="card-body">
-                                <b>Etat Ballon : </b><h4 id="alerte">N/A</h4>
-                                <b>Etat Minuteur : </b><h4 id="minuteur">N/A</h4>
-                                <b>Etat Relais 1 : </b><h4 id="relais 1">N/A</h4>
-                                <b>Etat Relais 2 : </b><h4 id="relais 2">N/A</h4>
-
-                                </div>
-                            </div>
-                        </div>
-                        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-                        <script type="text/javascript"> 
-				  
-	window.onload=function() {
-  horloge('time');
-};			 
-				  
-				  google.charts.load('current', {'packages':['corechart','gauge']}); 
-				  google.charts.setOnLoadCallback(drawChart);
-				  
-				  var chart ;
-				  var options = { title: 'Oscilloscope Mode', curveType: 'function', legend: { position: 'bottom' } };
-				  var data ;
-				  var inc;
-				  
-				  function drawChart() {    
-
-					var optionsGauge = {           
-          redFrom: 75, 
-          redTo: 100,
-           
-          yellowFrom: 50, 
-          yellowTo: 75, 
-           
-          greenFrom: 0, 
-          greenTo: 50, 
-		  	  
-          minorTicks: 4,
-		  
-          min: 0, 
-          max: 100, 
-           
-          
-        };
-       
-	   	   var optionsGaugetemp = {           
-          redFrom: 80, 
-          redTo: 100,
-           
-          yellowFrom: 70, 
-          yellowTo: 80, 
-           
-          greenFrom: 0, 
-          greenTo: 70, 
-		  	  
-          minorTicks: 5,
-		  
-          min: 0, 
-          max: 100, 
-           
-          
-        };
-	
-	// mise à jour de la jauge  --> 	
-		var gaugePA = new google.visualization.Gauge(document.getElementById('curve_chart2'));
-	    var dataGaugePA = new google.visualization.DataTable();
-	    dataGaugePA.addColumn('string', 'Puissance');
-		dataGaugePA.addColumn('number', 'Value');
-		dataGaugePA.addRows(1);
-		
-	// mise à jour de la jauge  --> 	
-		var gaugePAtemp = new google.visualization.Gauge(document.getElementById('curve_temp'));
-	    var dataGaugePAtemp = new google.visualization.DataTable();
-	    dataGaugePAtemp.addColumn('string', 'Power');
-		dataGaugePAtemp.addColumn('number', 'Value');
-		dataGaugePAtemp.addRows(1);
-
-
-	// récupération valeur sigma et State -->
-				  
-setInterval(function ( ) {
-
-$.getJSON('/state', function(data) {
-// Récupérer les données du JSON
-    var dimmer = data.dimmer;
-    var power = data.power;
-    var temperature = data.temperature;
-    var alerte = data.alerte;
-    var minuteur = data.minuteur;
-    var relais1 = data.relay1;
-    var relais2 = data.relay2;
-
-    // Mettre à jour les éléments HTML
-        dataGaugePA.setValue(0, 0, "Power (W)"); 
-		dataGaugePA.setValue(0, 1, power);
-        var pmaxtemp = parseInt(power *100 / dimmer ); 
-        let pmax = isNaN(pmaxtemp) ? 1000 : pmaxtemp;
-        optionsGauge.max = pmax;
-        optionsGauge.redTo = pmax;
-        optionsGauge.redFrom = parseInt(pmax/2);
-        optionsGauge.yellowTo = parseInt(pmax/2); 
-		gaugePA.draw(dataGaugePA,optionsGauge);
-		
-		dataGaugePAtemp.setValue(0, 0, "Temp °C"); 
-		dataGaugePAtemp.setValue(0, 1, temperature);
-		gaugePAtemp.draw(dataGaugePAtemp,optionsGaugetemp);
-
-    // recupération de l'état de sécurité
-        
-    // ecriture de "refroidissement" dans le div alerte si l'état est à 1
-        if (alerte == 1) {
-            document.getElementById("alerte").innerHTML = "Refroidissement";
-            document.getElementById("alerte").style.color = "red";
-        } else {
-            document.getElementById("alerte").innerHTML = "Normal";
-            document.getElementById("alerte").style.color = "";
-        }
-
-    // ecriture de "minuteur" dans le div minuteur si l'état est à 1
-        if (minuteur == 1) {
-            document.getElementById("minuteur").innerHTML = "Minuteur";
-            document.getElementById("minuteur").style.color = "red";
-        } else {
-            document.getElementById("minuteur").innerHTML = "Non actif";
-            document.getElementById("minuteur").style.color = "";
-        }
-    
-    // ecriture de "ON" dans le div relais 1 si l'état est à 1
-        if (relais1 == 1) {
-            document.getElementById("relais 1").innerHTML = "ON";
-            document.getElementById("relais 1").style.color = "red";
-        } else {
-            document.getElementById("relais 1").innerHTML = "OFF";
-            document.getElementById("relais 1").style.color = "";
-        }
-
-    // ecriture de "ON" dans le div relais 2 si l'état est à 1
-        if (relais2 == 1) {
-            document.getElementById("relais 2").innerHTML = "ON";
-            document.getElementById("relais 2").style.color = "red";
-        } else {
-            document.getElementById("relais 2").innerHTML = "OFF";
-            document.getElementById("relais 2").style.color = "";
-        }
-
-        if (data.alerte && data.alerte.trim() != "" ) {
-            const alertContainer = document.getElementById("alertContainer");
-            alertContainer.innerHTML = "Alerte : " + data.alerte;
-                    $('#alertBox').fadeIn();
-            } else {
-                    $('#alertBox').fadeOut();
-        }
-
-
-
-  });
-}, 5000);
- 			
-		  
- 
-}
-
-function horloge(el) {
-  if(typeof el=="string") { el = document.getElementById(el); }
-  function actualiser() {
-    var date = new Date();
-    var str = date.getHours();
-    str += ':'+(date.getMinutes()<10?'0':'')+date.getMinutes();
-    str += ':'+(date.getSeconds()<10?'0':'')+date.getSeconds();
-    el.innerHTML = str;
-  }
-  actualiser();
-  setInterval(actualiser,1000);
-}
-
-
-                    </script >
-                    <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
-                    <script>
-                    if (typeof jQuery == 'undefined') {
-                        document.write('<script src="/js/jquery.min.js"><\/script>');
-                    }
-                    </script>
-                </div>
+  <head>
+    <meta name="generator" content="HTML Tidy for HTML5 for Linux version 5.6.0" />
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>Pv Dimmer %NAME% - Dashboard</title>
+    <!-- Custom styles for this template-->
+    <link href="all.css" rel="stylesheet" />
+  </head>
+  <body id="page-top">
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+      <!-- Sidebar -->
+      <ul
+        class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion"
+        id="accordionSidebar"
+      >
+        <!-- Sidebar - Brand -->
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/">
+          <div class="sidebar-brand-icon rotate-n-15"></div>
+          <div class="sidebar-brand-text mx-3">Pv Dimmer %NAME%</div></a
+        ><!-- Divider -->
+        <hr class="sidebar-divider my-0" />
+        <!-- Nav Item - Dashboard -->
+        <li class="nav-item active">
+          <a class="nav-link" href="/"
+            ><span>Dashboard</span><br />
+            <span id="version">%VERSION%</span>
+            <span id="RSSI">RSSI : %RSSI% dBm</span></a
+          >
+        </li>
+        <!-- Divider -->
+        <hr class="sidebar-divider" />
+        <!-- Heading -->
+        <div class="sidebar-heading">Interface</div>
+        <!-- Nav Item - Pages Collapse Menu -->
+        <li class="nav-item active">
+          <a class="nav-link" href="config.html"><span>Configuration</span></a>
+        </li>
+        <!-- Divider -->
+        <hr class="sidebar-divider" />
+        <!-- Sidebar Toggler (Sidebar) -->
+        <div class="text-center d-none d-md-inline">
+          <button class="rounded-circle border-0" id="sidebarToggle"></button>
+        </div>
+      </ul>
+      <!-- End of Sidebar --><!-- Content Wrapper -->
+      <div id="content-wrapper" class="d-flex flex-column">
+        <!-- Main Content -->
+        <div id="content">
+          <!-- Topbar -->
+          <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+            <div class="alert alert-danger" id="alertBox">
+              <p role="alert" id="alertContainer"></p>
             </div>
+            <!-- Topbar Navbar -->
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item dropdown no-arrow">
+                <div id="time">
+                  <span class="mr-2 d-none d-lg-inline text-gray-600 small">%TIME%</span>
+                </div>
+              </li>
+              <div class="topbar-divider d-none d-sm-block"></div>
+            </ul>
+          </nav>
+          <!-- End of Topbar -->
+          <!-- Begin Page Content -->
+          <div class="container-fluid">
+            <!-- Page Heading -->
+            <div class="d-sm-flex align-items-center justify-content-between mb-4">
+              <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+            </div>
+            <!-- Content Row -->
+            <div class="row">
+              <!-- Area Chart -->
+              <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card shadow mb-4">
+                  <!-- Card Header - Dropdown -->
+                  <div
+                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
+                  >
+                    <h6 class="m-0 font-weight-bold text-primary">Dimmer</h6>
+                  </div>
+                  <div class="card-body">
+                    <div id="curve_chart2" style="width: auto; height: 200px"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card shadow mb-4">
+                  <!-- Card Header - Dropdown -->
+                  <div
+                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
+                  >
+                    <h6 class="m-0 font-weight-bold text-primary">Température</h6>
+                  </div>
+                  <div class="card-body">
+                    <div id="curve_temp" style="width: auto; height: 200px"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card shadow mb-4">
+                  <!-- Card Header - Dropdown -->
+                  <div
+                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
+                  >
+                    <h6 class="m-0 font-weight-bold text-primary">Etats</h6>
+                  </div>
+                  <div class="card-body">
+                    <b>Etat Ballon :</b>
+                    <h4 id="alerte">N/A</h4>
+                    <b>Etat Minuteur :</b>
+                    <h4 id="minuteur">N/A</h4>
+                    <b>Etat Relais 1 :</b>
+                    <h4 id="relais 1">N/A</h4>
+                    <b>Etat Relais 2 :</b>
+                    <h4 id="relais 2">N/A</h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
-</div>
-</div>
-<!-- /.container-fluid -->
-</div>
-<!-- End of Main Content --><!-- Footer -->
-<footer class="sticky-footer bg-white">
-    <div class="container my-auto">
+    <!-- /.container-fluid -->
+    <!-- End of Main Content --><!-- Footer -->
+    <footer class="sticky-footer bg-white">
+      <div class="container my-auto">
         <div class="copyright text-center my-auto">
-            <span>https://github.com/xlyric/  - 2020</span>
+          <span>https://github.com/xlyric/ - 2020</span>
         </div>
-    </div>
-</footer>
-<!-- End of Footer -->
-</div>
-<!-- Bootstrap core JavaScript-->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.bundle.min.js"></script>
-<!-- Core plugin JavaScript-->
-<script src="https://ota.apper-solaire.org/css/jquery.easing.min.js"></script>
-<!-- Custom scripts for all pages-->
-<script src="https://ota.apper-solaire.org/css/sb-admin-2.js"></script>
-</body>
+      </div>
+    </footer>
+    <!-- End of Footer -->
+
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+    <script>
+      if (typeof jQuery == "undefined") {
+        document.write('<script src="/js/jquery.min.js"><\/script>');
+      }
+    </script>
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.bundle.min.js"></script>
+    <!-- Core plugin JavaScript-->
+    <script src="https://ota.apper-solaire.org/css/jquery.easing.min.js"></script>
+    <!-- Custom scripts for all pages-->
+    <script src="https://ota.apper-solaire.org/css/sb-admin-2.js"></script>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <!-- Page script -->
+    <script type="text/javascript">
+      window.onload = function () {
+        horloge("time");
+      };
+
+      google.charts.load("current", {
+        packages: ["corechart", "gauge"],
+      });
+      google.charts.setOnLoadCallback(drawChart);
+
+      var chart;
+      var options = {
+        title: "Oscilloscope Mode",
+        curveType: "function",
+        legend: { position: "bottom" },
+      };
+      var data;
+      var inc;
+
+      function drawChart() {
+        var optionsGauge = {
+          redFrom: 75,
+          redTo: 100,
+
+          yellowFrom: 50,
+          yellowTo: 75,
+
+          greenFrom: 0,
+          greenTo: 50,
+
+          minorTicks: 4,
+
+          min: 0,
+          max: 100,
+        };
+
+        var optionsGaugetemp = {
+          redFrom: 80,
+          redTo: 100,
+
+          yellowFrom: 70,
+          yellowTo: 80,
+
+          greenFrom: 0,
+          greenTo: 70,
+
+          minorTicks: 5,
+
+          min: 0,
+          max: 100,
+        };
+
+        // mise à jour de la jauge  -->
+        var gaugePA = new google.visualization.Gauge(document.getElementById("curve_chart2"));
+        var dataGaugePA = new google.visualization.DataTable();
+        dataGaugePA.addColumn("string", "Puissance");
+        dataGaugePA.addColumn("number", "Value");
+        dataGaugePA.addRows(1);
+
+        // mise à jour de la jauge  -->
+        var gaugePAtemp = new google.visualization.Gauge(document.getElementById("curve_temp"));
+        var dataGaugePAtemp = new google.visualization.DataTable();
+        dataGaugePAtemp.addColumn("string", "Power");
+        dataGaugePAtemp.addColumn("number", "Value");
+        dataGaugePAtemp.addRows(1);
+
+        // récupération valeur sigma et State -->
+
+        setInterval(function () {
+          $.getJSON("/state", function (data) {
+            // Récupérer les données du JSON
+            var dimmer = data.dimmer;
+            var power = data.power;
+            var temperature = data.temperature;
+            var alerte = data.alerte;
+            var minuteur = data.minuteur;
+            var relais1 = data.relay1;
+            var relais2 = data.relay2;
+
+            // Mettre à jour les éléments HTML
+            dataGaugePA.setValue(0, 0, "Power (W)");
+            dataGaugePA.setValue(0, 1, power);
+            var pmaxtemp = parseInt((power * 100) / dimmer);
+            let pmax = isNaN(pmaxtemp) ? 1000 : pmaxtemp;
+            optionsGauge.max = pmax;
+            optionsGauge.redTo = pmax;
+            optionsGauge.redFrom = parseInt(pmax / 2);
+            optionsGauge.yellowTo = parseInt(pmax / 2);
+            gaugePA.draw(dataGaugePA, optionsGauge);
+
+            dataGaugePAtemp.setValue(0, 0, "Temp °C");
+            dataGaugePAtemp.setValue(0, 1, temperature);
+            gaugePAtemp.draw(dataGaugePAtemp, optionsGaugetemp);
+
+            // recupération de l'état de sécurité
+
+            // ecriture de "refroidissement" dans le div alerte si l'état est à 1
+            if (alerte == 1) {
+              document.getElementById("alerte").innerHTML = "Refroidissement";
+              document.getElementById("alerte").style.color = "red";
+            } else {
+              document.getElementById("alerte").innerHTML = "Normal";
+              document.getElementById("alerte").style.color = "";
+            }
+
+            // ecriture de "minuteur" dans le div minuteur si l'état est à 1
+            if (minuteur == 1) {
+              document.getElementById("minuteur").innerHTML = "Minuteur";
+              document.getElementById("minuteur").style.color = "red";
+            } else {
+              document.getElementById("minuteur").innerHTML = "Non actif";
+              document.getElementById("minuteur").style.color = "";
+            }
+
+            // ecriture de "ON" dans le div relais 1 si l'état est à 1
+            if (relais1 == 1) {
+              document.getElementById("relais 1").innerHTML = "ON";
+              document.getElementById("relais 1").style.color = "red";
+            } else {
+              document.getElementById("relais 1").innerHTML = "OFF";
+              document.getElementById("relais 1").style.color = "";
+            }
+
+            // ecriture de "ON" dans le div relais 2 si l'état est à 1
+            if (relais2 == 1) {
+              document.getElementById("relais 2").innerHTML = "ON";
+              document.getElementById("relais 2").style.color = "red";
+            } else {
+              document.getElementById("relais 2").innerHTML = "OFF";
+              document.getElementById("relais 2").style.color = "";
+            }
+
+            if (data.alerte && data.alerte.trim() != "") {
+              const alertContainer = document.getElementById("alertContainer");
+              alertContainer.innerHTML = "Alerte : " + data.alerte;
+              $("#alertBox").fadeIn();
+            } else {
+              $("#alertBox").fadeOut();
+            }
+          });
+        }, 5000);
+      }
+
+      function horloge(el) {
+        if (typeof el == "string") {
+          el = document.getElementById(el);
+        }
+        function actualiser() {
+          var date = new Date();
+          var str = date.getHours();
+          str += ":" + (date.getMinutes() < 10 ? "0" : "") + date.getMinutes();
+          str += ":" + (date.getSeconds() < 10 ? "0" : "") + date.getSeconds();
+          el.innerHTML = str;
+        }
+        actualiser();
+        setInterval(actualiser, 1000);
+      }
+    </script>
+  </body>
 </html>
