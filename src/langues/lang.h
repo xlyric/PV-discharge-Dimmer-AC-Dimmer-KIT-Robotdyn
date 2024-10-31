@@ -8,13 +8,13 @@
 
 
 #if defined(LANG_FR)
-    #include "lang_fr.h"
+  #include "lang_fr.h"
 #elif defined(LANG_EN)
-    #include "lang_en.h"
+  #include "lang_en.h"
 #elif defined(LANG_UA)
-    #include "lang_ua.h"
+  #include "lang_ua.h"
 #else
-    #include "lang_fr.h"
+  #include "lang_fr.h"
 #endif
 
 #endif
