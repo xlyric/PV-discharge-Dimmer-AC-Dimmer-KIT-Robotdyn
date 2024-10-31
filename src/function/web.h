@@ -185,14 +185,14 @@ void call_pages() {
         sysvar.change=1; 
         }
         String pb=getState().c_str(); 
-        request->send(200, "text/plain", pb.c_str() );  
+        request->send(200, "application/json", pb.c_str() );
       } 
       
-              else if (request->hasParam(PARAM_INPUT_2)) { 
+      else if (request->hasParam(PARAM_INPUT_2)) {
         config.startingpow = request->getParam(PARAM_INPUT_2)->value().toInt(); 
         logging.Set_log_init("HTTP power at " + String(config.startingpow)+"W\r\n");
         sysvar.change=1; 
-        request->send(200, "text/plain", getState().c_str());
+        request->send(200, "application/json", getState().c_str());
       }
 
       else  { 
@@ -228,18 +228,18 @@ void call_pages() {
     }
     else
     { 
-      request->send(200, "text/plain", textnofiles().c_str());
+      request->send(200, "text/html", textnofiles().c_str());
     }
   });
 
   server.on("/state", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain", getState().c_str());
+    request->send(200, "application/json", getState().c_str());
   });
 
 
 
     server.on("/state_dallas", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain", getState_dallas().c_str());
+    request->send(200, "application/json", getState_dallas().c_str());
   });
 
   server.on("/resetwifi", HTTP_ANY, [](AsyncWebServerRequest *request){
@@ -279,7 +279,7 @@ void call_pages() {
   });
 
   server.on("/getmqtt", HTTP_ANY, [] (AsyncWebServerRequest *request) {
-    request->send(200, "text/plain",  getmqtt().c_str()); 
+    request->send(200, "application/json",  getmqtt().c_str());
   });
 
   server.on("/getminuteur", HTTP_ANY, [] (AsyncWebServerRequest *request) {
@@ -341,7 +341,7 @@ void call_pages() {
 
 
   server.on("/config", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain", getconfig().c_str());
+    request->send(200, "application/json", getconfig().c_str());
   });
 
   server.on("/reset", HTTP_ANY, [](AsyncWebServerRequest *request){
