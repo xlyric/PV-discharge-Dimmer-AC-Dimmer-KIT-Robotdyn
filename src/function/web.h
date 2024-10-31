@@ -317,7 +317,7 @@ void call_pages() {
 
     server.on("/getseuil", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     if (request->hasParam("relay1")) { request->send(200, "application/json",  getMinuteur(programme_relay1)); }
-    if (request->hasParam("relay2")) { request->send(200, "application/json",  getMinuteur(programme_relay2)); }
+    else if (request->hasParam("relay2")) { request->send(200, "application/json",  getMinuteur(programme_relay2)); }
     else { request->send(200, "application/json",  getMinuteur()); }
   });
 
