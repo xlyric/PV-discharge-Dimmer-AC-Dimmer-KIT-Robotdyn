@@ -461,41 +461,43 @@ if (request->hasParam("charge1")) {
   //Ajout des relais
 
   #ifdef RELAY1
-   if (request->hasParam("relay1")) { int relay = request->getParam("relay1")->value().toInt(); 
-
+    if (request->hasParam("relay1")) {
+        int relay = request->getParam("relay1")->value().toInt();
         if ( relay == 0) { digitalWrite(RELAY1 , LOW); }
         else if (relay == 1) { digitalWrite(RELAY1 , HIGH); } 
         else if (relay == 2) { digitalWrite(RELAY1, !digitalRead(RELAY1)); }
         int relaystate = digitalRead(RELAY1); 
         char str[8];// NOSONAR
         itoa( relaystate, str, 10 );
-        request->send(200, "text/html", str );
+        request->send(200, "application/json", str );
         if (!AP && mqtt_config.mqtt) { device_relay1.send(String(relaystate));}
+        return;
     }
   #endif
   #ifdef RELAY2
-    if (request->hasParam("relay2")) { int relay = request->getParam("relay2")->value().toInt(); 
-
+    if (request->hasParam("relay2")) {
+        int relay = request->getParam("relay2")->value().toInt();
         if ( relay == 0) { digitalWrite(RELAY2 , LOW); }
         else if (relay == 1) { digitalWrite(RELAY2 , HIGH); } 
         else if (relay == 2) { digitalWrite(RELAY2, !digitalRead(RELAY2)); }
         int relaystate = digitalRead(RELAY2); 
         char str[8];// NOSONAR
         itoa( relaystate, str, 10 );
-        request->send(200, "text/html", str );
+        request->send(200, "application/json", str );
         if (!AP && mqtt_config.mqtt) { device_relay2.send(String(relaystate));}
+        return;
     }
   #endif 
 
-   //// for check boxs in web pages  
-   if (request->hasParam("servermode")) {String inputMessage = request->getParam("servermode")->value();
-                                            getServermode(inputMessage);
-                                            request->send(200, "text/html", getconfig().c_str());
-                                            logging.Set_log_init(config.saveConfiguration()); //sauvegarde de la configuration
-                                            logging.Set_log_init(mqtt_config.savemqtt());  // sauvegarde et récupération de la log MQTT  
-                                        }
+  //// for check boxs in web pages
+  if (request->hasParam("servermode")) {
+    String inputMessage = request->getParam("servermode")->value();
+    getServermode(inputMessage);
+    logging.Set_log_init(config.saveConfiguration()); //sauvegarde de la configuration
+    logging.Set_log_init(mqtt_config.savemqtt());  // sauvegarde et récupération de la log MQTT
+  }
 
-   request->send(200, "text/html", getconfig().c_str());
+  request->send(200, "application/json", getconfig().c_str());
   });
 
 }
