@@ -1,7 +1,7 @@
 #ifndef DIMMER_FUNCTIONS
 #define DIMMER_FUNCTIONS
 
-///regroupement des fonctions de dimmer
+// regroupement des fonctions de dimmer
 
 #include <Arduino.h>
 #include "mqtt.h"
@@ -16,12 +16,12 @@
 #else
 // Web services
   #include <ESP8266WiFi.h>
-  //#include <ESPAsyncTCP.h>
-  #include <ESP8266HTTPClient.h> 
+// #include <ESPAsyncTCP.h>
+  #include <ESP8266HTTPClient.h>
 #endif
 
 extern struct System sysvar;
-extern struct Config config;  
+extern struct Config config;
 extern dimmerLamp dimmer;
 #ifdef outputPin2
 extern dimmerLamp dimmer2;

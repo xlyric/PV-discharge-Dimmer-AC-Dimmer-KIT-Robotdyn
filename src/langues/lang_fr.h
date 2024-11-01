@@ -1,4 +1,5 @@
-#define FAIL_CONF "impossible d'ouvrir le fichier de configuration en écriture dans la fonction Enregistrer la configuration"
+#define FAIL_CONF \
+  "impossible d'ouvrir le fichier de configuration en écriture dans la fonction Enregistrer la configuration"
 #define mDNS_Responder_Started "mDNS responder démarré \r\n"
 #define Reason_for_reset "-- Raison du redémarrage: "
 #define Start_filesystem "Démarrage du système de fichiers \r\n"
@@ -26,7 +27,7 @@
 #define FS_version_is_missing "FS version manquante, veuillez mettre à jour"
 #define FS_version_is_not_same "La version du FS n'est pas à jour\r\n"
 #define FS_version_is_same "La version du FS est à jour\r\n"
-#define Failed_write_wifi_config "Impossible d'écrire la configuration wifi\r\n"   
+#define Failed_write_wifi_config "Impossible d'écrire la configuration wifi\r\n"
 #define Clear_alarm_temp "retrait de l'alarme de température \r\n"
 #define Subscribe_MQTT "S'abonner et publier sur les sujets MQTT\r\n"
 #define Dallas_sensor "Capteur Dallas "
