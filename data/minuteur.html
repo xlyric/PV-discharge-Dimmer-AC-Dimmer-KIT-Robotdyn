@@ -17,6 +17,11 @@
     <link href="https://ota.apper-solaire.org/css/sb-admin-2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
     <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script>
+      if (typeof jQuery == "undefined") {
+        document.write('<script src="/js/jquery.min.js"><\/script>');
+      }
+    </script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
     <script>
       $(function () {
@@ -338,13 +343,6 @@
       </div>
     </footer>
     <!-- End of Footer -->
-    <!-- JQuery -->
-    <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
-    <script>
-      if (typeof jQuery == "undefined") {
-        document.write('<script src="/js/jquery.min.js"><\/script>');
-      }
-    </script>
     <!-- Bootstrap core JavaScript-->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.bundle.min.js"></script>
     <!-- Core plugin JavaScript-->
