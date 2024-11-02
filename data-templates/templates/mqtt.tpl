@@ -103,7 +103,7 @@
                           type="text"
                           class="form-control form-control-user"
                           id="server"
-                          placeholder="%SERVER%"
+                          placeholder="IP ou nom d'hôte du serveur MQTT"
                         />
                       </div>
                       <div class="form-group">
@@ -113,7 +113,7 @@
                           step="1"
                           class="form-control form-control-user"
                           id="port"
-                          placeholder="%PORT%"
+                          placeholder="Port du serveur MQTT (port standard : 1883)"
                         />
                       </div>
                       <div class="form-group">
@@ -122,7 +122,7 @@
                           type="text"
                           class="form-control form-control-user"
                           id="topic"
-                          placeholder="%TOPIC%"
+                          placeholder="Topic Domoticz"
                         />
                       </div>
                       <div class="form-group">
@@ -131,7 +131,7 @@
                           type="text"
                           class="form-control form-control-user"
                           id="user"
-                          placeholder="%USER%"
+                          placeholder="Nom d'utilisateur de connexion au serveur MQTT"
                         />
                       </div>
                       <div class="form-group">
@@ -140,7 +140,7 @@
                           type="password"
                           class="form-control form-control-user"
                           id="password"
-                          placeholder="%PASSWORD%"
+                          placeholder="Mot de passe de connexion au serveur MQTT"
                         />
                       </div>
                     </div>
@@ -163,7 +163,7 @@
                               step="1"
                               class="form-control form-control-user"
                               id="idxtemp"
-                              placeholder="%IDXTEMP%"
+                              placeholder="Index température"
                             />
                           </div>
                           <div class="col-sm-3">
@@ -172,7 +172,7 @@
                               step="1"
                               class="form-control form-control-user"
                               id="IDX"
-                              placeholder="%IDX%"
+                              placeholder="Index puissance"
                             />
                           </div>
                           <div class="col-sm-3">
@@ -181,7 +181,7 @@
                               step="1"
                               class="form-control form-control-user"
                               id="IDXAlarme"
-                              placeholder="%IDXALARME%"
+                              placeholder="Index alarme"
                             />
                           </div>
                         </div>

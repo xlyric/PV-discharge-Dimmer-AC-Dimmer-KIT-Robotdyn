@@ -71,7 +71,7 @@
                           type="text"
                           class="form-control form-control-user"
                           id="heure_demarrage_dimmer"
-                          placeholder="%heure_demarrage%"
+                          placeholder="HH:MM"
                         />
                       </div>
                       <div class="form-group">
@@ -80,7 +80,7 @@
                           type="text"
                           class="form-control form-control-user"
                           id="heure_arret_dimmer"
-                          placeholder="%heure_arret%"
+                          placeholder="HH:MM"
                         />
                       </div>
                       <div class="form-group">
@@ -90,17 +90,17 @@
                           step="1"
                           class="form-control form-control-user"
                           id="temperature_dimmer"
-                          placeholder="%temperature%"
+                          placeholder="X (en °C)"
                         />
                       </div>
                       <div class="form-group">
-                        Puissance de sortie (0-100%):
+                        Puissance de sortie (0-100&percnt;):
                         <input
                           type="number"
                           step="1"
                           class="form-control form-control-user"
                           id="puissance_dimmer"
-                          placeholder="%puissance%"
+                          placeholder="X (en &percnt;)"
                         />
                       </div>
                       <input
@@ -119,7 +119,7 @@
                           type="text"
                           class="form-control form-control-user"
                           id="heure_demarrage_relay1"
-                          placeholder="%heure_demarrage%"
+                          placeholder="HH:MM"
                         />
                       </div>
                       <div class="form-group">
@@ -128,7 +128,7 @@
                           type="text"
                           class="form-control form-control-user"
                           id="heure_arret_relay1"
-                          placeholder="%heure_arret%"
+                          placeholder="HH:MM"
                         />
                       </div>
                       <div class="form-group">
@@ -138,7 +138,7 @@
                           step="1"
                           class="form-control form-control-user"
                           id="temperature_relay1"
-                          placeholder="%temperature%"
+                          placeholder="X (en °C)"
                         />
                       </div>
                       <input
@@ -157,7 +157,7 @@
                           type="text"
                           class="form-control form-control-user"
                           id="heure_demarrage_relay2"
-                          placeholder="%heure_demarrage%"
+                          placeholder="HH:MM"
                         />
                       </div>
                       <div class="form-group">
@@ -166,7 +166,7 @@
                           type="text"
                           class="form-control form-control-user"
                           id="heure_arret_relay2"
-                          placeholder="%heure_arret%"
+                          placeholder="HH:MM"
                         />
                       </div>
                       <div class="form-group">
@@ -176,7 +176,7 @@
                           step="1"
                           class="form-control form-control-user"
                           id="temperature_relay2"
-                          placeholder="%temperature%"
+                          placeholder="X (en °C)"
                         />
                       </div>
                       <input

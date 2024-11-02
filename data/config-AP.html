@@ -208,14 +208,14 @@
               </div>
             </div>
             <div class="col-lg-6">
-              <div class="card position-relative">
-                <div class="card-header py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">Paramètres</h6>
-                  <span id="saveform"></span>
-                </div>
-                <div class="card-body">
-                  <div class="col-lg-12">
-                    <form class="user" id="formulaire" method="post" action="">
+              <form class="user" id="formulaire" method="post" action="">
+                <div class="card position-relative">
+                  <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Paramètres</h6>
+                    <span id="saveform"></span>
+                  </div>
+                  <div class="card-body">
+                    <div class="col-lg-12">
                       <div class="card position-relative">
                         <div class="card-header py-3">
                           <h6 class="m-0 font-weight-bold text-primary">Plage d'utilisation</h6>
@@ -437,18 +437,18 @@
                           </div>
                         </div>
                       </div>
-                    </form>
+                    </div>
+                    <!--  fin du formumaire et envoie -->
+                    <input
+                      type="submit"
+                      value=" Application des paramètres"
+                      class="btn btn-primary btn-user btn-block"
+                    />
+                    <hr />
                   </div>
-                  <!--  fin du formumaire et envoie -->
-                  <input
-                    type="submit"
-                    value=" Application des paramètres"
-                    class="btn btn-primary btn-user btn-block"
-                  />
                   <hr />
                 </div>
-                <hr />
-              </div>
+              </form>
             </div>
           </div>
           <!-- End of Page Content -->

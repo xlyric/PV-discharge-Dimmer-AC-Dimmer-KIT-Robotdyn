@@ -55,21 +55,21 @@
                   <div role="tabpanel" class="card-body tab-pane fade show active" id="relay1">
                     <form class="user" id="relay1-form" method="post" action="">
                       <div class="form-group">
-                        Seuil de démarrage en %
+                        Seuil de démarrage en &percnt;
                         <input
                           type="text"
                           class="form-control form-control-user"
                           id="seuil_demarrage_relay1"
-                          placeholder="%seuil_demarrage%"
+                          placeholder="X (en &percnt;)"
                         />
                       </div>
                       <div class="form-group">
-                        Seuil d'arrêt en %
+                        Seuil d'arrêt en &percnt;
                         <input
                           type="text"
                           class="form-control form-control-user"
                           id="seuil_arret_relay1"
-                          placeholder="%seuil_arret%"
+                          placeholder="X (en &percnt;)"
                         />
                       </div>
                       <div class="form-group">
@@ -79,7 +79,7 @@
                           step="1"
                           class="form-control form-control-user"
                           id="temperature_relay1"
-                          placeholder="%temperature%"
+                          placeholder="X (en °C)"
                         />
                       </div>
                       <input
@@ -93,21 +93,21 @@
                   <div role="tabpanel" class="card-body tab-pane fade" id="relay2">
                     <form class="user" id="relay2-form" method="post" action="">
                       <div class="form-group">
-                        Seuil de démarrage en %
+                        Seuil de démarrage en &percnt;
                         <input
                           type="text"
                           class="form-control form-control-user"
                           id="seuil_demarrage_relay2"
-                          placeholder="%seuil_demarrage%"
+                          placeholder="X (en &percnt;)"
                         />
                       </div>
                       <div class="form-group">
-                        Seuil d'arrêt en %
+                        Seuil d'arrêt en &percnt;
                         <input
                           type="text"
                           class="form-control form-control-user"
                           id="seuil_arret_relay2"
-                          placeholder="%seuil_arret%"
+                          placeholder="X (en &percnt;)"
                         />
                       </div>
                       <div class="form-group">
@@ -117,7 +117,7 @@
                           step="1"
                           class="form-control form-control-user"
                           id="temperature_relay2"
-                          placeholder="%temperature%"
+                          placeholder="X (en °C)"
                         />
                       </div>
                       <input
