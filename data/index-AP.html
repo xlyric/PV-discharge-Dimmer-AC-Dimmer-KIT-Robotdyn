@@ -1,3 +1,4 @@
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -6,9 +7,7 @@
     <meta name="description" content="" />
     <meta name="author" content="" />
     <title>Pv Dimmer %NAME% - Dashboard</title>
-
-    <!-- Custom styles for this template-->
-    <link href="all.css" rel="stylesheet" />
+    <link href="css/all.min.css?%FS_RELEASE%" rel="stylesheet" type="text/css" />
   </head>
   <body id="page-top">
     <!-- Page Wrapper -->
@@ -56,30 +55,25 @@
           <button class="rounded-circle border-0" id="sidebarToggle"></button>
         </div>
       </ul>
-      <!-- End of Sidebar --><!-- Content Wrapper -->
+      <!-- End of Sidebar -->
+      <!-- Content wrapper -->
       <div id="content-wrapper" class="d-flex flex-column">
-        <!-- Main Content -->
+        <!-- Main content -->
         <div id="content">
           <!-- Topbar -->
           <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-            <!-- Sidebar Toggle (Topbar) -->
-
-            <!-- Topbar Navbar -->
             <ul class="navbar-nav ml-auto">
               <div class="topbar-divider d-none d-sm-block"></div>
             </ul>
           </nav>
           <!-- End of Topbar -->
-
-          <!-- Begin Page Content -->
+          <!-- Page Content -->
           <div class="container-fluid">
             <!-- Page Heading -->
             <div class="d-sm-flex align-items-center justify-content-between mb-4">
               <h1 class="h3 mb-0 text-gray-800">Dashboard-AP</h1>
             </div>
-
             <!-- Content Row -->
-
             <div class="row">
               <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card border-left-primary shadow h-100 py-2">
@@ -100,7 +94,6 @@
                   </div>
                 </div>
               </div>
-
               <!-- Earnings (Monthly) Card Example -->
               <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card border-left-info shadow h-100 py-2">
@@ -123,10 +116,13 @@
               </div>
             </div>
           </div>
+          <!-- End of Page Content -->
         </div>
+        <!-- End of Main Content -->
       </div>
+      <!-- End of Content wrapper -->
     </div>
-    <!-- End of Main Content --><!-- Footer -->
+    <!-- Footer -->
     <footer class="sticky-footer bg-white">
       <div class="container my-auto">
         <div class="copyright text-center my-auto">
@@ -135,30 +131,11 @@
       </div>
     </footer>
     <!-- End of Footer -->
-
-    <!-- JQuery -->
-    <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
-    <script>
-      if (typeof jQuery == "undefined") {
-        document.write('<script src="/js/jquery.min.js"><\/script>');
-      }
-    </script>
-
-    <!-- Bootstrap core JavaScript-->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.bundle.min.js"></script>
-    <!-- Core plugin JavaScript-->
-    <script src="https://ota.apper-solaire.org/css/jquery.easing.min.js"></script>
-    <!-- Custom scripts for all pages-->
-    <script src="https://ota.apper-solaire.org/css/sb-admin-2.js"></script>
-
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-
-    <!-- Page script -->
+    <script type="text/javascript" src="js/all.min.js?%FS_RELEASE%"></script>
     <script type="text/javascript">
       setInterval(function () {
         $.getJSON("/state", function (data) {
           // Récupérer les données du JSON
-
           document.getElementById("state").innerHTML = data.power;
           document.getElementById("sigma").innerHTML = data.temperature;
         });

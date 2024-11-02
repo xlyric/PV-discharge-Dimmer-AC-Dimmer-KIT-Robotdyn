@@ -1,97 +1,6 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <meta name="description" content="" />
-    <meta name="author" content="" />
-    <title>Pv Dimmer %NAME% - Configuration Relais</title>
-    <link href="css/all.min.css?%FS_RELEASE%" rel="stylesheet" type="text/css" />
-  </head>
-  <body id="page-top">
-    <!-- Page Wrapper -->
-    <div id="wrapper">
-      <!-- Sidebar -->
-      <ul
-        class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion"
-        id="accordionSidebar"
-      >
-        <!-- Sidebar - Brand -->
-        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/">
-          <div class="sidebar-brand-icon rotate-n-15">
-            <i class="fas fa-laugh-wink"></i>
-          </div>
-          <div class="sidebar-brand-text mx-3">Pv Dimmer %NAME%</div>
-        </a>
-        <!-- Divider -->
-        <hr class="sidebar-divider my-0" />
-        <!-- Nav Item - Dashboard -->
-        <li class="nav-item active">
-          <a class="nav-link" href="/">
-            <i class="fas fa-fw fa-tachometer-alt"></i>
-            <span>Dashboard</span>
-            <br />
-            <span id="version">%VERSION%</span><br />
-            <span id="RSSI">RSSI : %RSSI% dBm</span><br />
-            <span>%NAME%</span>
-          </a>
-        </li>
-        <!-- Divider -->
-        <hr class="sidebar-divider" />
-        <!-- Heading -->
-        <div class="sidebar-heading">Interface</div>
-        <!-- Nav Item - Pages Collapse Menu -->
-        <li class="nav-item active">
-          <a class="nav-link" href="/">
-            <i class="fas fa-fw fa-cog"></i>
-            <span>Retour Index</span>
-          </a>
-        </li>
-        <li class="nav-item active" id="menu_mqtt">
-          <a class="nav-link" href="/mqtt.html">
-            <i class="fas fa-fw fa-book"></i>
-            <span>Configuration MQTT</span>
-          </a>
-        </li>
-        <li class="nav-item active">
-          <a class="nav-link" href="/minuteur.html">
-            <i class="fas fa-fw fa-moon"></i>
-            <span>Minuteur d'appoint</span>
-          </a>
-        </li>
-        <li class="nav-item active">
-          <a class="nav-link" href="/log.html">
-            <i class="fas fa-fw fa-info"></i>
-            <span>Console logs</span>
-          </a>
-        </li>
-        <li class="nav-item active">
-          <a class="nav-link" href="/update">
-            <i class="fas fa-fw fa-download"></i>
-            <span>OTA</span>
-          </a>
-        </li>
-        <li class="nav-item active">
-          <a class="nav-link" href="/reboot">
-            <i class="fas fa-fw fa-power-off"></i>
-            <span>Reboot</span>
-          </a>
-        </li>
-        <!-- Divider -->
-        <hr class="sidebar-divider" />
-        <!-- Sidebar Toggler (Sidebar) -->
-        <div class="text-center d-none d-md-inline">
-          <button class="rounded-circle border-0" id="sidebarToggle"></button>
-        </div>
-      </ul>
-      <!-- End of Sidebar -->
-      <!-- Content wrapper -->
-      <div id="content-wrapper" class="d-flex flex-column">
-        <!-- Main content -->
-        <div id="content">
-          <!-- Topbar -->
-          <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+<%inherit file="config.tpl"/>
+<%block name="page_title">Configuration Relais</%block>
+<%block name="topbar_content">
             <ul class="navbar-nav ml-auto">
               <!-- Nav Item - Search Dropdown (Visible Only XS) -->
               <li class="nav-item dropdown no-arrow d-sm-none">
@@ -107,10 +16,8 @@
               </li>
               <div class="topbar-divider d-none d-sm-block"></div>
             </ul>
-          </nav>
-          <!-- End of Topbar -->
-          <!-- Page Content -->
-          <div class="container-fluid">
+</%block>
+<%block name="content">
             <!-- Page Heading -->
             <h1 class="h3 mb-2 text-gray-800">Configuration Relais</h1>
             <div class="col-lg-6">
@@ -143,6 +50,7 @@
                     </div>
                   </nav>
                 </div>
+
                 <div class="tab-content">
                   <div role="tabpanel" class="card-body tab-pane fade show active" id="relay1">
                     <form class="user" id="relay1-form" method="post" action="">
@@ -181,6 +89,7 @@
                       />
                     </form>
                   </div>
+
                   <div role="tabpanel" class="card-body tab-pane fade" id="relay2">
                     <form class="user" id="relay2-form" method="post" action="">
                       <div class="form-group">
@@ -221,23 +130,9 @@
                 </div>
               </div>
             </div>
-          </div>
-          <!-- End of Page Content -->
-        </div>
-        <!-- End of Main Content -->
-      </div>
-      <!-- End of Content wrapper -->
-    </div>
-    <!-- Footer -->
-    <footer class="sticky-footer bg-white">
-      <div class="container my-auto">
-        <div class="copyright text-center my-auto">
-          <span>https://github.com/xlyric/ - 2024</span>
-        </div>
-      </div>
-    </footer>
-    <!-- End of Footer -->
-    <script type="text/javascript" src="js/all.min.js?%FS_RELEASE%"></script>
+</%block>
+<%block name="pagescript">
+<%text>
     <script type="text/javascript">
       $(document).ready(function () {
         // Enable tabs
@@ -246,11 +141,13 @@
           window.location.hash = $(this).attr("data-target");
           $(this).tab("show");
         });
+
         // Show last tab on refresh
         if (window.location.hash) {
           $(`#tabs button[aria-controls=${window.location.hash.substring(1)}]`).tab("show");
           window.scrollTo({ top: 0 });
         }
+
         // Récupération des heures de démarrage et d'arrêt depuis le serveur
         $.get("/getseuil?relay2", function (data) {
           $("#seuil_demarrage_relay2").val(data.seuil_start);
@@ -261,12 +158,15 @@
           var minute = data.minute < 10 ? "0" + data.minute : data.minute;
           $("#heure").html(heure + ":" + minute);
         });
+
         $.get("/getseuil?relay1", function (data) {
           $("#seuil_demarrage_relay1").val(data.seuil_start);
           $("#seuil_arret_relay1").val(data.seuil_stop);
           $("#temperature_relay1").val(data.seuil_temp);
         });
+
         // Envoi des données de formulaire au serveur lors de la soumission du formulaire
+
         $("#relay1-form").submit(function (event) {
           event.preventDefault();
           var seuil_demarrage = $("#seuil_demarrage_relay1").val();
@@ -278,6 +178,7 @@
             temperature: temperature,
           });
         });
+
         $("#relay2-form").submit(function (event) {
           event.preventDefault();
           var seuil_demarrage = $("#seuil_demarrage_relay2").val();
@@ -291,5 +192,5 @@
         });
       });
     </script>
-  </body>
-</html>
+</%text>
+</%block>

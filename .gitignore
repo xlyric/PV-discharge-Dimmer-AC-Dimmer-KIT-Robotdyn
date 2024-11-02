@@ -8,3 +8,4 @@ test/README
 include/README
 .vscode
 .vscode/extensions.json
+node_modules

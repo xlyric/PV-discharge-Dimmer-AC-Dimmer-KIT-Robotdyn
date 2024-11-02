@@ -88,18 +88,15 @@ extern SSR_BURST ssr_burst;
 
 void call_pages() {
   // pages Statiques voir compressées
-  server.serveStatic("/all.min.css", LittleFS, "/css/all.css");
-  server.serveStatic("/all.css", LittleFS, "/css/all.css");
-  server.serveStatic("/favicon.ico", LittleFS, "/favicon.ico");
-  server.serveStatic("/fa-solid-900.woff2", LittleFS, "/css/fa-solid-900.woff2");
-  server.serveStatic("/sb-admin-2.js", LittleFS, "/js/sb-admin-2.js");
-  server.serveStatic("/sb-admin-2.min.css", LittleFS, "/css/sb-admin-2.min.css");
-  server.serveStatic("/jquery.easing.min.js", LittleFS, "/js/jquery.easing.min.js");
+  server.serveStatic("/js/all.min.js", LittleFS, "/js/all.min.js").setCacheControl("max-age=31536000");
+  server.serveStatic("/css/all.min.css", LittleFS, "/css/all.min.css").setCacheControl("max-age=31536000");
+  server.serveStatic("/css/fa-solid-900.woff2", LittleFS,
+                     "/css/fa-solid-900.woff2").setCacheControl("max-age=31536000");
+  server.serveStatic("/favicon.ico", LittleFS, "/favicon.ico").setCacheControl("max-age=31536000");
   server.serveStatic("/log.html", LittleFS, "/log.html");
-  server.serveStatic("/mqtt.html", LittleFS, "/mqtt.html");
-  server.serveStatic("/minuteur.html", LittleFS, "/minuteur.html");
-  server.serveStatic("/relai.html", LittleFS, "/relai.html");
-  server.serveStatic("/jquery.easing.min.js", LittleFS, "/js/jquery.easing.min.js");
+  server.serveStatic("/mqtt.html", LittleFS, "/mqtt.html").setTemplateProcessor(processor);
+  server.serveStatic("/minuteur.html", LittleFS, "/minuteur.html").setTemplateProcessor(processor);
+  server.serveStatic("/relai.html", LittleFS, "/relai.html").setTemplateProcessor(processor);
   server.serveStatic("/lang.json", LittleFS, "/lang.json");
 
   // page de index et récupération des requetes de puissance
@@ -638,6 +635,9 @@ String processor(const String& var){
   }
   if (var == "RSSI") {
     return (String(WiFi.RSSI()));
+  }
+  if (var == "FS_RELEASE") {
+    return String(FS_RELEASE);
   }
   return ("N/A");
 }
