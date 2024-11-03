@@ -1,59 +1,22 @@
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <meta name="description" content="" />
-    <meta name="author" content="" />
-    <title>Pv Dimmer %NAME% - Dashboard</title>
+<%inherit file="index.tpl"/>
+<%block name="page_title">Configuration</%block>
 
-    <!-- Custom styles for this template-->
-    <link href="all.css" rel="stylesheet" />
-  </head>
-  <body id="page-top">
-    <!-- Page Wrapper -->
-    <div id="wrapper">
-      <!-- Sidebar -->
-      <ul
-        class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion"
-        id="accordionSidebar"
-      >
-        <!-- Sidebar - Brand -->
-        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/">
-          <div class="sidebar-brand-icon rotate-n-15">
-            <i class="fas fa-laugh-wink"></i>
-          </div>
-          <div class="sidebar-brand-text mx-3">Pv Dimmer %NAME%</div>
-        </a>
-        <!-- Divider -->
-        <hr class="sidebar-divider my-0" />
-        <!-- Nav Item - Dashboard -->
-        <li class="nav-item active">
-          <a class="nav-link" href="/">
-            <i class="fas fa-fw fa-tachometer-alt"></i>
-            <span>Dashboard</span>
-            <br />
-            <span id="version">%VERSION%</span>
-            <span id="RSSI">RSSI : %RSSI% dBm</span>
-          </a>
-        </li>
-        <!-- Divider -->
-        <hr class="sidebar-divider" />
-        <!-- Heading -->
-        <div class="sidebar-heading">Interface</div>
-        <!-- Nav Item - Pages Collapse Menu -->
+<%def name="generate_menu(support_mqtt=True)">
+
         <li class="nav-item active">
           <a class="nav-link" href="/">
             <i class="fas fa-fw fa-cog"></i>
             <span>Retour Index</span>
           </a>
         </li>
+% if support_mqtt:
         <li class="nav-item active" id="menu_mqtt">
           <a class="nav-link" href="/mqtt.html">
             <i class="fas fa-fw fa-book"></i>
             <span>Configuration MQTT</span>
           </a>
         </li>
+%endif
         <li class="nav-item active">
           <a class="nav-link" href="/minuteur.html">
             <i class="fas fa-fw fa-moon"></i>
@@ -78,19 +41,11 @@
             <span>Reboot</span>
           </a>
         </li>
-        <!-- Divider -->
-        <hr class="sidebar-divider d-none d-md-block" />
-        <!-- Sidebar Toggler (Sidebar) -->
-        <div class="text-center d-none d-md-inline">
-          <button class="rounded-circle border-0" id="sidebarToggle"></button>
-        </div>
-      </ul>
-      <!-- End of Sidebar --><!-- Content Wrapper -->
-      <div id="content-wrapper" class="d-flex flex-column">
-        <!-- Main Content -->
-        <div id="content">
-          <!-- Topbar -->
-          <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+</%def>
+<%block name="menu">
+${generate_menu()}
+</%block>
+<%block name="topbar_content">
             <div class="alert alert-danger" id="alertBox">
               <span class="mr-2 d-none d-lg-inline text-gray-600"></span>
               <p role="alert" id="alertContainer"></p>
@@ -111,10 +66,8 @@
               <li class="nav-item dropdown no-arrow mx-1"></li>
               <div class="topbar-divider d-none d-sm-block"></div>
             </ul>
-          </nav>
-          <!-- End of Topbar -->
-          <!-- Begin Page Content -->
-          <div class="container-fluid">
+</%block>
+<%def name="generate_content(support_mqtt=True)">
             <!-- Page Heading -->
             <h1 class="h3 mb-2 text-gray-800">Configuration</h1>
             <p class="mb-4">
@@ -287,9 +240,11 @@
                               class="col-sm-4"
                               data-toggle="popover"
                               title="Aide"
-                              data-content="Charge branchée sur la sortie Robotdyn ou SSR 1 (GND et PWM pour le SSR + pontage pins synchro) "
+                              data-content="Charge branchée sur la sortie Robotdyn ou SSR 1 (GND et PWM pour le SSR + pontage pins synchro)"
+                              style="cursor: help"
                             >
-                              Charge 1 (W) ( dimmer )ℹ
+                              Charge 1 (W) ( dimmer )
+                              <i class="fas fa-info-circle"></i>
                               <img
                                 height="40"
                                 alt="dimmer"
@@ -300,9 +255,11 @@
                               class="col-sm-4"
                               data-toggle="popover"
                               title="Aide"
-                              data-content="Charge branchée sur la sortie Jotta ou SSR2 (pontage pins synchro) "
+                              data-content="Charge branchée sur la sortie Jotta ou SSR2 (pontage pins synchro)"
+                              style="cursor: help"
                             >
-                              Charge 2 (W) ( Jotta ) ℹ
+                              Charge 2 (W) ( Jotta )
+                              <i class="fas fa-info-circle"></i>
                               <img
                                 height="40"
                                 alt="Jotta"
@@ -313,9 +270,11 @@
                               class="col-sm-4"
                               data-toggle="popover"
                               title="Aide"
-                              data-content="Charge branchée sur la sortie Relay 2 ou SSR 3 (pontage pins synchro) "
+                              data-content="Charge branchée sur la sortie Relay 2 ou SSR 3 (pontage pins synchro)"
+                              style="cursor: help"
                             >
-                              Charge 3 (W) ( relay2 ) ℹ
+                              Charge 3 (W) ( relay2 )
+                              <i class="fas fa-info-circle"></i>
                               <img
                                 height="40"
                                 alt="relay2"
@@ -397,7 +356,11 @@
                         <div class="card-body">
                           <div class="form-group row">
                             <div class="col-sm-6">Dimmer Name</div>
+                            <div class="col-sm-4" id="dimmer-mDNS">
+                              <!-- Le nom mDNS sera rajouté ici-->
+                            </div>
                           </div>
+
                           <div class="form-group row">
                             <div class="col-sm-6">
                               <input
@@ -411,6 +374,7 @@
                         </div>
                       </div>
                       <br />
+% if support_mqtt:
                       <div class="card position-relative" id="menu_mqtt">
                         <div class="card-header py-3">
                           <h6 class="m-0 font-weight-bold text-primary">Pilote MQTT</h6>
@@ -476,6 +440,7 @@
                           </div>
                         </div>
                       </div>
+%endif
                       <br />
                       <div class="card position-relative" id="DALLAS-LOCAL">
                         <div class="card-header py-3">
@@ -515,206 +480,185 @@
                 <hr />
               </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Content Row -->
-        <script type="text/javascript">
-          //<!-- rafraichissement valeurs -->
-          setInterval(function refreshsend() {
-            $.getJSON("/state", function (data) {
-              // Récupérer les données du JSON
-              var dimmer = data.dimmer;
-              var temperature = data.temperature;
-              var power = data.power;
-              var onoff = data.onoff;
-              document.getElementById("state").innerHTML = dimmer;
-              document.getElementById("sigma").innerHTML = temperature;
-              document.getElementById("power").innerHTML = power;
-              onoff = onoff ? "ON" : "OFF";
-              $("#ONOFF").text(onoff);
+</%def>
+<%block name="content">
+${generate_content()}
+</%block>
+<%block name="pagescript">
+<%text>
+    <script type="text/javascript">
+      $('[data-toggle="popover"]').popover();
 
-              if (data.alerte && data.alerte.trim() != "") {
-                const alertContainer = document.getElementById("alertContainer");
-                alertContainer.innerHTML = "Alerte : " + data.alerte;
-                $("#alertBox").fadeIn();
-              } else {
-                $("#alertBox").fadeOut();
-              }
-            });
-          }, 5000);
+      //<!-- rafraichissement valeurs -->
+      setInterval(function refreshsend() {
+        $.getJSON("/state", function (data) {
+          // Récupérer les données du JSON
+          var dimmer = data.dimmer;
+          var temperature = data.temperature;
+          var power = data.power;
+          var onoff = data.onoff;
+          document.getElementById("state").innerHTML = dimmer;
+          document.getElementById("sigma").innerHTML = temperature;
+          document.getElementById("power").innerHTML = power;
+          onoff = onoff ? "ON" : "OFF";
+          $("#ONOFF").text(onoff);
 
-          setInterval(function refreshsend() {
-            $.getJSON("/state_dallas", function (data) {
-              // affichage des dallas et les Température ( boucle sur les dallas )
-              var dallasData = {}; // Objet pour stocker les données des capteurs Dallas
-              var dallasNumber;
-              // Extraction des données des capteurs Dallas du JSON
-              for (var key in data) {
-                if (key.startsWith("dallas")) {
-                  dallasNumber = key.substring(6); // Récupérer le numéro du capteur Dallas
-                  var dallasTemperature = data[key];
-                  var dallasAddressKey = "addr" + dallasNumber;
-                  var dallasAddress = data[dallasAddressKey];
-                  dallasData[dallasNumber] = {
-                    temperature: dallasTemperature,
-                    address: dallasAddress,
-                  };
+          if (data.alerte && data.alerte.trim() != "") {
+            const alertContainer = document.getElementById("alertContainer");
+            alertContainer.innerHTML = "Alerte : " + data.alerte;
+            $("#alertBox").fadeIn();
+          } else {
+            $("#alertBox").fadeOut();
+          }
+        });
+      }, 5000);
+
+      setInterval(function refreshsend() {
+        $.getJSON("/state_dallas", function (data) {
+          // affichage des dallas et les Température ( boucle sur les dallas )
+          var dallasData = {}; // Objet pour stocker les données des capteurs Dallas
+          var dallasNumber;
+          // Extraction des données des capteurs Dallas du JSON
+          for (var key in data) {
+            if (key.startsWith("dallas")) {
+              dallasNumber = key.substring(6); // Récupérer le numéro du capteur Dallas
+              var dallasTemperature = data[key];
+              var dallasAddressKey = "addr" + dallasNumber;
+              var dallasAddress = data[dallasAddressKey];
+              dallasData[dallasNumber] = {
+                temperature: dallasTemperature,
+                address: dallasAddress,
+              };
+            }
+          }
+          // Affichage des données des capteurs Dallas dans la page HTML
+          var dallasHtml = "";
+          for (dallasNumber in dallasData) {
+            dallasHtml +=
+              "<p>Dallas sensor " +
+              dallasNumber +
+              ": " +
+              dallasData[dallasNumber].temperature +
+              "°C <br>Address: " +
+              dallasData[dallasNumber].address +
+              "</p>";
+          }
+          document.getElementById("dallas").innerHTML = dallasHtml;
+        });
+      }, 5000);
+
+      function sendmode(mode) {
+        $.get("/get", { send: mode }).done(function (data) {
+          document.getElementById("sendmode").innerHTML = "Request sent";
+          document.getElementById("sendmode2").innerHTML = "Request sent";
+        });
+      }
+
+      function save() {
+        $.get("/get", { save: "yes" }).done(function (data) {});
+      }
+
+      <!--- sauvegarde de la configuration -->
+      $("#save").click(function () {
+        $.get("/get", { save: "yes" }).done(function (data) {
+          $("#savemsg").text("Configuration sauvegardée").show().fadeOut(5000);
+        });
+      });
+
+      $("#ONOFF").click(function () {
+        $.get("/onoff").done(function (data) {
+          // si la data est 1 alors on affiche ON sinon OFF
+          if (data == 1) {
+            data = "ON";
+          } else {
+            data = "OFF";
+          }
+          $("#ONOFF").text(data);
+        });
+      });
+
+      $("#formulaire").submit(function () {
+        var data = {
+          hostname: $("#hostname").val(),
+          port: $("#port").val(),
+          Publish: $("#Publish").val(),
+          maxtemp: $("#maxtemp").val(),
+          startingpow: $("#startingpow").val(),
+          minpow: $("#minpow").val(),
+          maxpow: $("#maxpow").val(),
+          child: $("#child").val(),
+          SubscribePV: $("#SubscribePV").val(),
+          SubscribeTEMP: $("#SubscribeTEMP").val(),
+          mode: $("#delester").val(),
+          charge1: $("#charge1").val(),
+          charge2: $("#charge2").val(),
+          charge3: $("#charge3").val(),
+          DALLAS: $("#DALLAS").val(),
+          dimmername: $("#dimmername").val(),
+          trigger: $("#trigger").val(),
+        };
+
+        $.ajax({
+          type: "GET",
+          data: data,
+          url: "get",
+
+          success: function (retour) {
+            $("#saveform").text("Configuration appliquée").show().fadeOut(5000);
+          },
+        });
+        return false;
+      });
+
+      $(document).ready(function () {
+        function generateLink(dimmerValue) {
+          if (dimmerValue !== "none") {
+            var dimmerURL = "http://" + dimmerValue;
+            $("#dimmer-url").html(
+              `<a href="${dimmerURL}" target="_blank" rel="noopener">${dimmerURL}</a>`,
+            );
+          }
+        }
+
+        function generateLinkName(dimmerName) {
+          var formattedName = dimmerName.replace(/ /g, "-") + ".local"; // Replace spaces with hyphens and add .local
+          $("#dimmer-mDNS").html(formattedName); // Update the HTML content
+        }
+
+        var recupconfig = $.getJSON("/config", function (data) {
+          for (var key in data) {
+            if (data.hasOwnProperty(key)) {
+              var element = document.getElementById(key);
+              if (element) {
+                element.value = data[key];
+                if (element.type === "checkbox") {
+                  element.checked = data[key];
                 }
-              }
-              // Affichage des données des capteurs Dallas dans la page HTML
-              var dallasHtml = "";
-              for (dallasNumber in dallasData) {
-                dallasHtml +=
-                  "<p>Dallas sensor " +
-                  dallasNumber +
-                  ": " +
-                  dallasData[dallasNumber].temperature +
-                  "°C <br>Address: " +
-                  dallasData[dallasNumber].address +
-                  "</p>";
-              }
-              document.getElementById("dallas").innerHTML = dallasHtml;
-            });
-          }, 5000);
-
-          function sendmode(mode) {
-            $.get("/get", { send: mode }).done(function (data) {
-              document.getElementById("sendmode").innerHTML = "Request sent";
-              document.getElementById("sendmode2").innerHTML = "Request sent";
-            });
-          }
-
-          function save() {
-            $.get("/get", { save: "yes" }).done(function (data) {});
-          }
-        </script>
-
-        <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
-        <script>
-          if (typeof jQuery == "undefined") {
-            document.write('<script src="/js/jquery.min.js"><\/script>');
-          }
-        </script>
-
-        <script>
-          $(function () {
-            $('[data-toggle="popover"]').popover();
-          });
-
-          <!--- sauvegarde de la configuration -->
-          $("#save").click(function () {
-            $.get("/get", { save: "yes" }).done(function (data) {
-              $("#savemsg").text("Configuration sauvegardée").show().fadeOut(5000);
-            });
-          });
-
-          $("#ONOFF").click(function () {
-            $.get("/onoff").done(function (data) {
-              // si la data est 1 alors on affiche ON sinon OFF
-              if (data == 1) {
-                data = "ON";
-              } else {
-                data = "OFF";
-              }
-              $("#ONOFF").text(data);
-            });
-          });
-
-          $("#formulaire").submit(function () {
-            var data = {
-              hostname: $("#hostname").val(),
-              port: $("#port").val(),
-              Publish: $("#Publish").val(),
-              maxtemp: $("#maxtemp").val(),
-              startingpow: $("#startingpow").val(),
-              minpow: $("#minpow").val(),
-              maxpow: $("#maxpow").val(),
-              child: $("#child").val(),
-              SubscribePV: $("#SubscribePV").val(),
-              SubscribeTEMP: $("#SubscribeTEMP").val(),
-              mode: $("#delester").val(),
-              charge1: $("#charge1").val(),
-              charge2: $("#charge2").val(),
-              charge3: $("#charge3").val(),
-              DALLAS: $("#DALLAS").val(),
-              dimmername: $("#dimmername").val(),
-              trigger: $("#trigger").val(),
-            };
-
-            $.ajax({
-              type: "GET",
-              data: data,
-              url: "get",
-
-              success: function (retour) {
-                $("#saveform").text("Configuration appliquée").show().fadeOut(5000);
-              },
-            });
-            return false;
-          });
-
-          $(document).ready(function () {
-            function generateLink(dimmerValue) {
-              if (dimmerValue !== "none") {
-                var dimmerURL = "http://" + dimmerValue;
-                $("#dimmer-url").html(
-                  '<a href="' + dimmerURL + '" target="_blank" rel="noopener">' + dimmerURL + "</a>"
-                );
               }
             }
+          }
 
-            var recupconfig = $.getJSON("/config", function (data) {
-              for (var key in data) {
-                if (data.hasOwnProperty(key)) {
-                  var element = document.getElementById(key);
-                  if (element) {
-                    element.value = data[key];
-                    if (element.type === "checkbox") {
-                      element.checked = data[key];
-                    }
-                  }
-                }
-              }
-
-              // Une fois la requête terminée
-              recupconfig.done(function () {
-                // Générer le lien avec la valeur initiale
-                var dimmerValue = $("#child").val();
-                generateLink(dimmerValue);
-              });
-
-              $("#child").on("input", function () {
-                var dimmerValue = $(this).val();
-                generateLink(dimmerValue);
-              });
-            });
+          // Une fois la requête terminée
+          recupconfig.done(function () {
+            // Générer le lien avec la valeur initiale
+            var dimmerValue = $("#child").val();
+            generateLink(dimmerValue);
+            var dimmerValue = $("#dimmername").val();
+            generateLinkName(dimmerValue);
           });
-        </script>
-      </div>
-    </div>
-    <!-- /.container-fluid -->
-    <!-- End of Main Content --><!-- Footer -->
-    <footer class="sticky-footer bg-white">
-      <div class="container my-auto">
-        <div class="copyright text-center my-auto">
-          <span>https://github.com/xlyric/ - 2020</span>
-        </div>
-      </div>
-    </footer>
-    <!-- End of Footer -->
-    <!-- JQuery -->
-    <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
-    <script>
-      if (typeof jQuery == "undefined") {
-        document.write('<script src="/js/jquery.min.js"><\/script>');
-      }
+
+          $("#child").on("input", function () {
+            var dimmerValue = $(this).val();
+            generateLink(dimmerValue);
+          });
+
+          $("#dimmer-mDNS").on("input", function () {
+            var dimmerValue = $(this).val();
+            generateLinkName(dimmerValue);
+          });
+        });
+      });
     </script>
-    <!-- Bootstrap core JavaScript-->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.bundle.min.js"></script>
-    <!-- Core plugin JavaScript-->
-    <script src="https://ota.apper-solaire.org/css/jquery.easing.min.js"></script>
-    <!-- Custom scripts for all pages-->
-    <script src="https://ota.apper-solaire.org/css/sb-admin-2.js"></script>
-  </body>
-</html>
+</%text>
+</%block>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr" class="">
   <head>
     <meta charset="utf-8" />
@@ -77,14 +77,14 @@
                 b.setSelectionRange(1e9, 1e9);
               },
               0,
-              b
+              b,
             );
           }
           38 == c
             ? (++cn > hc.length && (cn = hc.length), (b.value = hc[cn - 1] || ""))
             : 40 == c
-            ? (0 > --cn && (cn = 0), (b.value = hc[cn - 1] || ""))
-            : 13 == c && (hc.length > 19 && hc.pop(), hc.unshift(b.value), (cn = 0));
+              ? (0 > --cn && (cn = 0), (b.value = hc[cn - 1] || ""))
+              : 13 == c && (hc.length > 19 && hc.pop(), hc.unshift(b.value), (cn = 0));
         });
       }
       wl(h);
