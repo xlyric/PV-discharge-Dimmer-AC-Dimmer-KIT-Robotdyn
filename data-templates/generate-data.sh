@@ -90,6 +90,15 @@ echo -n "- Replace color #212529 by #858796... "
 sed -i 's/#212529/#858796/gi' "$DST_DIR/css/all.min.css"
 echo "done."
 
+echo "Include custom CSS files:"
+for file in $SRC_DIR/css/*.css; do
+    echo -n "- $(basename "$file")... "
+    cat "$file" >> "$DST_DIR/css/all.min.css"
+    echo >> "$DST_DIR/css/all.min.css"
+    echo "done."
+done
+echo "done."
+
 echo "Download webfonts:"
 for filename in "${!WEBFONTS[@]}"; do
     if [[ ! -e "$CACHE_DIR/$filename" ]]; then
