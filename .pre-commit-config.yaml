@@ -7,7 +7,7 @@ repos:
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
-        args: ["--print-width", "100"]
+        args: ["--no-error-on-unmatched-pattern", "--print-width", "100"]
   - repo: https://github.com/pocc/pre-commit-hooks
     rev: v1.3.5
     hooks:
