@@ -1,9 +1,11 @@
-#!/bin/bash
+#!/bin/bash 
 
 KEEP_EXTERNAL_RESOURCES=0
 [ "$1" == "--keep" -o "$1" == "-k" ] && KEEP_EXTERNAL_RESOURCES=1
 
-SRC_DIR="$(dirname "$(realpath "$0")")"
+
+#SRC_DIR="$(dirname "$(realpath "$0")")"
+SRC_DIR=$(PWD)
 DST_DIR=$(realpath "$SRC_DIR/../data")
 
 JS=(
@@ -14,7 +16,7 @@ JS=(
     "https://www.gstatic.com/charts/loader.js"
 )
 CSS=(
-    "https://raw.githubusercontent.com/StartBootstrap/startbootstrap-sb-admin-2/refs/heads/master/vendor/fontawesome-free/css/all.min.css"
+    "https://raw.githubusercontent.com/StartBootstrap/startbootstrap-sb-admin-2/refs/heads/master/vendor/fontawesome-free/css/all.min.css" 
     "https://raw.githubusercontent.com/StartBootstrap/startbootstrap-sb-admin-2/refs/heads/master/css/sb-admin-2.min.css"
     "https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
 )
@@ -34,7 +36,7 @@ if [[ "$KEEP_EXTERNAL_RESOURCES" -eq 0 ]]; then
     for url in "${JS[@]}"; do
         filename="${url##*/}"
         echo -n "- Download $filename... "
-        curl -s "$url" >> "$DST_DIR/js/all.min.js"
+        curl -s "$url" >> "$DST_DIR/js/all.min.js" --ssl-no-revoke
         echo >> "$DST_DIR/js/all.min.js"
         echo "done."
     done
@@ -46,7 +48,7 @@ if [[ "$KEEP_EXTERNAL_RESOURCES" -eq 0 ]]; then
     for url in "${CSS[@]}"; do
         filename="${url##*/}"
         echo -n "- Download $filename... "
-        curl -s "$url" >> "$DST_DIR/css/all.min.css"
+        curl -s "$url" >> "$DST_DIR/css/all.min.css" --ssl-no-revoke
         echo >> "$DST_DIR/css/all.min.css"
         echo "done."
     done
@@ -67,7 +69,7 @@ if [[ "$KEEP_EXTERNAL_RESOURCES" -eq 0 ]]; then
     for url in "${FONTS[@]}"; do
         filename="${url##*/}"
         echo -n "- Download $filename... "
-        curl -s -o "$DST_DIR/css/$filename" "$url"
+        curl -s -o "$DST_DIR/css/$filename" "$url" --ssl-no-revoke
         rm -f "$DST_DIR/$filename"
         echo "done."
     done
@@ -100,5 +102,11 @@ echo -n "Generate version file... "
 grep "#define FS_RELEASE " "$SRC_DIR/../src/config/config.h" | cut -d'"' -f 2 > "$DST_DIR/version"
 echo "done."
 
+pip install mako
+
+#python --version
+
 # Generate HTML files using generate-html-files.py script
-"$SRC_DIR/generate-html-files.py"
+./generate-html-files.py
+
+read -p "Press [Enter] to exit."
