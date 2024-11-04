@@ -1,0 +1,5 @@
+/* Fix displaying delester mode & start mode on config page */
+form.user .form-control-user {
+  font-size: .8rem;
+  border-radius: 10rem;
+}
