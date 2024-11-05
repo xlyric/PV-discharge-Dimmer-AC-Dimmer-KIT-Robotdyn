@@ -156,10 +156,13 @@ for file in $CACHE_DIR/*; do
         echo "- keep $filename"
     fi
 done
-echo "done."
+echo " clean done."
 
 # Generate HTML files using generate-html-files.py script
 python -m pip install mako
 python "$SRC_DIR/generate-html-files.py"
+
+# compression du fichier logs.html
+gzip -n -9 "$DST_DIR/log.html"
 
 [[ -n "$GITHUB_RUN_ID" ]] || read -p "Press [Enter] to exit."

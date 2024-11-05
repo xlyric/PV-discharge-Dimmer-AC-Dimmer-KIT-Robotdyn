@@ -93,7 +93,7 @@ void call_pages() {
   server.serveStatic("/css/fa-solid-900.woff2", LittleFS,
                      "/css/fa-solid-900.woff2").setCacheControl("max-age=31536000");
   server.serveStatic("/favicon.ico", LittleFS, "/favicon.ico").setCacheControl("max-age=31536000");
-  server.serveStatic("/log.html", LittleFS, "/log.html");
+  server.serveStatic("/log.html", LittleFS, "/log.html").setCacheControl("max-age=31536000");;
   server.serveStatic("/mqtt.html", LittleFS, "/mqtt.html").setTemplateProcessor(processor);
   server.serveStatic("/minuteur.html", LittleFS, "/minuteur.html").setTemplateProcessor(processor);
   server.serveStatic("/relai.html", LittleFS, "/relai.html").setTemplateProcessor(processor);

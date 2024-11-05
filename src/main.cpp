@@ -554,7 +554,7 @@ void setup() {
   //************* Setup - OTA
   //***********************************
   ElegantOTA.begin(&server);      // Start ElegantOTA
-
+  ElegantOTA.setAutoReboot(true);
   //***********************************
   //************* Setup - Web pages
   //***********************************
