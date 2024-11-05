@@ -162,4 +162,4 @@ echo "done."
 python -m pip install mako
 python "$SRC_DIR/generate-html-files.py"
 
-read -p "Press [Enter] to exit."
+[[ -n "$GITHUB_RUN_ID" ]] || read -p "Press [Enter] to exit."
