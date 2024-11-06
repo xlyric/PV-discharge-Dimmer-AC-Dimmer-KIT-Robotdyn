@@ -18,31 +18,31 @@
             </ul>
 </%block>
 <%block name="menu">
-        <li class="nav-item active">
-          <a class="nav-link" href="/">
+        <li class="nav-item">
+          <a class="nav-link" href="./">
             <i class="fas fa-fw fa-plug"></i>
             <span>Retour Index</span>
           </a>
         </li>
-        <li class="nav-item active">
+        <li class="nav-item">
           <a class="nav-link" href="config.html">
             <i class="fas fa-fw fa-cog"></i>
             <span>Configuration</span>
           </a>
         </li>
-        <li class="nav-item active">
+        <li class="nav-item">
           <a class="nav-link" href="readmqtt">
             <i class="fas fa-fw fa-download"></i>
             <span>Reprise conf par MQTT</span>
           </a>
         </li>
-        <li class="nav-item active">
+        <li class="nav-item">
           <a class="nav-link" href="save">
             <i class="fas fa-fw fa-download"></i>
             <span>Enregistrer fichier conf</span>
           </a>
         </li>
-        <li class="nav-item active">
+        <li class="nav-item">
           <a class="nav-link" href="/reboot">
             <i class="fas fa-fw fa-power-off"></i>
             <span>Reboot</span>

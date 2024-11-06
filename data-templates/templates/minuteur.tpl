@@ -1,4 +1,5 @@
 <%inherit file="config.tpl"/>
+<%namespace name="config" file="config.tpl"/>
 <%block name="page_title">Configuration minuteur d'appoint</%block>
 <%block name="topbar_content">
             <ul class="navbar-nav ml-auto">
@@ -16,6 +17,9 @@
               </li>
               <div class="topbar-divider d-none d-sm-block"></div>
             </ul>
+</%block>
+<%block name="menu">
+${config.generate_menu(page="minuteur")}
 </%block>
 <%block name="content">
             <!-- Page Heading -->

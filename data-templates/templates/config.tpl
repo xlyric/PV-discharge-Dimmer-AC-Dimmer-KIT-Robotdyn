@@ -1,42 +1,54 @@
 <%inherit file="index.tpl"/>
 <%block name="page_title">Configuration</%block>
 
-<%def name="generate_menu(support_mqtt=True)">
+<%def name="generate_menu(page='config', support_mqtt=True)">
 
-        <li class="nav-item active">
-          <a class="nav-link" href="/">
+        <li class="nav-item">
+          <a class="nav-link" href="./">
             <i class="fas fa-fw fa-cog"></i>
             <span>Retour Index</span>
           </a>
         </li>
+        <li class="nav-item${' active' if page == 'config' else ''}">
+          <a class="nav-link" href="config.html">
+            <i class="fas fa-fw fa-book"></i>
+            <span>Configuration</span>
+          </a>
+        </li>
 % if support_mqtt:
-        <li class="nav-item active" id="menu_mqtt">
-          <a class="nav-link" href="/mqtt.html">
+        <li class="nav-item" id="menu_mqtt">
+          <a class="nav-link" href="mqtt.html">
             <i class="fas fa-fw fa-book"></i>
             <span>Configuration MQTT</span>
           </a>
         </li>
 %endif
-        <li class="nav-item active">
-          <a class="nav-link" href="/minuteur.html">
+        <li class="nav-item${' active' if page == 'minuteur' else ''}">
+          <a class="nav-link" href="minuteur.html">
             <i class="fas fa-fw fa-moon"></i>
             <span>Minuteur d'appoint</span>
           </a>
         </li>
-        <li class="nav-item active">
-          <a class="nav-link" href="/log.html">
+        <li class="nav-item">
+          <a class="nav-link" href="log.html">
             <i class="fas fa-fw fa-info"></i>
             <span>Console logs</span>
           </a>
         </li>
-        <li class="nav-item active">
-          <a class="nav-link" href="/update">
+        <li class="nav-item${' active' if page == 'backup' else ''}">
+          <a class="nav-link" href="backup.html">
+            <i class="fas fa-download"></i>
+            <span>Sauvegardes</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="update">
             <i class="fas fa-fw fa-download"></i>
             <span>OTA</span>
           </a>
         </li>
-        <li class="nav-item active">
-          <a class="nav-link" href="/reboot">
+        <li class="nav-item">
+          <a class="nav-link" href="reboot">
             <i class="fas fa-fw fa-power-off"></i>
             <span>Reboot</span>
           </a>
