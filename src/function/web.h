@@ -97,6 +97,7 @@ void call_pages() {
   server.serveStatic("/mqtt.html", LittleFS, "/mqtt.html").setTemplateProcessor(processor);
   server.serveStatic("/minuteur.html", LittleFS, "/minuteur.html").setTemplateProcessor(processor);
   server.serveStatic("/relai.html", LittleFS, "/relai.html").setTemplateProcessor(processor);
+  server.serveStatic("/backup.html", LittleFS, "/backup.html").setTemplateProcessor(processor);
   server.serveStatic("/lang.json", LittleFS, "/lang.json");
 
   // page de index et récupération des requetes de puissance

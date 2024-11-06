@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>Pv Dimmer %NAME% - Sauvegarde et restauration de la configuration</title>
+    <link href="css/all.min.css?%FS_RELEASE%" rel="stylesheet" type="text/css" />
+  </head>
+  <body id="page-top">
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+      <!-- Sidebar -->
+      <ul
+        class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion"
+        id="accordionSidebar"
+      >
+        <!-- Sidebar - Brand -->
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="./">
+          <div class="sidebar-brand-icon rotate-n-15">
+            <i class="fas fa-laugh-wink"></i>
+          </div>
+          <div class="sidebar-brand-text mx-3">Pv Dimmer %NAME%</div>
+        </a>
+        <!-- Divider -->
+        <hr class="sidebar-divider my-0" />
+        <!-- Nav Item - Dashboard -->
+        <li class="nav-item active">
+          <a class="nav-link" href="./">
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+            <br />
+            <span id="version">%VERSION%</span><br />
+            <span id="RSSI">RSSI : %RSSI% dBm</span><br />
+            <span>%NAME%</span>
+          </a>
+        </li>
+        <!-- Divider -->
+        <hr class="sidebar-divider" />
+        <!-- Heading -->
+        <div class="sidebar-heading">Interface</div>
+        <!-- Nav Item - Pages Collapse Menu -->
+        <li class="nav-item">
+          <a class="nav-link" href="./">
+            <i class="fas fa-fw fa-cog"></i>
+            <span>Retour Index</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="config.html">
+            <i class="fas fa-fw fa-book"></i>
+            <span>Configuration</span>
+          </a>
+        </li>
+        <li class="nav-item" id="menu_mqtt">
+          <a class="nav-link" href="mqtt.html">
+            <i class="fas fa-fw fa-book"></i>
+            <span>Configuration MQTT</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="minuteur.html">
+            <i class="fas fa-fw fa-moon"></i>
+            <span>Minuteur d'appoint</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="log.html">
+            <i class="fas fa-fw fa-info"></i>
+            <span>Console logs</span>
+          </a>
+        </li>
+        <li class="nav-item active">
+          <a class="nav-link" href="backup.html">
+            <i class="fas fa-download"></i>
+            <span>Sauvegardes</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="update">
+            <i class="fas fa-fw fa-download"></i>
+            <span>OTA</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="reboot">
+            <i class="fas fa-fw fa-power-off"></i>
+            <span>Reboot</span>
+          </a>
+        </li>
+        <!-- Divider -->
+        <hr class="sidebar-divider" />
+        <!-- Sidebar Toggler (Sidebar) -->
+        <div class="text-center d-none d-md-inline">
+          <button class="rounded-circle border-0" id="sidebarToggle"></button>
+        </div>
+      </ul>
+      <!-- End of Sidebar -->
+      <!-- Content wrapper -->
+      <div id="content-wrapper" class="d-flex flex-column">
+        <!-- Main content -->
+        <div id="content">
+          <!-- Topbar -->
+          <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+          </nav>
+          <!-- End of Topbar -->
+          <!-- Page Content -->
+          <div class="container-fluid">
+            <!-- Page Heading -->
+            <h1 class="h3 mb-2 text-gray-800">Sauvegarde et restauration de la configuration</h1>
+            <div class="row">
+              <div class="col-lg-6">
+                <div class="card position-relative">
+                  <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Sauvegarder la configuration</h6>
+                  </div>
+                  <div class="card-body text-center">
+                    <button id="backup" class="btn btn-primary">
+                      <i class="fas fa-download"></i>
+                      Sauvegarder
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="card position-relative">
+                  <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Restaurer la configuration</h6>
+                  </div>
+                  <div class="card-body text-center">
+                    <form id="restoreForm" enctype="multipart/form-data">
+                      <div class="form-group">
+                        Fichier de sauvegarde :
+                        <input
+                          type="file"
+                          step="1"
+                          class="form-control form-control-user"
+                          id="restoreFile"
+                          accept=".json" required"
+                        />
+                      </div>
+                      <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                          <i class="fas fa-upload"></i>
+                          Restaurer la configuration
+                        </button>
+                      </div>
+                    </form
+                    <div class="form-group">
+                      <button id="save" class="btn btn-secondary">
+                        <i class="fas fa-download"></i>
+                        Sauvegarder sur la flash
+                      </button>
+                    </div>
+                    <div id="alertBox" style="display: none"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- End of Page Content -->
+        </div>
+        <!-- End of Main Content -->
+      </div>
+      <!-- End of Content wrapper -->
+    </div>
+    <!-- Footer -->
+    <footer class="sticky-footer bg-white">
+      <div class="container my-auto">
+        <div class="copyright text-center my-auto">
+          <span>https://github.com/xlyric/ - 2024</span>
+        </div>
+      </div>
+    </footer>
+    <!-- End of Footer -->
+    <script type="text/javascript" src="js/all.min.js?%FS_RELEASE%"></script>
+    <script type="text/javascript">
+      var alertBox = $("#alertBox");
+      $("#backup").click(function () {
+        const urls = {
+          "general": "config",
+          "mqtt": "getmqtt",
+          "dimmer_timer": "getminuteur?dimmer",
+          "relay1_timer": "getminuteur?relay1",
+          "relay2_timer": "getminuteur?relay2",
+        };
+        function fetchBackupData(urls) {
+          const promises = Object.keys(urls).map(key =>
+            $.ajax({
+              url: urls[key],
+              method: 'GET',
+              dataType: 'json'
+            })
+          );
+          return Promise.all(promises);
+        }
+        function computeBackupFile(urls, results) {
+          const data = {};
+          Object.keys(urls).forEach((key, index) => {
+            data[key] = results[index];
+          });
+          return data;
+        }
+        function createDownloadLink(data, fileName) {
+          const jsonString = JSON.stringify(data, null, 2);
+          const blob = new Blob([jsonString], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+        fetchBackupData(urls).then(results => {
+          const data = computeBackupFile(urls, results);
+          createDownloadLink(data, 'backup.json');
+        }).catch(error => {
+          console.error('Error fetching backup data:', error);
+        });
+      });
+      function getKey(data, keyString) {
+        var keys = keyString.split('.');
+        var current = data;
+        for (var i = 0; i < keys.length; i++) {
+          if (current[keys[i]] === undefined) return undefined;
+          current = current[keys[i]];
+        }
+        return current;
+      }
+      function restoreConfig(data) {
+        alertBox.css("display", "none");
+        alertBox.html("");
+        const urls = [
+          {
+            "title": "Configuration générale",
+            "url": "get",
+            "data": {
+              "maxtemp": "general.maxtemp",
+              "startingpow": "general.startingpow",
+              "minpow": "general.minpow",
+              "maxpow": "general.maxpow",
+              "child": "general.child",
+              "SubscribePV": "general.SubscribePV",
+              "SubscribeTEMP": "general.SubscribeTEMP",
+              "mode": "general.delester",
+              "charge1": "general.charge1",
+              "charge2": "general.charge2",
+              "charge3": "general.charge3",
+              "DALLAS": "general.DALLAS",
+              "dimmername": "general.dimmername",
+              "trigger": "general.trigger",
+            },
+          },
+          {
+            "title": "Configuration MQTT",
+            "url": "get",
+            "data": {
+              "hostname": "mqtt.server",
+              "port": "mqtt.port",
+              "Publish": "mqtt.topic",
+              "mqttuser": "mqtt.user",
+              "mqttpassword": "mqtt.password",
+              "idxtemp": "mqtt.idxtemp",
+              "IDXAlarme": "mqtt.IDXAlarme",
+              "IDX": "mqtt.IDX",
+            },
+          },
+          {
+            "title": "Configuration du minuteur d'appoint du dimmer",
+            "url": "setminuteur",
+            "data": {
+              "dimmer": "",
+              "heure_demarrage": "dimmer_timer.heure_demarrage",
+              "heure_arret": "dimmer_timer.heure_arret",
+              "temperature": "dimmer_timer.temperature",
+              "puissance": "dimmer_timer.puissance",
+            },
+          },
+          {
+            "title": "Configuration du minuteur d'appoint du relai 1",
+            "url": "setminuteur",
+            "data": {
+              "relay1": "",
+              "heure_demarrage": "relay1_timer.heure_demarrage",
+              "heure_arret": "relay1_timer.heure_arret",
+              "temperature": "relay1_timer.temperature",
+              "puissance": "relay1_timer.puissance",
+            },
+          },
+          {
+            "title": "Configuration du minuteur d'appoint du relai 2",
+            "url": "setminuteur",
+            "data": {
+              "relay2": "",
+              "heure_demarrage": "relay2_timer.heure_demarrage",
+              "heure_arret": "relay2_timer.heure_arret",
+              "temperature": "relay2_timer.temperature",
+              "puissance": "relay2_timer.puissance",
+            },
+          },
+        ];
+        urls.forEach(request => {
+          const params = {};
+          for (const key in request.data) {
+            if (request.data.hasOwnProperty(key)) {
+              const value = getKey(data, request.data[key]);
+              if (value !== undefined) {
+                params[key] = value;
+              }
+            }
+          }
+          if (Object.keys(params).length == 0) {
+            alertBox.append(`<div class="alert alert-warning" role="alert">❓ ${request.title} : aucune information trouvée dans la sauvegarde</div>`);
+            alertBox.css("display", "initial");
+            return;
+          }
+          $.ajax({
+            url: request.url,
+            method: 'GET',
+            data: params,
+            success: function(data) {
+              alertBox.append(`<div class="alert alert-success" role="alert">✅ ${request.title}</div>`);
+              alertBox.css("display", "initial");
+            },
+            error: function(xhr, status, error) {
+              alertBox.append(`<div class="alert alert-danger" role="alert">⛔ ${request.title} : ${error?error:"Une erreur est survenue durant la restauration."}</div>`);
+              alertBox.css("display", "initial");
+            }
+          });
+        });
+      }
+      $('#restoreForm').on('submit', function(e) {
+        e.preventDefault(); // Empêche le formulaire de soumettre normalement
+        var input = $('#restoreFile')[0];
+        if (input.files.length > 0) {
+          var file = input.files[0];
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            try {
+              var data = JSON.parse(e.target.result);
+              restoreConfig(data);
+            } catch (e) {
+              console.error('Error parsing JSON file:', e);
+            }
+          };
+          reader.onerror = function(e) {
+            console.error('Error loading JSON file:', e);
+          };
+          reader.readAsText(file);
+        }
+    });
+    $("#save").click(function() {
+      alertBox.css("display", "none");
+      alertBox.html("");
+      $.ajax({
+            url: "get",
+            method: "GET",
+            data: {"save": "yes"},
+            success: function(data) {
+              alertBox.append(`<div class="alert alert-success" role="alert">✅ Configuration sauvegardée sur la flash</div>`);
+              alertBox.css("display", "initial");
+            },
+            error: function(xhr, status, error) {
+              alertBox.append(`<div class="alert alert-danger" role="alert">⛔ Une erreur est survenue durant l'enregistrement de la configuration sur la flash.</div>`);
+              alertBox.css("display", "initial");
+            }
+          });
+    });
+    </script>
+  </body>
+</html>
