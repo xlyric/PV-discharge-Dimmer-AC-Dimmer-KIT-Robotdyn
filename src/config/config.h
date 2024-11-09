@@ -5,6 +5,7 @@
 #define FS_RELEASE "20241105" // date de la release
 
 #define TEMPERATURE_PRECISION 10
+#define DALALS_TIMEOUT 4000
 // configuration for Standalone boards ( personnalisation )
 #ifdef  STANDALONE
 
