@@ -246,7 +246,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       if (doc2["reset_alarm"] == "1" ) {
         logging.Set_log_init(Clear_alarm_temp,true);
         sysvar.security = 0;
-        device_dimmer_alarm.send("RAS");
+        device_dimmer_alarm_temp.send("RAS");
         sysvar.change = 1;
       }
     }
