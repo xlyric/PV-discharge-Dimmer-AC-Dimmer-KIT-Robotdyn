@@ -34,7 +34,7 @@
             <br />
             <span id="version">%VERSION%</span><br />
             <span id="RSSI">RSSI : %RSSI% dBm</span><br />
-            <span>%NAME%</span>
+            <span id="dimmer_name">%NAME%</span>
           </a>
         </li>
         <!-- Divider -->
@@ -104,6 +104,7 @@
         <div id="content">
           <!-- Topbar -->
           <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+            <!-- Put something here to avoid prettier reformat all page -->
           </nav>
           <!-- End of Topbar -->
           <!-- Page Content -->
@@ -121,6 +122,7 @@
                       <i class="fas fa-download"></i>
                       Sauvegarder
                     </button>
+                    <div class="m-3 text-left" id="backupAlerts" style="display: none"></div>
                   </div>
                 </div>
               </div>
@@ -138,7 +140,8 @@
                           step="1"
                           class="form-control form-control-user"
                           id="restoreFile"
-                          accept=".json" required"
+                          accept=".json"
+                          required
                         />
                       </div>
                       <div class="form-group">
@@ -147,14 +150,14 @@
                           Restaurer la configuration
                         </button>
                       </div>
-                    </form
+                    </form>
                     <div class="form-group">
-                      <button id="save" class="btn btn-secondary">
+                      <button id="save" class="btn btn-sm btn-secondary">
                         <i class="fas fa-download"></i>
                         Sauvegarder sur la flash
                       </button>
                     </div>
-                    <div id="alertBox" style="display: none"></div>
+                    <div class="m-3 text-left" id="restoreAlerts" style="display: none"></div>
                   </div>
                 </div>
               </div>
@@ -177,53 +180,111 @@
     <!-- End of Footer -->
     <script type="text/javascript" src="js/all.min.js?%FS_RELEASE%"></script>
     <script type="text/javascript">
-      var alertBox = $("#alertBox");
+      /*
+       * Sauvergarde de la configuration
+       */
+      var backupAlerts = $("#backupAlerts");
       $("#backup").click(function () {
-        const urls = {
-          "general": "config",
-          "mqtt": "getmqtt",
-          "dimmer_timer": "getminuteur?dimmer",
-          "relay1_timer": "getminuteur?relay1",
-          "relay2_timer": "getminuteur?relay2",
-        };
-        function fetchBackupData(urls) {
-          const promises = Object.keys(urls).map(key =>
-            $.ajax({
-              url: urls[key],
-              method: 'GET',
-              dataType: 'json'
-            })
+        const requests = [
+          {
+            title: "Configuration générale",
+            url: "config",
+            key: "general",
+          },
+          {
+            title: "Configuration MQTT",
+            url: "getmqtt",
+            key: "mqtt",
+          },
+          {
+            title: "Configuration du minuteur d'appoint du dimmer",
+            url: "getminuteur?dimmer",
+            key: "dimmer_timer",
+          },
+          {
+            title: "Configuration du minuteur d'appoint du relai 1",
+            url: "getminuteur?relay1",
+            key: "relay1_timer",
+          },
+          {
+            title: "Configuration du minuteur d'appoint du relai 1",
+            url: "getminuteur?relay2",
+            key: "relay2_timer",
+          },
+        ];
+        var backup = {};
+        var error = false;
+        function fetchBackupData(request) {
+          var backupAlert = $(
+            `<div class="alert alert-info" role="alert">⌛ ${request.title}...</div>`,
           );
-          return Promise.all(promises);
+          backupAlerts.append(backupAlert);
+          return $.getJSON(request.url)
+            .then(function (data) {
+              backup[request.key] = data;
+              backupAlert.removeClass("alert-info").addClass("alert-success");
+              backupAlert.text(`✅ ${request.title}`);
+            })
+            .catch(function (error) {
+              backupAlert.removeClass("alert-info").addClass("alert-danger");
+              backupAlert.text(
+                `⛔ ${request.title} : ${error ? error : "Une erreur est survenue durant le téléchargement."}`,
+              );
+              error = true;
+            });
         }
-        function computeBackupFile(urls, results) {
-          const data = {};
-          Object.keys(urls).forEach((key, index) => {
-            data[key] = results[index];
-          });
-          return data;
-        }
-        function createDownloadLink(data, fileName) {
-          const jsonString = JSON.stringify(data, null, 2);
-          const blob = new Blob([jsonString], { type: 'application/json' });
+        function createDownloadLink() {
+          const now = new Date().toISOString().replace(/[TZ]/g, "-").replace(/\..+/, "");
+          const dimmer_name = $("#dimmer_name").text().replace(".local", "");
+          const jsonString = JSON.stringify(backup, null, 2);
+          const blob = new Blob([jsonString], { type: "application/json" });
           const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
+          const a = document.createElement("a");
           a.href = url;
-          a.download = fileName;
+          a.download = `${now}-${dimmer_name}.json`;
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
         }
-        fetchBackupData(urls).then(results => {
-          const data = computeBackupFile(urls, results);
-          createDownloadLink(data, 'backup.json');
-        }).catch(error => {
-          console.error('Error fetching backup data:', error);
-        });
+        backupAlerts.html(
+          `<div class="alert alert-info" role="alert">
+            ⌛ Construction de la sauvegarde...
+          </div>`,
+        );
+        backupAlerts.css("display", "");
+        requests
+          .reduce(function (promise, request) {
+            return promise.then(function () {
+              return fetchBackupData(request);
+            });
+          }, Promise.resolve())
+          .then(function () {
+            if (error) {
+              backupAlerts.append(
+                `<div class="alert alert-danger" role="alert">
+                  Une erreur est survenue durant la construction de la sauvegarde.
+                </div>`,
+              );
+            } else {
+              backupAlerts.append(
+                `<div class="alert alert-info" role="alert">
+                ✨ Construction de la sauvegarde terminée.
+              </div>`,
+              );
+              createDownloadLink();
+            }
+          })
+          .catch(function (error) {
+            console.error("Error fetching backup data:", error);
+          });
       });
+      /*
+       * Restauration
+       */
+      var restoreAlerts = $("#restoreAlerts");
       function getKey(data, keyString) {
-        var keys = keyString.split('.');
+        var keys = keyString.split(".");
         var current = data;
         for (var i = 0; i < keys.length; i++) {
           if (current[keys[i]] === undefined) return undefined;
@@ -231,79 +292,84 @@
         }
         return current;
       }
+      var error = false;
       function restoreConfig(data) {
-        alertBox.css("display", "none");
-        alertBox.html("");
-        const urls = [
+        const requests = [
           {
-            "title": "Configuration générale",
-            "url": "get",
-            "data": {
-              "maxtemp": "general.maxtemp",
-              "startingpow": "general.startingpow",
-              "minpow": "general.minpow",
-              "maxpow": "general.maxpow",
-              "child": "general.child",
-              "SubscribePV": "general.SubscribePV",
-              "SubscribeTEMP": "general.SubscribeTEMP",
-              "mode": "general.delester",
-              "charge1": "general.charge1",
-              "charge2": "general.charge2",
-              "charge3": "general.charge3",
-              "DALLAS": "general.DALLAS",
-              "dimmername": "general.dimmername",
-              "trigger": "general.trigger",
+            title: "Configuration générale",
+            url: "get",
+            data: {
+              maxtemp: "general.maxtemp",
+              startingpow: "general.startingpow",
+              minpow: "general.minpow",
+              maxpow: "general.maxpow",
+              child: "general.child",
+              SubscribePV: "general.SubscribePV",
+              SubscribeTEMP: "general.SubscribeTEMP",
+              mode: "general.delester",
+              charge1: "general.charge1",
+              charge2: "general.charge2",
+              charge3: "general.charge3",
+              DALLAS: "general.DALLAS",
+              dimmername: "general.dimmername",
+              trigger: "general.trigger",
             },
           },
           {
-            "title": "Configuration MQTT",
-            "url": "get",
-            "data": {
-              "hostname": "mqtt.server",
-              "port": "mqtt.port",
-              "Publish": "mqtt.topic",
-              "mqttuser": "mqtt.user",
-              "mqttpassword": "mqtt.password",
-              "idxtemp": "mqtt.idxtemp",
-              "IDXAlarme": "mqtt.IDXAlarme",
-              "IDX": "mqtt.IDX",
+            title: "Configuration MQTT",
+            url: "get",
+            data: {
+              hostname: "mqtt.server",
+              port: "mqtt.port",
+              Publish: "mqtt.topic",
+              mqttuser: "mqtt.user",
+              mqttpassword: "mqtt.password",
+              idxtemp: "mqtt.idxtemp",
+              IDXAlarme: "mqtt.IDXAlarme",
+              IDX: "mqtt.IDX",
             },
           },
           {
-            "title": "Configuration du minuteur d'appoint du dimmer",
-            "url": "setminuteur",
-            "data": {
-              "dimmer": "",
-              "heure_demarrage": "dimmer_timer.heure_demarrage",
-              "heure_arret": "dimmer_timer.heure_arret",
-              "temperature": "dimmer_timer.temperature",
-              "puissance": "dimmer_timer.puissance",
+            title: "Configuration du minuteur d'appoint du dimmer",
+            url: "setminuteur",
+            data: {
+              dimmer: "",
+              heure_demarrage: "dimmer_timer.heure_demarrage",
+              heure_arret: "dimmer_timer.heure_arret",
+              temperature: "dimmer_timer.temperature",
+              puissance: "dimmer_timer.puissance",
             },
           },
           {
-            "title": "Configuration du minuteur d'appoint du relai 1",
-            "url": "setminuteur",
-            "data": {
-              "relay1": "",
-              "heure_demarrage": "relay1_timer.heure_demarrage",
-              "heure_arret": "relay1_timer.heure_arret",
-              "temperature": "relay1_timer.temperature",
-              "puissance": "relay1_timer.puissance",
+            title: "Configuration du minuteur d'appoint du relai 1",
+            url: "setminuteur",
+            data: {
+              relay1: "",
+              heure_demarrage: "relay1_timer.heure_demarrage",
+              heure_arret: "relay1_timer.heure_arret",
+              temperature: "relay1_timer.temperature",
+              puissance: "relay1_timer.puissance",
             },
           },
           {
-            "title": "Configuration du minuteur d'appoint du relai 2",
-            "url": "setminuteur",
-            "data": {
-              "relay2": "",
-              "heure_demarrage": "relay2_timer.heure_demarrage",
-              "heure_arret": "relay2_timer.heure_arret",
-              "temperature": "relay2_timer.temperature",
-              "puissance": "relay2_timer.puissance",
+            title: "Configuration du minuteur d'appoint du relai 2",
+            url: "setminuteur",
+            data: {
+              relay2: "",
+              heure_demarrage: "relay2_timer.heure_demarrage",
+              heure_arret: "relay2_timer.heure_arret",
+              temperature: "relay2_timer.temperature",
+              puissance: "relay2_timer.puissance",
             },
           },
         ];
-        urls.forEach(request => {
+        function restoreOne(request) {
+          // Add alert message for this restoration
+          var restoreAlert = $(
+            `<div class="alert alert-info" role="alert">⌛ ${request.title} : restoration...</div>`,
+          );
+          restoreAlerts.append(restoreAlert);
+          // Compute request parameters
           const params = {};
           for (const key in request.data) {
             if (request.data.hasOwnProperty(key)) {
@@ -313,63 +379,108 @@
               }
             }
           }
+          // Check we have at lest one parameter to restore
           if (Object.keys(params).length == 0) {
-            alertBox.append(`<div class="alert alert-warning" role="alert">❓ ${request.title} : aucune information trouvée dans la sauvegarde</div>`);
-            alertBox.css("display", "initial");
+            restoreAlert.removeClass("alert-info").addClass("alert-warning");
+            restoreAlert.text(
+              `❓ ${request.title} : aucune information trouvée dans la sauvegarde`,
+            );
             return;
           }
-          $.ajax({
-            url: request.url,
-            method: 'GET',
-            data: params,
-            success: function(data) {
-              alertBox.append(`<div class="alert alert-success" role="alert">✅ ${request.title}</div>`);
-              alertBox.css("display", "initial");
-            },
-            error: function(xhr, status, error) {
-              alertBox.append(`<div class="alert alert-danger" role="alert">⛔ ${request.title} : ${error?error:"Une erreur est survenue durant la restauration."}</div>`);
-              alertBox.css("display", "initial");
-            }
+          // Make restoration request
+          return $.getJSON(request.url, params)
+            .then(function (data) {
+              restoreAlert.removeClass("alert-info").addClass("alert-success");
+              restoreAlert.text(`✅ ${request.title} : restorée.`);
+            })
+            .catch(function (error) {
+              restoreAlert.removeClass("alert-info").addClass("alert-danger");
+              restoreAlert.text(
+                `⛔ ${request.title} : ${error ? error : "Une erreur est survenue durant la restauration."}`,
+              );
+              error = true;
+            });
+        }
+        requests
+          .reduce(function (promise, request) {
+            return promise.then(function () {
+              return restoreOne(request);
+            });
+          }, Promise.resolve())
+          .then(function () {
+            console.log("Restoration finish");
+            if (!error)
+              restoreAlerts.append(
+                `<div class="alert alert-info" role="alert">
+                ✨ Restauration terminée. Pensez à sauvegarder la configuration sur la flash.
+              </div>`,
+              );
+          })
+          .catch(function (error) {
+            console.error("Error occurred restoring configuraion:", error);
           });
-        });
       }
-      $('#restoreForm').on('submit', function(e) {
+      $("#restoreForm").on("submit", function (e) {
         e.preventDefault(); // Empêche le formulaire de soumettre normalement
-        var input = $('#restoreFile')[0];
+        restoreAlerts.text("");
+        restoreAlerts.css("display", "");
+        var input = $("#restoreFile")[0];
         if (input.files.length > 0) {
+          loadingAlert = $(
+            `<div class="alert alert-info" role="alert">⌛ Chargement du fichier sauvegarde...</div>`,
+          );
+          restoreAlerts.append(loadingAlert);
           var file = input.files[0];
           var reader = new FileReader();
-          reader.onload = function(e) {
+          reader.onload = function (e) {
             try {
               var data = JSON.parse(e.target.result);
+              loadingAlert.removeClass("alert-info").addClass("alert-success");
+              loadingAlert.text("✅ Sauvegarde chargée");
               restoreConfig(data);
             } catch (e) {
-              console.error('Error parsing JSON file:', e);
+              loadingAlert.removeClass("alert-info").addClass("alert-danger");
+              loadingAlert.text(
+                "⛔ Une erreur est survenue en chargeant le fichier de sauvegarde : fichier invalide ou corrompu.",
+              );
             }
           };
-          reader.onerror = function(e) {
-            console.error('Error loading JSON file:', e);
+          reader.onerror = function (e) {
+            loadingAlert.removeClass("alert-info").addClass("alert-danger");
+            loadingAlert.text(
+              "⛔ Une erreur est survenue en chargeant le fichier de sauvegarde : impossible de lire le contenu du fichier.",
+            );
           };
           reader.readAsText(file);
+        } else {
+          restoreAlerts.append(
+            `<div class="alert alert-warning" role="alert">⛔ Sélectionnez un fichier de sauvegarde pour commencer.</div>`,
+          );
         }
-    });
-    $("#save").click(function() {
-      alertBox.css("display", "none");
-      alertBox.html("");
-      $.ajax({
-            url: "get",
-            method: "GET",
-            data: {"save": "yes"},
-            success: function(data) {
-              alertBox.append(`<div class="alert alert-success" role="alert">✅ Configuration sauvegardée sur la flash</div>`);
-              alertBox.css("display", "initial");
-            },
-            error: function(xhr, status, error) {
-              alertBox.append(`<div class="alert alert-danger" role="alert">⛔ Une erreur est survenue durant l'enregistrement de la configuration sur la flash.</div>`);
-              alertBox.css("display", "initial");
-            }
-          });
-    });
+      });
+      $("#save").click(function () {
+        var saverAlert = $(
+          `<div class="alert alert-info" role="alert">⌛ Sauvegarde de la configuration sur la flash...</div>`,
+        );
+        restoreAlerts.text("");
+        restoreAlerts.append(saverAlert);
+        restoreAlerts.css("display", "");
+        $.ajax({
+          url: "get",
+          method: "GET",
+          data: { save: "yes" },
+          success: function (data) {
+            saverAlert.removeClass("alert-info").addClass("alert-success");
+            saverAlert.text("✅ Configuration sauvegardée sur la flash");
+          },
+          error: function (xhr, status, error) {
+            saverAlert.removeClass("alert-info").addClass("alert-danger");
+            saverAlert.text(
+              "⛔ Une erreur est survenue durant l'enregistrement de la configuration sur la flash.",
+            );
+          },
+        });
+      });
     </script>
   </body>
 </html>
