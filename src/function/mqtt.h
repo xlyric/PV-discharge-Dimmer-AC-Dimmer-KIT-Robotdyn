@@ -32,7 +32,7 @@ extern HA device_dimmer_minpow;
 extern HA device_dimmer_starting_pow;
 extern HA device_dimmer_maxtemp;
 extern HA device_dimmer_on_off;
-extern HA device_dimmer_alarm_temp;
+extern HA device_dimmer_alarm;
 extern HA device_dimmer_power;
 extern HA device_dimmer_send_power;
 extern HA device_dimmer_total_power;
@@ -41,8 +41,7 @@ extern HA device_temp_master;
 extern HA device_relay1;
 extern HA device_relay2;
 extern HA device_cooler;
-extern HA device_dimmer_alarm_temp_clear;
-
+extern HA device_dimmer_reset_alarm;
 
 extern bool HA_reconnected;
 extern bool discovery_temp;
@@ -77,6 +76,34 @@ String command_select = String(topic_Xlyric + "command/select");
 String command_button = String(topic_Xlyric + "command/button");
 const String HA_status = String("homeassistant/status");
 String command_save = String("Xlyric/sauvegarde/"+ node_id );
+
+
+void Mqtt_send_DOMOTICZ(String idx, String value, String name="") {
+  if (config.DOMOTICZ) {
+    String nvalue = "0";
+    String retour;
+    JsonDocument doc;
+    if ( value != "0" ) { nvalue = "2"; }
+    doc["idx"] = idx.toInt();
+    doc["nvalue"] = nvalue.toInt();
+    doc["svalue"] = value;
+    doc["name"] = name;
+    serializeJson(doc, retour);
+    // si config.Publish est vide, on ne publie pas
+    if (strlen(config.Publish) != 0 ) {
+      client.publish(config.Publish, retour.c_str(), true);
+    }
+  }
+
+  if (config.JEEDOM) {
+    String jeedom_publish = String(config.Publish) + "/" + idx;
+    // si config.Publish est vide, on ne publie pas
+    if (strlen(config.Publish) != 0 ) {
+      client.publish(jeedom_publish.c_str(), value.c_str(), true);
+    }
+  }
+  Serial.println("MQTT SENT");
+}
 
 void callback(char* topic, byte* payload, unsigned int length) {
   // char arrivage[length+1]; // Ajout d'un espace pour le caractère nul // NOSONAR
@@ -118,13 +145,13 @@ void callback(char* topic, byte* payload, unsigned int length) {
     devAddrNames[deviceCount+1] = "MQTT";
     if (!discovery_temp) {
       discovery_temp = true;
-      device_dimmer_alarm_temp.HA_discovery();
+      device_dimmer_alarm.HA_discovery();
       device_temp[sysvar.dallas_maitre].HA_discovery();
       device_temp_master.HA_discovery();
       device_dimmer_maxtemp.HA_discovery();
-      device_dimmer_alarm_temp.send(stringBoolMQTT(sysvar.security));
+      device_dimmer_alarm.send(check_fs_version("RAS"));
       device_dimmer_maxtemp.send(String(config.maxtemp));
-      device_dimmer_alarm_temp_clear.HA_discovery();
+      device_dimmer_reset_alarm.HA_discovery();
     }
     device_temp[sysvar.dallas_maitre].send(String(sysvar.celsius[sysvar.dallas_maitre]));
     Serial.println(sysvar.celsius[sysvar.dallas_maitre]);
@@ -245,8 +272,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
     if (doc2["reset_alarm"].is<String>()) {
       if (doc2["reset_alarm"] == "1" ) {
         logging.Set_log_init(Clear_alarm_temp,true);
+        logging.Set_alerte_web("");
+        if (mqtt_config.mqtt) Mqtt_send_DOMOTICZ(String(config.IDXAlarme), check_fs_version("RAS"), "Alerte");
+        if (config.HA) device_dimmer_alarm.send(check_fs_version("RAS"));
         sysvar.security = 0;
-        device_dimmer_alarm_temp.send("RAS");
         sysvar.change = 1;
       }
     }
@@ -335,39 +364,12 @@ void callback(char* topic, byte* payload, unsigned int length) {
         }
         device_temp_master.send(String(sysvar.celsius[sysvar.dallas_maitre]));
         Serial.println(sysvar.celsius[sysvar.dallas_maitre]);
-        device_dimmer_alarm_temp.send(stringBoolMQTT(sysvar.security));
+        device_dimmer_alarm.send(check_fs_version("RAS"));
         device_dimmer_maxtemp.send(String(config.maxtemp));
       }
     }
   }
   delete[] arrivage;
-}
-
-void Mqtt_send_DOMOTICZ(String idx, String value, String name="") {
-  if (config.DOMOTICZ) {
-    String nvalue = "0";
-    String retour;
-    JsonDocument doc;
-    if ( value != "0" ) { nvalue = "2"; }
-    doc["idx"] = idx.toInt();
-    doc["nvalue"] = nvalue.toInt();
-    doc["svalue"] = value;
-    doc["name"] = name;
-    serializeJson(doc, retour);
-    // si config.Publish est vide, on ne publie pas
-    if (strlen(config.Publish) != 0 ) {
-      client.publish(config.Publish, retour.c_str(), true);
-    }
-  }
-
-  if (config.JEEDOM) {
-    String jeedom_publish = String(config.Publish) + "/" + idx;
-    // si config.Publish est vide, on ne publie pas
-    if (strlen(config.Publish) != 0 ) {
-      client.publish(jeedom_publish.c_str(), value.c_str(), true);
-    }
-  }
-  Serial.println("MQTT SENT");
 }
 
 

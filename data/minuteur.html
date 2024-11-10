@@ -7,7 +7,7 @@
     <meta name="description" content="" />
     <meta name="author" content="" />
     <title>Pv Dimmer %NAME% - Configuration minuteur d'appoint</title>
-    <link href="css/all.min.css?%FS_RELEASE%" rel="stylesheet" type="text/css" />
+    <link href="css/all.min.css?%FS_VERSION%" rel="stylesheet" type="text/css" />
   </head>
   <body id="page-top">
     <!-- Page Wrapper -->
@@ -32,7 +32,9 @@
             <i class="fas fa-fw fa-tachometer-alt"></i>
             <span>Dashboard</span>
             <br />
-            <span id="version">%VERSION%</span><br />
+            <span id="version">Version : %VERSION%</span><br />
+            <span id="model">Modèle : %MODEL%</span><br />
+            <span id="fs_version">FS : %CURRENT_FS_VERSION% (requis: %FS_VERSION%)</span><br />
             <span id="RSSI">RSSI : %RSSI% dBm</span><br />
             <span>%NAME%</span>
           </a>
@@ -307,7 +309,7 @@
       </div>
     </footer>
     <!-- End of Footer -->
-    <script type="text/javascript" src="js/all.min.js?%FS_RELEASE%"></script>
+    <script type="text/javascript" src="js/all.min.js?%FS_VERSION%"></script>
     <script type="text/javascript">
       $(document).ready(function () {
         // Enable tabs

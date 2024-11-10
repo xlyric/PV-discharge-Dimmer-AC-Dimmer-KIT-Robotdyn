@@ -54,6 +54,8 @@ extern HA device_dimmer_minpow;
 extern HA device_dimmer_starting_pow;
 extern HA device_dimmer_maxtemp;
 
+extern String CURRENT_FS_VERSION;
+
 
 extern String dimmername;
 
@@ -602,7 +604,6 @@ String getState() {
   doc["power"] = int(instant_power * config.charge/100);
   doc["Ptotal"]  = sysvar.puissance_cumul + int(instant_power * config.charge/100);
   // recupération de l'état de surchauffe
-  doc["alerte"]  = sysvar.security;
 #ifdef RELAY1
   doc["relay1"]   = digitalRead(RELAY1);
   doc["relay2"]   = digitalRead(RELAY2);
@@ -613,6 +614,7 @@ String getState() {
   doc["minuteur"] = programme.run;
   doc["onoff"] = config.dimmer_on_off;
   doc["alerte"] = logging.Get_alerte_web();
+  if (doc["alerte"] == "") doc["alerte"] = check_fs_version();
   serializeJson(doc, state);
   return String(state);
 }
@@ -624,22 +626,12 @@ String textnofiles() {
 }
 
 String processor(const String& var){
-
-  if (var == "VERSION") {
-    // affichage de la version et de l'environnement
-    String VERSION_http = String(VERSION) + " " + String(COMPILE_NAME);
-    return (VERSION_http);
-  }
-  if (var == "NAME") {
-    String name = String(config.say_my_name) + ".local";
-    return (name);
-  }
-  if (var == "RSSI") {
-    return (String(WiFi.RSSI()));
-  }
-  if (var == "FS_RELEASE") {
-    return String(FS_RELEASE);
-  }
+  if (var == "VERSION") return String(VERSION);
+  if (var == "MODEL") return String(COMPILE_NAME);
+  if (var == "NAME") return String(config.say_my_name) + ".local";
+  if (var == "RSSI") return (String(WiFi.RSSI()));
+  if (var == "FS_VERSION") return String(FS_VERSION);
+  if (var == "CURRENT_FS_VERSION") return String(CURRENT_FS_VERSION);
   return ("N/A");
 }
 

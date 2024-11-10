@@ -364,7 +364,7 @@ void setup() {
   delay(1000);
   Serial.println("Demarrage file System");
   logging.Set_log_init(Start_filesystem);
-  test_fs_version();
+  logging.Set_log_init(check_fs_version(String(FS_version_is_outdated)));
 #ifdef ROBOTDYN
   // configuration dimmer
     #ifdef outputPin
@@ -800,13 +800,12 @@ void loop() {
 
   //// si la sécurité température est active on coupe le dimmer
   if ( sysvar.celsius[sysvar.dallas_maitre] > ( config.maxtemp + 2) && (!alerte) ) {
-    /// send alert to MQTT
-    Mqtt_send_DOMOTICZ(
-      String(config.IDXAlarme),
-      String("Alert Temp :" + String(sysvar.celsius[sysvar.dallas_maitre]) ),
-      "Alerte"
-      );
-
+    logging.Set_alerte_web("Surchauffe ("+String(sysvar.celsius[sysvar.dallas_maitre])+"°C)");
+    if (mqtt_config.mqtt)
+      Mqtt_send_DOMOTICZ(String(config.IDXAlarme), "Surchauffe ("+String(
+                           sysvar.celsius[sysvar.dallas_maitre])+"°C)", "Alerte");
+    if (config.HA)
+      device_dimmer_alarm.send("Surchauffe ("+String(sysvar.celsius[sysvar.dallas_maitre])+"°C)");
     alerte=true;
     unified_dimmer.dimmer_off();
   }
@@ -817,18 +816,21 @@ void loop() {
       logging.Set_log_init(Alert_Temp,true);
 
       if (!AP && mqtt_config.mqtt ) {
-        Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("Ballon chaud " ),"Alerte");        /// send alert to MQTT
-        device_dimmer_alarm_temp.send("Hot water");
+        logging.Set_alerte_web("Surchauffe ("+String(sysvar.celsius[sysvar.dallas_maitre])+"°C)");
+        if (mqtt_config.mqtt)
+          Mqtt_send_DOMOTICZ(String(config.IDXAlarme), "Surchauffe ("+String(
+                               sysvar.celsius[sysvar.dallas_maitre])+"°C)", "Alerte");
+        if (config.HA)
+          device_dimmer_alarm.send("Surchauffe ("+String(sysvar.celsius[sysvar.dallas_maitre])+"°C)");
       }
       alerte=true;
     }
     //// Trigger de sécurité température
     if ( sysvar.celsius[sysvar.dallas_maitre] <= (config.maxtemp - (config.maxtemp*config.trigger/100)) ) {
       sysvar.security = 0;
-      if (!AP && mqtt_config.mqtt && config.HA) {
-        device_dimmer_alarm_temp.send(stringBool(sysvar.security));
-        Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("RAS" ),"Alerte");
-      }
+      logging.Set_alerte_web("");
+      if (mqtt_config.mqtt) Mqtt_send_DOMOTICZ(String(config.IDXAlarme), check_fs_version("RAS"), "Alerte");
+      if (config.HA) device_dimmer_alarm.send(check_fs_version("RAS"));
       sysvar.change = 1;
     }
     else {
@@ -1003,10 +1005,12 @@ void loop() {
     if ( config.HA ) {
       device_temp[sysvar.dallas_maitre].send(String(temp));
       device_temp_master.send(String(temp));
-      device_dimmer_alarm_temp.send(stringBool(sysvar.security));
       device_dimmer_power.send(String(0));
       device_dimmer_total_power.send(String(sysvar.puissance_cumul));
     }        /// si HA remonté MQTT HA de la température
+    logging.Set_alerte_web("Surchauffe ("+String(temp)+"°C)");
+    if (mqtt_config.mqtt) Mqtt_send_DOMOTICZ(String(config.IDXAlarme), "Surchauffe ("+String(temp)+"°C)", "Alerte");
+    if (config.HA) device_dimmer_alarm.send("Surchauffe ("+String(temp)+"°C)");
   }
 
   //// protection contre la perte de la sonde dallas
@@ -1031,9 +1035,14 @@ bool dallaspresent () {
     /// remonter l'alerte une fois toute les 10 secondes
     if (devicealerte == 0) {
       logging.Set_log_init(Alerte_Dallas_not_found);
-      Mqtt_send_DOMOTICZ(String(config.IDXTemp), String("Alerte Dallas non trouvée"),"Alerte");  /// send alert to MQTT
-      device_dimmer_alarm_temp.send("Alerte Dallas non trouvée");
-      logging.Set_alerte_web("Dallas Maitre non trouvée");
+      logging.Set_alerte_web("Sonde température (Dallas) non-détectée");
+      if (mqtt_config.mqtt)
+        Mqtt_send_DOMOTICZ(
+          String(config.IDXAlarme),
+          "Sonde température (Dallas) non-détectée",
+          "Alerte"
+          );
+      if (config.HA) device_dimmer_alarm.send("Sonde température (Dallas) non-détectée");
       devicealerte++;
     }
     else {
@@ -1046,6 +1055,8 @@ bool dallaspresent () {
   }
 
   logging.Set_alerte_web("");
+  if (mqtt_config.mqtt) Mqtt_send_DOMOTICZ(String(config.IDXAlarme), check_fs_version("RAS"), "Alerte");
+  if (config.HA) device_dimmer_alarm.send(check_fs_version("RAS"));
 
   //// recherche des adresses des sondes
 

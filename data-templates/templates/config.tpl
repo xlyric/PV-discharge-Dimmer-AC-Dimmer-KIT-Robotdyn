@@ -58,26 +58,7 @@
 ${generate_menu()}
 </%block>
 <%block name="topbar_content">
-            <div class="alert alert-danger" id="alertBox">
-              <span class="mr-2 d-none d-lg-inline text-gray-600"></span>
-              <p role="alert" id="alertContainer"></p>
-            </div>
-            <!-- Sidebar Toggle (Topbar) -->
-
-            <!-- Topbar Navbar -->
-            <ul class="navbar-nav ml-auto">
-              <!-- Nav Item - Search Dropdown (Visible Only XS) -->
-              <li class="nav-item dropdown no-arrow d-sm-none">
-                <!-- Dropdown - Messages -->
-                <div
-                  class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in"
-                  aria-labelledby="searchDropdown"
-                ></div>
-              </li>
-              <!-- Nav Item - Alerts -->
-              <li class="nav-item dropdown no-arrow mx-1"></li>
-              <div class="topbar-divider d-none d-sm-block"></div>
-            </ul>
+            <div class="alert alert-danger mt-3" id="alertBox" style="display: none"></div>
 </%block>
 <%def name="generate_content(support_mqtt=True)">
             <!-- Page Heading -->
@@ -90,7 +71,6 @@ ${generate_menu()}
               page rapide d'aide :
               <a href="https://wiki.apper-solaire.org/" target="_blank" rel="noopener"> ici </a>
             </p>
-
             <!-- Content Row -->
             <div class="row">
               <!-- Earnings (Monthly) Card Example -->
@@ -326,7 +306,6 @@ ${generate_menu()}
                         </div>
                       </div>
                       <br />
-
                       <div class="card position-relative">
                         <div class="card-header py-3">
                           <h6 class="m-0 font-weight-bold text-primary">Child</h6>
@@ -372,7 +351,6 @@ ${generate_menu()}
                               <!-- Le nom mDNS sera rajouté ici-->
                             </div>
                           </div>
-
                           <div class="form-group row">
                             <div class="col-sm-6">
                               <input
@@ -499,7 +477,6 @@ ${generate_content()}
 <%text>
     <script type="text/javascript">
       $('[data-toggle="popover"]').popover();
-
       //<!-- rafraichissement valeurs -->
       setInterval(function refreshsend() {
         $.getJSON("/state", function (data) {
@@ -513,17 +490,17 @@ ${generate_content()}
           document.getElementById("power").innerHTML = power;
           onoff = onoff ? "ON" : "OFF";
           $("#ONOFF").text(onoff);
-
           if (data.alerte && data.alerte.trim() != "") {
-            const alertContainer = document.getElementById("alertContainer");
-            alertContainer.innerHTML = "Alerte : " + data.alerte;
-            $("#alertBox").fadeIn();
+            $("#alertBox")
+              .html(
+                `<strong><i class="fas fa-exclamation-triangle"></i> Alerte : ${data.alerte}</strong>`,
+              )
+              .fadeIn();
           } else {
             $("#alertBox").fadeOut();
           }
         });
       }, 5000);
-
       setInterval(function refreshsend() {
         $.getJSON("/state_dallas", function (data) {
           // affichage des dallas et les Température ( boucle sur les dallas )
@@ -557,25 +534,21 @@ ${generate_content()}
           document.getElementById("dallas").innerHTML = dallasHtml;
         });
       }, 5000);
-
       function sendmode(mode) {
         $.get("/get", { send: mode }).done(function (data) {
           document.getElementById("sendmode").innerHTML = "Request sent";
           document.getElementById("sendmode2").innerHTML = "Request sent";
         });
       }
-
       function save() {
         $.get("/get", { save: "yes" }).done(function (data) {});
       }
-
       <!--- sauvegarde de la configuration -->
       $("#save").click(function () {
         $.get("/get", { save: "yes" }).done(function (data) {
           $("#savemsg").text("Configuration sauvegardée").show().fadeOut(5000);
         });
       });
-
       $("#ONOFF").click(function () {
         $.get("/onoff").done(function (data) {
           // si la data est 1 alors on affiche ON sinon OFF
@@ -587,7 +560,6 @@ ${generate_content()}
           $("#ONOFF").text(data);
         });
       });
-
       $("#formulaire").submit(function () {
         var data = {
           hostname: $("#hostname").val(),
@@ -608,19 +580,16 @@ ${generate_content()}
           dimmername: $("#dimmername").val(),
           trigger: $("#trigger").val(),
         };
-
         $.ajax({
           type: "GET",
           data: data,
           url: "get",
-
           success: function (retour) {
             $("#saveform").text("Configuration appliquée").show().fadeOut(5000);
           },
         });
         return false;
       });
-
       $(document).ready(function () {
         function generateLink(dimmerValue) {
           if (dimmerValue !== "none") {
@@ -630,12 +599,10 @@ ${generate_content()}
             );
           }
         }
-
         function generateLinkName(dimmerName) {
           var formattedName = dimmerName.replace(/ /g, "-") + ".local"; // Replace spaces with hyphens and add .local
           $("#dimmer-mDNS").html(formattedName); // Update the HTML content
         }
-
         var recupconfig = $.getJSON("/config", function (data) {
           for (var key in data) {
             if (data.hasOwnProperty(key)) {
@@ -648,7 +615,6 @@ ${generate_content()}
               }
             }
           }
-
           // Une fois la requête terminée
           recupconfig.done(function () {
             // Générer le lien avec la valeur initiale
@@ -657,12 +623,10 @@ ${generate_content()}
             var dimmerValue = $("#dimmername").val();
             generateLinkName(dimmerValue);
           });
-
           $("#child").on("input", function () {
             var dimmerValue = $(this).val();
             generateLink(dimmerValue);
           });
-
           $("#dimmer-mDNS").on("input", function () {
             var dimmerValue = $(this).val();
             generateLinkName(dimmerValue);

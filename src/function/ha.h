@@ -12,6 +12,7 @@ extern String devAddrNames[MAX_DALLAS];  // array of (up to) 15 temperature sens
 extern int deviceCount;  // nombre de sonde(s) dallas détectée(s)
 
 String stringBool(bool mybool);
+String check_fs_version(String default_message);
 
 /// @brief déclaration des configurations HA et MQTT
 struct HA
@@ -237,6 +238,7 @@ public: void send(String value){
 HA device_dimmer;
 HA device_temp[MAX_DALLAS];  // NOSONAR
 HA device_temp_master;
+HA device_dimmer_alarm;
 
 /// création des switchs
 HA device_relay1;
@@ -245,6 +247,7 @@ HA device_dimmer_on_off;
 
 /// création des button
 HA device_dimmer_save;
+HA device_dimmer_reset_alarm;
 
 /// création number
 HA device_dimmer_starting_pow;
@@ -257,9 +260,7 @@ HA device_dimmer_send_power;
 HA device_dimmer_child_mode;
 
 /// création binary_sensor
-HA device_dimmer_alarm_temp;
 HA device_cooler;
-HA device_dimmer_alarm_temp_clear;
 
 // creation remonté de puissance
 HA device_dimmer_power;
@@ -318,6 +319,13 @@ void devices_init(){
   device_temp_master.Set_entity_qos(1);
   device_temp_master.Set_retain_flag(true);
 
+  device_dimmer_alarm.Set_name("Alarme");
+  device_dimmer_alarm.Set_entity_type("sensor");
+  device_dimmer_alarm.Set_object_id("alarm");
+  device_dimmer_alarm.Set_entity_category("diagnostic");
+  device_dimmer.Set_icon("mdi:alert");
+  device_dimmer_alarm.Set_retain_flag(true);
+
   /// création des switch
   device_relay1.Set_name("Relais 1");
   device_relay1.Set_object_id("relay1");
@@ -340,6 +348,13 @@ void devices_init(){
   device_dimmer_save.Set_entity_type("button");
   device_dimmer_save.Set_entity_category("config");
   device_dimmer_save.Set_retain_flag(false);
+
+  device_dimmer_reset_alarm.Set_name("Reset alarme");
+  device_dimmer_reset_alarm.Set_object_id("reset_alarm");
+  device_dimmer_reset_alarm.Set_entity_type("button");
+  device_dimmer_reset_alarm.Set_entity_category("config");
+  device_dimmer_reset_alarm.Set_entity_qos(0);
+  device_dimmer_reset_alarm.Set_retain_flag(false);
 
   /// création des number
   device_dimmer_starting_pow.Set_name("Puissance de démarrage");
@@ -398,26 +413,12 @@ void devices_init(){
   device_dimmer_child_mode.Set_retain_flag(true);
 
   // création des binary_sensor
-  device_dimmer_alarm_temp.Set_name("Surchauffe");
-  device_dimmer_alarm_temp.Set_object_id("alarm_temp");
-  device_dimmer_alarm_temp.Set_entity_type("binary_sensor");
-  device_dimmer_alarm_temp.Set_entity_category("diagnostic");
-  device_dimmer_alarm_temp.Set_dev_cla("problem");
-  device_dimmer_alarm_temp.Set_retain_flag(true);
-
   device_cooler.Set_name("Ventilateur");
   device_cooler.Set_object_id("cooler");
   device_cooler.Set_entity_type("binary_sensor");
   device_cooler.Set_entity_category("diagnostic");
   device_cooler.Set_dev_cla("running");
   device_cooler.Set_retain_flag(true);
-
-  device_dimmer_alarm_temp_clear.Set_name("Reset alarme");
-  device_dimmer_alarm_temp_clear.Set_object_id("reset_alarm");
-  device_dimmer_alarm_temp_clear.Set_entity_type("button");
-  device_dimmer_alarm_temp_clear.Set_entity_category("config");
-  device_dimmer_alarm_temp_clear.Set_entity_qos(0);
-  device_dimmer_alarm_temp_clear.Set_retain_flag(false);
 }
 
 void HA_discover(){
@@ -466,6 +467,15 @@ void HA_discover(){
     device_dimmer_child_mode.send(String(config.mode));
 
     device_dimmer_save.HA_discovery();
+    device_dimmer_alarm.send(
+      sysvar.security == 1?
+      "Surchauffe" + (
+        sysvar.celsius[sysvar.dallas_maitre]?
+        " (" + String(sysvar.celsius[sysvar.dallas_maitre]) + "°C)":
+        ""
+        ):
+      check_fs_version("RAS")
+      );
   }
 }
 #endif

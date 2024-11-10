@@ -19,5 +19,5 @@
 #define Dallas_lost "Dallas втрачено"
 #define HTTP_power_at "HTTP потужність на"
 #define FS_version_is_missing "Версія FS відсутня, будь ласка, оновіть"
-#define FS_version_is_not_same "Версія FS не актуальна"
-#define FS_version_is_same "Версія FS актуальна"
+#define FS_version_is_outdated "Версія FS не актуальна"
+#define FS_version_is_uptodate "Версія FS актуальна"

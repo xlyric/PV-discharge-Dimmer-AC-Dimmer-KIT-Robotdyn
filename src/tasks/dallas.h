@@ -56,15 +56,15 @@ void mqttdallas() {
 
       if (!discovery_temp) {
         discovery_temp = true;
-        device_dimmer_alarm_temp.HA_discovery();
+        device_dimmer_alarm.HA_discovery();
         for (int i = 0; i < deviceCount; i++) {
           device_temp[i].HA_discovery();
         }
         device_temp_master.HA_discovery();
         device_dimmer_maxtemp.HA_discovery();
-        device_dimmer_alarm_temp.send(stringBoolMQTT(sysvar.security));
+        device_dimmer_alarm.send(check_fs_version("RAS"));
         device_dimmer_maxtemp.send(String(config.maxtemp));
-        device_dimmer_alarm_temp_clear.HA_discovery();
+        device_dimmer_reset_alarm.HA_discovery();
       }
 
       // uniformisation des valeurs de température ( for en valeur I pour retrouver plus facilement)

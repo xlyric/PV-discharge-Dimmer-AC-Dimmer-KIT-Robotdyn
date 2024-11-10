@@ -7,8 +7,7 @@
     <meta name="description" content="" />
     <meta name="author" content="" />
     <title>Pv Dimmer %NAME% - <%block name="page_title">Dashboard</%block></title>
-
-    <link href="css/all.min.css?%FS_RELEASE%" rel="stylesheet" type="text/css" />
+    <link href="css/all.min.css?%FS_VERSION%" rel="stylesheet" type="text/css" />
   </head>
   <body id="page-top">
     <!-- Page Wrapper -->
@@ -33,7 +32,9 @@
             <i class="fas fa-fw fa-tachometer-alt"></i>
             <span>Dashboard</span>
             <br />
-            <span id="version">%VERSION%</span><br />
+            <span id="version">Version : %VERSION%</span><br />
+            <span id="model">Modèle : %MODEL%</span><br />
+            <span id="fs_version">FS : %CURRENT_FS_VERSION% (requis: %FS_VERSION%)</span><br />
             <span id="RSSI">RSSI : %RSSI% dBm</span><br />
             <span>%NAME%</span>
           </a>
@@ -59,7 +60,6 @@
         </div>
       </ul>
       <!-- End of Sidebar -->
-
       <!-- Content wrapper -->
       <div id="content-wrapper" class="d-flex flex-column">
         <!-- Main content -->
@@ -68,20 +68,11 @@
           <!-- Topbar -->
           <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
             <%block name="topbar_content">
-            <div class="alert alert-danger" id="alertBox">
-              <span class="mr-2 d-none d-lg-inline text-gray-600"></span>
-              <p role="alert" id="alertContainer"></p>
-            </div>
-
+            <div class="alert alert-danger mt-3" id="alertBox" style="display: none"></div>
             <!-- Topbar Navbar -->
             <ul class="navbar-nav ml-auto">
-              <li class="nav-item dropdown no-arrow">
-                <span class="mr-2 d-none d-lg-inline text-gray-600 small">
-                  <div id="time">%TIME%</div>
-                </span>
-              </li>
+              <li class="nav-item" id="time">%TIME%</li>
             </ul>
-            <div class="topbar-divider d-none d-sm-block"></div>
             </%block>
           </nav>
           <!-- End of Topbar -->
@@ -131,7 +122,7 @@
                     <h6 class="m-0 font-weight-bold text-primary">Etats</h6>
                   </div>
                   <div class="card-body">
-                    <b>Etat Ballon : </b>
+                    <b>Alarme : </b>
                     <h4 id="alerte">N/A</h4>
                     <b>Etat Minuteur : </b>
                     <h4 id="minuteur">N/A</h4>
@@ -164,7 +155,6 @@
       </div>
       <!-- End of Content wrapper -->
     </div>
-
     <!-- Footer -->
     <footer class="sticky-footer bg-white">
       <div class="container my-auto">
@@ -174,19 +164,15 @@
       </div>
     </footer>
     <!-- End of Footer -->
-
-    <script type="text/javascript" src="js/all.min.js?%FS_RELEASE%"></script>
-
+    <script type="text/javascript" src="js/all.min.js?%FS_VERSION%"></script>
     <%block name="pagescript">
     <%text>
     <script type="text/javascript">
       window.onload = function () {
         horloge("time");
       };
-
       google.charts.load("current", { packages: ["corechart", "gauge"] });
       google.charts.setOnLoadCallback(drawChart);
-
       var chart;
       var options = {
         title: "Oscilloscope Mode",
@@ -195,56 +181,42 @@
       };
       var data;
       var inc;
-
       function drawChart() {
         var optionsGauge = {
           redFrom: 75,
           redTo: 100,
-
           yellowFrom: 50,
           yellowTo: 75,
-
           greenFrom: 0,
           greenTo: 50,
-
           minorTicks: 4,
-
           min: 0,
           max: 100,
         };
-
         var optionsGaugetemp = {
           redFrom: 80,
           redTo: 100,
-
           yellowFrom: 70,
           yellowTo: 80,
-
           greenFrom: 0,
           greenTo: 70,
-
           minorTicks: 5,
-
           min: 0,
           max: 100,
         };
-
         // mise à jour de la jauge  -->
         var gaugePA = new google.visualization.Gauge(document.getElementById("curve_chart2"));
         var dataGaugePA = new google.visualization.DataTable();
         dataGaugePA.addColumn("string", "Puissance");
         dataGaugePA.addColumn("number", "Value");
         dataGaugePA.addRows(1);
-
         // mise à jour de la jauge  -->
         var gaugePAtemp = new google.visualization.Gauge(document.getElementById("curve_temp"));
         var dataGaugePAtemp = new google.visualization.DataTable();
         dataGaugePAtemp.addColumn("string", "Power");
         dataGaugePAtemp.addColumn("number", "Value");
         dataGaugePAtemp.addRows(1);
-
         // récupération valeur sigma et State -->
-
         function refreshvalue() {
           $.getJSON("/state", function (data) {
             // Récupérer les données du JSON
@@ -255,7 +227,6 @@
             var minuteur = data.minuteur;
             var relais1 = data.relay1;
             var relais2 = data.relay2;
-
             // Mettre à jour les éléments HTML
             dataGaugePA.setValue(0, 0, "Power (W)");
             dataGaugePA.setValue(0, 1, power);
@@ -266,22 +237,18 @@
             optionsGauge.redFrom = parseInt(pmax / 2);
             optionsGauge.yellowTo = parseInt(pmax / 2);
             gaugePA.draw(dataGaugePA, optionsGauge);
-
             dataGaugePAtemp.setValue(0, 0, "Temp °C");
             dataGaugePAtemp.setValue(0, 1, temperature);
             gaugePAtemp.draw(dataGaugePAtemp, optionsGaugetemp);
-
             // recupération de l'état de sécurité
-
-            // ecriture de "refroidissement" dans le div alerte si l'état est à 1
-            if (alerte == 1) {
-              document.getElementById("alerte").innerHTML = "Refroidissement";
+            // ecriture de l'alerte dans le div alerte si l'état n'est pas vide
+            if (alerte) {
+              document.getElementById("alerte").innerHTML = alerte;
               document.getElementById("alerte").style.color = "red";
             } else {
-              document.getElementById("alerte").innerHTML = "Normal";
+              document.getElementById("alerte").innerHTML = "RAS";
               document.getElementById("alerte").style.color = "";
             }
-
             // ecriture de "minuteur" dans le div minuteur si l'état est à 1
             if (minuteur == 1) {
               document.getElementById("minuteur").innerHTML = "Minuteur";
@@ -290,7 +257,6 @@
               document.getElementById("minuteur").innerHTML = "Non actif";
               document.getElementById("minuteur").style.color = "";
             }
-
             // ecriture de "ON" dans le div relais 1 si l'état est à 1
             if (relais1 == 1) {
               document.getElementById("relais 1").innerHTML = "ON";
@@ -299,7 +265,6 @@
               document.getElementById("relais 1").innerHTML = "OFF";
               document.getElementById("relais 1").style.color = "";
             }
-
             // ecriture de "ON" dans le div relais 2 si l'état est à 1
             if (relais2 == 1) {
               document.getElementById("relais 2").innerHTML = "ON";
@@ -308,19 +273,18 @@
               document.getElementById("relais 2").innerHTML = "OFF";
               document.getElementById("relais 2").style.color = "";
             }
-
             if (data.alerte && data.alerte.trim() != "") {
-              const alertContainer = document.getElementById("alertContainer");
-              alertContainer.innerHTML = "Alerte : " + data.alerte;
-              $("#alertBox").fadeIn();
+              $("#alertBox")
+                .html(
+                  `<strong><i class="fas fa-exclamation-triangle"></i> Alerte : ${data.alerte}</strong>`,
+                )
+                .fadeIn();
             } else {
               $("#alertBox").fadeOut();
             }
           });
         }
-
         setInterval(refreshvalue, 5000); // Rafraîchir les données toutes les 5 secondes
-
         document.getElementById("relais 1").addEventListener("click", function () {
           fetch("/get?relay1=2")
             .then((response) => response.text())
@@ -332,7 +296,6 @@
               console.error("Error:", error);
             });
         });
-
         document.getElementById("relais 2").addEventListener("click", function () {
           fetch("/get?relay2=2")
             .then((response) => response.text())
@@ -345,7 +308,6 @@
             });
         });
       }
-
       function horloge(el) {
         if (typeof el == "string") {
           el = document.getElementById(el);
@@ -360,7 +322,6 @@
         actualiser();
         setInterval(actualiser, 1000);
       }
-
       function refresh_temp() {
         $.getJSON("/state_dallas", function (data) {
           // affichage des dallas et les Température ( boucle sur les dallas )
@@ -394,7 +355,6 @@
           document.getElementById("dallas").innerHTML = dallasHtml;
         });
       }
-
       setInterval(refresh_temp, 5000); // Rafraîchir les données toutes les 5 secondes
     </script>
     </%text>

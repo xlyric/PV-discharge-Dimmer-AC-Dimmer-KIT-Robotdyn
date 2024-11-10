@@ -1,8 +1,8 @@
 #ifndef CONFIG
 #define CONFIG
 
-#define VERSION "Version 20241105"
-#define FS_RELEASE "20241105" // date de la release
+#define VERSION "20241106"
+#define FS_VERSION "20241106" // date de la release
 
 #define TEMPERATURE_PRECISION 10
 // configuration for Standalone boards ( personnalisation )
