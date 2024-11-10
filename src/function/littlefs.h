@@ -40,17 +40,6 @@ void saveConfigCallback () {
   shouldSaveConfig = true;
 }
 
-String loguptime(String log) {
-  String uptime_stamp;
-  uptime::calculateUptime();
-  uptime_stamp = String(uptime::getDays())
-                 +":"+String(uptime::getHours())
-                 +":"+String(uptime::getMinutes())
-                 +":"+String(uptime::getSeconds())
-                 +"\t"+ log +"\r\n";
-  return uptime_stamp;
-}
-
 
 //***********************************
 //************* Gestion de la configuration - Lecture du fichier de configuration
@@ -115,7 +104,7 @@ void savewifiIP(const char *wifi_conf, Wifi_struct &wifi_config_fixe) {
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {
     Serial.println(F("Failed to write to file in function Save configuration "));
-    logging.Set_log_init(Failed_write_wifi_config);
+    logging.log(Failed_write_wifi_config);
   }
 
   // Close the file
@@ -128,7 +117,7 @@ bool test_fs_version() {
     // Open file for reading
     File file = LittleFS.open("/version", "r");
     if (!file) {
-      logging.Set_log_init("FS version is missing please update or reboot for activate after ota\r\n");
+      logging.log("FS version is missing please update or reboot for activate after ota");
       return false;
     }
     // comparaison entre le contenu du fichier et la version du code FS_VERSION

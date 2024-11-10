@@ -40,14 +40,9 @@ public:
 
 
 /// setter log_init
-public: void Set_log_init(String setter, bool logtime=false) {
+public: void Set_log_init(String setter) {
     // Vérifier si la longueur de la chaîne ajoutée ne dépasse pas LOG_MAX_STRING_LENGTH
     if ( strlen(setter.c_str()) + strlen(log_init) < static_cast<size_t>(MaxString) )  {
-      if (logtime) {
-        if ( strlen(setter.c_str()) + strlen(log_init) + strlen(loguptime()) < static_cast<size_t>(MaxString))  {
-          strcat(log_init,loguptime());
-        }
-      }
       strcat(log_init,setter.c_str());
     } else {
       // Si la taille est trop grande, réinitialiser le log_init
@@ -74,16 +69,30 @@ public: void Set_log_init(String setter, bool logtime=false) {
     strcat(log_init,"197}11}1");
   }
 
-  char *loguptime(bool day=false) {
+  void log(String message, ...) {
+    va_list args;
+    va_start(args, message);
+    char buffer[150];
+    if (sizeof(args) > 0) {
+      vsnprintf(buffer, sizeof(buffer), message.c_str(), args);
+      Set_log_init(get_current_time() + " - " + String(buffer) + "\r\n");
+    }
+    else {
+      Set_log_init(get_current_time() + " - " + message + "\r\n");
+    }
+    va_end(args);
+  }
+
+  String get_current_time(bool day=false) {
     static char uptime_stamp[20];   // Vous devrez définir une taille suffisamment grande pour stocker votre temps
     time_t maintenant;
     time(&maintenant);
     if (day) {
-      strftime(uptime_stamp, sizeof(uptime_stamp), "%d/%m/%Y %H:%M:%S\t ", localtime(&maintenant));
+      strftime(uptime_stamp, sizeof(uptime_stamp), "%d/%m/%Y %H:%M:%S", localtime(&maintenant));
     } else {
-      strftime(uptime_stamp, sizeof(uptime_stamp), "%H:%M:%S\t ", localtime(&maintenant));
+      strftime(uptime_stamp, sizeof(uptime_stamp), "%H:%M:%S", localtime(&maintenant));
     }
-    return uptime_stamp;
+    return String(uptime_stamp);
   }
 
 };
@@ -133,7 +142,7 @@ public:
 
 // Loads the configuration from a file
   String loadConfiguration() {
-    String message = "";
+    String message = Load_configuration_loaded;
     // Open file for reading
     File configFile = LittleFS.open(filename_conf, "r");
 
@@ -146,7 +155,7 @@ public:
     DeserializationError error = deserializeJson(doc, configFile);
     if (error) {
       Serial.println(F("Failed to read configuration file, using default configuration"));
-      message = "Failed to read file config File, use default\r\n";
+      message = Load_configuration_failed_use_default;
     }
     // Copy values from the JsonDocument to the Config
 
@@ -213,13 +222,13 @@ public:
 //***********************************
 
   String saveConfiguration() {
-    String message = "";
+    String message = Save_configuration_saved;
     check_trigger();
     // Open file for writing
     File configFile = LittleFS.open(filename_conf, "w");
     if (!configFile) {
       Serial.println(F("Failed to open config file for writing"));
-      return "Failed to open config file for writing\r\n";
+      return Save_configuration_failed_open;
     }
 
     // Allocate a temporary JsonDocument
@@ -258,7 +267,7 @@ public:
     // Serialize JSON to file
     if (serializeJson(doc, configFile) == 0) {
       Serial.println(F("Failed to write to file"));
-      message = "Failed to write to file\r\n";
+      message = Save_configuration_failed_write;
     }
 
     // Publish on MQTT
@@ -288,7 +297,6 @@ public:
 
   String loadmqtt() {
     // Open file for reading
-    String message = "";
     File configFile = LittleFS.open(filename_mqtt, "r");
 
     // Allocate a temporary JsonDocument
@@ -299,8 +307,8 @@ public:
     // Deserialize the JSON document
     DeserializationError error = deserializeJson(doc, configFile);
     if (error) {
-      Serial.println(F("Failed to read MQTT config "));
-      return message = "Failed to read MQTT config\r\n";
+      Serial.println(F("Failed to read MQTT config"));
+      return "Failed to read MQTT config";
     }
 
     // Copy values from the JsonDocument to the Config
@@ -314,16 +322,16 @@ public:
 
     configFile.close();
 
-    return message;
+    return "Configuration MQTT chargée.";
   }
 
   String savemqtt() {
     // Open file for writing
     File configFile = LittleFS.open(filename_mqtt, "w");
-    String message = filename_mqtt;
+    String message = Save_configuration_saved;
     if (!configFile) {
       Serial.println(F("Failed to open config file for writing in function Save configuration"));
-      return "Failed to open config file for writing in function Save configuration\r\n";
+      return Save_configuration_failed_open;
     }
 
     // Allocate a temporary JsonDocument
@@ -337,7 +345,7 @@ public:
     doc["mqtt"] = mqtt;
     if (serializeJson(doc, configFile) == 0) {
       Serial.println(F("Failed to write to file in function Save configuration "));
-      message = "Failed to write MQTT config\r\n";
+      message = Save_configuration_failed_write;
     }
 
     // Close the file
