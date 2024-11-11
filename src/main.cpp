@@ -578,7 +578,7 @@ void setup() {
 
   if (deviceCount == 0 ) { // si toujours pas trouvé
     sensors.begin(); // réinit du bus one wire
-    delay(DALALS_TIMEOUT);
+    delay(1500);
     deviceCount = sensors.getDeviceCount();
   }
 
