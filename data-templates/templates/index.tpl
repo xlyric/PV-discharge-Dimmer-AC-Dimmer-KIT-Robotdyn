@@ -35,7 +35,7 @@
             <br />
             <span id="version">%VERSION%</span><br />
             <span id="RSSI">RSSI : %RSSI% dBm</span><br />
-            <span>%NAME%</span>
+            <span id="dimmer_name">%NAME%</span>
           </a>
         </li>
         <!-- Divider -->
