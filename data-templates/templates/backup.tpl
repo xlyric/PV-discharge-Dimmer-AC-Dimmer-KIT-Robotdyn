@@ -214,7 +214,7 @@ ${config.generate_menu(page="backup")}
           },
           {
             title: "Configuration du minuteur d'appoint du dimmer",
-            url: "setminuteur",
+            url: "setminuteur?dimmer",
             data: {
               dimmer: "",
               heure_demarrage: "dimmer_timer.heure_demarrage",
@@ -225,7 +225,7 @@ ${config.generate_menu(page="backup")}
           },
           {
             title: "Configuration du minuteur d'appoint du relai 1",
-            url: "setminuteur",
+            url: "setminuteur?relay1",
             data: {
               relay1: "",
               heure_demarrage: "relay1_timer.heure_demarrage",
@@ -236,7 +236,7 @@ ${config.generate_menu(page="backup")}
           },
           {
             title: "Configuration du minuteur d'appoint du relai 2",
-            url: "setminuteur",
+            url: "setminuteur?relay2",
             data: {
               relay2: "",
               heure_demarrage: "relay2_timer.heure_demarrage",
