@@ -80,12 +80,12 @@ public: float power;
       if (dimmer1_pwr == 0 && dimmer.getState()==1) {
         dimmer.setPower(0);
         dimmer.setState(OFF);
-        logging.Set_log_init("Dimmer1 Off\r\n");
+        logging.log("Dimmer1 Off");
         delay(50);
       }
       else if (dimmer1_pwr != 0 && dimmer.getState()==0) {
         dimmer.setState(ON);
-        logging.Set_log_init("Dimmer1 On\r\n");
+        logging.log("Dimmer1 On");
         delay(50);
         dimmer.setPower(dimmer1_pwr);
       }
@@ -97,12 +97,12 @@ public: float power;
       if (dimmer2_pwr == 0 && dimmer2.getState()==1) {
         dimmer2.setPower(0);
         dimmer2.setState(OFF);
-        logging.Set_log_init("Dimmer2 Off\r\n");
+        logging.log("Dimmer2 Off");
         delay(50);
       }
       else if (dimmer2_pwr != 0 && dimmer2.getState()==0) {
         dimmer2.setState(ON);
-        logging.Set_log_init("Dimmer2 On\r\n");
+        logging.log("Dimmer2 On");
         delay(50);
         dimmer2.setPower(dimmer2_pwr);
       }
@@ -114,22 +114,22 @@ public: float power;
       if (dimmer3_pwr == 0 && dimmer3.getState()==1) {
         dimmer3.setPower(0);
         dimmer3.setState(OFF);
-        logging.Set_log_init("Dimmer3 Off\r\n");
+        logging.log("Dimmer3 Off");
         delay(50);
       }
       else if (dimmer3_pwr != 0 && dimmer3.getState()==0) {
         dimmer3.setState(ON);
-        logging.Set_log_init("Dimmer3 On\r\n");
+        logging.log("Dimmer3 On");
         delay(50);
         dimmer3.setPower(dimmer3_pwr);
       }
       else { dimmer3.setPower(dimmer3_pwr); }
     }
     #endif
-    logging.Set_log_init("dimmer 1: " + String(dimmer1_pwr) + "%\r\n" );
+    logging.log("dimmer 1: %d%%", dimmer1_pwr);
     #ifdef outputPin2
-    logging.Set_log_init("dimmer 2: " + String(dimmer2_pwr) + "%\r\n" );
-    logging.Set_log_init("dimmer 3: " + String(dimmer3_pwr) + "%\r\n" );
+    logging.log("dimmer 2: %d%%", dimmer2_pwr);
+    logging.log("dimmer 3: %d%%", dimmer3_pwr);
     #endif
   #endif
   }
@@ -167,14 +167,14 @@ public: float power;
     if (dimmer.getState()) {
       dimmer.setPower(0);
       dimmer.setState(OFF);
-      logging.Set_log_init("Dimmer1 Off\r\n");
+      logging.log("Dimmer1 Off");
       delay(50);
     }
     #ifdef outputPin2
     if (dimmer2.getState()) {
       dimmer2.setPower(0);
       dimmer2.setState(OFF);
-      logging.Set_log_init("Dimmer2 Off\r\n");
+      logging.log("Dimmer2 Off");
       delay(50);
     }
     #endif
@@ -182,7 +182,7 @@ public: float power;
     if (dimmer3.getState()) {
       dimmer3.setPower(0);
       dimmer3.setState(OFF);
-      logging.Set_log_init("Dimmer3 Off\r\n");
+      logging.log("Dimmer3 Off");
       delay(50);
     }
     #endif

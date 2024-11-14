@@ -40,8 +40,10 @@ void mqttdallas() {
            (sysvar.celsius[a] > 200.00) ) {
         sysvar.celsius[a]=previous_celsius[a];
         dallas_error[a]++;  // incrémente le compteur d'erreur
+
         logging.Set_log_init("Dallas " + String(a) + " : échec "+ String(dallas_error[a]) + "\r\n",true);
         if ( timer_dallas < DALALS_TIMEOUT )  { timer_dallas = timer_dallas + 100;  } // on augmente le timer pour la prochaine lecture
+
       }
       else {
         sysvar.celsius[a] = (roundf(sysvar.celsius[a] * 10) / 10 ) + 0.1; // pour les valeurs min
@@ -56,15 +58,15 @@ void mqttdallas() {
 
       if (!discovery_temp) {
         discovery_temp = true;
-        device_dimmer_alarm_temp.HA_discovery();
+        device_dimmer_alarm.HA_discovery();
         for (int i = 0; i < deviceCount; i++) {
           device_temp[i].HA_discovery();
         }
         device_temp_master.HA_discovery();
         device_dimmer_maxtemp.HA_discovery();
-        device_dimmer_alarm_temp.send(stringBoolMQTT(sysvar.security));
+        device_dimmer_alarm.send(check_fs_version("RAS"));
         device_dimmer_maxtemp.send(String(config.maxtemp));
-        device_dimmer_alarm_temp_clear.HA_discovery();
+        device_dimmer_reset_alarm.HA_discovery();
       }
 
       // uniformisation des valeurs de température ( for en valeur I pour retrouver plus facilement)
@@ -75,7 +77,7 @@ void mqttdallas() {
           device_temp[i].send(String(sysvar.celsius[i]));
           previous_celsius[i]=sysvar.celsius[i];
           if ( dallas_wait_log > 5 ) { /// limitation de l'affichage des logs de température
-            logging.Set_log_init("Dallas " + String(i) + " : " + String(sysvar.celsius[i]) + "\r\n",false);
+            logging.log("Dallas %d : %s°C", i, String(sysvar.celsius[i]));
           }
         }
       }
@@ -118,7 +120,7 @@ void mqttdallas() {
       DEBUG_PRINTLN("détection perte sonde dallas");
 
       Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String(Dallas_lost),"Dallas perdue");
-      logging.Set_log_init(String(Dallas_lost) + "\r\n",true);
+      logging.log(Dallas_lost);
       dallas_error[a] = 0; // remise à zéro du compteur d'erreur
       /// mise en sécurité
       sysvar.celsius[a] = 99.9;
@@ -127,7 +129,7 @@ void mqttdallas() {
       if (a == sysvar.dallas_maitre) {
         String temp_topic = "Xlyric/" + String(config.say_my_name) + "/dallas";
 
-        String message = String(logging.loguptime()) + "Dallas maitre perdue";
+        String message = logging.get_current_time() + " - " + Dallas_lost;
         client.publish((temp_topic+"dallas").c_str(), String(message).c_str(),true);
 
         unified_dimmer.dimmer_off(); /// mise en sécurité de l'ensemble
@@ -176,8 +178,7 @@ void restart_dallas() {
     deviceCount = sensors.getDeviceCount();
     if ( deviceCount > 0 )  {
       present = 1;
-      logging.Set_log_init(String(deviceCount));
-      logging.Set_log_init(" DALLAS detected\r\n");
+      logging.log(DALLAS_detected, deviceCount);
       devices_init(); // initialisation des devices HA
     }
 
