@@ -1,8 +1,8 @@
 #ifndef CONFIG
 #define CONFIG
 
-#define VERSION "20241106"
-#define FS_VERSION "20241106" // date de la release
+#define VERSION "20241114"
+#define FS_VERSION "20241114" // date de la release
 
 #define TEMPERATURE_PRECISION 10
 #define DALALS_TIMEOUT 4000

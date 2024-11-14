@@ -41,7 +41,7 @@ void mqttdallas() {
         sysvar.celsius[a]=previous_celsius[a];
         dallas_error[a]++;  // incrémente le compteur d'erreur
 
-        logging.Set_log_init("Dallas " + String(a) + " : échec "+ String(dallas_error[a]) + "\r\n",true);
+        logging.log("Dallas %s : échec %d", String(a), dallas_error[a]);
         if ( timer_dallas < DALALS_TIMEOUT )  { timer_dallas = timer_dallas + 100;  } // on augmente le timer pour la prochaine lecture
 
       }
