@@ -356,19 +356,18 @@ void setup() {
   pinMode(COOLER, OUTPUT);
   digitalWrite(COOLER, LOW);
 
-  logging.log(
-    "-- Dimmer %s (version: %s / expected FS version: %s) --",
-    String(COMPILE_NAME), String(VERSION), String(FS_VERSION)
-    );
-
   // démarrage file system
   LittleFS.begin();
   // correction d'erreur de chargement de FS
   delay(1000);
   Serial.println("Demarrage file System");
   logging.log(Start_filesystem);
-  logging.log(check_fs_version(String(FS_version_is_outdated)));
-#ifdef ROBOTDYN
+  logging.log(
+    "-- Dimmer %s (version: %s / expected FS version: %s) --",
+    String(COMPILE_NAME), String(VERSION), String(FS_VERSION)
+    );
+  logging.log(check_fs_version(FS_version_is_uptodate));
+#ifdef ROBOTDYNs
   // configuration dimmer
     #ifdef outputPin
   dimmer.begin(NORMAL_MODE, OFF);     // dimmer initialisation: name.begin(MODE, STATE)
