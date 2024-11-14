@@ -54,6 +54,8 @@ extern HA device_dimmer_minpow;
 extern HA device_dimmer_starting_pow;
 extern HA device_dimmer_maxtemp;
 
+extern String CURRENT_FS_VERSION;
+
 
 extern String dimmername;
 
@@ -173,7 +175,7 @@ void call_pages() {
         int max = 200;
         if (strcmp(config.child,"none") == 0 || strcmp(config.mode,"off") == 0 ) { max = 100; }
         if (sysvar.puissance >= max) {sysvar.puissance = max; }
-        logging.Set_log_init("HTTP power at " + String(sysvar.puissance) + "%\r\n");
+        logging.log("HTTP power at %d%%", sysvar.puissance);
         // Modif RV - correction bug si dimmer configuré mais pas allumé ou planté
         if (sysvar.change == 0) {
           sysvar.change=1;
@@ -184,7 +186,7 @@ void call_pages() {
 
       else if (request->hasParam(PARAM_INPUT_2)) {
         config.startingpow = request->getParam(PARAM_INPUT_2)->value().toInt();
-        logging.Set_log_init("HTTP power at " + String(config.startingpow)+"W\r\n");
+        logging.log("HTTP power at %dW", config.startingpow);
         sysvar.change=1;
         request->send(200, "application/json", getState().c_str());
       }
@@ -377,7 +379,8 @@ void call_pages() {
   });
 
   server.on("/reset", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain","Restarting");
+    // faire un redirect vers / 
+    request->redirect("/");
     config.restart = true;
   });
 
@@ -412,7 +415,7 @@ void call_pages() {
     ///  fonction  /get?paramettre=xxxx
     if (request->hasParam("save")) {
       Serial.println(F("Saving configuration..."));
-      logging.Set_log_init(config.saveConfiguration()); // sauvegarde de la configuration
+      logging.log(config.saveConfiguration()); // sauvegarde de la configuration
     }
 
     if (request->hasParam("hostname")) { request->getParam("hostname")->value().toCharArray(config.hostname,16); }
@@ -480,8 +483,8 @@ void call_pages() {
     if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,50); }
     if (request->hasParam("mqttpassword")) {
       request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,50);
-      logging.Set_log_init(config.saveConfiguration()); // sauvegarde de la configuration
-      logging.Set_log_init(mqtt_config.savemqtt()); // sauvegarde et récupération de la log MQTT
+      logging.log(config.saveConfiguration()); // sauvegarde de la configuration
+      logging.log(mqtt_config.savemqtt()); // sauvegarde et récupération de la log MQTT
     }
     if (request->hasParam("DALLAS")) {
       request->getParam("DALLAS")->value().toCharArray(config.DALLAS,17);
@@ -543,8 +546,8 @@ void call_pages() {
     if (request->hasParam("servermode")) {
       String inputMessage = request->getParam("servermode")->value();
       getServermode(inputMessage);
-      logging.Set_log_init(config.saveConfiguration()); // sauvegarde de la configuration
-      logging.Set_log_init(mqtt_config.savemqtt()); // sauvegarde et récupération de la log MQTT
+      logging.log(config.saveConfiguration()); // sauvegarde de la configuration
+      logging.log(mqtt_config.savemqtt()); // sauvegarde et récupération de la log MQTT
     }
 
     request->send(200, "application/json", getconfig().c_str());
@@ -602,7 +605,6 @@ String getState() {
   doc["power"] = int(instant_power * config.charge/100);
   doc["Ptotal"]  = sysvar.puissance_cumul + int(instant_power * config.charge/100);
   // recupération de l'état de surchauffe
-  doc["alerte"]  = sysvar.security;
 #ifdef RELAY1
   doc["relay1"]   = digitalRead(RELAY1);
   doc["relay2"]   = digitalRead(RELAY2);
@@ -613,33 +615,24 @@ String getState() {
   doc["minuteur"] = programme.run;
   doc["onoff"] = config.dimmer_on_off;
   doc["alerte"] = logging.Get_alerte_web();
+  if (doc["alerte"] == "") doc["alerte"] = check_fs_version();
   serializeJson(doc, state);
   return String(state);
 }
 
 String textnofiles() {
   String state =
-    "<html><body>Filesystem is not present. <a href='https://ota.apper-solaire.org/firmware/littlefs-dimmer.bin'>download it here</a> <br>and after  <a href='/update'>upload on the ESP here </a></body></html>";
+    "<html><body>Filesystem is not present. <a href='https://ota.apper-solaire.org/firmware/littlefs-dimmer.bin'>download it here</a> <br>and after  <a href='/update'>upload on the ESP here </a> or <a href='/reset'>reboot</a> if update is already made</body></html>";
   return String(state);
 }
 
 String processor(const String& var){
-
-  if (var == "VERSION") {
-    // affichage de la version et de l'environnement
-    String VERSION_http = String(VERSION) + " " + String(COMPILE_NAME);
-    return (VERSION_http);
-  }
-  if (var == "NAME") {
-    String name = String(config.say_my_name) + ".local";
-    return (name);
-  }
-  if (var == "RSSI") {
-    return (String(WiFi.RSSI()));
-  }
-  if (var == "FS_RELEASE") {
-    return String(FS_RELEASE);
-  }
+  if (var == "VERSION") return String(VERSION);
+  if (var == "MODEL") return String(COMPILE_NAME);
+  if (var == "NAME") return String(config.say_my_name) + ".local";
+  if (var == "RSSI") return (String(WiFi.RSSI()));
+  if (var == "FS_VERSION") return String(FS_VERSION);
+  if (var == "CURRENT_FS_VERSION") return String(CURRENT_FS_VERSION);
   return ("N/A");
 }
 

@@ -140,7 +140,7 @@ cp "$SRC_DIR/favicon.ico" "$DST_DIR/favicon.ico"
 echo "done."
 
 echo -n "Generate version file... "
-grep "#define FS_RELEASE " "$SRC_DIR/../src/config/config.h" | cut -d'"' -f 2 > "$DST_DIR/version"
+grep "#define FS_VERSION " "$SRC_DIR/../src/config/config.h" | cut -d'"' -f 2 > "$DST_DIR/version"
 echo "done."
 
 echo "Clean old cached files... "

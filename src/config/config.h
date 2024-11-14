@@ -1,11 +1,11 @@
 #ifndef CONFIG
 #define CONFIG
 
-#define VERSION "Version 20241105"
-#define FS_RELEASE "20241105" // date de la release
+#define VERSION "20241114"
+#define FS_VERSION "20241114" // date de la release
 
 #define TEMPERATURE_PRECISION 10
-#define DALALS_TIMEOUT 4000
+#define DALLAS_TIMEOUT 1500
 // configuration for Standalone boards ( personnalisation )
 #ifdef  STANDALONE
 

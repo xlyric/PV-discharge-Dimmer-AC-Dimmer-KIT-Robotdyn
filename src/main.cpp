@@ -334,12 +334,12 @@ void setup() {
   #if defined(ESP32) || defined(ESP32ETH)
   esp_reset_reason_t reset_reason = esp_reset_reason();
   Serial.printf("Reason for reset: %d\n", reset_reason);
-  logging.Set_log_init(String(Reason_for_reset) + String(reset_reason) + " --\r\n" );
+  logging.log(String(Reason_for_reset), reset_reason);
 
   #else
   rst_info *reset_info = ESP.getResetInfoPtr();
   Serial.printf("Reason for reset: %d\n", reset_info->reason);
-  logging.Set_log_init(String(Reason_for_reset) + String(reset_info->reason) + " --\r\n");
+  logging.log(String(Reason_for_reset), reset_info->reason);
 
   #endif
 
@@ -356,16 +356,18 @@ void setup() {
   pinMode(COOLER, OUTPUT);
   digitalWrite(COOLER, LOW);
 
-  logging.Set_log_init("-- " + String(VERSION) + " --\r\n");
-
   // démarrage file system
   LittleFS.begin();
   // correction d'erreur de chargement de FS
   delay(1000);
   Serial.println("Demarrage file System");
-  logging.Set_log_init(Start_filesystem);
-  test_fs_version();
-#ifdef ROBOTDYN
+  logging.log(Start_filesystem);
+  logging.log(
+    "-- Dimmer %s (version: %s / expected FS version: %s) --",
+    String(COMPILE_NAME), String(VERSION), String(FS_VERSION)
+    );
+  logging.log(check_fs_version(FS_version_is_uptodate));
+#ifdef ROBOTDYNs
   // configuration dimmer
     #ifdef outputPin
   dimmer.begin(NORMAL_MODE, OFF);     // dimmer initialisation: name.begin(MODE, STATE)
@@ -412,20 +414,20 @@ void setup() {
   #endif
   // Should load default config if run for the first time
   Serial.println(F("Loading configuration..."));
-  logging.Set_log_init(Load_configuration);
-  logging.Set_log_init(config.loadConfiguration()); // charge la configuration
+  logging.log(Load_configuration);
+  logging.log(config.loadConfiguration()); // charge la configuration
 
   // Load configuration file mqtt
   Serial.println(F("Loading mqtt_conf configuration..."));
-  logging.Set_log_init(Load_configuration_MQTT);
-  logging.Set_log_init(mqtt_config.loadmqtt());  // charge la configuration mqtt
+  logging.log(Load_configuration_MQTT);
+  logging.log(mqtt_config.loadmqtt());  // charge la configuration mqtt
 
   // chargement des conf de wifi
   Serial.println(F("Loading wifi configuration..."));
   loadwifiIP(wifi_conf, wifi_config_fixe);
 
   // chargement des conf de minuteries
-  Serial.println(F("Loading minuterie \r\n"));
+  Serial.println(F("Loading minuterie"));
   programme.set_name("/dimmer");
   programme.loadProgramme();
   programme.saveProgramme();
@@ -443,7 +445,7 @@ void setup() {
   //************* Setup - Connexion Wifi
   //***********************************
   Serial.print("start Wifiautoconnect");
-  logging.Set_log_init(Start_Wifiautoconnect);
+  logging.log(Start_Wifiautoconnect);
 
   // WiFi.setPhyMode(WIFI_PHY_MODE_11N);
   // wifi_set_phy_mode(PHY_MODE_11N);
@@ -545,8 +547,8 @@ void setup() {
   // MDNS.addService("http", "tcp", 80);
   MDNS.addService("http", "tcp", 1308);
 
-  logging.Set_log_init(mDNS_Responder_Started);
-  logging.Set_log_init(String(config.say_my_name) + ".local \r\n");
+  logging.log(mDNS_Responder_Started);
+  logging.log(String(config.say_my_name) + ".local");
 
 
 
@@ -582,8 +584,7 @@ void setup() {
     deviceCount = sensors.getDeviceCount();
   }
 
-  logging.Set_log_init(String(deviceCount));
-  logging.Set_log_init(DALLAS_detected);
+  logging.log(DALLAS_detected, deviceCount);
 
   /// recherche d'une sonde dallas
   dallaspresent();
@@ -593,7 +594,7 @@ void setup() {
   /// MQTT
   if (!AP && mqtt_config.mqtt) {
     Serial.println("Connection MQTT" );
-    logging.Set_log_init(Attempting_MQTT_connexion);
+    logging.log(Attempting_MQTT_connexion);
 
     /// Configuration et connexion MQTT
     async_mqtt_init();
@@ -664,9 +665,7 @@ void setup() {
   DEBUG_PRINTLN(ESP.getFreeHeap());
 
   /// affichage de l'heure  GMT +1 dans la log
-  logging.Set_log_init(End_Start);
-  logging.Set_log_init("",true);
-  logging.Set_log_init("\r\n");
+  logging.log(End_Start);
 
   delay(1000);
 }
@@ -711,7 +710,7 @@ void loop() {
     //  minuteur en cours
     if (programme.stop_progr()) {
       // Robotdyn dimmer
-      logging.Set_log_init(Stop_minuteur,true);
+      logging.log(Stop_minuteur);
       unified_dimmer.set_power(0);       // necessaire pour les autres modes
       unified_dimmer.dimmer_off();
 
@@ -739,7 +738,7 @@ void loop() {
       else { sysvar.puissance = programme.puissance; }
 
       //// robotdyn dimmer
-      logging.Set_log_init(Start_minuteur,true);
+      logging.log(Start_minuteur);
 
       unified_dimmer.set_power(sysvar.puissance);
       delay (50);
@@ -762,14 +761,14 @@ void loop() {
   //// relay 1
   if (programme_relay1.run) {
     if (programme_relay1.stop_progr()) {
-      logging.Set_log_init(Stop_minuteur_relay1,true);
+      logging.log(Stop_minuteur_relay1);
       digitalWrite(RELAY1, LOW);
       device_relay1.send(String(0));
     }
   }
   else {
     if (programme_relay1.start_progr()) {
-      logging.Set_log_init(Start_minuteur_relay1,true);
+      logging.log(Start_minuteur_relay1);
       digitalWrite(RELAY1, HIGH);
       device_relay1.send(String(1));
     }
@@ -777,14 +776,14 @@ void loop() {
 
   if (programme_relay2.run) {
     if (programme_relay2.stop_progr()) {
-      logging.Set_log_init(Stop_minuteur_relay2,true);
+      logging.log(Stop_minuteur_relay2);
       digitalWrite(RELAY2, LOW);
       device_relay2.send(String(0));
     }
   }
   else {
     if (programme_relay2.start_progr()) {
-      logging.Set_log_init(Start_minuteur_relay2,true);
+      logging.log(Start_minuteur_relay2);
       digitalWrite(RELAY2, HIGH);
       device_relay2.send(String(1));
     }
@@ -800,13 +799,12 @@ void loop() {
 
   //// si la sécurité température est active on coupe le dimmer
   if ( sysvar.celsius[sysvar.dallas_maitre] > ( config.maxtemp + 2) && (!alerte) ) {
-    /// send alert to MQTT
-    Mqtt_send_DOMOTICZ(
-      String(config.IDXAlarme),
-      String("Alert Temp :" + String(sysvar.celsius[sysvar.dallas_maitre]) ),
-      "Alerte"
-      );
-
+    logging.Set_alerte_web("Surchauffe ("+String(sysvar.celsius[sysvar.dallas_maitre])+"°C)");
+    if (mqtt_config.mqtt)
+      Mqtt_send_DOMOTICZ(String(config.IDXAlarme), "Surchauffe ("+String(
+                           sysvar.celsius[sysvar.dallas_maitre])+"°C)", "Alerte");
+    if (config.HA)
+      device_dimmer_alarm.send("Surchauffe ("+String(sysvar.celsius[sysvar.dallas_maitre])+"°C)");
     alerte=true;
     unified_dimmer.dimmer_off();
   }
@@ -814,21 +812,24 @@ void loop() {
   if ( sysvar.security == 1 ) {
     if (!alerte) {
       Serial.println("Alert Temp");
-      logging.Set_log_init(Alert_Temp,true);
+      logging.log(Alert_Temp);
 
       if (!AP && mqtt_config.mqtt ) {
-        Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("Ballon chaud " ),"Alerte");        /// send alert to MQTT
-        device_dimmer_alarm_temp.send("Hot water");
+        logging.Set_alerte_web("Surchauffe ("+String(sysvar.celsius[sysvar.dallas_maitre])+"°C)");
+        if (mqtt_config.mqtt)
+          Mqtt_send_DOMOTICZ(String(config.IDXAlarme), "Surchauffe ("+String(
+                               sysvar.celsius[sysvar.dallas_maitre])+"°C)", "Alerte");
+        if (config.HA)
+          device_dimmer_alarm.send("Surchauffe ("+String(sysvar.celsius[sysvar.dallas_maitre])+"°C)");
       }
       alerte=true;
     }
     //// Trigger de sécurité température
     if ( sysvar.celsius[sysvar.dallas_maitre] <= (config.maxtemp - (config.maxtemp*config.trigger/100)) ) {
       sysvar.security = 0;
-      if (!AP && mqtt_config.mqtt && config.HA) {
-        device_dimmer_alarm_temp.send(stringBool(sysvar.security));
-        Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("RAS" ),"Alerte");
-      }
+      logging.Set_alerte_web("");
+      if (mqtt_config.mqtt) Mqtt_send_DOMOTICZ(String(config.IDXAlarme), check_fs_version("RAS"), "Alerte");
+      if (config.HA) device_dimmer_alarm.send(check_fs_version("RAS"));
       sysvar.change = 1;
     }
     else {
@@ -896,7 +897,7 @@ void loop() {
           // si mode délest envoie d'une commande à 0
           if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance <= config.maxpow) {
             child_communication(0,false);
-            logging.Set_log_init(Child_at_zero);
+            logging.log(Child_at_zero);
           }
           // si sysvar.puissance passe subitement au dessus de config.maxpow
           if ( strcmp(config.mode,"delester") == 0 && sysvar.puissance > config.maxpow) {
@@ -1003,10 +1004,12 @@ void loop() {
     if ( config.HA ) {
       device_temp[sysvar.dallas_maitre].send(String(temp));
       device_temp_master.send(String(temp));
-      device_dimmer_alarm_temp.send(stringBool(sysvar.security));
       device_dimmer_power.send(String(0));
       device_dimmer_total_power.send(String(sysvar.puissance_cumul));
     }        /// si HA remonté MQTT HA de la température
+    logging.Set_alerte_web("Surchauffe ("+String(temp)+"°C)");
+    if (mqtt_config.mqtt) Mqtt_send_DOMOTICZ(String(config.IDXAlarme), "Surchauffe ("+String(temp)+"°C)", "Alerte");
+    if (config.HA) device_dimmer_alarm.send("Surchauffe ("+String(temp)+"°C)");
   }
 
   //// protection contre la perte de la sonde dallas
@@ -1030,10 +1033,15 @@ bool dallaspresent () {
   if (deviceCount == 0 && ( strcmp("null", config.DALLAS) != 0 || strcmp("none", config.DALLAS) != 0 )) {
     /// remonter l'alerte une fois toute les 10 secondes
     if (devicealerte == 0) {
-      logging.Set_log_init(Alerte_Dallas_not_found);
-      Mqtt_send_DOMOTICZ(String(config.IDXTemp), String("Alerte Dallas non trouvée"),"Alerte");  /// send alert to MQTT
-      device_dimmer_alarm_temp.send("Alerte Dallas non trouvée");
-      logging.Set_alerte_web("Dallas Maitre non trouvée");
+      logging.log(Alerte_Dallas_not_found);
+      logging.Set_alerte_web("Sonde température (Dallas) non-détectée");
+      if (mqtt_config.mqtt)
+        Mqtt_send_DOMOTICZ(
+          String(config.IDXAlarme),
+          "Sonde température (Dallas) non-détectée",
+          "Alerte"
+          );
+      if (config.HA) device_dimmer_alarm.send("Sonde température (Dallas) non-détectée");
       devicealerte++;
     }
     else {
@@ -1046,6 +1054,8 @@ bool dallaspresent () {
   }
 
   logging.Set_alerte_web("");
+  if (mqtt_config.mqtt) Mqtt_send_DOMOTICZ(String(config.IDXAlarme), check_fs_version("RAS"), "Alerte");
+  if (config.HA) device_dimmer_alarm.send(check_fs_version("RAS"));
 
   //// recherche des adresses des sondes
 
@@ -1067,7 +1077,7 @@ bool dallaspresent () {
 
        /// si pas de sonde trouvée
        if (!sensorFound) {
-         logging.Set_log_init("Unable to find temperature sensors address \r\n", true);
+         logging.log("Unable to find temperature sensors address");
          return false;
        }*/
 
@@ -1088,25 +1098,22 @@ bool dallaspresent () {
     }
     devAddrNames[a] = address;
     Serial.println();
+    logging.log(Dallas_sensor_found, a, address.c_str());
+
     if (strcmp(address.c_str(), config.DALLAS) == 0) {
       sysvar.dallas_maitre = a;
-      logging.Set_log_init("MAIN " );
+      logging.log(Dallas_sensor_is_main, address.c_str());
     }
-
     // détection de la 1ere présence d'une dallas
-    if (strcmp("none", config.DALLAS) == 0 || strcmp("null", config.DALLAS) == 0 ) {
+    else if (strcmp("none", config.DALLAS) == 0 || strcmp("null", config.DALLAS) == 0 ) {
       sysvar.dallas_maitre = a;
-      logging.Set_log_init("Default MAIN " );
       // sauvegarde de l'adresse de la sonde maitre
       strcpy(config.DALLAS, address.c_str());
       config.saveConfiguration();
+      logging.log(Dallas_sensor_is_now_main, address);
     }
 
-    logging.Set_log_init(Dallas_sensor);
-    logging.Set_log_init(String(a).c_str());
-    logging.Set_log_init(found_Address);
-    logging.Set_log_init(String(address).c_str());
-    logging.Set_log_init("\r\n");
+
     present = 1;
 
     delay(250);

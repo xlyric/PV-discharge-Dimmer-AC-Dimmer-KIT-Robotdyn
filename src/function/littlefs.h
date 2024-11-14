@@ -32,21 +32,12 @@ extern Wifi_struct wifi_config_fixe;  // NOSONAR
 // flag for saving data
 extern bool shouldSaveConfig;   // NOSONAR
 
+String CURRENT_FS_VERSION;
+
 // callback notifying us of the need to save config
 void saveConfigCallback () {
   Serial.println("Should save config");
   shouldSaveConfig = true;
-}
-
-String loguptime(String log) {
-  String uptime_stamp;
-  uptime::calculateUptime();
-  uptime_stamp = String(uptime::getDays())
-                 +":"+String(uptime::getHours())
-                 +":"+String(uptime::getMinutes())
-                 +":"+String(uptime::getSeconds())
-                 +"\t"+ log +"\r\n";
-  return uptime_stamp;
 }
 
 
@@ -113,7 +104,7 @@ void savewifiIP(const char *wifi_conf, Wifi_struct &wifi_config_fixe) {
   // Serialize JSON to file
   if (serializeJson(doc, configFile) == 0) {
     Serial.println(F("Failed to write to file in function Save configuration "));
-    logging.Set_log_init(Failed_write_wifi_config);
+    logging.log(Failed_write_wifi_config);
   }
 
   // Close the file
@@ -122,23 +113,26 @@ void savewifiIP(const char *wifi_conf, Wifi_struct &wifi_config_fixe) {
 
 
 bool test_fs_version() {
-
-  // Open file for reading
-
-  File file = LittleFS.open("/version", "r");
-  if (!file) {
-    logging.Set_log_init("FS version is missing please update or reboot for activate after ota\r\n");
+  if (CURRENT_FS_VERSION == "") {
+    // Open file for reading
+    File file = LittleFS.open("/version", "r");
+    if (!file) {
+      logging.log("FS version is missing please update or reboot for activate after ota");
+      return false;
+    }
+    // comparaison entre le contenu du fichier et la version du code FS_VERSION
+    CURRENT_FS_VERSION = file.readStringUntil('\n');
+    file.close();
+  }
+  if (CURRENT_FS_VERSION.toInt() < String(FS_VERSION).toInt() )  {
     return false;
   }
-  // comparaison entre le contenu du fichier et la version du code FS_RELEASE
-  String version = file.readStringUntil('\n');
-  file.close();
-  if (version.toInt() < String(FS_RELEASE).toInt() )  {
-    logging.Set_log_init(FS_version_is_not_same);
-    return false;
-  }
-  logging.Set_log_init(FS_version_is_same);
   return true;
+}
+
+String check_fs_version(String default_message="") {
+  if (!test_fs_version()) return String(FS_version_is_outdated);
+  return default_message;
 }
 
 #endif
