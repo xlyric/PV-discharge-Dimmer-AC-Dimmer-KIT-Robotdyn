@@ -379,7 +379,8 @@ void call_pages() {
   });
 
   server.on("/reset", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain","Restarting");
+    // faire un redirect vers / 
+    request->redirect("/");
     config.restart = true;
   });
 
@@ -621,7 +622,7 @@ String getState() {
 
 String textnofiles() {
   String state =
-    "<html><body>Filesystem is not present. <a href='https://ota.apper-solaire.org/firmware/littlefs-dimmer.bin'>download it here</a> <br>and after  <a href='/update'>upload on the ESP here </a></body></html>";
+    "<html><body>Filesystem is not present. <a href='https://ota.apper-solaire.org/firmware/littlefs-dimmer.bin'>download it here</a> <br>and after  <a href='/update'>upload on the ESP here </a> or <a href='/reset'>reboot</a> if update is already made</body></html>";
   return String(state);
 }
 
