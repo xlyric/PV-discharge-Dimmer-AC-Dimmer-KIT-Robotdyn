@@ -377,7 +377,8 @@ void call_pages() {
   });
 
   server.on("/reset", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain","Restarting");
+    // faire un redirect vers / 
+    request->redirect("/");
     config.restart = true;
   });
 

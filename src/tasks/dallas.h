@@ -41,7 +41,7 @@ void mqttdallas() {
         sysvar.celsius[a]=previous_celsius[a];
         dallas_error[a]++;  // incrémente le compteur d'erreur
         logging.Set_log_init("Dallas " + String(a) + " : échec "+ String(dallas_error[a]) + "\r\n",true);
-        if ( timer_dallas < DALALS_TIMEOUT )  { timer_dallas = timer_dallas + 100;  } // on augmente le timer pour la prochaine lecture
+        if ( timer_dallas < DALLAS_TIMEOUT )  { timer_dallas = timer_dallas + 100;  } // on augmente le timer pour la prochaine lecture
       }
       else {
         sysvar.celsius[a] = (roundf(sysvar.celsius[a] * 10) / 10 ) + 0.1; // pour les valeurs min
@@ -172,7 +172,7 @@ float CheckTemperature(String label, byte deviceAddress[12]){ // NOSONAR
 void restart_dallas() {
   if (deviceCount == 0 ) {
     sensors.begin();
-    delay(DALALS_TIMEOUT);
+    delay(DALLAS_TIMEOUT);
     deviceCount = sensors.getDeviceCount();
     if ( deviceCount > 0 )  {
       present = 1;
