@@ -572,7 +572,7 @@ void setup() {
 
   //// récupération des dallas .
   Serial.println("start 18b20");
-
+  sensors.begin();
   delay(1000);
   deviceCount = sensors.getDeviceCount();
 
