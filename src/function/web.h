@@ -625,11 +625,11 @@ String processor(const String& var){
 
   if (var == "VERSION") {
     // affichage de la version et de l'environnement
-    String VERSION_http = String(VERSION) + " " + String(COMPILE_NAME);
+    auto VERSION_http = String(VERSION) + " " + String(COMPILE_NAME);
     return VERSION_http;
   }
   if (var == "NAME") {
-    String name = String(config.say_my_name) + ".local";
+    auto name = String(config.say_my_name) + ".local";
     return name;
   }
   if (var == "RSSI") {

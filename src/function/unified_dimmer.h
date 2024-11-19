@@ -50,6 +50,7 @@ public: float power;
     int dimmer2_pwr = 0;
     int dimmer3_pwr = 0;
 
+
     // Calcul de la puissance à envoyer à chaque dimmer
     if (tmp_pwr_watt <= config.charge1) { // Un seul dimmer à fournir
       if ( tmp_pwr_watt > 0 ) { dimmer1_pwr = tmp_pwr_watt * 100 / config.charge1; }

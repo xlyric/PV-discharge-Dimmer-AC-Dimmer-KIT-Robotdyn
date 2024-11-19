@@ -68,14 +68,14 @@ String stringBoolMQTT(bool mybool);
 String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
 String node_id = String("dimmer-") + node_mac;
 
-String topic_Xlyric = "Xlyric/" + String(config.say_my_name) +"/";
+auto topic_Xlyric = "Xlyric/" + String(config.say_my_name) +"/";
 
-String command_switch = String(topic_Xlyric + "command/switch");
-String command_number = String(topic_Xlyric + "command/number");
-String command_select = String(topic_Xlyric + "command/select");
-String command_button = String(topic_Xlyric + "command/button");
+auto command_switch = String(topic_Xlyric + "command/switch");
+auto command_number = String(topic_Xlyric + "command/number");
+auto command_select = String(topic_Xlyric + "command/select");
+auto command_button = String(topic_Xlyric + "command/button");
 const String HA_status = String("homeassistant/status");
-String command_save = String("Xlyric/sauvegarde/"+ node_id );
+auto command_save = String("Xlyric/sauvegarde/"+ node_id );
 
 void callback(char* topic, byte* payload, unsigned int length) {
 
@@ -94,7 +94,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   JsonDocument doc2;
   deserializeJson(doc2, arrivage);
   /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remontées par MQTT
-  if (strcmp( topic, config.SubscribePV ) == 0 && doc2.containsKey("power")) {
+  if (strcmp( topic, config.SubscribePV ) == 0 && doc2["power"].is<int>()) {
     int puissancemqtt = doc2["power"];
     puissancemqtt = puissancemqtt - config.startingpow;
     if (puissancemqtt < 0) puissancemqtt = 0;
@@ -108,7 +108,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }
   }
   /// @brief Enregistrement temperature
-  if (strcmp( topic, config.SubscribeTEMP ) == 0 && doc2.containsKey("temperature")) {
+  if (strcmp( topic, config.SubscribeTEMP ) == 0 && doc2["temperature"].is<float>()) {
     Serial.println("lecture temperature MQTT ");
     float temperaturemqtt = doc2["temperature"];
     Serial.println(temperaturemqtt);
@@ -138,7 +138,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   /// @brief Enregistrement des requetes de commandes
   if (strstr( topic, command_switch.c_str() ) != nullptr) {
     #ifdef RELAY1
-    if (doc2.containsKey("relay1")) {
+    if (doc2["relay1"].is<int>()) {
       int relay = doc2["relay1"];
       if ( relay == 0) { digitalWrite(RELAY1, LOW); }
       else { digitalWrite(RELAY1, HIGH); }
@@ -149,7 +149,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }
     #endif
     #ifdef RELAY2
-    if (doc2.containsKey("relay2")) {
+    if (doc2["relay2"].is<int>()) {
       int relay = doc2["relay2"];
       if ( relay == 0) { digitalWrite(RELAY2, LOW); }
       else { digitalWrite(RELAY2, HIGH); }
@@ -159,7 +159,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       device_relay2.send(String(relay));
     }
     #endif
-    if (doc2.containsKey("on_off")) {
+    if (doc2["on_off"].is<int>()) {
       int relay = doc2["on_off"];
       if ( relay == 0) { config.dimmer_on_off = false; }
       else { config.dimmer_on_off = true; }
@@ -172,7 +172,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 
   if (strstr( topic, command_number.c_str() ) != nullptr) {
-    if (doc2.containsKey("starting_power")) {
+    if (doc2["starting_power"].is<int>()) {
       int startingpow = doc2["starting_power"];
       if (config.startingpow != startingpow ) {
         config.startingpow = startingpow;
@@ -183,7 +183,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
         sysvar.change=1;
       }
     }
-    else if (doc2.containsKey("minpow")) {
+    else if (doc2["minpow"].is<int>()) {
       int minpow = doc2["minpow"];
       if (config.minpow != minpow ) {
         config.minpow = minpow;
@@ -194,7 +194,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
         sysvar.change=1;
       }
     }
-    else if (doc2.containsKey("maxpow")) {
+    else if (doc2["maxpow"].is<int>()) {
       int maxpow = doc2["maxpow"];
       if (config.maxpow != maxpow ) {
         config.maxpow = maxpow;
@@ -205,7 +205,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
         sysvar.change=1;
       }
     }
-    else if (doc2.containsKey("powdimmer")) {
+    else if (doc2["powdimmer"].is<int>()) {
       int powdimmer = doc2["powdimmer"];
       if (sysvar.puissance != powdimmer ) {
         if ( config.maxpow != 0 && powdimmer > config.maxpow ) { powdimmer = config.maxpow; }
@@ -216,7 +216,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
         logging.Set_log_init("%\r\n");
       }
     }
-    else if (doc2.containsKey("maxtemp")) {
+    else if (doc2["maxtemp"].is<int>()) {
       int maxtemp = doc2["maxtemp"];
       if (config.maxtemp != maxtemp ) {
         config.maxtemp = maxtemp;
@@ -227,7 +227,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
         sysvar.change=1;
       }
     }
-    else if (doc2.containsKey("charge")) {
+    else if (doc2["charge"].is<int>()) {
       int charge = doc2["charge"];
       if (config.charge != charge ) {
         config.charge = charge;
@@ -240,7 +240,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
   // clear alarm & save
   if (strstr( topic, command_button.c_str() ) != nullptr) {
-    if (doc2.containsKey("reset_alarm")) {
+    if (doc2["reset_alarm"].is<int>()) {
       if (doc2["reset_alarm"] == "1" ) {
         logging.Set_log_init(Clear_alarm_temp,true);
         sysvar.security = 0;
@@ -248,7 +248,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
         sysvar.change = 1;
       }
     }
-    else if (doc2.containsKey("save")) {
+    else if (doc2["save"].is<int>()) {
       if (doc2["save"] == "1" ) {
         logging.Set_log_init(config.saveConfiguration()); // sauvegarde de la configuration
       }
@@ -257,7 +257,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   // child mode
   if (strstr( topic, command_select.c_str() ) != nullptr) {
-    if (doc2.containsKey("child_mode")) {
+    if (doc2["child_mode"].is<String>()) {
       String childmode = doc2["child_mode"];
       if (config.mode != doc2["child_mode"] ) {
         strlcpy(config.mode, doc2["child_mode"], sizeof(config.mode));
@@ -360,7 +360,7 @@ void Mqtt_send_DOMOTICZ(String idx, String value, String name="") {
   }
 
   if (config.JEEDOM) {
-    String jeedom_publish = String(config.Publish) + "/" + idx;
+    auto jeedom_publish = String(config.Publish) + "/" + idx;
     // si config.Publish est vide, on ne publie pas
     if (strlen(config.Publish) != 0 ) { // NOSONAR
       client.publish(jeedom_publish.c_str(), value.c_str(), true);
@@ -428,7 +428,7 @@ void connect_and_subscribe() {
       client.subscribe(command_button.c_str(),1);
 
       String node_id = config.say_my_name;
-      String save_command = String("Xlyric/sauvegarde/"+ node_id );
+      auto save_command = String("Xlyric/sauvegarde/"+ node_id );
 
       int instant_power = sysvar.puissance;
       /// correction 19/04 valeur remonté au dessus du max conf
@@ -528,7 +528,7 @@ String stringBoolMQTT(bool mybool){
 }
 
 void recreate_topic(){
-  String topic_Xlyric = "Xlyric/" + String(config.say_my_name) +"/";
+  auto topic_Xlyric = "Xlyric/" + String(config.say_my_name) +"/";
   Serial.println("test "+String(config.say_my_name));
   command_switch = String(topic_Xlyric + "command/switch");
   command_number = String(topic_Xlyric + "command/number");

@@ -149,21 +149,20 @@ private: String HA_sensor_type() {
     return info;
   }
 
-
-
-private: String IPaddress = WiFi.localIP().toString();
-
-private: String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
 // setter mod_mac
 public: void Set_node_mac(String setter) {
     node_mac=setter;
   }
 
-private: String node_id = String("dimmer-") + node_mac;
-private: String topic_switch = "homeassistant/switch/"+ node_id +"/";
-private: String topic_switch_state = "homeassistant/switch/";
-private: String HA_device_declare() {
-    String IPaddress = WiFi.localIP().toString();
+private: String IPaddress = WiFi.localIP().toString();
+         String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
+
+
+         String node_id = String("dimmer-") + node_mac;
+         String topic_switch = "homeassistant/switch/"+ node_id +"/";
+         String topic_switch_state = "homeassistant/switch/";
+         String HA_device_declare() {
+         String IPaddress = WiFi.localIP().toString();
     String info = R"(
                   "dev": {
                       "ids": ")" + node_id + R"(",

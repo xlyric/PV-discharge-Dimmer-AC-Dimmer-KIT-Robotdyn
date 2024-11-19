@@ -158,12 +158,12 @@ public:
 
     /// en cas de reboot étranges, il sera bon de passer sur un format de type doc["hostname"].as<String>().c_str() pour éviter les problèmes de mémoire
     /// --> Exception 9: LoadStoreAlignmentCause: Load or store to an unaligned address. cas survenu avec les configuration MQTT
-    String hostnamevalue = doc["hostname"].as<String>();
+    auto hostnamevalue = doc["hostname"].as<String>();
     strlcpy(hostname, hostnamevalue.c_str(), sizeof(hostname));
 
     port = doc["port"] | 1883;
 
-    String PublishValue = doc["Publish"].as<String>();
+    auto PublishValue = doc["Publish"].as<String>();
     strlcpy(Publish, PublishValue.c_str(), sizeof(Publish));
 
     IDXTemp = doc["IDXTemp"] | 200;
@@ -180,16 +180,16 @@ public:
     trigger = doc["trigger"] | 10;
     check_trigger();
 
-    String Publishchild = doc["child"].as<String>();
+    auto Publishchild = doc["child"].as<String>();
     strlcpy(child, Publishchild.c_str(), sizeof(child));
 
-    String Publishmode = doc["mode"].as<String>();
+    auto Publishmode = doc["mode"].as<String>();
     strlcpy(mode, Publishmode.c_str(), sizeof(mode));
 
-    String PublishSubscribePV = doc["SubscribePV"].as<String>();
+    auto PublishSubscribePV = doc["SubscribePV"].as<String>();
     strlcpy(SubscribePV, PublishSubscribePV.c_str(), sizeof(SubscribePV));
 
-    String PublishSubscribeTEMP = doc["SubscribeTEMP"].as<String>();
+    auto PublishSubscribeTEMP = doc["SubscribeTEMP"].as<String>();
     strlcpy(SubscribeTEMP, PublishSubscribeTEMP.c_str(), sizeof(SubscribeTEMP));
 
     dimmer_on_off = doc["dimmer_on_off"] | 1;
@@ -197,13 +197,13 @@ public:
     JEEDOM = doc["JEEDOM"] | true;
     DOMOTICZ = doc["DOMOTICZ"] | true;
 
-    String PublishPVROUTER = doc["PVROUTER"].as<String>();
+    auto PublishPVROUTER = doc["PVROUTER"].as<String>();
     strlcpy(PVROUTER, PublishPVROUTER.c_str(), sizeof(PVROUTER));
 
-    String PublishDALLAS = doc["DALLAS"].as<String>();
+    auto PublishDALLAS = doc["DALLAS"].as<String>();
     strlcpy(DALLAS, PublishDALLAS.c_str(), sizeof(DALLAS));
 
-    String Publishsay_my_name = doc["name"].as<String>();
+    auto Publishsay_my_name = doc["name"].as<String>();
     if (strcmp(Publishsay_my_name.c_str(), "") == 0 || strcmp(Publishsay_my_name.c_str(), "null" ) == 0 ) {
       strcpy(say_my_name, ("dimmer-"+WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17)).c_str());
     }
@@ -304,10 +304,10 @@ public:
     }
 
     // Copy values from the JsonDocument to the Config
-    String usernameValue = doc["MQTT_USER"].as<String>();
+    auto usernameValue = doc["MQTT_USER"].as<String>();
     strlcpy(username, usernameValue.c_str(), sizeof(username));
 
-    String passwordValue = doc["MQTT_PASSWORD"].as<String>();
+    auto passwordValue = doc["MQTT_PASSWORD"].as<String>();
     strlcpy(password, passwordValue.c_str(), sizeof(password));
 
     mqtt = doc["mqtt"] | true;
