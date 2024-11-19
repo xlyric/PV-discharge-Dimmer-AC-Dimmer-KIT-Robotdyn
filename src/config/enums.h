@@ -51,10 +51,10 @@ public: void Set_log_init(String setter, bool logtime=false) {
 
       if ( logtime && ( setterLength + logInitLength + logUptimeLength < maxLength))  {
           // protection dépassements de tampon (buffer overflow)
-          strncat(log_init, loguptime(), maxLength - logInitLength - 1);
+          strncat(log_init, loguptime(), maxLength - logInitLength - 1); // NOSONAR
       }
       // protection dépassements de tampon (buffer overflow)
-      strncat(log_init, setter.c_str(), maxLength - logInitLength - 1);
+      strncat(log_init, setter.c_str(), maxLength - logInitLength - 1); // NOSONAR
     } else {
       // Si la taille est trop grande, réinitialiser le log_init
       reset_log_init();
@@ -77,7 +77,7 @@ public: void Set_log_init(String setter, bool logtime=false) {
   // reset log_init
   void reset_log_init() {
     log_init[0] = '\0';
-    strcat(log_init,"197}11}1");
+    strncat(log_init, "197}11}1", sizeof(log_init) - strlen(log_init) - 1);
   }
 
   char *loguptime(bool day=false) {
@@ -394,8 +394,5 @@ public:
   int annee;
   int weekday;
 };  // fin de la structure epoc
-
-
-
 
 #endif

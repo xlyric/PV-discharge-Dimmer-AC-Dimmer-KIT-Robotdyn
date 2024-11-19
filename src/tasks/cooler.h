@@ -9,7 +9,6 @@ extern Mqtt mqtt_config;
 extern String logs;
 extern bool AP; // mode point d'accès
 extern HA device_cooler;
-// extern byte security;
 extern Programme programme;
 
 unsigned long lastCoolerOffTime = 0; // NOSONAR

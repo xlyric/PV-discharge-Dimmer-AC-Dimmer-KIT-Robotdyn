@@ -66,8 +66,8 @@ public: void saveProgramme() {
     JsonDocument doc;
 
     //// vérification cohérence des données
-    if (check_data(heure_demarrage)) {strcpy(heure_demarrage, "00:00"); }
-    if (check_data(heure_arret)) {strcpy(heure_arret, "00:00"); }
+    if (check_data(heure_demarrage)) {strlcpy(heure_demarrage, "00:00", sizeof(heure_demarrage)); }
+    if (check_data(heure_arret)) {strlcpy(heure_arret, "00:00", sizeof(heure_arret)); }
 
     // Set the values in the document
     doc["heure_demarrage"] = heure_demarrage;

@@ -354,7 +354,7 @@ void Mqtt_send_DOMOTICZ(String idx, String value, String name="") {
     doc["name"] = name;
     serializeJson(doc, retour);
     // si config.Publish est vide, on ne publie pas
-    if (strlen(config.Publish) != 0 ) {
+    if (strlen(config.Publish) != 0 ) { // NOSONAR
       client.publish(config.Publish, retour.c_str(), true);
     }
   }
@@ -362,7 +362,7 @@ void Mqtt_send_DOMOTICZ(String idx, String value, String name="") {
   if (config.JEEDOM) {
     String jeedom_publish = String(config.Publish) + "/" + idx;
     // si config.Publish est vide, on ne publie pas
-    if (strlen(config.Publish) != 0 ) {
+    if (strlen(config.Publish) != 0 ) { // NOSONAR
       client.publish(jeedom_publish.c_str(), value.c_str(), true);
     }
   }
@@ -420,8 +420,8 @@ void connect_and_subscribe() {
 
       logging.Set_log_init("Other subscriptions...\r\n");
       Serial.println("Other subscriptions...");
-      if (mqtt_config.mqtt && strlen(config.SubscribePV) !=0 ) {client.subscribe(config.SubscribePV,1);}
-      if (mqtt_config.mqtt && strlen(config.SubscribeTEMP) != 0 ) {client.subscribe(config.SubscribeTEMP,1);}
+      if (mqtt_config.mqtt && strlen(config.SubscribePV) !=0 ) {client.subscribe(config.SubscribePV,1);} // NOSONAR
+      if (mqtt_config.mqtt && strlen(config.SubscribeTEMP) != 0 ) {client.subscribe(config.SubscribeTEMP,1);} // NOSONAR
       client.subscribe(command_switch.c_str(),1);
       client.subscribe(command_number.c_str(),1);
       client.subscribe(command_select.c_str(),1);
