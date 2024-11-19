@@ -138,7 +138,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 
   /// @brief Enregistrement des requetes de commandes
-  if (strstr( topic, command_switch.c_str() ) != NULL) {
+  if (strstr( topic, command_switch.c_str() ) != nullptr) {
     #ifdef RELAY1
     if (doc2.containsKey("relay1")) {
       int relay = doc2["relay1"];
@@ -173,7 +173,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }
   }
 
-  if (strstr( topic, command_number.c_str() ) != NULL) {
+  if (strstr( topic, command_number.c_str() ) != nullptr) {
     if (doc2.containsKey("starting_power")) {
       int startingpow = doc2["starting_power"];
       if (config.startingpow != startingpow ) {
@@ -241,7 +241,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }
   }
   // clear alarm & save
-  if (strstr( topic, command_button.c_str() ) != NULL) {
+  if (strstr( topic, command_button.c_str() ) != nullptr) {
     if (doc2.containsKey("reset_alarm")) {
       if (doc2["reset_alarm"] == "1" ) {
         logging.Set_log_init(Clear_alarm_temp,true);
@@ -258,7 +258,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 
   // child mode
-  if (strstr( topic, command_select.c_str() ) != NULL) {
+  if (strstr( topic, command_select.c_str() ) != nullptr) {
     if (doc2.containsKey("child_mode")) {
       String childmode = doc2["child_mode"];
       if (config.mode != doc2["child_mode"] ) {
@@ -340,7 +340,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
       }
     }
   }
-  delete[] arrivage;
+  //delete[] arrivage;
+  return;
 }
 
 void Mqtt_send_DOMOTICZ(String idx, String value, String name="") {

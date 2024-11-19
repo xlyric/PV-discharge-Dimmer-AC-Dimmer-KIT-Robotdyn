@@ -4,8 +4,8 @@
 #define VERSION "Version 20241118"
 #define FS_RELEASE "20241105" // date de la release
 
-#define TEMPERATURE_PRECISION 10
-#define DALLAS_TIMEOUT 1500
+constexpr size_t TEMPERATURE_PRECISION=10;
+constexpr size_t DALLAS_TIMEOUT=1500;
 // configuration for Standalone boards ( personnalisation )
 #ifdef  STANDALONE
 
@@ -91,7 +91,7 @@
 // #define TRIGGER 10
 #define TIMERDELAY 5 // delay before switch off
 
-#define LOG_MAX_STRING_LENGTH 1500 // taille max des logs stockées
+constexpr size_t LOG_MAX_STRING_LENGTH=1800 ;// taille max des logs stockées
 
 // activation mode debug
 // #define Debug

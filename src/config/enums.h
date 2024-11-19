@@ -42,9 +42,12 @@ public:
 /// setter log_init
 public: void Set_log_init(String setter, bool logtime=false) {
     // Vérifier si la longueur de la chaîne ajoutée ne dépasse pas LOG_MAX_STRING_LENGTH
-    if ( strlen(setter.c_str()) + strlen(log_init) < static_cast<size_t>(MaxString) )  {
+    size_t setterLength = strlen(setter.c_str());
+    size_t logInitLength = strlen(log_init);
+    size_t logUptimeLength = strlen(loguptime());
+    if ( setterLength + logInitLength < static_cast<size_t>(MaxString) )  {
       if (logtime) {
-        if ( strlen(setter.c_str()) + strlen(log_init) + strlen(loguptime()) < static_cast<size_t>(MaxString))  {
+        if ( setterLength + logInitLength + logUptimeLength < static_cast<size_t>(MaxString))  {
           strcat(log_init,loguptime());
         }
       }

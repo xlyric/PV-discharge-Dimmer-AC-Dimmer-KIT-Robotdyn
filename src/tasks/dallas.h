@@ -25,7 +25,7 @@ int dallas_wait_log; // NOSONAR
 float CheckTemperature(String label, byte deviceAddress[12]); // NOSONAR
 void restart_dallas();
 bool dallaspresent ();
-int timer_dallas = 500; // timer pour la dallas
+size_t timer_dallas = 500; // timer pour la dallas
 
 /// @brief / task executé toute les n secondes pour publier la température ( voir déclaration task dans main )
 void mqttdallas() {
