@@ -2,8 +2,6 @@
 #define TASK_DALLAS
 
 #ifdef STANDALONE
-// #include <Pinger.h>
-// Pinger pinger;
 #endif
 
 extern PubSubClient client;

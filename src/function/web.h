@@ -17,7 +17,6 @@
 #else
 // Web services
   #include <ESP8266WiFi.h>
-// #include <ESPAsyncTCP.h>
   #include <ESP8266HTTPClient.h>
 #endif
 
@@ -33,7 +32,6 @@ extern Programme programme_relay2;
 extern gestion_puissance unified_dimmer;
 
 extern DNSServer dns;
-// extern byte security;
 
 AsyncWebServer server(80);
 
@@ -126,7 +124,6 @@ void call_pages() {
 
         if (input==0) {
           sysvar.puissance = 0;         // En %
-          // int dispo=0;               // En % // on ne s'en sert pas, donc commenté
           sysvar.puissance_dispo = 0;   // En W
           sysvar.change = 0;            // par sécurité, au cas ou le main n'aurait pas fini
         }
@@ -629,11 +626,11 @@ String processor(const String& var){
   if (var == "VERSION") {
     // affichage de la version et de l'environnement
     String VERSION_http = String(VERSION) + " " + String(COMPILE_NAME);
-    return (VERSION_http);
+    return VERSION_http;
   }
   if (var == "NAME") {
     String name = String(config.say_my_name) + ".local";
-    return (name);
+    return name;
   }
   if (var == "RSSI") {
     return (String(WiFi.RSSI()));
@@ -732,8 +729,8 @@ String getcomplement() {
 
 
 String readmqttsave(){
-  String node_id = config.say_my_name;
-  String save_command = String("Xlyric/sauvegarde/"+ node_id );
+  String node_id_readmqttsave = config.say_my_name;
+  auto save_command = String("Xlyric/sauvegarde/"+ node_id_readmqttsave );
   client.subscribe(save_command.c_str(),1);
   return String(
     "<html><head><meta http-equiv='refresh' content='5;url=config.html' /></head><body><h1>config restauree, retour au setup dans 5 secondes, pensez a sauvegarder sur la flash </h1></body></html>");
