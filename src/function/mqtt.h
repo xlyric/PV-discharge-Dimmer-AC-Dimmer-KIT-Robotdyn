@@ -137,6 +137,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   /// @brief Enregistrement des requetes de commandes
   if (strstr( topic, command_switch.c_str() ) != nullptr) {
+    logging.Set_log_init("MQTT command switch ",true);
     #ifdef RELAY1
     if (doc2["relay1"].is<int>()) {
       int relay = doc2["relay1"];

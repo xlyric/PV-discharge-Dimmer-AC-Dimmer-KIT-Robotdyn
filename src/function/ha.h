@@ -110,14 +110,15 @@ private: String HA_sensor_type() {
              "\"value_template\": \"{{ value_json."+ object_id +" }}\",";
     }
     else if (entity_type == "switch") {
-      info = "\"val_tpl\": \"{{ value_json."+ object_id +" }}\","
-             "\"pl\":  \"{{ value_json."+ object_id +" }}\","
-             "\"pl_on\": \"{ \\\""+object_id+"\\\" : \\\"1\\\"  } \","
-             "\"pl_off\": \"{ \\\""+object_id+"\\\" : \\\"0\\\"  } \","
-             "\"stat_on\":1,"
-             "\"stat_off\":0,"
-             "\"qos\":1,"
-             "\"cmd_t\": \""+ topic_Xlyric + "command/" +  entity_type + "/" + object_id + "\",";
+      info = R"(
+          "value_template": "{{ value_json.)" + object_id + R"( }}",
+          "payload_on": "{ \")" + object_id + R"(\" : 1 }",
+          "payload_off": "{ \")" + object_id + R"(\" : 0 }",
+          "stat_on": "1",
+          "stat_off": "0",
+          "qos": 1,
+          "command_topic": ")" + topic_Xlyric + R"(command/)" + entity_type + R"(/)" + object_id + R"(",
+          )";
     }
     else if (entity_type == "number") {
       info = "\"val_tpl\": \"{{ value_json."+ object_id +" }}\","
