@@ -77,7 +77,7 @@ public: void Set_log_init(String setter, bool logtime=false) {
   // reset log_init
   void reset_log_init() {
     log_init[0] = '\0';
-    strncat(log_init, "197}11}1", sizeof(log_init) - strlen(log_init) - 1);
+    strncat(log_init, "197}11}1", sizeof(log_init) - strlen(log_init) - 1); // NOSONAR
   }
 
   char *loguptime(bool day=false) {
