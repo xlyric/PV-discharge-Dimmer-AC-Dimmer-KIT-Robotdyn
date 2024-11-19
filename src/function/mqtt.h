@@ -56,6 +56,8 @@ void connectToMqtt();
 void onMqttConnect(bool sessionPresent);
 void onMqttSubscribe(uint16_t packetId, uint8_t qos);
 void recreate_topic();
+void handleRelay(const JsonDocument& doc, const char* relayKey, int relayPin, const char* relayName, HA& device);
+void handleNumberParameter(const JsonDocument& doc, const char* key, int& configParam, const char* logMessage, HA& device);
 
 char buffer[1024];// NOSONAR
 /// @brief Enregistrement du dimmer sur MQTT pour récuperer les informations remonté par MQTT
@@ -79,7 +81,7 @@ auto command_save = String("Xlyric/sauvegarde/"+ node_id );
 
 void callback(char* topic, byte* payload, unsigned int length) {
 
-  char* arrivage = new char[length + 1];
+  auto arrivage = new char[length + 1];
 
   for (unsigned int i=0; i<length; i++) {
     arrivage[i] = (char)payload[i];
@@ -135,30 +137,15 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }
   }
 
-  /// @brief Enregistrement des requetes de commandes
+  /// @brief Enregistrement des requetes de commandes 
+  /// pour les switch 
   if (strstr( topic, command_switch.c_str() ) != nullptr) {
     logging.Set_log_init("MQTT command switch ",true);
     #ifdef RELAY1
-    if (doc2["relay1"].is<int>()) {
-      int relay = doc2["relay1"];
-      if ( relay == 0) { digitalWrite(RELAY1, LOW); }
-      else { digitalWrite(RELAY1, HIGH); }
-      logging.Set_log_init("RELAY1 at ");
-      logging.Set_log_init(String(relay).c_str());
-      logging.Set_log_init("\r\n");
-      device_relay1.send(String(relay));
-    }
+    handleRelay(doc2, "relay1", RELAY1, "relay1", device_relay1);
     #endif
     #ifdef RELAY2
-    if (doc2["relay2"].is<int>()) {
-      int relay = doc2["relay2"];
-      if ( relay == 0) { digitalWrite(RELAY2, LOW); }
-      else { digitalWrite(RELAY2, HIGH); }
-      logging.Set_log_init("RELAY2 at ");
-      logging.Set_log_init(String(relay).c_str());
-      logging.Set_log_init("\r\n");
-      device_relay2.send(String(relay));
-    }
+    handleRelay(doc2, "relay2", RELAY2, "relay2", device_relay2);
     #endif
     if (doc2["on_off"].is<int>()) {
       int relay = doc2["on_off"];
@@ -172,41 +159,15 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }
   }
 
+  // pour les number
   if (strstr( topic, command_number.c_str() ) != nullptr) {
-    if (doc2["starting_power"].is<int>()) {
-      int startingpow = doc2["starting_power"];
-      if (config.startingpow != startingpow ) {
-        config.startingpow = startingpow;
-        logging.Set_log_init("MQTT starting_pow at ");
-        logging.Set_log_init(String(startingpow).c_str());
-        logging.Set_log_init("%\r\n");
-        device_dimmer_starting_pow.send(String(startingpow));
-        sysvar.change=1;
-      }
-    }
-    else if (doc2["minpow"].is<int>()) {
-      int minpow = doc2["minpow"];
-      if (config.minpow != minpow ) {
-        config.minpow = minpow;
-        logging.Set_log_init("MQTT minpow at " );
-        logging.Set_log_init(String(minpow).c_str());
-        logging.Set_log_init("%\r\n");
-        device_dimmer_minpow.send(String(minpow));
-        sysvar.change=1;
-      }
-    }
-    else if (doc2["maxpow"].is<int>()) {
-      int maxpow = doc2["maxpow"];
-      if (config.maxpow != maxpow ) {
-        config.maxpow = maxpow;
-        logging.Set_log_init("MQTT maxpow at ");
-        logging.Set_log_init(String(maxpow).c_str());
-        logging.Set_log_init("%\r\n");
-        device_dimmer_maxpow.send(String(maxpow));
-        sysvar.change=1;
-      }
-    }
-    else if (doc2["powdimmer"].is<int>()) {
+    handleNumberParameter(doc2, "starting_power", config.startingpow, "MQTT starting_pow at ", device_dimmer_starting_pow);
+    handleNumberParameter(doc2, "minpow", config.minpow, "MQTT minpow at ", device_dimmer_minpow);
+    handleNumberParameter(doc2, "maxpow", config.maxpow, "MQTT maxpow at ", device_dimmer_maxpow);
+    handleNumberParameter(doc2, "maxtemp", config.maxtemp, "MQTT maxtemp at ", device_dimmer_maxtemp);
+    handleNumberParameter(doc2, "charge", config.charge, "MQTT charge at ", device_dimmer_power);
+
+    if (doc2["powdimmer"].is<int>()) {
       int powdimmer = doc2["powdimmer"];
       if (sysvar.puissance != powdimmer ) {
         if ( config.maxpow != 0 && powdimmer > config.maxpow ) { powdimmer = config.maxpow; }
@@ -215,27 +176,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
         logging.Set_log_init("MQTT power at ");
         logging.Set_log_init(String(powdimmer).c_str());
         logging.Set_log_init("%\r\n");
-      }
-    }
-    else if (doc2["maxtemp"].is<int>()) {
-      int maxtemp = doc2["maxtemp"];
-      if (config.maxtemp != maxtemp ) {
-        config.maxtemp = maxtemp;
-        logging.Set_log_init("MQTT maxtemp at ");
-        logging.Set_log_init(String(maxtemp).c_str());
-        logging.Set_log_init("°C\r\n");
-        device_dimmer_maxtemp.send(String(maxtemp));
-        sysvar.change=1;
-      }
-    }
-    else if (doc2["charge"].is<int>()) {
-      int charge = doc2["charge"];
-      if (config.charge != charge ) {
-        config.charge = charge;
-        logging.Set_log_init("MQTT charge at ");
-        logging.Set_log_init(String(charge).c_str());
-        logging.Set_log_init("W\r\n");
-        sysvar.change=1;
       }
     }
   }
@@ -536,6 +476,38 @@ void recreate_topic(){
   command_select = String(topic_Xlyric + "command/select");
   command_button = String(topic_Xlyric + "command/button");
   command_save = String("Xlyric/sauvegarde/"+ node_id );
+}
+
+/// @brief  Gestion des relais ( factorisation )
+/// @param doc 
+/// @param relayKey 
+/// @param relayPin 
+/// @param relayName 
+/// @param device 
+void handleRelay(const JsonDocument& doc, const char* relayKey, int relayPin, const char* relayName, HA& device) {
+    if (doc[relayKey].is<int>()) {
+        int relay = doc[relayKey];
+        digitalWrite(relayPin, relay == 0 ? LOW : HIGH);
+        logging.Set_log_init(String(relayName) + " at ");
+        logging.Set_log_init(String(relay).c_str());
+        logging.Set_log_init("\r\n");
+        device.send(String(relay));
+    }
+}
+
+/// @brief  Gestion des paramètres numériques ( factorisation )
+void handleNumberParameter(const JsonDocument& doc, const char* key, int& configParam, const char* logMessage, HA& device) {
+    if (doc[key].is<int>()) {
+        int value = doc[key];
+        if (configParam != value) {
+            configParam = value;
+            logging.Set_log_init(logMessage);
+            logging.Set_log_init(String(value).c_str());
+            logging.Set_log_init("%\r\n");
+            device.send(String(value));
+            sysvar.change = 1;
+        }
+    }
 }
 
 #endif

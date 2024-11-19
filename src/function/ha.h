@@ -165,15 +165,15 @@ private: String IPaddress = WiFi.localIP().toString();
          String HA_device_declare() {
          String IPaddress = WiFi.localIP().toString();
     String info = R"(
-                  "dev": {
-                      "ids": ")" + node_id + R"(",
-                      "name": ")" + node_id + R"(",
-                      "sw": "Dimmer )" + String(VERSION) + R"(",
-                      "mdl": "ESP8266 )" + IPaddress +
-                  R"(",
-                      "mf": "Cyril Poissonnier",
-                      "cu": "http://)" + IPaddress + R"("
-                  }
+            "dev": {
+                "ids": ")" + node_id + R"(",
+                "name": ")" + node_id + R"(",
+                "sw": "Dimmer )" + String(VERSION) + R"(",
+                "mdl": "ESP8266 )" + IPaddress +
+            R"(",
+                "mf": "Cyril Poissonnier",
+                "cu": "http://)" + IPaddress + R"("
+            }
               )";
     return info;
   }
