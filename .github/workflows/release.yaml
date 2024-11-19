@@ -38,7 +38,7 @@ jobs:
           for file in .pio/build/*/*.bin; do
             platform="$( basename "$( dirname "$file" )" )"
             date=$(date +"%Y.%m.%d")
-            filename="${date}_${platform}_${{steps.version.outputs.describe}}_$( basename "$file" ).gz"
+            filename="${date}_${{steps.version.outputs.describe}}_${platform}_$( basename "$file" ).gz"
             gzip --stdout "$file" > "dist/$filename"
           done
       - name: Upload built files

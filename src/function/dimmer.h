@@ -16,7 +16,6 @@
 #else
 // Web services
   #include <ESP8266WiFi.h>
-// #include <ESPAsyncTCP.h>
   #include <ESP8266HTTPClient.h>
 #endif
 

@@ -14,7 +14,6 @@
 #else
 // Web services
   #include <ESP8266WiFi.h>
-// #include <ESPAsyncTCP.h>
   #include <ESP8266HTTPClient.h>
 #endif
 
@@ -79,8 +78,7 @@ const String HA_status = String("homeassistant/status");
 String command_save = String("Xlyric/sauvegarde/"+ node_id );
 
 void callback(char* topic, byte* payload, unsigned int length) {
-  // char arrivage[length+1]; // Ajout d'un espace pour le caractère nul // NOSONAR
-  // int recup = 0;
+
   char* arrivage = new char[length + 1];
 
   for (unsigned int i=0; i<length; i++) {
@@ -340,7 +338,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       }
     }
   }
-  //delete[] arrivage;
+  
   return;
 }
 
@@ -451,18 +449,6 @@ void async_mqtt_init() {
   IPAddress ip;
   ip.fromString(config.hostname);
   DEBUG_PRINTLN(ip);
-  // client.setClientId(node_id.c_str());
-
-  // client.setWill(arrayWill, 2, true, "offline");
-  // client.setCredentials(mqtt_config.username, mqtt_config.password);
-  // client.onDisconnect(onMqttDisconnect);
-  // client.onSubscribe(onMqttSubscribe);
-  // client.onMessage(callback);
-
-  // client.setServer(ip, config.port);
-  // client.setMaxTopicLength(768); // 1024 -> 768
-  //
-
   client.setServer(ip, config.port);
   client.setCallback(callback);
   connectToMqtt();
@@ -501,7 +487,6 @@ void onMqttConnect(bool sessionPresent) {
   logging.Set_log_init("Connected to MQTT.\r\n");
   Serial.print("Session present: ");
   Serial.println(sessionPresent);
-  // String topic_Xlyric = "Xlyric/" + String(config.say_my_name) +"/";
   String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
   String topic_Xlyric = "Xlyric/dimmer-" + node_mac +"/";;
 

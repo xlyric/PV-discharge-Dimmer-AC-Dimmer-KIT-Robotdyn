@@ -71,9 +71,6 @@
 
 #include <Arduino.h>
 
-// #include "Arduino.h"
-
-
 #ifdef ROBOTDYN
 // Dimmer librairy
   #include <RBDdimmer.h>   /// the corrected librairy  in personal depot , the original has a bug
@@ -103,12 +100,6 @@
 #include "function/littlefs.h"
 #include "function/mqtt.h"
 #include "function/minuteur.h"
-
-/*
-   extern "C" {
- #include "user_interface.h"
-   }
- */
 
 #ifdef ROBOTDYN
   #include "function/dimmer.h"
@@ -142,7 +133,6 @@
 // Web services
   #include <ESP8266WiFi.h>
   #include <ESP8266mDNS.h>
-// #include <ESPAsyncTCP.h>
   #include <ESP8266HTTPClient.h>
 // File System
   #include <LittleFS.h> // NOSONAR
@@ -445,11 +435,6 @@ void setup() {
   Serial.print("start Wifiautoconnect");
   logging.Set_log_init(Start_Wifiautoconnect);
 
-  // WiFi.setPhyMode(WIFI_PHY_MODE_11N);
-  // wifi_set_phy_mode(PHY_MODE_11N);
-
-
-
   // préparation  configuration IP fixe
 
   AsyncWiFiManagerParameter custom_IP_Address("server", "IP", wifi_config_fixe.static_ip, 16);
@@ -487,19 +472,13 @@ void setup() {
   DEBUG_PRINTLN("static adress: " + String(wifi_config_fixe.static_ip) + " mask: " + String(
                   wifi_config_fixe.static_sn) + " GW: " + String(wifi_config_fixe.static_gw));
 
-  // savewifiIP(wifi_conf, wifi_config_fixe); // NOSONAR je doute que ça soit utilisé vu que c'est en autoconnect, seul le chargement est necessaire
-
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
 
-
-  // WiFi.setPhyMode(WIFI_PHY_MODE_11N);
-  // wifi_set_phy_mode(PHY_MODE_11N);
   WiFi.setAutoReconnect(true);
-  // WiFi.setOutputPower(20);
 
   /// restart si la configuration OP static est différente ip affectée suite changement ip Autoconf
   if ( !strcmp(wifi_config_fixe.static_ip, "" ) == 0 )  {
@@ -533,8 +512,7 @@ void setup() {
     AP = true;
   }
 
-  // Initialize mDNS
-  // config.say_my_name)
+  // initialisation de la connexion MDNS pour le nom de l'ESP
   if (!MDNS.begin(config.say_my_name)) {
     Serial.println("Error setting up MDNS responder!");
     while(1) {
@@ -542,13 +520,10 @@ void setup() {
     }
   }
   Serial.println("mDNS responder started");
-  // MDNS.addService("http", "tcp", 80);
   MDNS.addService("http", "tcp", 1308);
 
   logging.Set_log_init(mDNS_Responder_Started);
   logging.Set_log_init(String(config.say_my_name) + ".local \r\n");
-
-
 
   //***********************************
   //************* Setup - OTA
@@ -558,7 +533,6 @@ void setup() {
   //***********************************
   //************* Setup - Web pages
   //***********************************
-
 
   // chargement des url des pages
   call_pages();
@@ -1050,27 +1024,6 @@ bool dallaspresent () {
   //// recherche des adresses des sondes
 
   for (int i = 0; i < deviceCount; i++) {
-    // int attempts = 0;
-    // bool sensorFound = false;
-    /// cas pour les sondes les plus lentes
-    /*   while (!sensorFound) {
-         if (!ds.search(addr[i])) {
-           delay(200); // try again after a short delay
-           attempts++;
-           if (attempts > 5) { // timeout: 5 attempts * 200ms each
-             break;
-           }
-         } else {
-           sensorFound = true;
-         }
-       }
-
-       /// si pas de sonde trouvée
-       if (!sensorFound) {
-         logging.Set_log_init("Unable to find temperature sensors address \r\n", true);
-         return false;
-       }*/
-
     if (!sensors.getAddress(addr[i], i)) Serial.println("Unable to find address for Device 1");
     else {
       sensors.setResolution(addr[i], TEMPERATURE_PRECISION);
@@ -1139,7 +1092,7 @@ void tests () {
 /// test de debug
 #ifdef ROBOTDYN
   USE_SERIAL.println("--- Toggle dimmer example start ---");
-  dimmer.setState(ON); // state: dimmer1.setState(ON/OFF);
+  dimmer.setState(ON); 
   dimmer.setState(ON);
   dimmer3.setState(ON);
   dimmer2.setState(ON);

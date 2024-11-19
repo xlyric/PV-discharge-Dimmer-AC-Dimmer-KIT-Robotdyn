@@ -42,16 +42,19 @@ public:
 /// setter log_init
 public: void Set_log_init(String setter, bool logtime=false) {
     // Vérifier si la longueur de la chaîne ajoutée ne dépasse pas LOG_MAX_STRING_LENGTH
-    size_t setterLength = strlen(setter.c_str());
-    size_t logInitLength = strlen(log_init);
-    size_t logUptimeLength = strlen(loguptime());
-    if ( setterLength + logInitLength < static_cast<size_t>(MaxString) )  {
-      if (logtime) {
-        if ( setterLength + logInitLength + logUptimeLength < static_cast<size_t>(MaxString))  {
-          strcat(log_init,loguptime());
-        }
+    size_t setterLength = strlen(setter.c_str()); // NOSONAR
+    size_t logInitLength = strlen(log_init);  // NOSONAR
+    size_t logUptimeLength = strlen(loguptime()); // NOSONAR
+    size_t maxLength = static_cast<size_t>(MaxString); // NOSONAR
+
+    if ( setterLength + logInitLength < maxLength )  {
+
+      if ( logtime && ( setterLength + logInitLength + logUptimeLength < maxLength))  {
+          // protection dépassements de tampon (buffer overflow)
+          strncat(log_init, loguptime(), maxLength - logInitLength - 1);
       }
-      strcat(log_init,setter.c_str());
+      // protection dépassements de tampon (buffer overflow)
+      strncat(log_init, setter.c_str(), maxLength - logInitLength - 1);
     } else {
       // Si la taille est trop grande, réinitialiser le log_init
       reset_log_init();
@@ -89,7 +92,7 @@ public: void Set_log_init(String setter, bool logtime=false) {
     return uptime_stamp;
   }
 
-};
+};  // fin de la structure Logs
 
 
 struct Config {
@@ -263,12 +266,6 @@ public:
       Serial.println(F("Failed to write to file"));
       message = "Failed to write to file\r\n";
     }
-
-    // Publish on MQTT
-    // char buffer[1024];// NOSONAR
-    // serializeJson(doc, buffer);
-    // client.publish(("Xlyric/sauvegarde/"+ node_id).c_str() ,0,true, buffer);
-
     // Close the file
     configFile.close();
     return message;
@@ -278,7 +275,7 @@ public:
     charge = charge1 + charge2 + charge3;
   }
 
-};
+};  // fin de la structure Config
 
 ///// structure MQTT
 
@@ -350,7 +347,7 @@ public:
   }
 
 
-};
+};  // fin de la structure Mqtt
 
 struct Wifi_struct {
 public:
@@ -385,7 +382,7 @@ struct System {
   bool ping=false;
   const char pingurl[35] = "ota.apper-solaire.org";
   int pingfail=0;
-};
+};  // fin de la structure System
 
 struct epoc {
 public:
@@ -396,7 +393,7 @@ public:
   int mois;
   int annee;
   int weekday;
-};
+};  // fin de la structure epoc
 
 
 

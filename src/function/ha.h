@@ -201,7 +201,7 @@ public: void HA_discovery(){
                     + HA_device_declare() +
                     "}";
 
-    if (strlen(object_id.c_str()) > 0) {
+    if (object_id.length() != 0) {
       client.publish(String(topic+object_id+"/config").c_str(), device.c_str(),true);  // déclaration autoconf dimmer
     }
     else {
