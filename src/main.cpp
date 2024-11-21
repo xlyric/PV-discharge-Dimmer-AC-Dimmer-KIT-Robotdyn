@@ -202,10 +202,6 @@ String routeur="PV-ROUTER";
 bool AP = false;
 bool discovery_temp;
 
-
-
-
-
 byte present = 0;
 
 byte data[12];   // NOSONAR
@@ -214,7 +210,6 @@ byte data[12];   // NOSONAR
 int refresh = 60;
 int refreshcount = 0;
 int deviceCount = 0;
-
 
 /***************************
  * End Settings

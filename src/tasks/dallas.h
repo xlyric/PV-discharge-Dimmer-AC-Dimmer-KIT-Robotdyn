@@ -157,8 +157,9 @@ void mqttdallas() {
       dallaspresent();
       devices_init(); // initialisation des devices HA
     }
-
   } 
+
+
 
 }
 
@@ -231,7 +232,7 @@ bool dallaspresent () {
     if (!sensors.getAddress(addr[i], i)) Serial.println("Unable to find address for Device 1");
     else {
       sensors.setResolution(addr[i], TEMPERATURE_PRECISION);
-    }
+    } 
   }
 
   for (int a = 0; a < deviceCount; a++) {
@@ -281,7 +282,13 @@ bool dallaspresent () {
     ds.select(addr[a]);
     ds.write(0xBE);         // Read Scratchpad
 
-
+    /// cas d'une adresse à 0 0 0 0 0 0 0 0
+    for (int i = 0; i < deviceCount; i++)  {
+      if (addr[i][0] == 0 && addr[i][1] == 0 && addr[i][2] == 0 && addr[i][3] == 0 && addr[i][4] == 0 && addr[i][5] == 0 && addr[i][6] == 0 && addr[i][7] == 0) {
+        logging.Set_log_init("Dallas " + String(i) + " : " + "Adresse 0 0 0 0 0 0 0 0" + "\r\n",true);
+        present = 0;
+      }
+    }
   }
   return true;
 }

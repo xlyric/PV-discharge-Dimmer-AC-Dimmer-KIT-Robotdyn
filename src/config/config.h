@@ -91,7 +91,7 @@ constexpr size_t DALLAS_TIMEOUT=1500;
 // #define TRIGGER 10
 #define TIMERDELAY 5 // delay before switch off
 
-constexpr size_t LOG_MAX_STRING_LENGTH=1800 ;// taille max des logs stockées
+constexpr size_t LOG_MAX_STRING_LENGTH=1500 ;// taille max des logs stockées
 
 // activation mode debug
 // #define Debug

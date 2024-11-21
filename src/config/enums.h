@@ -18,7 +18,7 @@
 #endif
 
 constexpr const int MAX_DALLAS=8; // nombre de sonde Dallas
-
+bool lock_log; // lock log pour éviter les problèmes de mémoire
 
 /// @brief  partie délicate car pas mal d'action sur la variable log_init et donc protection de la variable ( pour éviter les pb mémoire )
 struct Logs {
@@ -41,23 +41,30 @@ public:
 
 /// setter log_init
 public: void Set_log_init(String setter, bool logtime=false) {
-    // Vérifier si la longueur de la chaîne ajoutée ne dépasse pas LOG_MAX_STRING_LENGTH
-    size_t setterLength = strlen(setter.c_str()); // NOSONAR
-    size_t logInitLength = strlen(log_init);  // NOSONAR
-    size_t logUptimeLength = strlen(loguptime()); // NOSONAR
-    size_t maxLength = static_cast<size_t>(MaxString); // NOSONAR
 
-    if ( setterLength + logInitLength < maxLength )  {
-
-      if ( logtime && ( setterLength + logInitLength + logUptimeLength < maxLength))  {
-          // protection dépassements de tampon (buffer overflow)
-          strncat(log_init, loguptime(), maxLength - logInitLength - 1); // NOSONAR
-      }
-      // protection dépassements de tampon (buffer overflow)
-      strncat(log_init, setter.c_str(), maxLength - logInitLength - 1); // NOSONAR
+    if (lock_log) {
+      return;
     } else {
-      // Si la taille est trop grande, réinitialiser le log_init
-      reset_log_init();
+        lock_log = true;
+        // Vérifier si la longueur de la chaîne ajoutée ne dépasse pas LOG_MAX_STRING_LENGTH
+        size_t setterLength = strlen(setter.c_str()); // NOSONAR
+        size_t logInitLength = strlen(log_init);  // NOSONAR
+        size_t logUptimeLength = strlen(loguptime()); // NOSONAR
+        size_t maxLength = static_cast<size_t>(MaxString); // NOSONAR
+
+        if ( setterLength + logInitLength < maxLength )  {
+
+          if ( logtime && ( setterLength + logInitLength + logUptimeLength < maxLength))  {
+              // protection dépassements de tampon (buffer overflow)
+              strncat(log_init, loguptime(), maxLength - logInitLength - 1); // NOSONAR
+          }
+          // protection dépassements de tampon (buffer overflow)
+          strncat(log_init, setter.c_str(), maxLength - logInitLength - 1); // NOSONAR
+        } else {
+          // Si la taille est trop grande, réinitialiser le log_init
+          reset_log_init();
+        }
+        lock_log = false;
     }
   }
 
