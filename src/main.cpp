@@ -191,7 +191,7 @@ int timesync_refresh = 120;
 //***********************************
 //************* Dallas
 //***********************************
-bool dallaspresent ();
+//bool dallaspresent ();
 
 
 ////////////////////////////////////
@@ -203,21 +203,19 @@ bool AP = false;
 bool discovery_temp;
 
 
-OneWire ds(ONE_WIRE_BUS);   //  (a 4.7K resistor is necessary - 5.7K work with 3.3 ans 5V power)
-DallasTemperature sensors(&ds);
+
 
 
 byte present = 0;
 
 byte data[12];   // NOSONAR
-float previous_celsius[MAX_DALLAS] = {0.00};   // NOSONAR
+//float previous_celsius[MAX_DALLAS] = {0.00};   // NOSONAR
 // byte security = 0;
 int refresh = 60;
 int refreshcount = 0;
 int deviceCount = 0;
-int devicealerte=0;
-DeviceAddress addr[MAX_DALLAS];   // array of (up to) MAX_DALLAS temperature sensors NOSONAR
-String devAddrNames[MAX_DALLAS];  // array of (up to) MAX_DALLAS temperature sensors NOSONAR
+
+
 /***************************
  * End Settings
  **************************/
@@ -287,10 +285,10 @@ IPAddress _ip,_gw,_sn,gatewayIP;   // NOSONAR
 void setup() {
   Serial.begin(115200);
 
-  // reset du bus one Wire
-  // ds.reset();
-  // initialisation des dallas
-  sensors.begin();
+  /// init des tasks 
+  runner.init();
+  runner.addTask(Task_dallas); // ajout de la tache dallas
+  Task_dallas.enable();
 
   #ifdef ESP32ETH
   ETH.begin(ETH_ADDR, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_TYPE, ETH_CLK_MODE);
@@ -542,25 +540,10 @@ void setup() {
   //***********************************
   Serial.println("start server");
   server.begin();
-
-
-  //// récupération des dallas .
-  Serial.println("start 18b20");
-  sensors.begin();
-  delay(1000);
-  deviceCount = sensors.getDeviceCount();
-
-  if (deviceCount == 0 ) { // si toujours pas trouvé
-    sensors.begin(); // réinit du bus one wire
-    delay(1500);
-    deviceCount = sensors.getDeviceCount();
-  }
-
-  logging.Set_log_init(String(deviceCount));
-  logging.Set_log_init(DALLAS_detected);
+ 
 
   /// recherche d'une sonde dallas
-  dallaspresent();
+  // dallaspresent();
 
   devices_init(); // initialisation des devices HA
 
@@ -621,10 +604,7 @@ void setup() {
   /// init du NTP
   ntpinit();
 
-  /// init des tasks
-  runner.init();
-  runner.addTask(Task_dallas);
-  Task_dallas.enable();
+
 
   runner.addTask(Task_Cooler);
   Task_Cooler.enable();
@@ -983,7 +963,7 @@ void loop() {
     }        /// si HA remonté MQTT HA de la température
   }
 
-  //// protection contre la perte de la sonde dallas
+  //// protection contre la perte de la sonde dallas --> à basculer dans la task dallas, sinon ça peut créer des conflits
   if (strlen(config.SubscribeTEMP) == 0 ) {
     restart_dallas();
   }
@@ -994,93 +974,7 @@ void loop() {
 //// fin de loop
 //////////////
 
-//***********************************
-//************* Test de la présence d'une 18b20
-//***********************************
 
-bool dallaspresent () {
-
-  /// alerte d'une deection de dallas passée non trouvée
-  if (deviceCount == 0 && ( strcmp("null", config.DALLAS) != 0 || strcmp("none", config.DALLAS) != 0 )) {
-    /// remonter l'alerte une fois toute les 10 secondes
-    if (devicealerte == 0) {
-      logging.Set_log_init(Alerte_Dallas_not_found);
-      Mqtt_send_DOMOTICZ(String(config.IDXTemp), String("Alerte Dallas non trouvée"),"Alerte");  /// send alert to MQTT
-      device_dimmer_alarm_temp.send("Alerte Dallas non trouvée");
-      logging.Set_alerte_web("Dallas Maitre non trouvée");
-      devicealerte++;
-    }
-    else {
-      devicealerte++;
-      if (devicealerte > 10) {
-        devicealerte = 0;
-      }
-    }
-    return false;
-  }
-
-  logging.Set_alerte_web("");
-
-  //// recherche des adresses des sondes
-
-  for (int i = 0; i < deviceCount; i++) {
-    if (!sensors.getAddress(addr[i], i)) Serial.println("Unable to find address for Device 1");
-    else {
-      sensors.setResolution(addr[i], TEMPERATURE_PRECISION);
-    }
-  }
-
-  for (int a = 0; a < deviceCount; a++) {
-    String address = "";
-    Serial.print("ROM =");
-    for (uint8_t i = 0; i < 8; i++) {
-      if (addr[a][i] < 0x10) address += "0";
-      address += String(addr[a][i], HEX);
-      Serial.write(' ');
-      Serial.print(addr[a][i], HEX);
-    }
-    devAddrNames[a] = address;
-    Serial.println();
-    if (strcmp(address.c_str(), config.DALLAS) == 0) {
-      sysvar.dallas_maitre = a;
-      logging.Set_log_init("MAIN " );
-    }
-
-    // détection de la 1ere présence d'une dallas
-    if (strcmp("none", config.DALLAS) == 0 || strcmp("null", config.DALLAS) == 0 ) {
-      sysvar.dallas_maitre = a;
-      logging.Set_log_init("Default MAIN " );
-      // sauvegarde de l'adresse de la sonde maitre
-      strcpy(config.DALLAS, address.c_str());
-      config.saveConfiguration();
-    }
-
-    logging.Set_log_init(Dallas_sensor);
-    logging.Set_log_init(String(a).c_str());
-    logging.Set_log_init(found_Address);
-    logging.Set_log_init(String(address).c_str());
-    logging.Set_log_init("\r\n");
-    present = 1;
-
-    delay(250);
-    ds.reset();
-    ds.select(addr[a]);
-
-    ds.write(0x44, 1);        // start conversion, with parasite power on at the end
-
-    delay(1000);     // maybe 750ms is enough, maybe not
-    // we might do a ds.depower() here, but the reset will take care of it.
-
-    present = ds.reset();    ///  byte 0 > 1 si present
-    delay(1000);
-
-    ds.select(addr[a]);
-    ds.write(0xBE);         // Read Scratchpad
-
-
-  }
-  return true;
-}
 
 
 String stringBool(bool myBool) {

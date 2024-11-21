@@ -1,18 +1,20 @@
 #ifndef TASK_DALLAS
 #define TASK_DALLAS
 
-#ifdef STANDALONE
-#endif
+#include <OneWire.h>
+#include <DallasTemperature.h>
+OneWire ds(ONE_WIRE_BUS);   //  (a 4.7K resistor is necessary - 5.7K work with 3.3 ans 5V power)
+DallasTemperature sensors(&ds);
 
 extern PubSubClient client;
-extern DallasTemperature sensors;
 extern bool AP; // mode point d'accès
 extern Mqtt mqtt_config; // configuration mqtt
 extern byte present; // capteur dallas présent ou non
 extern String logs; // logs
 // extern byte security; // sécurité
-extern DeviceAddress addr[MAX_DALLAS];  // NOSONAR
-extern float previous_celsius[MAX_DALLAS]; // température précédente // NOSONAR
+DeviceAddress addr[MAX_DALLAS];   // array of (up to) MAX_DALLAS temperature sensors NOSONAR
+String devAddrNames[MAX_DALLAS];  // array of (up to) MAX_DALLAS temperature sensors NOSONAR
+float previous_celsius[MAX_DALLAS] = {0.00};   // NOSONAR // température précédente // NOSONAR
 extern IPAddress gatewayIP;
 extern HA devicetemp[MAX_DALLAS]; // NOSONAR
 extern int deviceCount; // nombre de sonde(s) dallas détectée(s)
@@ -24,8 +26,10 @@ float CheckTemperature(String label, byte deviceAddress[12]); // NOSONAR
 void restart_dallas();
 bool dallaspresent ();
 size_t timer_dallas = 500; // timer pour la dallas
+size_t dallas_fail = 0; // compteur d'erreur dallas
 
 /// @brief / task executé toute les n secondes pour publier la température ( voir déclaration task dans main )
+// TODO tout mettre concernant les dallas dans cette task pour isoler les effets de bord 
 void mqttdallas() {
   if ( present == 1 ) {
     sensors.requestTemperatures();
@@ -132,22 +136,29 @@ void mqttdallas() {
       }
     }
   }
+/// cas de recherche de la dallas
+  if ( present == 0 && dallas_fail < 10 ) {
+      //// récupération des dallas .
+    Serial.println("start 18b20");
+    sensors.begin();
+    delay(1000);
+    deviceCount = sensors.getDeviceCount();
+    dallas_fail++;  
+    if (deviceCount == 0 ) { // si toujours pas trouvé
+      sensors.begin(); // réinit du bus one wire
+      delay(1500);
+      deviceCount = sensors.getDeviceCount();
+    }
 
+    logging.Set_log_init(String(deviceCount));
+    logging.Set_log_init(DALLAS_detected);
+    if ( deviceCount > 0 )  {
+      present = 1;
+      dallaspresent();
+      devices_init(); // initialisation des devices HA
+    }
 
-#ifdef qsdfsqdsfqs
-  if ( pinger.Ping(WiFi.gatewayIP())) {
-    gw_error = 0; // remise à zéro du compteur d'erreur
-  }
-  else {
-    gw_error++;  // incrémente le compteur d'erreur
-  }
-
-  /// si GW perdu, reboot de l'ESP après 2 minutes
-  if ( gw_error > 8 ) {
-    DEBUG_PRINTLN("détection perte gateway");
-    config.restart = true;
-  }
-#endif
+  } 
 
 }
 
@@ -186,5 +197,92 @@ void restart_dallas() {
 }
 
 
+//***********************************
+//************* Test de la présence d'une 18b20
+//***********************************
+int devicealerte=0;
 
+bool dallaspresent () {
+
+  /// alerte d'une deection de dallas passée non trouvée
+  if (deviceCount == 0 && ( strcmp("null", config.DALLAS) != 0 || strcmp("none", config.DALLAS) != 0 )) {
+    /// remonter l'alerte une fois toute les 10 secondes
+    if (devicealerte == 0) {
+      logging.Set_log_init(Alerte_Dallas_not_found);
+      Mqtt_send_DOMOTICZ(String(config.IDXTemp), String("Alerte Dallas non trouvée"),"Alerte");  /// send alert to MQTT
+      device_dimmer_alarm_temp.send("Alerte Dallas non trouvée");
+      logging.Set_alerte_web("Dallas Maitre non trouvée");
+      devicealerte++;
+    }
+    else {
+      devicealerte++;
+      if (devicealerte > 10) {
+        devicealerte = 0;
+      }
+    }
+    return false;
+  }
+
+  logging.Set_alerte_web("");
+
+  //// recherche des adresses des sondes
+
+  for (int i = 0; i < deviceCount; i++) {
+    if (!sensors.getAddress(addr[i], i)) Serial.println("Unable to find address for Device 1");
+    else {
+      sensors.setResolution(addr[i], TEMPERATURE_PRECISION);
+    }
+  }
+
+  for (int a = 0; a < deviceCount; a++) {
+    String address = "";
+    Serial.print("ROM =");
+    for (uint8_t i = 0; i < 8; i++) {
+      if (addr[a][i] < 0x10) address += "0";
+      address += String(addr[a][i], HEX);
+      Serial.write(' ');
+      Serial.print(addr[a][i], HEX);
+    }
+    devAddrNames[a] = address;
+    Serial.println();
+    if (strcmp(address.c_str(), config.DALLAS) == 0) {
+      sysvar.dallas_maitre = a;
+      logging.Set_log_init("MAIN " );
+    }
+
+    // détection de la 1ere présence d'une dallas
+    if (strcmp("none", config.DALLAS) == 0 || strcmp("null", config.DALLAS) == 0 ) {
+      sysvar.dallas_maitre = a;
+      logging.Set_log_init("Default MAIN " );
+      // sauvegarde de l'adresse de la sonde maitre
+      strcpy(config.DALLAS, address.c_str());
+      config.saveConfiguration();
+    }
+
+    logging.Set_log_init(Dallas_sensor);
+    logging.Set_log_init(String(a).c_str());
+    logging.Set_log_init(found_Address);
+    logging.Set_log_init(String(address).c_str());
+    logging.Set_log_init("\r\n");
+    present = 1;
+
+    delay(250);
+    ds.reset();
+    ds.select(addr[a]);
+
+    ds.write(0x44, 1);        // start conversion, with parasite power on at the end
+
+    delay(1000);     // maybe 750ms is enough, maybe not
+    // we might do a ds.depower() here, but the reset will take care of it.
+
+    present = ds.reset();    ///  byte 0 > 1 si present
+    delay(1000);
+
+    ds.select(addr[a]);
+    ds.write(0xBE);         // Read Scratchpad
+
+
+  }
+  return true;
+}
 #endif
