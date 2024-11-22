@@ -4,7 +4,7 @@
 #define VERSION "Version 20241121"
 #define FS_RELEASE "20241105" // date de la release
 
-constexpr size_t TEMPERATURE_PRECISION=10;
+constexpr size_t TEMPERATURE_PRECISION=11;
 constexpr size_t DALLAS_TIMEOUT=1500;
 // configuration for Standalone boards ( personnalisation )
 #ifdef  STANDALONE

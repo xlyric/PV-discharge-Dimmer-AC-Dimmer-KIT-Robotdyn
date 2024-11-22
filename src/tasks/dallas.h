@@ -229,7 +229,7 @@ bool dallaspresent () {
   //// recherche des adresses des sondes
 
   for (int i = 0; i < deviceCount; i++) {
-    if (!sensors.getAddress(addr[i], i)) Serial.println("Unable to find address for Device 1");
+    if (!sensors.getAddress(addr[i], i)) Serial.println("Unable to find address for Device " + String(i));
     else {
       sensors.setResolution(addr[i], TEMPERATURE_PRECISION);
     } 
@@ -256,7 +256,7 @@ bool dallaspresent () {
       sysvar.dallas_maitre = a;
       logging.Set_log_init("Default MAIN " );
       // sauvegarde de l'adresse de la sonde maitre
-      strcpy(config.DALLAS, address.c_str());
+      strcpy(config.DALLAS, address.c_str()); // nno sonar
       config.saveConfiguration();
     }
 
