@@ -21,6 +21,8 @@ extern int deviceCount; // nombre de sonde(s) dallas détectée(s)
 int dallas_error[MAX_DALLAS] = {0}; // compteur d'erreur dallas // NOSONAR
 int gw_error = 0;   // compteur d'erreur gateway
 int dallas_wait_log; // NOSONAR
+size_t temp_reponse_dallas = 400; 
+size_t temp_reponse_dallas_max = 1500;
 
 float CheckTemperature(String label, byte deviceAddress[12]); // NOSONAR
 void restart_dallas();
@@ -33,7 +35,6 @@ size_t dallas_fail = 0; // compteur d'erreur dallas
 void mqttdallas() {
   if ( present == 1 ) {
     sensors.requestTemperatures();
-    // delai plu utile vu que demande de relevé fait il y a ~15 sec
     delay(timer_dallas);
     for (int a = 0; a < deviceCount; a++) {
       sysvar.celsius[a]=CheckTemperature("temp_" + devAddrNames[a],addr[a]);
@@ -43,7 +44,8 @@ void mqttdallas() {
         sysvar.celsius[a]=previous_celsius[a];
         dallas_error[a]++;  // incrémente le compteur d'erreur
         logging.Set_log_init("Dallas " + String(a) + " : échec "+ String(dallas_error[a]) + "\r\n",true);
-        if ( timer_dallas < DALLAS_TIMEOUT )  { timer_dallas = timer_dallas + 100;  } // on augmente le timer pour la prochaine lecture
+        if ( timer_dallas < DALLAS_TIMEOUT )  { timer_dallas = timer_dallas + 100; ; } // on augmente le timer pour la prochaine lecture
+        if ( temp_reponse_dallas < temp_reponse_dallas_max )  { temp_reponse_dallas = temp_reponse_dallas + 100; ; } // ça permet de s'adapter aux sondes qui répondent mal
       }
       else {
         sysvar.celsius[a] = (roundf(sysvar.celsius[a] * 10) / 10 ) + 0.1; // pour les valeurs min
@@ -170,7 +172,7 @@ void mqttdallas() {
 float CheckTemperature(String label, byte deviceAddress[12]){ // NOSONAR
   float tempC = sensors.getTempC(deviceAddress);
   if ( (tempC == DEVICE_DISCONNECTED_C) || (tempC == -255.00) ) {
-    delay(500);
+    delay(temp_reponse_dallas);
     // cas d'une sonde trop longue à préparer les valeurs
     // attente de 187ms ( temps de réponse de la sonde )
     tempC = sensors.getTempC(deviceAddress);
