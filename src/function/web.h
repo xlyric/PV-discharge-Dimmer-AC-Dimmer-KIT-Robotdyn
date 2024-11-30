@@ -616,8 +616,7 @@ String getState() {
 }
 
 String textnofiles() {
-  String state =
-    "<html><body>Filesystem is not present. <a href='https://ota.apper-solaire.org/firmware/littlefs-dimmer.bin'>download it here</a> <br>and after  <a href='/update'>upload on the ESP here </a></body></html>";
+  String state = "<html><head><meta http-equiv='refresh' content='10'></head><body>Filesystem is not present.<a href='https://ota.apper-solaire.org/firmware/littlefs-dimmer.bin'>download it here</a><br>and after <a href='/update'>upload on the ESP here</a><br>or <a href='/reset'>reboot </a></body></html>";
   return String(state);
 }
 

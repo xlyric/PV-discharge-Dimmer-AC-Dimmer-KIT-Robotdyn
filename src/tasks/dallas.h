@@ -24,7 +24,7 @@ int dallas_wait_log; // NOSONAR
 size_t temp_reponse_dallas = 400; 
 size_t temp_reponse_dallas_max = 1500;
 
-float CheckTemperature(String label, byte deviceAddress[12]); // NOSONAR
+float CheckTemperature(String label, DeviceAddress  deviceAddress); // NOSONAR
 void restart_dallas();
 bool dallaspresent ();
 size_t timer_dallas = 500; // timer pour la dallas
@@ -34,7 +34,7 @@ size_t dallas_fail = 0; // compteur d'erreur dallas
 // TODO tout mettre concernant les dallas dans cette task pour isoler les effets de bord 
 void mqttdallas() {
   if ( present == 1 ) {
-    sensors.requestTemperatures();
+    
     delay(timer_dallas);
     for (int a = 0; a < deviceCount; a++) {
       sysvar.celsius[a]=CheckTemperature("temp_" + devAddrNames[a],addr[a]);
@@ -87,8 +87,9 @@ void mqttdallas() {
       device_temp_master.send(String(sysvar.celsius[sysvar.dallas_maitre]));
     }
     // on demande la température suivante pour le prochain cycle
-
+    sensors.requestTemperatures();
   }
+
   // détection sécurité température
   if  ( sysvar.celsius[sysvar.dallas_maitre] >= config.maxtemp ) {
     // coupure du dimmer
@@ -169,9 +170,11 @@ void mqttdallas() {
 //************* récupération d'une température du 18b20
 //***********************************
 
-float CheckTemperature(String label, byte deviceAddress[12]){ // NOSONAR
+float CheckTemperature(String label, DeviceAddress deviceAddress){ // NOSONAR
   float tempC = sensors.getTempC(deviceAddress);
   if ( (tempC == DEVICE_DISCONNECTED_C) || (tempC == -255.00) ) {
+    // si problème de récupération de la température, on relance la demande
+    sensors.requestTemperaturesByAddress(deviceAddress);
     delay(temp_reponse_dallas);
     // cas d'une sonde trop longue à préparer les valeurs
     // attente de 187ms ( temps de réponse de la sonde )
@@ -229,31 +232,34 @@ bool dallaspresent () {
   logging.Set_alerte_web("");
 
   //// recherche des adresses des sondes
-
+  /// réglage de la préciion des sondes
   for (int i = 0; i < deviceCount; i++) {
     if (!sensors.getAddress(addr[i], i)) Serial.println("Unable to find address for Device " + String(i));
     else {
       sensors.setResolution(addr[i], TEMPERATURE_PRECISION);
     } 
   }
-
+  
   for (int a = 0; a < deviceCount; a++) {
     String address = "";
     Serial.print("ROM =");
+    // affichage de l'adresse de la sonde
     for (uint8_t i = 0; i < 8; i++) {
       if (addr[a][i] < 0x10) address += "0";
       address += String(addr[a][i], HEX);
       Serial.write(' ');
       Serial.print(addr[a][i], HEX);
     }
+
     devAddrNames[a] = address;
     Serial.println();
+    // détection de la sonde maitre
     if (strcmp(address.c_str(), config.DALLAS) == 0) {
       sysvar.dallas_maitre = a;
       logging.Set_log_init("MAIN " );
     }
 
-    // détection de la 1ere présence d'une dallas
+    // détection de la 1ere présence d'une dallas si pas de dallas maitre
     if (strcmp("none", config.DALLAS) == 0 || strcmp("null", config.DALLAS) == 0 ) {
       sysvar.dallas_maitre = a;
       logging.Set_log_init("Default MAIN " );
@@ -268,11 +274,13 @@ bool dallaspresent () {
     logging.Set_log_init(String(address).c_str());
     logging.Set_log_init("\r\n");
     present = 1;
-
-    delay(250);
+    if (sensors.isParasitePowerMode())  { logging.Set_log_init("parasite power is on"); }
+    // usage de oneWire.reset_search() pour réinitialiser la recherche
+    // de la sonde suivante ( est ce vraiment utile, comme dans les docs, ça n'est pas fait )
+    // --> très tiré par les cheveux comme la librairie dallas le fait déja https://arduino.blaisepascal.fr/capteur-de-temperature-dallas/
+    /*delay(250);
     ds.reset();
     ds.select(addr[a]);
-
     ds.write(0x44, 1);        // start conversion, with parasite power on at the end
 
     delay(1000);     // maybe 750ms is enough, maybe not
@@ -283,12 +291,13 @@ bool dallaspresent () {
 
     ds.select(addr[a]);
     ds.write(0xBE);         // Read Scratchpad
-
+*/
     /// cas d'une adresse à 0 0 0 0 0 0 0 0
     for (int i = 0; i < deviceCount; i++)  {
       if (addr[i][0] == 0 && addr[i][1] == 0 && addr[i][2] == 0 && addr[i][3] == 0 && addr[i][4] == 0 && addr[i][5] == 0 && addr[i][6] == 0 && addr[i][7] == 0) {
         logging.Set_log_init("Dallas " + String(i) + " : " + "Adresse 0 0 0 0 0 0 0 0" + "\r\n",true);
         present = 0;
+        restart_dallas();
       }
     }
   }

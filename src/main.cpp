@@ -144,16 +144,15 @@
 #endif
 
 // taches
-Task Task_dallas(8000, TASK_FOREVER, &mqttdallas);
-Task Task_Cooler(15000, TASK_FOREVER, &cooler);
-Task Task_GET_POWER(10000, TASK_FOREVER, &get_dimmer_child_power);
+Task Task_dallas(8123, TASK_FOREVER, &mqttdallas);
+Task Task_Cooler(15456, TASK_FOREVER, &cooler);
+Task Task_GET_POWER(10789, TASK_FOREVER, &get_dimmer_child_power);
 #ifdef RELAY1
-Task Task_relay(20000, TASK_FOREVER, &relais_controle);
+Task Task_relay(20234, TASK_FOREVER, &relais_controle);
 #endif
 /// @brief  task de ping
-Task Task_ping(120000, TASK_FOREVER, &ping);
+Task Task_ping(120567, TASK_FOREVER, &ping);
 Scheduler runner;
-
 
 
 /***************************
@@ -204,7 +203,7 @@ bool discovery_temp;
 
 byte present = 0;
 
-byte data[12];   // NOSONAR
+//DeviceAddress data;   // NOSONAR
 //float previous_celsius[MAX_DALLAS] = {0.00};   // NOSONAR
 // byte security = 0;
 int refresh = 60;
