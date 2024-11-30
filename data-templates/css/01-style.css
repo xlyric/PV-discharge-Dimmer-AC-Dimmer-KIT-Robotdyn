@@ -2,4 +2,5 @@
 form.user .form-control-user {
   font-size: 0.8rem;
   border-radius: 10rem;
+  padding: 0.5rem 1rem;
 }
