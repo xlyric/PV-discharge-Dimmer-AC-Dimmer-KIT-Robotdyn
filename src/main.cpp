@@ -143,6 +143,8 @@
   #include <ETH.h>
 #endif
 
+#include "function/mdns.h"
+
 // taches
 Task Task_dallas(8123, TASK_FOREVER, &mqttdallas);
 Task Task_Cooler(15456, TASK_FOREVER, &cooler);
@@ -504,7 +506,9 @@ void setup() {
     AP = true;
   }
 
-  // initialisation de la connexion MDNS pour le nom de l'ESP
+  mdns_hello(config.say_my_name);
+
+ /* // initialisation de la connexion MDNS pour le nom de l'ESP
   if (!MDNS.begin(config.say_my_name)) {
     Serial.println("Error setting up MDNS responder!");
     while(1) {
@@ -512,8 +516,18 @@ void setup() {
     }
   }
   Serial.println("mDNS responder started");
+  // déclaration des services mDNS
   MDNS.addService("http", "tcp", 1308);
+  MDNS.addServiceTxt("http", "tcp", "name", String(config.say_my_name).c_str());
+  MDNS.addServiceTxt("http", "tcp", "version", VERSION);
+  MDNS.addServiceTxt("http", "tcp", "env", COMPILE_NAME);
 
+  MDNS.addService("dimmer", "tcp", 80);
+  MDNS.addServiceTxt("dimmer", "tcp", "name", String(config.say_my_name).c_str());
+  MDNS.addServiceTxt("dimmer", "tcp", "version", VERSION);
+  MDNS.addServiceTxt("dimmer", "tcp", "env", COMPILE_NAME);
+  */
+ 
   logging.Set_log_init(mDNS_Responder_Started);
   logging.Set_log_init(String(config.say_my_name) + ".local \r\n");
 
