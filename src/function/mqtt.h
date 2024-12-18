@@ -56,7 +56,7 @@ void connectToMqtt();
 void onMqttConnect(bool sessionPresent);
 void onMqttSubscribe(uint16_t packetId, uint8_t qos);
 void recreate_topic();
-void handleRelay(const JsonDocument& doc, const char* relayKey, int relayPin, const char* relayName, HA& device);
+void handleRelay(const JsonDocument& doc, const char* relayKey, int relayPin, const char* relayName, HA& device,bool invert);
 void handleNumberParameter(const JsonDocument& doc, const char* key, int& configParam, const char* logMessage, HA& device);
 
 char buffer[1024];// NOSONAR
@@ -142,10 +142,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
   if (strstr( topic, command_switch.c_str() ) != nullptr) {
     logging.Set_log_init("MQTT command switch ",true);
     #ifdef RELAY1
-    handleRelay(doc2, "relay1", RELAY1, "relay1", device_relay1);
+    handleRelay(doc2, "relay1", RELAY1, "relay1", device_relay1,true);
     #endif
     #ifdef RELAY2
-    handleRelay(doc2, "relay2", RELAY2, "relay2", device_relay2);
+    handleRelay(doc2, "relay2", RELAY2, "relay2", device_relay2,false);
     #endif
     if (doc2["on_off"].is<int>()) {
       int relay = doc2["on_off"];
@@ -261,7 +261,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       device_dimmer_on_off.send(String(config.dimmer_on_off));
 
       #ifdef RELAY1
-      int relaystate = digitalRead(RELAY1);
+      int relaystate = !digitalRead(RELAY1); // correction bug de démarrage en GPIO 0
       device_relay1.send(String(relaystate));
       #endif
       #ifdef RELAY2
@@ -484,10 +484,16 @@ void recreate_topic(){
 /// @param relayPin 
 /// @param relayName 
 /// @param device 
-void handleRelay(const JsonDocument& doc, const char* relayKey, int relayPin, const char* relayName, HA& device) {
+void handleRelay(const JsonDocument& doc, const char* relayKey, int relayPin, const char* relayName, HA& device,bool invert=false) {
     if (doc[relayKey].is<int>()) {
         int relay = doc[relayKey];
-        digitalWrite(relayPin, relay == 0 ? LOW : HIGH);
+        if (invert) {
+            digitalWrite(relayPin, relay == 0 ? HIGH : LOW);
+        }
+        else {
+            digitalWrite(relayPin, relay == 0 ? LOW : HIGH);
+        }
+
         logging.Set_log_init(String(relayName) + " at ");
         logging.Set_log_init(String(relay).c_str());
         logging.Set_log_init("\r\n");

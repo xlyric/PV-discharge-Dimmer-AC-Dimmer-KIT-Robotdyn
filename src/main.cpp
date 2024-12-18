@@ -329,7 +329,7 @@ void setup() {
 
   #ifdef RELAY1 // permet de rajouter les relais en ne modifiant que config.h, et pas seulement en STANDALONE
   pinMode(RELAY1, OUTPUT);
-  digitalWrite(RELAY1, LOW);
+  digitalWrite(RELAY1, HIGH); // correction pour la nouvelle carte et corriger le bug de démarrage en GPIO 0 ( High at start )
   #endif
   #ifdef RELAY2 // permet de rajouter les relais en ne modifiant que config.h
   pinMode(RELAY2, OUTPUT);
@@ -581,7 +581,7 @@ void setup() {
       device_dimmer_on_off.send(String(config.dimmer_on_off));
 
       #ifdef RELAY1
-      int relaystate = digitalRead(RELAY1);
+      int relaystate = !digitalRead(RELAY1); // correction bug de démarrage en GPIO 0
       device_relay1.send(String(relaystate));
       #endif
       #ifdef RELAY2
@@ -725,14 +725,14 @@ void loop() {
   if (programme_relay1.run) {
     if (programme_relay1.stop_progr()) {
       logging.Set_log_init(Stop_minuteur_relay1,true);
-      digitalWrite(RELAY1, LOW);
+      digitalWrite(RELAY1, HIGH); //correction bug de démarrage en GPIO 0
       device_relay1.send(String(0));
     }
   }
   else {
     if (programme_relay1.start_progr()) {
       logging.Set_log_init(Start_minuteur_relay1,true);
-      digitalWrite(RELAY1, HIGH);
+      digitalWrite(RELAY1, LOW); // Correction bug de démarrage en GPIO 0
       device_relay1.send(String(1));
     }
   }

@@ -14,7 +14,7 @@ void relais_controle() {
     #ifdef RELAY1
   /// activation du relai 1 si de seuil basse est remplie
   if (programme_relay1.start_seuil() && !programme_relay1.stop_seuil()) {
-    digitalWrite(RELAY1, HIGH);
+    digitalWrite(RELAY1, LOW); // correction bug de démarrage en GPIO 0
   }
 
   /// activation du relai 2 si de seuil basse est remplie
@@ -24,7 +24,7 @@ void relais_controle() {
 
   /// déactivation du relai 1 si de seuil haute est remplie
   if (programme_relay1.stop_seuil()) {
-    digitalWrite(RELAY1, LOW);
+    digitalWrite(RELAY1, HIGH); //correction bug de démarrage en GPIO 0
   }
 
   /// déactivation du relai 2 si de seuil haute est remplie
@@ -34,7 +34,7 @@ void relais_controle() {
 
   /// désactivation Relai 1 si seuil temperature est atteint
   if (programme_relay1.stop_seuil_temp()) {
-    digitalWrite(RELAY1, LOW);
+    digitalWrite(RELAY1, HIGH); //correction bug de démarrage en GPIO 0
   }
 
   /// désactivation relai 2 si seuil temperature est atteint
