@@ -21,6 +21,7 @@
 #endif
 
 #include "StreamConcat.h"
+extern bool boost();
 
 
 extern Mqtt mqtt_config;

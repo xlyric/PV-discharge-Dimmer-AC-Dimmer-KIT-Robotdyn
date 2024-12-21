@@ -696,8 +696,8 @@ void loop() {
       // réinint de la sécurité température
       sysvar.security = 0;
       // on remet les valeurs de temps programme_marche_force à 00:00
-      strcpy(programme_marche_forcee.heure_demarrage, "00:00");
-      strcpy(programme_marche_forcee.heure_arret, "00:00");
+      strcpy(programme_marche_forcee.heure_demarrage, "00:00"); // NOSONAR
+      strcpy(programme_marche_forcee.heure_arret, "00:00");  // NOSONAR
       device_dimmer_boost.send("0");
     }
   }
