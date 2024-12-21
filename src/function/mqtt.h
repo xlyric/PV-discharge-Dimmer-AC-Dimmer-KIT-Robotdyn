@@ -41,8 +41,9 @@ extern HA device_relay1;
 extern HA device_relay2;
 extern HA device_cooler;
 extern HA device_dimmer_alarm_temp_clear;
+extern HA device_dimmer_boost;
 
-
+extern bool boost();
 extern bool HA_reconnected;
 extern bool discovery_temp;
 extern bool alerte;
@@ -147,6 +148,16 @@ void callback(char* topic, byte* payload, unsigned int length) {
     #ifdef RELAY2
     handleRelay(doc2, "relay2", RELAY2, "relay2", device_relay2,false);
     #endif
+    // boost
+    if (doc2["boost"].is<int>()) {
+      if (doc2["boost"] == 1) {
+        boost();
+        device_dimmer_boost.send("1");
+      }
+      else {
+        device_dimmer_boost.send("0");
+      }
+    }
     if (doc2["on_off"].is<int>()) {
       int relay = doc2["on_off"];
       if ( relay == 0) { config.dimmer_on_off = false; }
@@ -259,6 +270,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
         device_dimmer_child_mode.send(String(config.mode));
       }
       device_dimmer_on_off.send(String(config.dimmer_on_off));
+      device_dimmer_boost.send("0");
 
       #ifdef RELAY1
       int relaystate = !digitalRead(RELAY1); // correction bug de démarrage en GPIO 0

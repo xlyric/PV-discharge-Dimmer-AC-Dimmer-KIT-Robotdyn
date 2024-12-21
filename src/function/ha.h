@@ -251,6 +251,9 @@ HA device_dimmer_alarm_temp_clear;
 HA device_dimmer_power;
 HA device_dimmer_total_power;
 
+// création du boost
+HA device_dimmer_boost;
+
 void devices_init(){
   /// création des sensors
   device_dimmer.Set_name("Puissance");
@@ -282,7 +285,6 @@ void devices_init(){
   device_dimmer_total_power.Set_icon("mdi:home-lightning-bolt-outline");
   device_dimmer_total_power.Set_entity_type("sensor");
   device_dimmer_total_power.Set_retain_flag(true);
-
 
   for (int i = 0; i < deviceCount; i++) {
     device_temp[i].Set_name("Température" + String(i+1) );
@@ -319,6 +321,11 @@ void devices_init(){
   device_dimmer_on_off.Set_object_id("on_off");
   device_dimmer_on_off.Set_entity_type("switch");
   device_dimmer_on_off.Set_retain_flag(true);
+
+  device_dimmer_boost.Set_name("Boost");
+  device_dimmer_boost.Set_object_id("boost");
+  device_dimmer_boost.Set_entity_type("switch");
+  device_dimmer_boost.Set_retain_flag(true);
 
   /// création des button
   device_dimmer_save.Set_name("Sauvegarder");
@@ -434,6 +441,11 @@ void HA_discover(){
     device_relay2.HA_discovery();
     device_relay2.send(String(0));
     #endif
+
+    // boost
+    device_dimmer_boost.HA_discovery();
+    device_dimmer_boost.send("0");
+
     device_dimmer_starting_pow.HA_discovery();
     device_dimmer_starting_pow.send(String(config.startingpow));
 

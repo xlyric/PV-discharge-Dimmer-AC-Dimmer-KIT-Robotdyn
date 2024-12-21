@@ -226,6 +226,7 @@ System sysvar;
 Programme programme;
 Programme programme_relay1;
 Programme programme_relay2;
+Programme programme_marche_forcee;
 
 String getmqtt();
 void savemqtt(const char *filename, const Mqtt &mqtt_config); // NOSONAR
@@ -234,6 +235,7 @@ String stringBool(bool mybool);
 String getServermode(String Servermode);
 String switchstate(int state);
 void tests ();
+bool boost();
 
 /// @brief  declaration des logs
 Logs logging;/// declare logs
@@ -414,6 +416,8 @@ void setup() {
   programme.loadProgramme();
   programme.saveProgramme();
 
+  programme_marche_forcee.set_name("/marche_forcee");
+
 #ifdef RELAY1
   programme_relay1.set_name("/relay1");
   programme_relay1.loadProgramme();
@@ -579,7 +583,7 @@ void setup() {
 
       device_dimmer_child_mode.send(String(config.mode));
       device_dimmer_on_off.send(String(config.dimmer_on_off));
-
+      device_dimmer_boost.send("0");
       #ifdef RELAY1
       int relaystate = !digitalRead(RELAY1); // correction bug de démarrage en GPIO 0
       device_relay1.send(String(relaystate));
@@ -669,9 +673,9 @@ void loop() {
 
   ///////////////// gestion des activité minuteur
   //// Dimmer
-  if (programme.run) {
+  if (programme.run || programme_marche_forcee.run) {
     //  minuteur en cours
-    if (programme.stop_progr()) {
+    if (programme.stop_progr() && programme_marche_forcee.stop_progr()) {
       // Robotdyn dimmer
       logging.Set_log_init(Stop_minuteur,true);
       unified_dimmer.set_power(0);       // necessaire pour les autres modes
@@ -691,11 +695,15 @@ void loop() {
       }
       // réinint de la sécurité température
       sysvar.security = 0;
+      // on remet les valeurs de temps programme_marche_force à 00:00
+      strcpy(programme_marche_forcee.heure_demarrage, "00:00");
+      strcpy(programme_marche_forcee.heure_arret, "00:00");
+      device_dimmer_boost.send("0");
     }
   }
   else {
     // minuteur à l'arret
-    if (programme.start_progr()) {
+    if (programme.start_progr() ||  programme_marche_forcee.start_progr()) {
       // definition de la puissance à appliquer
       if ( programme.puissance > config.maxpow ) {     sysvar.puissance=config.maxpow; }
       else { sysvar.puissance = programme.puissance; }
@@ -715,6 +723,9 @@ void loop() {
         device_dimmer_send_power.send(String(instant_power));
         device_dimmer_power.send(String(instant_power * config.charge/100));
         device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
+        if ( programme_marche_forcee.run) {
+          device_dimmer_boost.send("1");
+        }
       }
     }
   }
@@ -1010,3 +1021,17 @@ void tests () {
 #endif
 }
 
+bool boost(){
+    /// récupération de l'heure actuelle
+    time_t now = time(nullptr);
+    // programation de l'heure de démarrage
+    strftime(programme_marche_forcee.heure_demarrage, 6, "%H:%M", localtime(&now));
+    // ajout de 2h
+    now += 7200;
+    // programmaton de l'heure d'arrêt
+    strftime(programme_marche_forcee.heure_arret, 6, "%H:%M", localtime(&now));
+    // ajout de la température de consigne
+    programme_marche_forcee.temperature = programme.temperature;
+    programme_marche_forcee.puissance = programme.puissance;
+    return true;
+} 

@@ -29,6 +29,7 @@ extern System sysvar;
 extern Programme programme;
 extern Programme programme_relay1;
 extern Programme programme_relay2;
+extern Programme programme_marche_forcee;
 extern gestion_puissance unified_dimmer;
 
 extern DNSServer dns;
@@ -263,6 +264,12 @@ void call_pages() {
 
   server.on("/getmqtt", HTTP_ANY, [] (AsyncWebServerRequest *request) {
     request->send(200, "application/json",  getmqtt().c_str());
+  });
+
+  // ajout de la commande de boost 2h   
+  server.on("/boost", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+    boost();
+    request->send(200, "application/json",  getMinuteur(programme_marche_forcee));
   });
 
   server.on("/getminuteur", HTTP_ANY, [] (AsyncWebServerRequest *request) {
@@ -613,6 +620,10 @@ String getState() {
   doc["minuteur"] = programme.run;
   doc["onoff"] = config.dimmer_on_off;
   doc["alerte"] = logging.Get_alerte_web();
+if (programme_marche_forcee.run) {
+  doc["boost"] = programme_marche_forcee.run;
+  doc["boost_endtime"] = programme_marche_forcee.heure_arret; 
+  } 
   serializeJson(doc, state);
   return String(state);
 }

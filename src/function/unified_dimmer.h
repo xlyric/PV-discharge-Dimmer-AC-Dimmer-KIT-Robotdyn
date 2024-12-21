@@ -13,7 +13,6 @@ extern dimmerLamp dimmer3;
   #include "function/jotta.h"
 #endif
 
-
 // @brief  structure pour uniformiser les commandes de puissances entre robotdyn et SSR
 struct gestion_puissance {
 public: float power;
@@ -194,5 +193,8 @@ public: float power;
   #endif
   }
 };
+
+
+
 
 #endif
