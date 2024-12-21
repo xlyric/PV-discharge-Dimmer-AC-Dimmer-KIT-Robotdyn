@@ -139,6 +139,11 @@
                     <h4 id="relais 1" style="cursor: pointer">N/A</h4>
                     <b>Etat Relais 2 : </b>
                     <h4 id="relais 2" style="cursor: pointer">N/A</h4>
+                    <b>Etat Boost : </b>
+                    <div>
+                      <span class=h4 id="boost" style="cursor: pointer">N/A</span>
+                      <span class=h6 id="boost_endtime"></span>
+                    </div>  
                   </div>
                 </div>
               </div>
@@ -255,6 +260,8 @@
             var minuteur = data.minuteur;
             var relais1 = data.relay1;
             var relais2 = data.relay2;
+            var boost = data.boost;
+            var boost_endtime = data.boost_endtime;
 
             // Mettre à jour les éléments HTML
             dataGaugePA.setValue(0, 0, "Power (W)");
@@ -309,6 +316,17 @@
               document.getElementById("relais 2").style.color = "";
             }
 
+            // ecriture de "ON" dans le div boost si l'état est à 1
+            if (boost == 1) {
+              document.getElementById("boost").innerHTML = "ON";
+              document.getElementById("boost").style.color = "red";
+              document.getElementById("boost_endtime").innerHTML = "Heure de fin: " + boost_endtime ; 
+            } else {
+              document.getElementById("boost").innerHTML = "OFF";
+              document.getElementById("boost").style.color = "";
+              document.getElementById("boost_endtime").innerHTML = "" ;
+            }
+
             if (data.alerte && data.alerte.trim() != "") {
               const alertContainer = document.getElementById("alertContainer");
               alertContainer.innerHTML = "Alerte : " + data.alerte;
@@ -335,6 +353,18 @@
 
         document.getElementById("relais 2").addEventListener("click", function () {
           fetch("/get?relay2=2")
+            .then((response) => response.text())
+            .then((data) => {
+              console.log("Response:", data);
+              setTimeout(refreshvalue, 500);
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+        });
+      
+      document.getElementById("boost").addEventListener("click", function () {
+          fetch("/boost")
             .then((response) => response.text())
             .then((data) => {
               console.log("Response:", data);
