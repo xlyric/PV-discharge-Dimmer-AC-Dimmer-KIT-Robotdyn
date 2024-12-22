@@ -130,9 +130,9 @@ void mqttdallas() {
 
       previous_celsius[a]=sysvar.celsius[a];
       if (a == sysvar.dallas_maitre) {
-        auto temp_topic = "Xlyric/" + String(config.say_my_name) + "/dallas";
+        String temp_topic = "Xlyric/" + String(config.say_my_name) + "/dallas";
 
-        auto message = String(logging.loguptime()) + "Dallas maitre perdue";
+        String message = String(logging.loguptime()) + "Dallas maitre perdue";
         client.publish((temp_topic+"dallas").c_str(), String(message).c_str(),true);
 
         unified_dimmer.dimmer_off(); /// mise en sécurité de l'ensemble

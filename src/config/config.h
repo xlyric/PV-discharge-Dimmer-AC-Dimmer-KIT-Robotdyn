@@ -1,8 +1,8 @@
 #ifndef CONFIG
 #define CONFIG
 
-#define VERSION "Version 20241218"
-#define FS_RELEASE "20241130" // date de la release
+#define VERSION "Version 20241222"
+#define FS_RELEASE "20241222" // date de la release
 
 constexpr size_t TEMPERATURE_PRECISION=11;
 constexpr size_t DALLAS_TIMEOUT=1500;

@@ -71,7 +71,7 @@ String stringBoolMQTT(bool mybool);
 String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
 String node_id = String("dimmer-") + node_mac;
 
-auto topic_Xlyric = "Xlyric/" + String(config.say_my_name) +"/";
+String topic_Xlyric = "Xlyric/" + String(config.say_my_name) +"/";
 
 auto command_switch = String(topic_Xlyric + "command/switch");
 auto command_number = String(topic_Xlyric + "command/number");
@@ -148,16 +148,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
     #ifdef RELAY2
     handleRelay(doc2, "relay2", RELAY2, "relay2", device_relay2,false);
     #endif
-    // boost
-    if (doc2["boost"].is<int>()) {
-      if (doc2["boost"] == 1) {
-        boost();
-        device_dimmer_boost.send("1");
-      }
-      else {
-        device_dimmer_boost.send("0");
-      }
-    }
     if (doc2["on_off"].is<int>()) {
       int relay = doc2["on_off"];
       if ( relay == 0) { config.dimmer_on_off = false; }
@@ -192,18 +182,21 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
   // clear alarm & save
   if (strstr( topic, command_button.c_str() ) != nullptr) {
+    Serial.println("MQTT command button "); 
+    Serial.print(fixedpayload);
     if (doc2["reset_alarm"].is<int>()) {
-      if (doc2["reset_alarm"] == "1" ) {
         logging.Set_log_init(Clear_alarm_temp,true);
         sysvar.security = 0;
         device_dimmer_alarm_temp.send(stringBoolMQTT(sysvar.security));
         sysvar.change = 1;
-      }
     }
     else if (doc2["save"].is<int>()) {
-      if (doc2["save"] == "1" ) {
         logging.Set_log_init(config.saveConfiguration()); // sauvegarde de la configuration
-      }
+    }
+        // boost
+    else if (doc2["boost"].is<int>()) {
+        boost();
+        device_dimmer_boost.send("1");
     }
   }
 
@@ -353,7 +346,6 @@ void child_communication(int delest_power, bool equal = false){
 //////////// reconnexion MQTT
 
 void connect_and_subscribe() {
-  if  (LittleFS.exists("/mqtt.json")) {
     if (!client.connected() && WiFi.isConnected()) {
       Serial.print("Attempting MQTT connection...\n");
       connectToMqtt();
@@ -379,6 +371,9 @@ void connect_and_subscribe() {
       client.subscribe(command_number.c_str(),1);
       client.subscribe(command_select.c_str(),1);
       client.subscribe(command_button.c_str(),1);
+      Serial.print("Subscribe to ");
+      Serial.println(command_switch.c_str());
+      
 
       String node_id = config.say_my_name;
       auto save_command = String("Xlyric/sauvegarde/"+ node_id );
@@ -389,15 +384,15 @@ void connect_and_subscribe() {
       device_dimmer.send(String(instant_power));
       device_dimmer_power.send(String(instant_power * config.charge/100));
     }
-  } else {  Serial.println(" Filesystem not present "); delay(5000); }
+
 }
 // #define MQTT_HOST IPAddress(192, 168, 1, 20)
 char arrayWill[64];// NOSONAR
 void async_mqtt_init() {
   String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
-  String topic_Xlyric = "Xlyric/dimmer-" + node_mac +"/";;
+  String topic_Xlyric_1 = "Xlyric/dimmer-" + node_mac +"/";;
   // String topic_Xlyric = "Xlyric/" + String(config.say_my_name) +"/";
-  const String LASTWILL_TOPIC = topic_Xlyric + "status";
+  const String LASTWILL_TOPIC = topic_Xlyric_1 + "status";
   LASTWILL_TOPIC.toCharArray(arrayWill, 64);
   IPAddress ip;
   ip.fromString(config.hostname);
@@ -481,12 +476,14 @@ String stringBoolMQTT(bool mybool){
 }
 
 void recreate_topic(){
-  auto topic_Xlyric = "Xlyric/" + String(config.say_my_name) +"/";
+  String topic_Xlyric = "Xlyric/" + String(config.say_my_name) +"/";
   Serial.println("test "+String(config.say_my_name));
   command_switch = String(topic_Xlyric + "command/switch");
   command_number = String(topic_Xlyric + "command/number");
   command_select = String(topic_Xlyric + "command/select");
   command_button = String(topic_Xlyric + "command/button");
+  Serial.println(command_button);
+
   command_save = String("Xlyric/sauvegarde/"+ node_id );
 }
 

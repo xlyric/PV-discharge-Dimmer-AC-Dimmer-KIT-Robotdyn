@@ -114,8 +114,8 @@ private: String HA_sensor_type() {
           "value_template": "{{ value_json.)" + object_id + R"( }}",
           "payload_on": "{ \")" + object_id + R"(\" : 1 }",
           "payload_off": "{ \")" + object_id + R"(\" : 0 }",
-          "stat_on": "1",
-          "stat_off": "0",
+          "stat_on": 1,
+          "stat_off": 0,
           "qos": 1,
           "command_topic": ")" + topic_Xlyric + R"(command/)" + entity_type + R"(/)" + object_id + R"(",
           )";
@@ -145,7 +145,7 @@ private: String HA_sensor_type() {
     else if (entity_type == "button") {
       info = "\"entity_category\": \""+ entity_category + "\","
              "\"cmd_t\": \""+ topic_Xlyric + "command/" +  entity_type + "/" + object_id + "\","
-             "\"pl_prs\": \"{ \\\""+object_id+"\\\" : \\\"1\\\"  } \",";
+             "\"pl_prs\": \"{ \\\""+object_id+"\\\" : 1  } \",";
     }
     return info;
   }
@@ -322,10 +322,7 @@ void devices_init(){
   device_dimmer_on_off.Set_entity_type("switch");
   device_dimmer_on_off.Set_retain_flag(true);
 
-  device_dimmer_boost.Set_name("Boost");
-  device_dimmer_boost.Set_object_id("boost");
-  device_dimmer_boost.Set_entity_type("switch");
-  device_dimmer_boost.Set_retain_flag(true);
+
 
   /// création des button
   device_dimmer_save.Set_name("Sauvegarder");
@@ -409,6 +406,14 @@ void devices_init(){
   device_dimmer_alarm_temp_clear.Set_entity_category("config");
   device_dimmer_alarm_temp_clear.Set_entity_qos(0);
   device_dimmer_alarm_temp_clear.Set_retain_flag(false);
+
+  device_dimmer_boost.Set_name("Boost");
+  device_dimmer_boost.Set_object_id("boost");
+  device_dimmer_boost.Set_entity_type("button");
+  device_dimmer_boost.Set_entity_category("config");
+  device_dimmer_boost.Set_entity_qos(0);
+  device_dimmer_boost.Set_retain_flag(false);
+
 }
 
 void HA_discover(){
@@ -444,7 +449,7 @@ void HA_discover(){
 
     // boost
     device_dimmer_boost.HA_discovery();
-    device_dimmer_boost.send("0");
+    //device_dimmer_boost.send("0");
 
     device_dimmer_starting_pow.HA_discovery();
     device_dimmer_starting_pow.send(String(config.startingpow));
