@@ -814,7 +814,7 @@ void loop() {
 
   ////////////////// controle de la puissance /////////////////
 
-  if ( sysvar.change == 1  && programme.run == false ) {   /// si changement et pas de minuteur en cours
+  if ( sysvar.change == 1  && programme.run == false  && !programme_marche_forcee.run) {   /// si changement et pas de minuteur en cours
 
     if (config.dimmer_on_off == 0) {
       unified_dimmer.dimmer_off();

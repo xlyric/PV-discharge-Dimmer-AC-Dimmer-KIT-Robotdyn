@@ -21,7 +21,7 @@ void cooler() {
   /// controle du cooler
   if (config.dimmer_on_off == 1) {
     if ( ( sysvar.puissance > config.minpow && sysvar.celsius[sysvar.dallas_maitre]< config.maxtemp &&
-           sysvar.security == 0 ) || ( programme.run == true )) {
+           sysvar.security == 0 ) || ( programme.run == true || programme_marche_forcee.run)) {
       sysvar.cooler = true;
     } else {
       sysvar.cooler = false;
@@ -42,7 +42,7 @@ void cooler() {
   }
 
   if (sysvar.cooler == 0 && millis() - lastCoolerOffTime >= cooldownDuration && digitalRead(COOLER) == HIGH &&
-      programme.run == false) {
+      programme.run == false && !programme_marche_forcee.run) {
     digitalWrite(COOLER, LOW);     // Éteindre le ventilateur après X secondes (cooldownDuration)
 
     if ( config.HA ) {  device_cooler.send(stringBool(false));  }
