@@ -116,6 +116,9 @@
 #include "tasks/get_power.h"
 #include "tasks/relais.h"
 #include "tasks/ping.h"
+#ifdef ESP32
+#include "tasks/oled.h"
+#endif
 
 #if defined(ESP32) || defined(ESP32ETH)
 // Web services
@@ -154,6 +157,10 @@ Task Task_relay(20234, TASK_FOREVER, &relais_controle);
 #endif
 /// @brief  task de ping
 Task Task_ping(120567, TASK_FOREVER, &ping);
+#ifdef ESP32
+Task Task_OLED(10000, TASK_FOREVER, &oled_task);
+#endif
+
 Scheduler runner;
 
 
@@ -286,7 +293,14 @@ void setup() {
   /// init des tasks 
   runner.init();
   runner.addTask(Task_dallas); // ajout de la tache dallas
-  Task_dallas.enable();
+ 
+  //Task_dallas.enable();
+  #ifdef ESP32
+    runner.addTask(Task_OLED); // ajout de la tache oled
+    oled.init();
+    oled.wait_for_wifi(0);
+  #endif
+  runner.enableAll();
 
   #ifdef ESP32ETH
   ETH.begin(ETH_ADDR, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_TYPE, ETH_CLK_MODE);
@@ -471,11 +485,13 @@ void setup() {
                   wifi_config_fixe.static_sn) + " GW: " + String(wifi_config_fixe.static_gw));
 
   // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
+ /* while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
-  }
-
+  }*/
+  #ifdef ESP32
+  oled.wait_for_wifi(1);
+  #endif
   WiFi.setAutoReconnect(true);
 
   /// restart si la configuration OP static est différente ip affectée suite changement ip Autoconf
@@ -615,6 +631,10 @@ void setup() {
 
   /// init du NTP
   ntpinit();
+  // INIT DE l'oled 
+  #ifdef ESP32
+  init_ui();  
+  #endif
 
 
 
@@ -650,7 +670,11 @@ void loop() {
   /// update mdns
   MDNS.update();
   #endif
-
+  
+  #ifdef ESP32
+   // oled_task();
+  #endif
+  
   /// connexion MQTT dans les cas de conf mqtt et perte de connexion
   if (!client.connected() ) {
     mqttConnected = false;
@@ -675,7 +699,7 @@ void loop() {
   //// Dimmer
   if (programme.run || programme_marche_forcee.run) {
     //  minuteur en cours
-    if (programme.stop_progr() && programme_marche_forcee.stop_progr()) {
+    if (programme.stop_progr() || programme_marche_forcee.stop_progr()) {
       // Robotdyn dimmer
       logging.Set_log_init(Stop_minuteur,true);
       unified_dimmer.set_power(0);       // necessaire pour les autres modes
@@ -1027,7 +1051,7 @@ bool boost(){
     // programation de l'heure de démarrage
     strftime(programme_marche_forcee.heure_demarrage, 6, "%H:%M", localtime(&now));
     // ajout de 2h
-    now += 7200;
+    now += TIME_BOOST;
     // programmaton de l'heure d'arrêt
     strftime(programme_marche_forcee.heure_arret, 6, "%H:%M", localtime(&now));
     // ajout de la température de consigne

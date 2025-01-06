@@ -1,7 +1,7 @@
 #ifndef CONFIG
 #define CONFIG
 
-#define VERSION "Version 20241222"
+#define VERSION "Version 20250106"
 #define FS_RELEASE "20241222" // date de la release
 
 constexpr size_t TEMPERATURE_PRECISION=11;
@@ -51,6 +51,15 @@ constexpr size_t DALLAS_TIMEOUT=1500;
 
 
 #ifdef ESP32
+  #undef outputPin
+  #undef outputPin2
+  #undef outputPin3
+  #undef zerocross
+  #undef ONE_WIRE_BUS
+  #undef RELAY1
+  #undef RELAY2
+  #undef COOLER
+
   #define RELAY2 26
   #define outputPin  18 // PSM on board
   #define zerocross  19 // for boards with CHANGEBLE input pins // ZC on board
@@ -63,6 +72,7 @@ constexpr size_t DALLAS_TIMEOUT=1500;
 #endif
 
 #ifdef ESP32ETH
+
 #undef outputPin
 #undef outputPin2
 #undef zerocross
@@ -114,6 +124,6 @@ constexpr size_t LOG_MAX_STRING_LENGTH=1500 ;// taille max des logs stockées
 #define COOLER  D7       // 0 : off  -> 1 : On --> need a dry contact or opto
 #endif
 
-
+#define TIME_BOOST 7200 // temps de boost
 #endif
 
