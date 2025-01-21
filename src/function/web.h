@@ -269,7 +269,7 @@ void call_pages() {
 
   // ajout de la commande de boost 2h   
   server.on("/boost", HTTP_ANY, [] (AsyncWebServerRequest *request) {
-    boost();
+    boost();    
     request->send(200, "application/json",  getMinuteur(programme_marche_forcee));
   });
 

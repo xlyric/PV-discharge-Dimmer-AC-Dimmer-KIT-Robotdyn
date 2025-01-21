@@ -1046,6 +1046,15 @@ void tests () {
 }
 
 bool boost(){
+    if (programme_marche_forcee.run) {
+      // on coupe le boost 
+      programme_marche_forcee.run = false;
+      strcpy(programme_marche_forcee.heure_demarrage, "00:00"); // NOSONAR
+      strcpy(programme_marche_forcee.heure_arret, "00:00");  // NOSONAR
+      device_dimmer_boost.send("0");
+      unified_dimmer.set_power(0);
+        return false;
+    }
     /// récupération de l'heure actuelle
     time_t now = time(nullptr);
     // programation de l'heure de démarrage

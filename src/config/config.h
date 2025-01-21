@@ -1,7 +1,7 @@
 #ifndef CONFIG
 #define CONFIG
 
-#define VERSION "Version 20250106"
+#define VERSION "Version 20250125"
 #define FS_RELEASE "20241222" // date de la release
 
 constexpr size_t TEMPERATURE_PRECISION=11;
@@ -124,6 +124,6 @@ constexpr size_t LOG_MAX_STRING_LENGTH=1500 ;// taille max des logs stockées
 #define COOLER  D7       // 0 : off  -> 1 : On --> need a dry contact or opto
 #endif
 
-#define TIME_BOOST 7200 // temps de boost
+#define TIME_BOOST 3600 // temps de boost
 #endif
 
