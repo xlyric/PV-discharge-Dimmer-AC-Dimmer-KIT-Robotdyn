@@ -1046,17 +1046,21 @@ void tests () {
 }
 
 bool boost(){
+    time_t now = time(nullptr);
     if (programme_marche_forcee.run) {
       // on coupe le boost 
-      programme_marche_forcee.run = false;
+      /*programme_marche_forcee.run = false;
       strcpy(programme_marche_forcee.heure_demarrage, "00:00"); // NOSONAR
       strcpy(programme_marche_forcee.heure_arret, "00:00");  // NOSONAR
-      device_dimmer_boost.send("0");
       unified_dimmer.set_power(0);
-        return false;
+      */
+        // sur bug avec mqtt, on fait differement : on change l'heure de fin pour mettre à maintenant
+      strftime(programme_marche_forcee.heure_arret, 6, "%H:%M", localtime(&now));
+      now += TIME_BOOST;
+      strftime(programme_marche_forcee.heure_demarrage, 6, "%H:%M", localtime(&now));
+      return false;
     }
-    /// récupération de l'heure actuelle
-    time_t now = time(nullptr);
+    
     // programation de l'heure de démarrage
     strftime(programme_marche_forcee.heure_demarrage, 6, "%H:%M", localtime(&now));
     // ajout de 2h
