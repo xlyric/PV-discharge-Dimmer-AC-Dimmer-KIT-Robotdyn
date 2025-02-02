@@ -306,7 +306,7 @@ void setup() {
   ETH.begin(ETH_ADDR, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_TYPE, ETH_CLK_MODE);
   #endif
   logging.Set_log_init("197}11}1");
-  logging.Set_alerte_web("RAS");
+  logging.alerte_web="RAS";
   // Correction issue full power at start
   pinMode(outputPin, OUTPUT);
   pinMode(zerocross, INPUT);
@@ -812,7 +812,7 @@ void loop() {
     if (!alerte) {
       Serial.println("Alert Temp");
       logging.Set_log_init(Alert_Temp,true);
-      logging.Set_alerte_web(Alert_Temp);
+      logging.alerte_web=Alert_Temp;
 
       if (!AP && mqtt_config.mqtt ) {
         Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("Ballon chaud " ),"Alerte");        /// send alert to MQTT
@@ -823,7 +823,7 @@ void loop() {
     //// Trigger de sécurité température
     if ( sysvar.celsius[sysvar.dallas_maitre] <= (config.maxtemp - (config.maxtemp*config.trigger/100)) ) {
       sysvar.security = false;
-      logging.Set_alerte_web("RAS");
+      logging.alerte_web="RAS";
       if (!AP && mqtt_config.mqtt && config.HA) {
         device_dimmer_alarm_temp.send(stringBool(sysvar.security));
         Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("RAS" ),"Alerte");
@@ -994,7 +994,7 @@ void loop() {
   //***********************************
   if ( sysvar.celsius[sysvar.dallas_maitre] >= config.maxtemp && !sysvar.security) {
     sysvar.security = true;
-    logging.Set_alerte_web(Alert_Temp);
+    logging.alerte_web=Alert_Temp;
     unified_dimmer.set_power(0); // necessaire pour les autres modes
     unified_dimmer.dimmer_off();
     /// pour être sur que la dernière consigne envoyé soit au moins égale au max.temp

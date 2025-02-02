@@ -288,7 +288,6 @@ void call_pages() {
   });
 
   server.on("/setminuteur", HTTP_ANY, [] (AsyncWebServerRequest *request) {
-    sysvar.lock_mqtt=true;  // on bloque les requetes MQTT
     String name;
     if (request->hasParam("dimmer")) {
       if (request->hasParam("heure_demarrage")) {
@@ -341,7 +340,6 @@ void call_pages() {
       request->send(200, "application/json",  getMinuteur(programme_relay2));
     }
     else { request->send(200, "application/json",  getMinuteur()); }
-    sysvar.lock_mqtt=false; // on débloque les requetes MQTT
   });
 
   /// reglage des seuils relais
@@ -424,7 +422,6 @@ void call_pages() {
 /////////////////////////
 
   server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
-    sysvar.lock_mqtt=true; // on bloque les requetes MQTT
     ///  fonction  /get?paramettre=xxxx
     if (request->hasParam("save")) {
       Serial.println(F("Saving configuration..."));
@@ -567,7 +564,6 @@ void call_pages() {
 
     request->send(200, "application/json", getconfig().c_str());
   });
- sysvar.lock_mqtt=false; // on débloque les requetes MQTT
 }
 
 
