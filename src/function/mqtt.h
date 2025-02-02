@@ -186,7 +186,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print(fixedpayload);
     if (doc2["reset_alarm"].is<int>()) {
         logging.Set_log_init(Clear_alarm_temp,true);
-        sysvar.security = 0;
+        sysvar.security = false;
+        logging.Set_alerte_web("RAS");
         device_dimmer_alarm_temp.send(stringBoolMQTT(sysvar.security));
         sysvar.change = 1;
     }

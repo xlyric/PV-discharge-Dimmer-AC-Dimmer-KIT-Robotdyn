@@ -384,7 +384,7 @@ struct System {
   /// @brief etat de la surchauffe
   int dallas_maitre=0;
   /// @brief sonde principale
-  byte security=0;
+  bool security=0;
   /// @brief  état ping
   bool ping=false;
   const char pingurl[35] = "ota.apper-solaire.org";
