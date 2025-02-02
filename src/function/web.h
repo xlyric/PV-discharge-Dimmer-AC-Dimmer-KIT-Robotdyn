@@ -102,7 +102,7 @@ void call_pages() {
 
   // page de index et récupération des requetes de puissance
   server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
-
+    sysvar.lock_mqtt=true;  // on bloque les requetes MQTT 
     if  (LittleFS.exists("/index.html")) {
       DEBUG_PRINTLN(("%d------------------",__LINE__));
       DEBUG_PRINTLN(sysvar.puissance);
@@ -203,10 +203,12 @@ void call_pages() {
 
     DEBUG_PRINTLN(sysvar.puissance);
     DEBUG_PRINTLN(("%d------------------",__LINE__));
+    sysvar.lock_mqtt=false; // on débloque les requetes MQTT
   });
 
   // page de config et récupération des requetes de config
   server.on("/config.html",HTTP_ANY, [](AsyncWebServerRequest *request){
+    sysvar.lock_mqtt=true;  // on bloque les requetes MQTT
     if  (LittleFS.exists("/config.html")) {
       if (!AP) {
         request->send(LittleFS, "/config.html", String(), false, processor);
@@ -217,14 +219,19 @@ void call_pages() {
     else {
       request->send(200, "text/html", textnofiles().c_str());
     }
+    sysvar.lock_mqtt=false; // on débloque les requetes MQTT
   });
 
   server.on("/state", HTTP_ANY, [](AsyncWebServerRequest *request){
+    sysvar.lock_mqtt=true;  // on bloque les requetes MQTT
     request->send(200, "application/json", getState().c_str());
+    sysvar.lock_mqtt=false; // on débloque les requetes MQTT
   });
 
   server.on("/state_dallas", HTTP_ANY, [](AsyncWebServerRequest *request){
+    sysvar.lock_mqtt=true;  // on bloque les requetes MQTT
     request->send(200, "application/json", getState_dallas().c_str());
+    sysvar.lock_mqtt=false; // on débloque les requetes MQTT
   });
 
   server.on("/resetwifi", HTTP_ANY, [](AsyncWebServerRequest *request){
@@ -281,6 +288,7 @@ void call_pages() {
   });
 
   server.on("/setminuteur", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+    sysvar.lock_mqtt=true;  // on bloque les requetes MQTT
     String name;
     if (request->hasParam("dimmer")) {
       if (request->hasParam("heure_demarrage")) {
@@ -333,6 +341,7 @@ void call_pages() {
       request->send(200, "application/json",  getMinuteur(programme_relay2));
     }
     else { request->send(200, "application/json",  getMinuteur()); }
+    sysvar.lock_mqtt=false; // on débloque les requetes MQTT
   });
 
   /// reglage des seuils relais
@@ -415,6 +424,7 @@ void call_pages() {
 /////////////////////////
 
   server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+    sysvar.lock_mqtt=true; // on bloque les requetes MQTT
     ///  fonction  /get?paramettre=xxxx
     if (request->hasParam("save")) {
       Serial.println(F("Saving configuration..."));
@@ -557,7 +567,7 @@ void call_pages() {
 
     request->send(200, "application/json", getconfig().c_str());
   });
-
+ sysvar.lock_mqtt=false; // on débloque les requetes MQTT
 }
 
 
@@ -609,8 +619,6 @@ String getState() {
   doc["temperature"] = buffer;
   doc["power"] = int(instant_power * config.charge/100);
   doc["Ptotal"]  = sysvar.puissance_cumul + int(instant_power * config.charge/100);
-  // recupération de l'état de surchauffe
-  //doc["alerte"]  = sysvar.security;
   #ifdef RELAY1
   doc["relay1"]   = !digitalRead(RELAY1);
   doc["relay2"]   = digitalRead(RELAY2);
@@ -618,11 +626,10 @@ String getState() {
   doc["relay1"]   = 0;
   doc["relay2"]   = 0;
 #endif
-
-  
+ 
   doc["minuteur"] = programme.run;
   doc["onoff"] = config.dimmer_on_off;
-   doc["alerte"] = logging.Get_alerte_web();
+  doc["alerte"] = logging.alerte_web; //affiche maintenant l'alerte et plus 0 ou 1 pour les alertes
 if (programme_marche_forcee.run) {
   doc["boost"] = programme_marche_forcee.run;
   doc["boost_endtime"] = programme_marche_forcee.heure_arret; 

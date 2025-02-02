@@ -133,6 +133,7 @@ void mqttdallas() {
         String temp_topic = "Xlyric/" + String(config.say_my_name) + "/dallas";
 
         String message = String(logging.loguptime()) + "Dallas maitre perdue";
+        sysvar.wait_unlock_mqtt();
         client.publish((temp_topic+"dallas").c_str(), String(message).c_str(),true);
 
         unified_dimmer.dimmer_off(); /// mise en sécurité de l'ensemble
@@ -161,10 +162,16 @@ void mqttdallas() {
       devices_init(); // initialisation des devices HA
     }
   } 
-
-
-
 }
+
+#ifdef ESP32
+  void mqttdallas_32 ( void * parameter ) {
+    while (true) {
+      mqttdallas();
+      vTaskDelay(8123 / portTICK_PERIOD_MS); // Délai de 8 seconde pour ESP32
+    }
+  }
+#endif
 
 //***********************************
 //************* récupération d'une température du 18b20
@@ -217,7 +224,7 @@ bool dallaspresent () {
       logging.Set_log_init(Alerte_Dallas_not_found);
       Mqtt_send_DOMOTICZ(String(config.IDXTemp), String("Alerte Dallas non trouvée"),"Alerte");  /// send alert to MQTT
       device_dimmer_alarm_temp.send("Alerte Dallas non trouvée");
-      logging.Set_alerte_web("Dallas Maitre non trouvée");
+      logging.alerte_web="Dallas Maitre non trouvée";
       devicealerte++;
     }
     else {
@@ -229,7 +236,7 @@ bool dallaspresent () {
     return false;
   }
 
-  logging.Set_alerte_web("");
+  logging.alerte_web="RAS";
 
   //// recherche des adresses des sondes
   /// réglage de la préciion des sondes
@@ -278,20 +285,7 @@ bool dallaspresent () {
     // usage de oneWire.reset_search() pour réinitialiser la recherche
     // de la sonde suivante ( est ce vraiment utile, comme dans les docs, ça n'est pas fait )
     // --> très tiré par les cheveux comme la librairie dallas le fait déja https://arduino.blaisepascal.fr/capteur-de-temperature-dallas/
-    /*delay(250);
-    ds.reset();
-    ds.select(addr[a]);
-    ds.write(0x44, 1);        // start conversion, with parasite power on at the end
 
-    delay(1000);     // maybe 750ms is enough, maybe not
-    // we might do a ds.depower() here, but the reset will take care of it.
-
-    present = ds.reset();    ///  byte 0 > 1 si present
-    delay(1000);
-
-    ds.select(addr[a]);
-    ds.write(0xBE);         // Read Scratchpad
-*/
     /// cas d'une adresse à 0 0 0 0 0 0 0 0
     for (int i = 0; i < deviceCount; i++)  {
       if (addr[i][0] == 0 && addr[i][1] == 0 && addr[i][2] == 0 && addr[i][3] == 0 && addr[i][4] == 0 && addr[i][5] == 0 && addr[i][6] == 0 && addr[i][7] == 0) {

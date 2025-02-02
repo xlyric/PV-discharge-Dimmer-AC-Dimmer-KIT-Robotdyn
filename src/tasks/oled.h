@@ -93,7 +93,7 @@ OverlayCallback overlays[] = { drawHeaderOverlay };
 // task oled et meteo 
 
 void oled_task() {
-    ui.update();
+        ui.update();
 }
 
 // affichage de l'heure

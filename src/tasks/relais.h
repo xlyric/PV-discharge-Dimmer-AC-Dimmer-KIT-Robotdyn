@@ -44,4 +44,14 @@ void relais_controle() {
     #endif
 }
 
+  #ifdef ESP32
+    void relais_controle_32 ( void * parameter ) {
+      while (true) {
+        relais_controle();
+        vTaskDelay(20020 / portTICK_PERIOD_MS); // Délai de 15 secondes pour ESP32
+      }
+    }
+  #endif
+
+
 #endif

@@ -50,6 +50,13 @@ void cooler() {
 
   // pas besoin de tempo pour l'arret, vu que c'est toute les 15 secondes la task
 }
-
+  #ifdef ESP32
+    void cooler_32 ( void * parameter ) {
+      while (true) {
+        cooler();
+        vTaskDelay(15015 / portTICK_PERIOD_MS); // Délai de 15 secondes pour ESP32
+      }
+    }
+  #endif
 #endif
 

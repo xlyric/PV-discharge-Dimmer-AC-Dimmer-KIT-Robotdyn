@@ -202,9 +202,11 @@ public: void HA_discovery(){
                     "}";
 
     if (object_id.length() != 0) {
+      sysvar.wait_unlock_mqtt();
       client.publish(String(topic+object_id+"/config").c_str(), device.c_str(),true);  // déclaration autoconf dimmer
     }
     else {
+      sysvar.wait_unlock_mqtt();
       client.publish(String(topic+"config").c_str(), device.c_str(),true);   // déclaration autoconf dimmer
     }
 
@@ -214,6 +216,7 @@ public: void send(String value){
     if (config.JEEDOM || config.HA) {
       String topic = "Xlyric/"+ node_id +"/sensors/";
       String message = "  { \""+object_id+"\" : \"" + value.c_str() + "\"  } ";
+      sysvar.wait_unlock_mqtt();
       client.publish(String(topic + object_id + "/state").c_str(), message.c_str(), retain_flag);
     }
   }

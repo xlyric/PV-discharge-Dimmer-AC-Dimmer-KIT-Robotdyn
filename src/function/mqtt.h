@@ -187,7 +187,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     if (doc2["reset_alarm"].is<int>()) {
         logging.Set_log_init(Clear_alarm_temp,true);
         sysvar.security = false;
-        logging.Set_alerte_web("RAS");
+        logging.alerte_web="RAS";
         device_dimmer_alarm_temp.send(stringBoolMQTT(sysvar.security));
         sysvar.change = 1;
     }
@@ -302,6 +302,7 @@ void Mqtt_send_DOMOTICZ(String idx, String value, String name="") {
     serializeJson(doc, retour);
     // si config.Publish est vide, on ne publie pas
     if (strlen(config.Publish) != 0 ) { // NOSONAR
+      sysvar.wait_unlock_mqtt();
       client.publish(config.Publish, retour.c_str(), true);
     }
   }
@@ -310,6 +311,7 @@ void Mqtt_send_DOMOTICZ(String idx, String value, String name="") {
     auto jeedom_publish = String(config.Publish) + "/" + idx;
     // si config.Publish est vide, on ne publie pas
     if (strlen(config.Publish) != 0 ) { // NOSONAR
+      sysvar.wait_unlock_mqtt();
       client.publish(jeedom_publish.c_str(), value.c_str(), true);
     }
   }
@@ -440,6 +442,7 @@ void onMqttConnect(bool sessionPresent) {
   String topic_Xlyric = "Xlyric/dimmer-" + node_mac +"/";;
 
   // Once connected, publish online to the availability topic
+  sysvar.wait_unlock_mqtt();
   client.publish(String(topic_Xlyric +"status").c_str(),"online",true);
 
   if (strlen(config.SubscribePV) !=0 ) {

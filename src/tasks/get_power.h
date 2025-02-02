@@ -35,5 +35,13 @@ void get_dimmer_child_power (){
     }
   }
 }
+  #ifdef ESP32
+    void get_dimmer_child_power_32 ( void * parameter ) {
+      while (true) {
+        get_dimmer_child_power();
+        vTaskDelay(10010 / portTICK_PERIOD_MS); // Délai de 15 secondes pour ESP32
+      }
+    }
+  #endif
 
 #endif

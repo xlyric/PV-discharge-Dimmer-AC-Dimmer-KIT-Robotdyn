@@ -26,18 +26,11 @@ private:
 
   char log_init[LOG_MAX_STRING_LENGTH];     // NOSONAR
   int MaxString = LOG_MAX_STRING_LENGTH * .9;
-  String alerte_web = "";
+  
 
 public:
-  /// setter alerte_web
-  void Set_alerte_web(String setter) {
-    alerte_web = setter;
-  }
-  /// getter alerte_web
-  String Get_alerte_web() {
-    return alerte_web;
-  }
-
+  String alerte_web = "";
+  // retrait des setter/getter pour les logs d'alerte web ( pour éviter les problèmes de mémoire )
 
 /// setter log_init
 public: void Set_log_init(String setter, bool logtime=false) {
@@ -389,6 +382,15 @@ struct System {
   bool ping=false;
   const char pingurl[35] = "ota.apper-solaire.org";
   int pingfail=0;
+  bool lock_mqtt=false; // pour éviter les conflits de mémoire entre http et mqtt
+
+  void wait_unlock_mqtt() {
+      // attente que sysvar.lock soit libéré 
+      while (lock_mqtt) {
+        delay(50);
+      } 
+    }
+
 };  // fin de la structure System
 
 struct epoc {
