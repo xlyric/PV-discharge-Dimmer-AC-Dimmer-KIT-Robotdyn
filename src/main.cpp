@@ -82,7 +82,9 @@
 #include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
 #include <ArduinoJson.h> // ArduinoJson v6
 
+#if defined(ESP8266)
 #include <TaskScheduler.h> // gestion des taches
+#endif
 
 // ota mise à jour sans fil
 #include <ElegantOTA.h>
@@ -148,7 +150,8 @@
 
 #include "function/mdns.h"
 
-// taches
+#if defined(ESP8266)
+// taches 
 Task Task_dallas(8123, TASK_FOREVER, &mqttdallas);
 Task Task_Cooler(15456, TASK_FOREVER, &cooler);
 Task Task_GET_POWER(10789, TASK_FOREVER, &get_dimmer_child_power);
@@ -162,7 +165,7 @@ Task Task_OLED(10000, TASK_FOREVER, &oled_task);
 #endif
 
 Scheduler runner;
-
+#endif
 
 /***************************
  * Begin Settings
@@ -290,17 +293,19 @@ IPAddress _ip,_gw,_sn,gatewayIP;   // NOSONAR
 void setup() {
   Serial.begin(115200);
   
+  #if defined(ESP8266)
   /// init des tasks 
   runner.init();
   runner.addTask(Task_dallas); // ajout de la tache dallas
- 
+  runner.enableAll();
+  #endif
+
   //Task_dallas.enable();
   #ifdef ESP32
-    runner.addTask(Task_OLED); // ajout de la tache oled
     oled.init();
     oled.wait_for_wifi(0);
   #endif
-  runner.enableAll();
+  
 
   #ifdef ESP32ETH
   ETH.begin(ETH_ADDR, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_TYPE, ETH_CLK_MODE);
@@ -634,10 +639,62 @@ void setup() {
   // INIT DE l'oled 
   #ifdef ESP32
   init_ui();  
+
+      xTaskCreate(
+      oled_task,
+      "taskoled",  // Task name
+      6000,            // Stack size (bytes)
+      NULL,             // Parameter
+      3,                // Task priority
+      NULL          // Task handle
+      
+    );  
+
+
+    // création de la task pour le cooler
+    xTaskCreate(
+      cooler_32,
+      "taskcooler_32",  // Task name
+      6000,            // Stack size (bytes)
+      NULL,             // Parameter
+      3,                // Task priority
+      NULL          // Task handle
+    );
+
+    // création de la task pour le get power
+    xTaskCreate(
+      get_dimmer_child_power_32,
+      "taskgetpower_32",  // Task name
+      6000,            // Stack size (bytes)
+      NULL,             // Parameter
+      3,                // Task priority
+      NULL          // Task handle
+    );
+
+    // création de la task pour le ping
+    xTaskCreate(
+      ping_32,
+      "taskping_32",  // Task name
+      6000,            // Stack size (bytes)
+      NULL,             // Parameter
+      3,                // Task priority
+      NULL          // Task handle
+    );
+
+    // création de la task pour la dallas
+    xTaskCreate(
+      mqttdallas_32,
+      "taskdallas_32",  // Task name
+      6000,            // Stack size (bytes)
+      NULL,             // Parameter
+      3,                // Task priority
+      NULL          // Task handle
+    );
+
   #endif
 
 
-
+  #if defined(ESP8266)
   runner.addTask(Task_Cooler);
   Task_Cooler.enable();
 
@@ -646,6 +703,7 @@ void setup() {
 
   runner.addTask(Task_ping);
   Task_ping.enable();
+  #endif
 
   DEBUG_PRINTLN(ESP.getFreeHeap());
 
@@ -682,9 +740,9 @@ void loop() {
   if (!mqttConnected && !AP && mqtt_config.mqtt) {
     connect_and_subscribe();
   }
-
+  #if defined(ESP8266)
   runner.execute(); // gestion des taches
-
+  #endif
   /// limitation de la taille de la chaine de log
   logging.clean_log_init();
 

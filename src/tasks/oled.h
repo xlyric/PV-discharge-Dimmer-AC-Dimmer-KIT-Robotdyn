@@ -92,8 +92,12 @@ OverlayCallback overlays[] = { drawHeaderOverlay };
 
 // task oled et meteo 
 
-void oled_task() {
+void oled_task(void *parameter) {
+    while (true) {
         ui.update();
+        vTaskDelay(1000 / portTICK_PERIOD_MS);  // Attendre 1 seconde (1000ms)
+    }
+       
 }
 
 // affichage de l'heure
