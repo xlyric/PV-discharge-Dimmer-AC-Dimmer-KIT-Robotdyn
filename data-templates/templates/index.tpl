@@ -262,6 +262,7 @@
             var relais2 = data.relay2;
             var boost = data.boost;
             var boost_endtime = data.boost_endtime;
+            var boost_max_temp = data.boost_max_temp;
 
             // Mettre à jour les éléments HTML
             dataGaugePA.setValue(0, 0, "Power (W)");
@@ -320,11 +321,11 @@
             if (boost == 1) {
               document.getElementById("boost").innerHTML = "ON";
               document.getElementById("boost").style.color = "red";
-              document.getElementById("boost_endtime").innerHTML = "Heure de fin: " + boost_endtime ; 
+              document.getElementById("boost_endtime").innerHTML = "Heure de fin: " + boost_endtime + "max:" + boost_max_temp +"°C"; 
             } else {
               document.getElementById("boost").innerHTML = "OFF";
               document.getElementById("boost").style.color = "";
-              document.getElementById("boost_endtime").innerHTML = "" ;
+              document.getElementById("boost_endtime").innerHTML = "max:" + boost_max_temp +"°C" ;
             }
 
             if (data.alerte && data.alerte.trim() != "") {

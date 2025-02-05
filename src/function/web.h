@@ -94,11 +94,11 @@ void call_pages() {
                      "/css/fa-solid-900.woff2").setCacheControl("max-age=31536000");
   server.serveStatic("/favicon.ico", LittleFS, "/favicon.ico").setCacheControl("max-age=31536000");
   server.serveStatic("/log.html", LittleFS, "/log.html").setCacheControl("max-age=31536000");
-  server.serveStatic("/mqtt.html", LittleFS, "/mqtt.html").setTemplateProcessor(processor);
-  server.serveStatic("/minuteur.html", LittleFS, "/minuteur.html").setTemplateProcessor(processor);
-  server.serveStatic("/relai.html", LittleFS, "/relai.html").setTemplateProcessor(processor);
-  server.serveStatic("/backup.html", LittleFS, "/backup.html").setTemplateProcessor(processor);
-  server.serveStatic("/lang.json", LittleFS, "/lang.json");
+  server.serveStatic("/mqtt.html", LittleFS, "/mqtt.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
+  server.serveStatic("/minuteur.html", LittleFS, "/minuteur.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
+  server.serveStatic("/relai.html", LittleFS, "/relai.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
+  server.serveStatic("/backup.html", LittleFS, "/backup.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
+  server.serveStatic("/lang.json", LittleFS, "/lang.json").setCacheControl("max-age=31536000");
 
   // page de index et récupération des requetes de puissance
   server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
@@ -630,6 +630,7 @@ if (programme_marche_forcee.run) {
   doc["boost"] = programme_marche_forcee.run;
   doc["boost_endtime"] = programme_marche_forcee.heure_arret; 
   } 
+  doc["boost_max_temp"] = programme_marche_forcee.temperature;
   serializeJson(doc, state);
   return String(state);
 }

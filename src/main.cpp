@@ -711,7 +711,7 @@ void setup() {
   logging.Set_log_init(End_Start);
   logging.Set_log_init("",true);
   logging.Set_log_init("\r\n");
-
+  programme_marche_forcee.temperature = programme.temperature;
   delay(1000);
 }
 
