@@ -1071,7 +1071,14 @@ void loop() {
   if (strlen(config.SubscribeTEMP) == 0 ) {
     restart_dallas();
   }
-  delay(100); // 24/01/2023 changement 500 à 100ms pour plus de réactivité
+
+  //// protection contre l'absence de commande  
+  if ( !programme.run && !programme_marche_forcee.run ) { 
+    unified_dimmer.auto_off(AUTO_OFF);
+  }
+  
+  delay(100); 
+   // 24/01/2023 changement 500 à 100ms pour plus de réactivité 
 }
 
 ///////////////

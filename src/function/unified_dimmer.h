@@ -15,10 +15,14 @@ extern dimmerLamp dimmer3;
 
 // @brief  structure pour uniformiser les commandes de puissances entre robotdyn et SSR
 struct gestion_puissance {
+private: 
+        unsigned long last_time = millis();
+
 public: float power;
 
   // setter
   void set_power(float is_set_power){
+    last_time = millis();
     /// si la température est supérieur à la température max on coupe tout
     if ( sysvar.celsius[sysvar.dallas_maitre]> config.maxtemp ) { is_set_power = 0; }
     else if ( is_set_power > config.maxpow )  { is_set_power = config.maxpow; }
@@ -192,6 +196,15 @@ public: float power;
     ssr_burst.set_power(0);
   #endif
   }
+
+  // fonction de coupure automatique après un certain temps
+  void auto_off(int delay_off) {
+    if (( millis() - last_time > delay_off*60*1000)  && (power > 0) ) {
+      dimmer_off();
+      Serial.println("dimmer auto off");
+    }
+  }
+
 };
 
 
