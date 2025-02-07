@@ -70,7 +70,7 @@
                         </div>
                       </div>
                       <div class="col-auto">
-                        <i class="fas fa-download fa-2x text-gray-300"></i>
+                        <i class="fas fa-download_2 fa-2x "></i>
                       </div>
                     </div>
                   </div>

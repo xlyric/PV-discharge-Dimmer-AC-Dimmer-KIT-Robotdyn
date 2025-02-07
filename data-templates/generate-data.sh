@@ -13,12 +13,11 @@ declare -A JS=(
     [05-google-charts.min.js]="https://www.gstatic.com/charts/loader.js"
 )
 declare -A CSS=(
-    [01-fontawesome-free.min.css]="https://raw.githubusercontent.com/StartBootstrap/startbootstrap-sb-admin-2/refs/heads/master/vendor/fontawesome-free/css/all.min.css"
     [02-sb-admin-2.min.css]="https://raw.githubusercontent.com/StartBootstrap/startbootstrap-sb-admin-2/refs/heads/master/css/sb-admin-2.min.css"
     [03-bootstrap-4.6.2.min.css]="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
 )
 declare -A WEBFONTS=(
-    [fa-solid-900.woff2]="https://raw.githubusercontent.com/StartBootstrap/startbootstrap-sb-admin-2/refs/heads/master/vendor/fontawesome-free/webfonts/fa-solid-900.woff2"
+
 )
 
 echo -n "Remove old data files... "

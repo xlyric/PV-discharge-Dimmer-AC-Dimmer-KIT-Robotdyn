@@ -335,9 +335,42 @@
             } else {
               $("#alertBox").fadeOut();
             }
+
+          // affichage des dallas et les Température ( boucle sur les dallas )
+          var dallasData = {}; // Objet pour stocker les données des capteurs Dallas
+          var dallasNumber;
+          // Extraction des données des capteurs Dallas du JSON
+          for (var key in data) {
+            if (key.startsWith("dallas")) {
+              dallasNumber = key.substring(6); // Récupérer le numéro du capteur Dallas
+              var dallasTemperature = data[key];
+              var dallasAddressKey = "addr" + dallasNumber;
+              var dallasAddress = data[dallasAddressKey];
+              dallasData[dallasNumber] = {
+                temperature: dallasTemperature,
+                address: dallasAddress,
+              };
+            }
+          }
+          // Affichage des données des capteurs Dallas dans la page HTML
+          var dallasHtml = "";
+          for (dallasNumber in dallasData) {
+            dallasHtml +=
+              "<p>Dallas sensor " +
+              dallasNumber +
+              ": " +
+              dallasData[dallasNumber].temperature +
+              "°C <br>Address: " +
+              dallasData[dallasNumber].address +
+              "</p>";
+          }
+          document.getElementById("dallas").innerHTML = dallasHtml;
+
           });
         }
-
+        // Lancer après 500ms pour laisser l'ESP8266 charger
+        setTimeout(refreshvalue, 500); 
+        // Puis, continuer toutes les 5 secondes
         setInterval(refreshvalue, 5000); // Rafraîchir les données toutes les 5 secondes
 
         document.getElementById("relais 1").addEventListener("click", function () {
@@ -392,41 +425,6 @@
         setInterval(actualiser, 1000);
       }
 
-      function refresh_temp() {
-        $.getJSON("/state_dallas", function (data) {
-          // affichage des dallas et les Température ( boucle sur les dallas )
-          var dallasData = {}; // Objet pour stocker les données des capteurs Dallas
-          var dallasNumber;
-          // Extraction des données des capteurs Dallas du JSON
-          for (var key in data) {
-            if (key.startsWith("dallas")) {
-              dallasNumber = key.substring(6); // Récupérer le numéro du capteur Dallas
-              var dallasTemperature = data[key];
-              var dallasAddressKey = "addr" + dallasNumber;
-              var dallasAddress = data[dallasAddressKey];
-              dallasData[dallasNumber] = {
-                temperature: dallasTemperature,
-                address: dallasAddress,
-              };
-            }
-          }
-          // Affichage des données des capteurs Dallas dans la page HTML
-          var dallasHtml = "";
-          for (dallasNumber in dallasData) {
-            dallasHtml +=
-              "<p>Dallas sensor " +
-              dallasNumber +
-              ": " +
-              dallasData[dallasNumber].temperature +
-              "°C <br>Address: " +
-              dallasData[dallasNumber].address +
-              "</p>";
-          }
-          document.getElementById("dallas").innerHTML = dallasHtml;
-        });
-      }
-
-      setInterval(refresh_temp, 5000); // Rafraîchir les données toutes les 5 secondes
     </script>
     </%text>
     </%block>

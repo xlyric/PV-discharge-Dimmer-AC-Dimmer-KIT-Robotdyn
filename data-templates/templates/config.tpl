@@ -5,33 +5,33 @@
 
         <li class="nav-item">
           <a class="nav-link" href="./">
-            <i class="fas fa-fw fa-cog"></i>
+            <i class="fas fa-cog"></i>
             <span>Retour Index</span>
           </a>
         </li>
         <li class="nav-item${' active' if page == 'config' else ''}">
           <a class="nav-link" href="config.html">
-            <i class="fas fa-fw fa-book"></i>
+            <i class="fas fa-book"></i>
             <span>Configuration</span>
           </a>
         </li>
 % if support_mqtt:
         <li class="nav-item" id="menu_mqtt">
           <a class="nav-link" href="mqtt.html">
-            <i class="fas fa-fw fa-book"></i>
+            <i class="fas fa-book"></i>
             <span>Configuration MQTT</span>
           </a>
         </li>
 %endif
         <li class="nav-item${' active' if page == 'minuteur' else ''}">
           <a class="nav-link" href="minuteur.html">
-            <i class="fas fa-fw fa-moon"></i>
+            <i class="fas fa-moon"></i>
             <span>Minuteur d'appoint</span>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="log.html">
-            <i class="fas fa-fw fa-info"></i>
+            <i class="fas fa-info"></i>
             <span>Console logs</span>
           </a>
         </li>
@@ -43,13 +43,13 @@
         </li>
         <li class="nav-item">
           <a class="nav-link" href="update">
-            <i class="fas fa-fw fa-download"></i>
+            <i class="fas fa-download"></i>
             <span>OTA</span>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="reboot">
-            <i class="fas fa-fw fa-power-off"></i>
+            <i class="fas fa-power-off"></i>
             <span>Reboot</span>
           </a>
         </li>
@@ -107,7 +107,7 @@ ${generate_menu()}
                         </div>
                       </div>
                       <div class="col-auto">
-                        <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        <i class="fas fa-calendar fa-2x "></i>
                       </div>
                     </div>
                   </div>
@@ -127,7 +127,7 @@ ${generate_menu()}
                         </div>
                       </div>
                       <div class="col-auto">
-                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        <i class="fas fa-dollar-sign fa-2x "></i>
                       </div>
                     </div>
                   </div>
@@ -153,7 +153,7 @@ ${generate_menu()}
                         </div>
                       </div>
                       <div class="col-auto">
-                        <i class="fas fa-download fa-2x text-gray-300"></i>
+                        <i class="fas fa-download_2 fa-2x"></i>
                       </div>
                     </div>
                   </div>
@@ -172,7 +172,7 @@ ${generate_menu()}
                         </div>
                       </div>
                       <div class="col-auto">
-                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        <i class="fas fa-dollar-sign fa-2x "></i>
                       </div>
                     </div>
                   </div>
@@ -501,7 +501,7 @@ ${generate_content()}
       $('[data-toggle="popover"]').popover();
 
       //<!-- rafraichissement valeurs -->
-      setInterval(function refreshsend() {
+      function refreshvalue() {
         $.getJSON("/state", function (data) {
           // Récupérer les données du JSON
           var dimmer = data.dimmer;
@@ -521,12 +521,8 @@ ${generate_content()}
           } else {
             $("#alertBox").fadeOut();
           }
-        });
-      }, 5000);
 
-      setInterval(function refreshsend() {
-        $.getJSON("/state_dallas", function (data) {
-          // affichage des dallas et les Température ( boucle sur les dallas )
+                   // affichage des dallas et les Température ( boucle sur les dallas )
           var dallasData = {}; // Objet pour stocker les données des capteurs Dallas
           var dallasNumber;
           // Extraction des données des capteurs Dallas du JSON
@@ -555,8 +551,13 @@ ${generate_content()}
               "</p>";
           }
           document.getElementById("dallas").innerHTML = dallasHtml;
+
         });
-      }, 5000);
+      }
+      // Lancer après 500ms pour laisser l'ESP8266 charger
+        setTimeout(refreshvalue, 500); 
+      // Puis, continuer toutes les 5 secondes
+        setInterval(refreshvalue, 5000); // Rafraîchir les données toutes les 5 secondes
 
       function sendmode(mode) {
         $.get("/get", { send: mode }).done(function (data) {

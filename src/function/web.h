@@ -631,6 +631,16 @@ if (programme_marche_forcee.run) {
   doc["boost_endtime"] = programme_marche_forcee.heure_arret; 
   } 
   doc["boost_max_temp"] = programme_marche_forcee.temperature;
+    // affichage des température et adresse des sondes dallas
+  for (int i = 0; i < MAX_DALLAS; i++) {
+    char buffer[5];  // NOSONAR
+    // affichage que si != 0
+    if (sysvar.celsius[i] != 0) {
+      dtostrf(sysvar.celsius[i],2, 1, buffer);   // conversion en n.1f
+      doc["dallas"+String(i)] = buffer;
+      doc["addr"+String(i)] = devAddrNames[i];
+    }
+  }
   serializeJson(doc, state);
   return String(state);
 }
