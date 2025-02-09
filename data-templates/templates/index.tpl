@@ -9,6 +9,7 @@
     <title>Pv Dimmer %NAME% - <%block name="page_title">Dashboard</%block></title>
 
     <link href="css/all.min.css?%FS_RELEASE%" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="js/all.min.js?%FS_RELEASE%"></script>
   </head>
   <body id="page-top">
     <!-- Page Wrapper -->
@@ -180,7 +181,7 @@
     </footer>
     <!-- End of Footer -->
 
-    <script type="text/javascript" src="js/all.min.js?%FS_RELEASE%"></script>
+    
 
     <%block name="pagescript">
     <%text>
