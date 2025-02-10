@@ -711,7 +711,8 @@ void setup() {
   logging.Set_log_init(End_Start);
   logging.Set_log_init("",true);
   logging.Set_log_init("\r\n");
-  programme_marche_forcee.temperature = programme.temperature;
+ 
+  programme_marche_forcee.temperature = config.maxtemp;
   delay(1000);
 }
 
@@ -723,7 +724,7 @@ bool alerte=false;
 /////////////////////
 void loop() {
   client.loop();
-
+  
   #if !defined(ESP32) && !defined(ESP32ETH)
   /// update mdns
   MDNS.update();
@@ -1136,7 +1137,7 @@ bool boost(){
     // programmaton de l'heure d'arrêt
     strftime(programme_marche_forcee.heure_arret, 6, "%H:%M", localtime(&now));
     // ajout de la température de consigne
-    programme_marche_forcee.temperature = programme.temperature;
+    programme_marche_forcee.temperature = config.maxtemp;
     programme_marche_forcee.puissance = programme.puissance;
     return true;
 } 
