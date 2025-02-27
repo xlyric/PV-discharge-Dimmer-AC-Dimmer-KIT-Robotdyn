@@ -100,6 +100,14 @@ void call_pages() {
   server.serveStatic("/backup.html", LittleFS, "/backup.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
   server.serveStatic("/lang.json", LittleFS, "/lang.json").setCacheControl("max-age=31536000");
 
+  // page config.html
+  if (!AP) {
+    server.serveStatic("/config.html", LittleFS, "/config.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
+  } else {
+    server.serveStatic("/config-AP.html", LittleFS, "/config-AP.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
+  }
+
+
   // page de index et récupération des requetes de puissance
   server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
     sysvar.lock_mqtt=true;  // on bloque les requetes MQTT 
@@ -190,9 +198,16 @@ void call_pages() {
 
       else  {
         if (!AP) {
-          request->send(LittleFS, "/index.html", String(), false, processor);
+          AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/index.html", String(), false, processor);
+          response->addHeader("cache-control","max-age=31536000");
+          request->send(response);
+
+          //request->send(LittleFS, "/index.html", String(), false, processor);
         } else {
-          request->send(LittleFS, "/index-AP.html", String(), false, processor);
+          AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/index-AP.html", String(), false, processor);
+          response->addHeader("cache-control","max-age=31536000");
+          request->send(response);
+          //request->send(LittleFS, "/index-AP.html", String(), false, processor);
         }
       }
     }
@@ -206,6 +221,7 @@ void call_pages() {
     sysvar.lock_mqtt=false; // on débloque les requetes MQTT
   });
 
+/*
   // page de config et récupération des requetes de config
   server.on("/config.html",HTTP_ANY, [](AsyncWebServerRequest *request){
     sysvar.lock_mqtt=true;  // on bloque les requetes MQTT
@@ -221,6 +237,7 @@ void call_pages() {
     }
     sysvar.lock_mqtt=false; // on débloque les requetes MQTT
   });
+*/
 
   server.on("/state", HTTP_ANY, [](AsyncWebServerRequest *request){
     sysvar.lock_mqtt=true;  // on bloque les requetes MQTT
@@ -623,6 +640,14 @@ String getState() {
   doc["relay2"]   = 0;
 #endif
  
+// prévision retrait du mode de prepresseur 
+  /* doc["FS_RELEASE"] = FS_RELEASE;
+  doc["VERSION"] = VERSION;
+  doc["RSSI"] = WiFi.RSSI();
+  doc["NAME"] = String(config.say_my_name) + ".local";
+*/ 
+
+
   doc["minuteur"] = programme.run;
   doc["onoff"] = config.dimmer_on_off;
   doc["alerte"] = logging.alerte_web; //affiche maintenant l'alerte et plus 0 ou 1 pour les alertes
