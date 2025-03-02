@@ -87,18 +87,29 @@ extern SSR_BURST ssr_burst;
 
 
 void call_pages() {
-  // pages Statiques voir compressées
-  server.serveStatic("/js/all.min.js", LittleFS, "/js/all.min.js").setCacheControl("max-age=31536000");
-  server.serveStatic("/css/all.min.css", LittleFS, "/css/all.min.css").setCacheControl("max-age=31536000");
-  server.serveStatic("/css/fa-solid-900.woff2", LittleFS,
-                     "/css/fa-solid-900.woff2").setCacheControl("max-age=31536000");
-  server.serveStatic("/favicon.ico", LittleFS, "/favicon.ico").setCacheControl("max-age=31536000");
-  server.serveStatic("/log.html", LittleFS, "/log.html").setCacheControl("max-age=31536000");
-  server.serveStatic("/mqtt.html", LittleFS, "/mqtt.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
-  server.serveStatic("/minuteur.html", LittleFS, "/minuteur.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
-  server.serveStatic("/relai.html", LittleFS, "/relai.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
-  server.serveStatic("/backup.html", LittleFS, "/backup.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
-  server.serveStatic("/lang.json", LittleFS, "/lang.json").setCacheControl("max-age=31536000");
+  // Static pages, see compressed
+  const char* staticFiles[][2] = {
+    {"/js/all.min.js", "/js/all.min.js"},
+    {"/css/all.min.css", "/css/all.min.css"},
+    {"/css/fa-solid-900.woff2", "/css/fa-solid-900.woff2"},
+    {"/favicon.ico", "/favicon.ico"},
+    {"/log.html", "/log.html"},
+    {"/mqtt.html", "/mqtt.html"},
+    {"/minuteur.html", "/minuteur.html"},
+    {"/relai.html", "/relai.html"},
+    {"/backup.html", "/backup.html"},
+    {"/lang.json", "/lang.json"},
+    {"/style.css", "/style.css"},
+    {"/script.js", "/script.js"}
+  };
+
+  for (const auto& file : staticFiles) {
+    if (strstr(file[0], ".html")) {
+      server.serveStatic(file[0], LittleFS, file[1]).setTemplateProcessor(processor).setCacheControl("max-age=31536000");
+    } else {
+      server.serveStatic(file[0], LittleFS, file[1]).setCacheControl("max-age=31536000");
+    }
+  }
 
   // page config.html
   if (!AP) {
@@ -106,7 +117,6 @@ void call_pages() {
   } else {
     server.serveStatic("/config-AP.html", LittleFS, "/config-AP.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
   }
-
 
   // page de index et récupération des requetes de puissance
   server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
@@ -221,24 +231,6 @@ void call_pages() {
     sysvar.lock_mqtt=false; // on débloque les requetes MQTT
   });
 
-/*
-  // page de config et récupération des requetes de config
-  server.on("/config.html",HTTP_ANY, [](AsyncWebServerRequest *request){
-    sysvar.lock_mqtt=true;  // on bloque les requetes MQTT
-    if  (LittleFS.exists("/config.html")) {
-      if (!AP) {
-        request->send(LittleFS, "/config.html", String(), false, processor);
-      } else {
-        request->send(LittleFS, "/config-AP.html", String(), false, processor);
-      }
-    }
-    else {
-      request->send(200, "text/html", textnofiles().c_str());
-    }
-    sysvar.lock_mqtt=false; // on débloque les requetes MQTT
-  });
-*/
-
   server.on("/state", HTTP_ANY, [](AsyncWebServerRequest *request){
     sysvar.lock_mqtt=true;  // on bloque les requetes MQTT
     request->send(200, "application/json", getState().c_str());
@@ -249,6 +241,15 @@ void call_pages() {
     sysvar.lock_mqtt=true;  // on bloque les requetes MQTT
     request->send(200, "application/json", getState_dallas().c_str());
     sysvar.lock_mqtt=false; // on débloque les requetes MQTT
+  });
+
+  server.on("/config", HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->send(200, "application/json", getconfig().c_str());
+  });
+
+  
+  server.on("/getmqtt", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+    request->send(200, "application/json",  getmqtt().c_str());
   });
 
   server.on("/resetwifi", HTTP_ANY, [](AsyncWebServerRequest *request){
@@ -271,25 +272,16 @@ void call_pages() {
     request->send(200, "text/plain", "pong");
   });
 
-  server.on("/config.json", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/config.json", "application/json");
-  });
+  const char* jsonFiles[][2] = {
+    {"/config.json"},
+    {"/mqtt.json"},
+    {"/wifi.json"},
+    {"/programme.json"}
+  };
 
-  server.on("/mqtt.json", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/mqtt.json", "application/json");
-  });
-
-  server.on("/wifi.json", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/wifi.json", "application/json");
-  });
-
-  server.on("/programme.json", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/programme.json", "application/json");
-  });
-
-  server.on("/getmqtt", HTTP_ANY, [] (AsyncWebServerRequest *request) {
-    request->send(200, "application/json",  getmqtt().c_str());
-  });
+  for (const auto& file : jsonFiles) {
+    server.serveStatic(file[0], LittleFS, file[0]);
+  }
 
   // ajout de la commande de boost 2h   
   server.on("/boost", HTTP_ANY, [] (AsyncWebServerRequest *request) {
@@ -401,9 +393,6 @@ void call_pages() {
     else { request->send(200, "application/json",  getMinuteur()); }
   });
 
-  server.on("/config", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(200, "application/json", getconfig().c_str());
-  });
 
   server.on("/reset", HTTP_ANY, [](AsyncWebServerRequest *request){
     // faire un redirect vers / 

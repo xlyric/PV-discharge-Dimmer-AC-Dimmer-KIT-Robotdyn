@@ -113,6 +113,10 @@
 
 #include "function/unified_dimmer.h"
 
+#ifdef WEBSOCKET
+#include "function/websocket.h"
+#endif
+
 #include "tasks/dallas.h"
 #include "tasks/cooler.h"
 #include "tasks/get_power.h"
@@ -572,8 +576,12 @@ void setup() {
   //************* Setup -  demarrage du webserver et affichage de l'oled
   //***********************************
   Serial.println("start server");
+  #ifdef WEBSOCKET
+    setupWebSocket();
+    clientWebSocket();
+  #endif
   server.begin();
- 
+  
 
   /// recherche d'une sonde dallas
   // dallaspresent();
@@ -724,7 +732,12 @@ bool alerte=false;
 /////////////////////
 void loop() {
   client.loop();
-  
+
+  #ifdef WEBSOCKET
+    updateWebSocketClients();
+    clientWebSocketLoop();
+  #endif
+
   #if !defined(ESP32) && !defined(ESP32ETH)
   /// update mdns
   MDNS.update();
@@ -1140,4 +1153,4 @@ bool boost(){
     programme_marche_forcee.temperature = config.maxtemp;
     programme_marche_forcee.puissance = programme.puissance;
     return true;
-} 
+}
