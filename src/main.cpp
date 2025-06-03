@@ -403,12 +403,12 @@ void setup() {
   /// init de sécurité
   #ifdef ROBOTDYN
   dimmer.setState(OFF);
-  #endif
-  #ifdef outputPin2
-  dimmer2.setState(OFF);
-  #endif
-  #ifdef outputPin3
-  dimmer3.setState(OFF);
+    #ifdef outputPin2
+    dimmer2.setState(OFF);
+    #endif
+    #ifdef outputPin3
+    dimmer3.setState(OFF);
+    #endif
   #endif
 
   USE_SERIAL.println("Dimmer Program is starting...");
@@ -625,21 +625,19 @@ void setup() {
     }
   }
 
-
-  #ifdef  SSR
-    #ifdef OLDSSR
-  analogWriteFreq(GRIDFREQ);
-  analogWriteRange(100);
-  analogWrite(JOTTA, 0);
-    #elif  defined(SSR_ZC)
+  #ifdef  ZC_ESP32
   pinMode(JOTTA, OUTPUT);
   unified_dimmer.set_power(0);
   timer.attach_ms(10, SSR_run);     // Attachez la fonction task() au temporisateur pour qu'elle s'exécute toutes les 1000 ms
-    #else
   init_jotta();
   timer_init();
-    #endif
   #endif
+
+ #ifdef ZC_8266
+  pinMode(JOTTA, OUTPUT);
+  unified_dimmer.set_power(0);
+  timer.attach_ms(10, SSR_run);
+ #endif
 
 
   /// init du NTP

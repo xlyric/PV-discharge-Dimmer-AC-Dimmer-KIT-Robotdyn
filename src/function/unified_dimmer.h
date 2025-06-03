@@ -13,6 +13,7 @@ extern dimmerLamp dimmer3;
   #include "function/jotta.h"
 #endif
 
+
 // @brief  structure pour uniformiser les commandes de puissances entre robotdyn et SSR
 struct gestion_puissance {
 private: 
@@ -198,7 +199,7 @@ public: float power;
   }
 
   // fonction de coupure automatique après un certain temps
-  void auto_off(int delay_off) {
+  void auto_off(unsigned int delay_off) {
     if (( millis() - last_time >= delay_off*60*1000)  && (power > 0) ) {
       dimmer_off();
       Serial.println("dimmer auto off");

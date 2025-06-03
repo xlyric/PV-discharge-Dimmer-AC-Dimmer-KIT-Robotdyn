@@ -1,8 +1,8 @@
 #ifndef CONFIG
 #define CONFIG
 
-#define VERSION "Version 20250302"
-#define FS_RELEASE "20250207" // date de la release
+#define VERSION "Version 20250602"
+#define FS_RELEASE "20250602" // date de la release
 
 constexpr size_t TEMPERATURE_PRECISION=11;
 constexpr size_t DALLAS_TIMEOUT=1500;
@@ -39,7 +39,7 @@ constexpr size_t DALLAS_TIMEOUT=1500;
 #endif
 
 #ifdef  SSR  /// même pin que le stand alone
-  #define JOTTA  D1 // for boards with CHANGEBLE input pins
+  #define JOTTA  D5 // for boards with CHANGEBLE input pins ( passage de D1 à D5 le 02/06/2025 )
   #define ONE_WIRE_BUS D7 // dallas
   #define GRIDFREQ 50 /// PWM frequency
   #define outputPin  D5
@@ -69,6 +69,8 @@ constexpr size_t DALLAS_TIMEOUT=1500;
   #define outputPin2 22 // use JOTTA/SSR2 (SSR2) output for 2nd Robotdyn/Random SSR
   #define outputPin3 21  // (SSR3) use RELAY2/SSR3 output for 3rd Robotdyn/Random SSR ( for old boards )
   #define RELAY1 17
+  #undef JOTTA
+  #define JOTTA  18  // for boards with CHANGEBLE input pins
 #endif
 
 #ifdef ESP32ETH
