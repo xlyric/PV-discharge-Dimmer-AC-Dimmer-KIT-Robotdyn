@@ -9,7 +9,13 @@
     <title>Pv Dimmer %NAME% - <%block name="page_title">Dashboard</%block></title>
 
     <link href="css/all.min.css?%FS_RELEASE%" rel="stylesheet" type="text/css" />
-    <script type="text/javascript" src="js/all.min.js?%FS_RELEASE%"></script>
+    <script>
+        setTimeout(function() {
+            var script = document.createElement('script');
+            script.src = 'js/all.min.js?%FS_RELEASE%';
+            document.head.appendChild(script);
+        }, 50); // 500ms de délai
+    </script>
   </head>
   <body id="page-top">
     <!-- Page Wrapper -->
@@ -212,6 +218,7 @@
 
     <%block name="pagescript">
     <%text>
+    
     <script type="text/javascript">
             // Dashboard Controller - Version améliorée
       class DashboardController {
