@@ -274,7 +274,7 @@ ${config.generate_menu(page="backup")}
           return $.getJSON(request.url, params)
             .then(function (data) {
               restoreAlert.removeClass("alert-info").addClass("alert-success");
-              restoreAlert.text(`✅ ${request.title} : restorée.`);
+              restoreAlert.text(`✅ ${request.title} : restaurée.`);
             })
             .catch(function (error) {
               restoreAlert.removeClass("alert-info").addClass("alert-danger");
