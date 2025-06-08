@@ -724,6 +724,8 @@ void setup() {
 
 
 bool alerte=false;
+bool shouldRestart = false;
+unsigned long restartTime = 0;
 
 /////////////////////
 /// LOOP
@@ -859,10 +861,18 @@ void loop() {
 #endif
 
   ///////////////// commande de restart /////////
-  if (config.restart) {
-    delay(5000);
-    Serial.print("Restarting Dimmer");
-    ESP.restart();
+  // Dans votre code principal :
+  if (config.restart && !shouldRestart) {
+      shouldRestart = true;
+      restartTime = millis() + 5000;
+      Serial.println("Restart scheduled in 5 seconds...");
+      config.restart = false; // Éviter la répétition
+  }
+
+  // Dans loop() :
+  if (shouldRestart && millis() >= restartTime) {
+      Serial.println("Restarting Dimmer");
+      ESP.restart();
   }
 
   //// si la sécurité température est active on coupe le dimmer

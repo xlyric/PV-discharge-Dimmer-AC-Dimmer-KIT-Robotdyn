@@ -411,6 +411,14 @@ void connectToMqtt() {
     DEBUG_PRINTLN(Connecting_MQTT);
     logging.Set_log_init(String(Connecting_MQTT) + String(config.say_my_name) + " \r\n");
     delay(500); // pour laisser le temps de se connecter au wifi ou ne pas spam le serveur
+    
+    // PROTECTION : Vérifiez que hostname est valide
+    if (config.hostname == nullptr || strlen(config.hostname) == 0) {
+      Serial.println("ERROR: hostname not initialized!");
+      return; // Sortir de la fonction
+    }
+    
+    Serial.print("Connecting to: ");
     Serial.println(config.hostname);
     IPAddress ip;
     ip.fromString(config.hostname);

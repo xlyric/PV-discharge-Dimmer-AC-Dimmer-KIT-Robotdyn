@@ -625,8 +625,8 @@ String getState() {
   doc["relay1"]   = !digitalRead(RELAY1);
   doc["relay2"]   = digitalRead(RELAY2);
 #else
-  doc["relay1"]   = 0;
-  doc["relay2"]   = 0;
+  doc["relay1"]   = false;
+  doc["relay2"]   = false;
 #endif
  
 // prévision retrait du mode de prepresseur 
@@ -713,7 +713,19 @@ String getconfig() {
 }
 
 String getMinuteur(const Programme& minuteur ) {
-  getLocalTime(&timeinfo);
+
+  // Vérifiez si le système est prêt , protection contre une corruption de la mémoire
+  if (millis() < 5000) {
+        Serial.println("System not ready yet");
+        return "false";
+  }
+
+  struct tm timeinfo;  // Déclaration locale
+    if (!getLocalTime(&timeinfo)) {
+        Serial.println("Failed to obtain time");
+        return "false";
+    }
+  
   JsonDocument doc;
   doc["heure_demarrage"] = minuteur.heure_demarrage;
   doc["heure_arret"] = minuteur.heure_arret;
@@ -730,7 +742,19 @@ String getMinuteur(const Programme& minuteur ) {
 }
 
 String getMinuteur() {
-  getLocalTime(&timeinfo);
+
+  // Vérifiez si le système est prêt , protection contre une corruption de la mémoire
+  if (millis() < 5000) {
+        Serial.println("System not ready yet");
+        return "false";
+  }
+
+  struct tm timeinfo;  // Déclaration locale
+    if (!getLocalTime(&timeinfo)) {
+        Serial.println("Failed to obtain time");
+        return "false";
+    }
+  
   JsonDocument doc;
   doc["heure"] = timeinfo.tm_hour;
   doc["minute"] = timeinfo.tm_min;

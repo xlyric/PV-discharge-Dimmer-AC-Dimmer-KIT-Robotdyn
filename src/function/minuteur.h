@@ -21,17 +21,39 @@ extern System sysvar;
 extern Config config;
 extern gestion_puissance unified_dimmer;
 
-struct tm timeinfo;
+
 epoc actual_time;
 
 /// @brief /////// init du NTP
 void ntpinit() {
-  // Configurer le serveur NTP et le fuseau horaire
-  // Voir Time-Zone: https://sites.google.com/a/usapiens.com/opnode/time-zones
-  configTzTime("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", NTP_SERVER);
-  getLocalTime( &timeinfo );
-  Serial.println(asctime(&timeinfo));
-
+    // Configurer le serveur NTP et le fuseau horaire
+    Serial.println("Configuring NTP...");
+    configTzTime("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", NTP_SERVER);
+    
+    // Attendre la synchronisation avec timeout
+    Serial.print("Waiting for NTP sync");
+    struct tm timeinfo;  // Variable locale
+    memset(&timeinfo, 0, sizeof(timeinfo));
+    
+    int attempts = 0;
+    const int maxAttempts = 30; // 30 secondes maximum
+    
+    while (!getLocalTime(&timeinfo, 1000) && attempts < maxAttempts) {
+        delay(500);
+        Serial.print(".");
+        attempts++;
+    }
+    
+    if (attempts >= maxAttempts) {
+        Serial.println("\nFailed to sync with NTP server!");
+        Serial.println("Check your WiFi connection and NTP server");
+        // Optionnel : définir une heure par défaut ou redémarrer
+        return;
+    }
+    
+    Serial.println("\nNTP synchronized successfully!");
+    Serial.print("Current time: ");
+    Serial.println(asctime(&timeinfo));
 }
 
 //////// structure pour les programmateurs.
@@ -135,6 +157,7 @@ public: bool loadProgramme() {
   }
 
   bool start_progr() {
+    struct tm timeinfo;  // Variable locale
     /// test de la sécurité avant relance
     if (security && ( sysvar.celsius[sysvar.dallas_maitre]> float(temperature*0.95) ) )  { return false; }
     security = false;
@@ -182,6 +205,7 @@ public: bool loadProgramme() {
   }
 
   bool stop_progr() {
+    struct tm timeinfo;  // Variable locale
     int heures;
     int minutes;
     /// sécurité temp
