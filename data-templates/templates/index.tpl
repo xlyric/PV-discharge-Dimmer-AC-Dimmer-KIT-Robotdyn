@@ -125,26 +125,53 @@
               </div>
               <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card shadow mb-4">
-                  <!-- Card Header - Dropdown -->
-                  <div
-                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
-                  >
-                    <h6 class="m-0 font-weight-bold text-primary">Etats</h6>
+                  <!-- Card Header -->
+                  <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">États du Système</h6>
                   </div>
                   <div class="card-body">
-                    <b>Etat Ballon : </b>
-                    <h4 id="alerte">N/A</h4>
-                    <b>Etat Minuteur : </b>
-                    <h4 id="minuteur">N/A</h4>
-                    <b>Etat Relais 1 : </b>
-                    <h4 id="relais 1" style="cursor: pointer">N/A</h4>
-                    <b>Etat Relais 2 : </b>
-                    <h4 id="relais 2" style="cursor: pointer">N/A</h4>
-                    <b>Etat Boost : </b>
-                    <div>
-                      <span class=h4 id="boost" style="cursor: pointer">N/A</span>
-                      <span class=h6 id="boost_endtime"></span>
-                    </div>  
+                    <!-- État Ballon -->
+                    <div class="mb-3 p-2 border-left border-left-primary">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <span class="font-weight-bold text-sm text-gray-700">Ballon :</span>
+                        <span id="alerte" class="badge badge-pill badge-secondary">N/A</span>
+                      </div>
+                    </div>
+                    
+                    <!-- État Minuteur -->
+                    <div class="mb-3 p-2 border-left border-left-info">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <span class="font-weight-bold text-sm text-gray-700">Minuteur :</span>
+                        <span id="minuteur" class="badge badge-pill badge-secondary">N/A</span>
+                      </div>
+                    </div>
+                    
+                    <!-- État Relais 1 -->
+                    <div class="mb-3 p-2 border-left border-left-warning">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <span class="font-weight-bold text-sm text-gray-700">Relais 1 :</span>
+                        <span id="relais1" class="badge badge-pill badge-secondary clickable" style="cursor: pointer">N/A</span>
+                      </div>
+                    </div>
+                    
+                    <!-- État Relais 2 -->
+                    <div class="mb-3 p-2 border-left border-left-success">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <span class="font-weight-bold text-sm text-gray-700">Relais 2 :</span>
+                        <span id="relais2" class="badge badge-pill badge-secondary clickable" style="cursor: pointer">N/A</span>
+                      </div>
+                    </div>
+                    
+                    <!-- État Boost -->
+                    <div class="mb-2 p-2 border-left border-left-danger">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="font-weight-bold text-sm text-gray-700">Boost :</span>
+                        <span id="boost" class="badge badge-pill badge-secondary clickable" style="cursor: pointer">N/A</span>
+                      </div>
+                      <div class="text-xs text-gray-600">
+                        <span id="boost_endtime">max: N/A°C</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -175,7 +202,7 @@
     <footer class="sticky-footer bg-white">
       <div class="container my-auto">
         <div class="copyright text-center my-auto">
-          <span>https://github.com/xlyric/ - 2024</span>
+          <span>https://github.com/xlyric/ - 2025</span>
         </div>
       </div>
     </footer>
@@ -186,246 +213,378 @@
     <%block name="pagescript">
     <%text>
     <script type="text/javascript">
-      window.onload = function () {
-        horloge("time");
-      };
-
-      google.charts.load("current", { packages: ["corechart", "gauge"] });
-      google.charts.setOnLoadCallback(drawChart);
-
-      var chart;
-      var options = {
-        title: "Oscilloscope Mode",
-        curveType: "function",
-        legend: { position: "bottom" },
-      };
-      var data;
-      var inc;
-
-      function drawChart() {
-        var optionsGauge = {
-          redFrom: 75,
-          redTo: 100,
-
-          yellowFrom: 50,
-          yellowTo: 75,
-
-          greenFrom: 0,
-          greenTo: 50,
-
-          minorTicks: 4,
-
-          min: 0,
-          max: 100,
-        };
-
-        var optionsGaugetemp = {
-          redFrom: 80,
-          redTo: 100,
-
-          yellowFrom: 70,
-          yellowTo: 80,
-
-          greenFrom: 0,
-          greenTo: 70,
-
-          minorTicks: 5,
-
-          min: 0,
-          max: 100,
-        };
-
-        // mise à jour de la jauge  -->
-        var gaugePA = new google.visualization.Gauge(document.getElementById("curve_chart2"));
-        var dataGaugePA = new google.visualization.DataTable();
-        dataGaugePA.addColumn("string", "Puissance");
-        dataGaugePA.addColumn("number", "Value");
-        dataGaugePA.addRows(1);
-
-        // mise à jour de la jauge  -->
-        var gaugePAtemp = new google.visualization.Gauge(document.getElementById("curve_temp"));
-        var dataGaugePAtemp = new google.visualization.DataTable();
-        dataGaugePAtemp.addColumn("string", "Power");
-        dataGaugePAtemp.addColumn("number", "Value");
-        dataGaugePAtemp.addRows(1);
-
-        // récupération valeur sigma et State -->
-
-        function refreshvalue() {
-          $.getJSON("/state", function (data) {
-            // Récupérer les données du JSON
-            var dimmer = data.dimmer;
-            var power = data.power;
-            var temperature = data.temperature;
-            var alerte = data.alerte;
-            var minuteur = data.minuteur;
-            var relais1 = data.relay1;
-            var relais2 = data.relay2;
-            var boost = data.boost;
-            var boost_endtime = data.boost_endtime;
-            var boost_max_temp = data.boost_max_temp;
-
-            // Mettre à jour les éléments HTML
-            dataGaugePA.setValue(0, 0, "Power (W)");
-            dataGaugePA.setValue(0, 1, power);
-            var pmaxtemp = parseInt((power * 100) / dimmer);
-            let pmax = isNaN(pmaxtemp) ? 1000 : pmaxtemp;
-            optionsGauge.max = pmax;
-            optionsGauge.redTo = pmax;
-            optionsGauge.redFrom = parseInt(pmax / 2);
-            optionsGauge.yellowTo = parseInt(pmax / 2);
-            gaugePA.draw(dataGaugePA, optionsGauge);
-
-            dataGaugePAtemp.setValue(0, 0, "Temp °C");
-            dataGaugePAtemp.setValue(0, 1, temperature);
-            gaugePAtemp.draw(dataGaugePAtemp, optionsGaugetemp);
-
-            // recupération de l'état de sécurité
-
-            // ecriture de "refroidissement" dans le div alerte si l'état est à 1
-            if (alerte == 1) {
-              document.getElementById("alerte").innerHTML = "Refroidissement";
-              document.getElementById("alerte").style.color = "red";
-            } else {
-              document.getElementById("alerte").innerHTML = "Normal";
-              document.getElementById("alerte").style.color = "";
+            // Dashboard Controller - Version améliorée
+      class DashboardController {
+        constructor() {
+          this.refreshInterval = null;
+          this.gaugePA = null;
+          this.gaugePAtemp = null;
+          this.dataGaugePA = null;
+          this.dataGaugePAtemp = null;
+          
+          this.options = {
+            gauge: {
+              redFrom: 75, redTo: 100,
+              yellowFrom: 50, yellowTo: 75,
+              greenFrom: 0, greenTo: 50,
+              minorTicks: 4,
+              min: 0, max: 100,
+            },
+            gaugeTemp: {
+              redFrom: 80, redTo: 100,
+              yellowFrom: 70, yellowTo: 80,
+              greenFrom: 0, greenTo: 70,
+              minorTicks: 5,
+              min: 0, max: 100,
             }
+          };
+        }
 
-            // ecriture de "minuteur" dans le div minuteur si l'état est à 1
-            if (minuteur == 1) {
-              document.getElementById("minuteur").innerHTML = "Minuteur";
-              document.getElementById("minuteur").style.color = "red";
-            } else {
-              document.getElementById("minuteur").innerHTML = "Non actif";
-              document.getElementById("minuteur").style.color = "";
-            }
+        init() {
+          this.startClock();
+          google.charts.load("current", { packages: ["corechart", "gauge"] });
+          google.charts.setOnLoadCallback(() => this.initializeCharts());
+        }
 
-            // ecriture de "ON" dans le div relais 1 si l'état est à 1
-            if (relais1 == 1) {
-              document.getElementById("relais 1").innerHTML = "ON";
-              document.getElementById("relais 1").style.color = "red";
-            } else {
-              document.getElementById("relais 1").innerHTML = "OFF";
-              document.getElementById("relais 1").style.color = "";
-            }
-
-            // ecriture de "ON" dans le div relais 2 si l'état est à 1
-            if (relais2 == 1) {
-              document.getElementById("relais 2").innerHTML = "ON";
-              document.getElementById("relais 2").style.color = "red";
-            } else {
-              document.getElementById("relais 2").innerHTML = "OFF";
-              document.getElementById("relais 2").style.color = "";
-            }
-
-            // ecriture de "ON" dans le div boost si l'état est à 1
-            if (boost == 1) {
-              document.getElementById("boost").innerHTML = "ON";
-              document.getElementById("boost").style.color = "red";
-              document.getElementById("boost_endtime").innerHTML = "Heure de fin: " + boost_endtime + "max:" + boost_max_temp +"°C"; 
-            } else {
-              document.getElementById("boost").innerHTML = "OFF";
-              document.getElementById("boost").style.color = "";
-              document.getElementById("boost_endtime").innerHTML = "max:" + boost_max_temp +"°C" ;
-            }
-
-            if (data.alerte && data.alerte.trim() != "") {
-              const alertContainer = document.getElementById("alertContainer");
-              alertContainer.innerHTML = "Alerte : " + data.alerte;
-              $("#alertBox").fadeIn();
-            } else {
-              $("#alertBox").fadeOut();
-            }
-
-          // affichage des dallas et les Température ( boucle sur les dallas )
-          var dallasData = {}; // Objet pour stocker les données des capteurs Dallas
-          var dallasNumber;
-          // Extraction des données des capteurs Dallas du JSON
-          for (var key in data) {
-            if (key.startsWith("dallas")) {
-              dallasNumber = key.substring(6); // Récupérer le numéro du capteur Dallas
-              var dallasTemperature = data[key];
-              var dallasAddressKey = "addr" + dallasNumber;
-              var dallasAddress = data[dallasAddressKey];
-              dallasData[dallasNumber] = {
-                temperature: dallasTemperature,
-                address: dallasAddress,
-              };
-            }
+        initializeCharts() {
+          try {
+            this.setupGauges();
+            this.setupEventListeners();
+            this.startDataRefresh();
+          } catch (error) {
+            console.error('Erreur lors de l\'initialisation des graphiques:', error);
+            this.showAlert('Erreur lors du chargement des graphiques');
           }
-          // Affichage des données des capteurs Dallas dans la page HTML
-          var dallasHtml = "";
-          for (dallasNumber in dallasData) {
-            dallasHtml +=
-              "<p>Dallas sensor " +
-              dallasNumber +
-              ": " +
-              dallasData[dallasNumber].temperature +
-              "°C <br>Address: " +
-              dallasData[dallasNumber].address +
-              "</p>";
-          }
-          document.getElementById("dallas").innerHTML = dallasHtml;
+        }
 
+        setupGauges() {
+          // Configuration jauge puissance
+          const powerGaugeElement = document.getElementById("curve_chart2");
+          const tempGaugeElement = document.getElementById("curve_temp");
+          
+          if (!powerGaugeElement || !tempGaugeElement) {
+            throw new Error('Éléments de jauge introuvables');
+          }
+
+          this.gaugePA = new google.visualization.Gauge(powerGaugeElement);
+          this.dataGaugePA = new google.visualization.DataTable();
+          this.dataGaugePA.addColumn("string", "Puissance");
+          this.dataGaugePA.addColumn("number", "Value");
+          this.dataGaugePA.addRows(1);
+
+          // Configuration jauge température
+          this.gaugePAtemp = new google.visualization.Gauge(tempGaugeElement);
+          this.dataGaugePAtemp = new google.visualization.DataTable();
+          this.dataGaugePAtemp.addColumn("string", "Power");
+          this.dataGaugePAtemp.addColumn("number", "Value");
+          this.dataGaugePAtemp.addRows(1);
+        }
+
+        setupEventListeners() {
+          const relayButtons = [
+            { id: 'relais1', endpoint: '/get?relay1=2' },
+            { id: 'relais2', endpoint: '/get?relay2=2' },
+            { id: 'boost', endpoint: '/boost' }
+          ];
+
+          relayButtons.forEach(button => {
+            const element = document.getElementById(button.id) || 
+                          document.getElementById(button.id.replace('relais', 'relais '));
+            
+            if (element) {
+              element.addEventListener("click", () => this.toggleRelay(button.endpoint));
+            }
           });
         }
-        // Lancer après 500ms pour laisser l'ESP8266 charger
-        setTimeout(refreshvalue, 500); 
-        // Puis, continuer toutes les 5 secondes
-        setInterval(refreshvalue, 5000); // Rafraîchir les données toutes les 5 secondes
 
-        document.getElementById("relais 1").addEventListener("click", function () {
-          fetch("/get?relay1=2")
-            .then((response) => response.text())
-            .then((data) => {
-              console.log("Response:", data);
-              setTimeout(refreshvalue, 500);
-            })
-            .catch((error) => {
-              console.error("Error:", error);
-            });
-        });
+        async toggleRelay(endpoint) {
+          try {
+            const response = await fetch(endpoint);
+            if (!response.ok) {
+              throw new Error(`Erreur HTTP: ${response.status}`);
+            }
+            const data = await response.text();
+            console.log("Response:", data);
+            
+            // Attendre un peu puis rafraîchir
+            setTimeout(() => this.refreshData(), 500);
+          } catch (error) {
+            console.error("Erreur lors du toggle relay:", error);
+            this.showAlert("Erreur de communication avec le serveur");
+          }
+        }
 
-        document.getElementById("relais 2").addEventListener("click", function () {
-          fetch("/get?relay2=2")
-            .then((response) => response.text())
-            .then((data) => {
-              console.log("Response:", data);
-              setTimeout(refreshvalue, 500);
-            })
-            .catch((error) => {
-              console.error("Error:", error);
-            });
-        });
-      
-      document.getElementById("boost").addEventListener("click", function () {
-          fetch("/boost")
-            .then((response) => response.text())
-            .then((data) => {
-              console.log("Response:", data);
-              setTimeout(refreshvalue, 500);
-            })
-            .catch((error) => {
-              console.error("Error:", error);
-            });
-        });
+        async refreshData() {
+          try {
+            const response = await fetch("/state");
+            if (!response.ok) {
+              throw new Error(`Erreur HTTP: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            this.updateInterface(data);
+            this.hideAlert();
+            
+          } catch (error) {
+            console.error("Erreur lors de la récupération des données:", error);
+            this.showAlert("Impossible de récupérer les données du serveur");
+          }
+        }
+
+        updateInterface(data) {
+          // Validation des données critiques
+          if (!this.validateData(data)) {
+            console.warn("Données reçues invalides", data);
+            return;
+          }
+
+          this.updateGauges(data);
+          this.updateStates(data);
+          this.updateDallasDisplays(data);
+          
+          // Gestion des alertes spécifiques
+          if (data.alerte && typeof data.alerte === 'string' && data.alerte.trim()) {
+            this.showAlert(`Alerte : ${this.sanitizeText(data.alerte)}`);
+          }
+        }
+
+        validateData(data) {
+          // Vérification de la présence des champs critiques
+          const requiredFields = ['dimmer', 'power', 'temperature'];
+          return requiredFields.every(field => {
+            if (!data.hasOwnProperty(field)) return false;
+            
+            const value = data[field];
+            // Accepter les nombres ET les chaînes qui peuvent être converties en nombres
+            if (typeof value === 'number') return !isNaN(value);
+            if (typeof value === 'string') return !isNaN(parseFloat(value));
+            
+            return false;
+          });
+        }
+
+        updateGauges(data) {
+          // Conversion sécurisée des valeurs
+          const dimmer = parseFloat(data.dimmer) || 0;
+          const power = parseFloat(data.power) || 0;
+          const temperature = parseFloat(data.temperature) || 0;
+          
+          // Mise à jour jauge puissance
+          this.dataGaugePA.setValue(0, 0, "Power (W)");
+          this.dataGaugePA.setValue(0, 1, Math.round(power));
+          
+          // Calcul des limites dynamiques
+          const powerPercentage = dimmer > 0 ? Math.round((power * 100) / dimmer) : 0;
+          const maxGauge = Math.max(powerPercentage, 100);
+          
+          const dynamicOptions = {
+            ...this.options.gauge,
+            max: maxGauge,
+            redTo: maxGauge,
+            redFrom: Math.round(maxGauge / 2),
+            yellowTo: Math.round(maxGauge / 2)
+          };
+          
+          this.gaugePA.draw(this.dataGaugePA, dynamicOptions);
+
+          // Mise à jour jauge température
+          this.dataGaugePAtemp.setValue(0, 0, "Temp °C");
+          this.dataGaugePAtemp.setValue(0, 1, Math.round(temperature));
+          this.gaugePAtemp.draw(this.dataGaugePAtemp, this.options.gaugeTemp);
+        }
+
+        updateStates(data) {
+          const states = [
+            { 
+              key: 'alerte', 
+              element: 'alerte',
+              activeText: 'Refroidissement', 
+              inactiveText: 'Normal',
+              activeClass: 'badge badge-pill badge-danger',
+              inactiveClass: 'badge badge-pill badge-success',
+              checkActive: (value) => value === 1 || value === true || value === "1"
+            },
+            { 
+              key: 'minuteur', 
+              element: 'minuteur',
+              activeText: 'Minuteur', 
+              inactiveText: 'Non actif',
+              activeClass: 'badge badge-pill badge-warning',
+              inactiveClass: 'badge badge-pill badge-secondary',
+              checkActive: (value) => value === 1 || value === true || value === "1"
+            },
+            { 
+              key: 'relay1', 
+              element: 'relais1',
+              activeText: 'ON', 
+              inactiveText: 'OFF',
+              fallbackElement: 'relais 1',
+              activeClass: 'badge badge-pill badge-success clickable',
+              inactiveClass: 'badge badge-pill badge-secondary clickable',
+              checkActive: (value) => value === 1 || value === true || value === "1"
+            },
+            { 
+              key: 'relay2', 
+              element: 'relais2',
+              activeText: 'ON', 
+              inactiveText: 'OFF',
+              fallbackElement: 'relais 2',
+              activeClass: 'badge badge-pill badge-success clickable',
+              inactiveClass: 'badge badge-pill badge-secondary clickable',
+              checkActive: (value) => value === 1 || value === true || value === "1"
+            }
+          ];
+
+          states.forEach(state => {
+            let element = document.getElementById(state.element);
+            if (!element && state.fallbackElement) {
+              element = document.getElementById(state.fallbackElement);
+            }
+            
+            if (element) {
+              const isActive = state.checkActive(data[state.key]);
+              element.textContent = isActive ? state.activeText : state.inactiveText;
+              element.style.color = isActive ? "red" : "";
+            }
+          });
+
+          // Gestion spéciale du boost
+          this.updateBoostState(data);
+        }
+
+        updateBoostState(data) {
+          const boostElement = document.getElementById("boost");
+          const boostEndTimeElement = document.getElementById("boost_endtime");
+          
+          if (!boostElement) return;
+
+          const isBoostActive = data.boost === 1 || data.boost === true || data.boost === "1";
+          const boostMaxTemp = data.boost_max_temp || 'N/A';
+          
+          boostElement.textContent = isBoostActive ? "ON" : "OFF";
+          boostElement.style.color = isBoostActive ? "red" : "";
+          
+          if (boostEndTimeElement) {
+            let endTimeText = `max: ${boostMaxTemp}°C`;
+            if (isBoostActive && data.boost_endtime) {
+              endTimeText = `Heure de fin: ${data.boost_endtime} ${endTimeText}`;
+            }
+            boostEndTimeElement.textContent = endTimeText;
+          }
+        }
+
+        updateDallasDisplays(data) {
+          const dallasElement = document.getElementById("dallas");
+          if (!dallasElement) return;
+
+          const dallasData = this.extractDallasData(data);
+          const dallasHtml = this.generateDallasHtml(dallasData);
+          dallasElement.innerHTML = dallasHtml;
+        }
+
+        extractDallasData(data) {
+          const dallasData = {};
+          
+          Object.keys(data).forEach(key => {
+            if (key.startsWith("dallas")) {
+              const dallasNumber = key.substring(6);
+              const temperature = data[key];
+              const addressKey = `addr${dallasNumber}`;
+              const address = data[addressKey] || 'Inconnue';
+              
+              // Accepter les nombres ET les chaînes
+              const tempValue = typeof temperature === 'string' ? parseFloat(temperature) : temperature;
+              if (typeof tempValue === 'number' && !isNaN(tempValue)) {
+                dallasData[dallasNumber] = {
+                  temperature: tempValue.toFixed(1),
+                  address: this.sanitizeText(address.toString())
+                };
+              }
+            }
+          });
+          
+          return dallasData;
+        }
+
+        generateDallasHtml(dallasData) {
+          if (Object.keys(dallasData).length === 0) {
+            return "<p>Aucun capteur Dallas détecté</p>";
+          }
+
+          return Object.entries(dallasData)
+            .map(([number, data]) => 
+              `<p>Dallas sensor ${this.sanitizeText(number)}: ${data.temperature}°C<br>` +
+              `Address: ${data.address}</p>`
+            ).join('');
+        }
+
+        startDataRefresh() {
+          // Premier rafraîchissement après 500ms
+          setTimeout(() => this.refreshData(), 500);
+          
+          // Puis toutes les 5 secondes
+          this.refreshInterval = setInterval(() => this.refreshData(), 5000);
+        }
+
+        startClock() {
+          const timeElement = document.getElementById("time");
+          if (!timeElement) return;
+
+          const updateClock = () => {
+            const date = new Date();
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const seconds = date.getSeconds().toString().padStart(2, '0');
+            timeElement.textContent = `${hours}:${minutes}:${seconds}`;
+          };
+
+          updateClock();
+          setInterval(updateClock, 1000);
+        }
+
+        showAlert(message) {
+          const alertContainer = document.getElementById("alertContainer");
+          const alertBox = document.getElementById("alertBox");
+          
+          if (alertContainer && alertBox) {
+            alertContainer.textContent = message;
+            alertBox.style.display = 'block';
+          }
+        }
+
+        hideAlert() {
+          const alertBox = document.getElementById("alertBox");
+          if (alertBox) {
+            alertBox.style.display = 'none';
+          }
+        }
+
+        sanitizeText(text) {
+          const div = document.createElement('div');
+          div.textContent = text;
+          return div.innerHTML;
+        }
+
+        destroy() {
+          if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
+          }
+        }
       }
 
-      function horloge(el) {
-        if (typeof el == "string") {
-          el = document.getElementById(el);
-        }
-        function actualiser() {
-          var date = new Date();
-          var str = date.getHours();
-          str += ":" + (date.getMinutes() < 10 ? "0" : "") + date.getMinutes();
-          str += ":" + (date.getSeconds() < 10 ? "0" : "") + date.getSeconds();
-          el.innerHTML = str;
-        }
-        actualiser();
-        setInterval(actualiser, 1000);
-      }
+      // Initialisation au chargement de la page
+      window.addEventListener('load', () => {
+        window.dashboardController = new DashboardController();
+        window.dashboardController.init();
+      });
 
+      // Nettoyage au déchargement
+      window.addEventListener('beforeunload', () => {
+        if (window.dashboardController) {
+          window.dashboardController.destroy();
+        }
+      });
     </script>
     </%text>
     </%block>

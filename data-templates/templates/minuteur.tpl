@@ -198,91 +198,208 @@ ${config.generate_menu(page="minuteur")}
 <%text>
     <script type="text/javascript">
       $(document).ready(function () {
-        // Enable tabs
-        $("#tabs button").click(function (e) {
-          e.preventDefault();
-          window.location.hash = $(this).attr("data-target");
-          $(this).tab("show");
+        // Configuration centralisée
+        const CONFIG = {
+          UPDATE_INTERVAL: 15000,
+          DEVICES: ['relay1', 'relay2', 'dimmer']
+        };
+
+        // Utilitaires
+        const Utils = {
+          formatTime: (hour, minute) => {
+            const h = hour < 10 ? "0" + hour : hour;
+            const m = minute < 10 ? "0" + minute : minute;
+            return `${h}:${m}`;
+          },
+
+          showNotification: (message, type = 'info') => {
+            // Placeholder pour système de notification
+            console.log(`[${type.toUpperCase()}] ${message}`);
+          },
+
+          handleError: (error, context) => {
+            console.error(`Erreur dans ${context}:`, error);
+            Utils.showNotification(`Erreur: ${context}`, 'error');
+          }
+        };
+
+        // Gestionnaire des onglets
+        const TabManager = {
+          init() {
+            $("#tabs button").on("click", this.handleTabClick);
+            this.showLastTab();
+          },
+
+          handleTabClick(e) {
+            e.preventDefault();
+            const target = $(this).attr("data-target");
+            if (target) {
+              window.location.hash = target;
+              $(this).tab("show");
+            }
+          },
+
+          showLastTab() {
+            if (window.location.hash) {
+              const tabSelector = `#tabs button[aria-controls=${window.location.hash.substring(1)}]`;
+              $(tabSelector).tab("show");
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }
+        };
+
+        // Gestionnaire des données de minuteurs
+        const TimerDataManager = {
+          cache: new Map(),
+          
+          async loadDeviceData(device) {
+            try {
+              const data = await $.get(`/getminuteur?${device}`);
+              this.cache.set(device, data);
+              this.updateUI(device, data);
+              
+              // Mise à jour spéciale de l'horloge pour relay2
+              if (device === 'relay2' && data.heure !== undefined && data.minute !== undefined) {
+                this.updateClock(data.heure, data.minute);
+              }
+              
+              return data;
+            } catch (error) {
+              Utils.handleError(error, `Chargement des données ${device}`);
+              throw error;
+            }
+          },
+
+          updateUI(device, data) {
+            const prefix = `#heure_demarrage_${device}`;
+            $(`${prefix.replace('demarrage', 'demarrage')}`).val(data.heure_demarrage);
+            $(`${prefix.replace('demarrage', 'arret')}`).val(data.heure_arret);
+            $(`#temperature_${device}`).val(data.temperature);
+            
+            // Champ spécifique au dimmer
+            if (device === 'dimmer' && data.puissance !== undefined) {
+              $(`#puissance_${device}`).val(data.puissance);
+            }
+          },
+
+          updateClock(hour, minute) {
+            const timeString = Utils.formatTime(hour, minute);
+            $("#heure").html(timeString);
+          },
+
+          async saveDeviceData(device, formData) {
+            try {
+              await $.get(`/setminuteur?${device}`, formData);
+              Utils.showNotification(`Configuration ${device} sauvegardée`, 'success');
+              
+              // Mise à jour du cache
+              this.cache.set(device, { ...this.cache.get(device), ...formData });
+            } catch (error) {
+              Utils.handleError(error, `Sauvegarde ${device}`);
+              throw error;
+            }
+          }
+        };
+
+        // Gestionnaire des formulaires
+        const FormManager = {
+          init() {
+            CONFIG.DEVICES.forEach(device => {
+              $(`#${device}-form`).on("submit", (e) => this.handleSubmit(e, device));
+            });
+          },
+
+          async handleSubmit(event, device) {
+            event.preventDefault();
+            
+            try {
+              const formData = this.getFormData(device);
+              await TimerDataManager.saveDeviceData(device, formData);
+            } catch (error) {
+              // L'erreur est déjà gérée dans saveDeviceData
+            }
+          },
+
+          getFormData(device) {
+            const data = {
+              heure_demarrage: $(`#heure_demarrage_${device}`).val(),
+              heure_arret: $(`#heure_arret_${device}`).val(),
+              temperature: $(`#temperature_${device}`).val()
+            };
+
+            // Champ spécifique au dimmer
+            if (device === 'dimmer') {
+              data.puissance = $(`#puissance_${device}`).val();
+            }
+
+            return data;
+          }
+        };
+
+        // Gestionnaire de mise à jour périodique
+        const UpdateManager = {
+          intervalId: null,
+
+          start() {
+            this.intervalId = setInterval(() => {
+              this.updateClock();
+            }, CONFIG.UPDATE_INTERVAL);
+          },
+
+          stop() {
+            if (this.intervalId) {
+              clearInterval(this.intervalId);
+              this.intervalId = null;
+            }
+          },
+
+          async updateClock() {
+            try {
+              const data = await $.getJSON("/getminuteur");
+              if (data.heure !== undefined && data.minute !== undefined) {
+                TimerDataManager.updateClock(data.heure, data.minute);
+              }
+            } catch (error) {
+              Utils.handleError(error, 'Mise à jour de l\'horloge');
+            }
+          }
+        };
+
+        // Initialisation de l'application
+        const App = {
+          async init() {
+            try {
+              // Initialisation des gestionnaires
+              TabManager.init();
+              FormManager.init();
+
+              // Chargement initial des données
+              await Promise.allSettled(
+                CONFIG.DEVICES.map(device => TimerDataManager.loadDeviceData(device))
+              );
+
+              // Démarrage des mises à jour périodiques
+              UpdateManager.start();
+
+              console.log('Application initialisée avec succès');
+            } catch (error) {
+              Utils.handleError(error, 'Initialisation de l\'application');
+            }
+          },
+
+          destroy() {
+            UpdateManager.stop();
+          }
+        };
+
+        // Nettoyage lors du déchargement de la page
+        $(window).on('beforeunload', () => {
+          App.destroy();
         });
 
-        // Show last tab on refresh
-        if (window.location.hash) {
-          $(`#tabs button[aria-controls=${window.location.hash.substring(1)}]`).tab("show");
-          window.scrollTo({ top: 0 });
-        }
-
-        // Récupération des heures de démarrage et d'arrêt depuis le serveur
-        $.get("/getminuteur?relay2", function (data) {
-          $("#heure_demarrage_relay2").val(data.heure_demarrage);
-          $("#heure_arret_relay2").val(data.heure_arret);
-          $("#temperature_relay2").val(data.temperature);
-          // Affichage de l'heure au format 2 digits
-          var heure = data.heure < 10 ? "0" + data.heure : data.heure;
-          var minute = data.minute < 10 ? "0" + data.minute : data.minute;
-          $("#heure").html(heure + ":" + minute);
-        });
-
-        $.get("/getminuteur?relay1", function (data) {
-          $("#heure_demarrage_relay1").val(data.heure_demarrage);
-          $("#heure_arret_relay1").val(data.heure_arret);
-          $("#temperature_relay1").val(data.temperature);
-        });
-
-        $.get("/getminuteur?dimmer", function (data) {
-          $("#heure_demarrage_dimmer").val(data.heure_demarrage);
-          $("#heure_arret_dimmer").val(data.heure_arret);
-          $("#temperature_dimmer").val(data.temperature);
-          $("#puissance_dimmer").val(data.puissance);
-        });
-
-        // Envoi des données de formulaire au serveur lors de la soumission du formulaire
-        $("#dimmer-form").submit(function (event) {
-          event.preventDefault();
-          var heure_demarrage = $("#heure_demarrage_dimmer").val();
-          var heure_arret = $("#heure_arret_dimmer").val();
-          var temperature = $("#temperature_dimmer").val();
-          var puissance = $("#puissance_dimmer").val();
-          $.get("/setminuteur?dimmer", {
-            heure_demarrage: heure_demarrage,
-            heure_arret: heure_arret,
-            temperature: temperature,
-            puissance: puissance,
-          });
-        });
-
-        $("#relay1-form").submit(function (event) {
-          event.preventDefault();
-          var heure_demarrage = $("#heure_demarrage_relay1").val();
-          var heure_arret = $("#heure_arret_relay1").val();
-          var temperature = $("#temperature_relay1").val();
-          $.get("/setminuteur?relay1", {
-            heure_demarrage: heure_demarrage,
-            heure_arret: heure_arret,
-            temperature: temperature,
-          });
-        });
-
-        $("#relay2-form").submit(function (event) {
-          event.preventDefault();
-          var heure_demarrage = $("#heure_demarrage_relay2").val();
-          var heure_arret = $("#heure_arret_relay2").val();
-          var temperature = $("#temperature_relay2").val();
-          $.get("/setminuteur?relay2", {
-            heure_demarrage: heure_demarrage,
-            heure_arret: heure_arret,
-            temperature: temperature,
-          });
-        });
+        // Démarrage de l'application
+        App.init();
       });
-
-      setInterval(function () {
-        $.getJSON("/getminuteur", function (data) {
-          // Affichage de l'heure au format 2 digits
-          var heure = data.heure < 10 ? "0" + data.heure : data.heure;
-          var minute = data.minute < 10 ? "0" + data.minute : data.minute;
-          $("#heure").html(heure + ":" + minute);
-        });
-      }, 15000);
     </script>
 </%text>
 </%block>

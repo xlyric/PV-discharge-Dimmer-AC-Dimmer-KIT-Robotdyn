@@ -530,7 +530,7 @@
     <footer class="sticky-footer bg-white">
       <div class="container my-auto">
         <div class="copyright text-center my-auto">
-          <span>https://github.com/xlyric/ - 2024</span>
+          <span>https://github.com/xlyric/ - 2025</span>
         </div>
       </div>
     </footer>
@@ -552,7 +552,7 @@
           $("#ONOFF").text(onoff);
           if (data.alerte && data.alerte.trim() != "") {
             const alertContainer = document.getElementById("alertContainer");
-            alertContainer.innerHTML = "Alerte : " + data.alerte;
+            alertContainer.textContent = "Alerte : " + data.alerte;
             $("#alertBox").fadeIn();
           } else {
             $("#alertBox").fadeOut();
@@ -601,7 +601,7 @@
       function save() {
         $.get("/get", { save: "yes" }).done(function (data) {});
       }
-      <!--- sauvegarde de la configuration -->
+      // Sauvegarde de la configuration
       $("#save").click(function () {
         $.get("/get", { save: "yes" }).done(function (data) {
           $("#savemsg").text("Configuration sauvegardée").show().fadeOut(5000);

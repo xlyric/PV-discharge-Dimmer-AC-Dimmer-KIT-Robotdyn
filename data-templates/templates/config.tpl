@@ -501,7 +501,7 @@ ${generate_content()}
 
           if (data.alerte && data.alerte.trim() != "") {
             const alertContainer = document.getElementById("alertContainer");
-            alertContainer.innerHTML = "Alerte : " + data.alerte;
+            alertContainer.textContent = "Alerte : " + data.alerte;
             $("#alertBox").fadeIn();
           } else {
             $("#alertBox").fadeOut();
@@ -555,7 +555,7 @@ ${generate_content()}
         $.get("/get", { save: "yes" }).done(function (data) {});
       }
 
-      <!--- sauvegarde de la configuration -->
+      // Sauvegarde de la configuration
       $("#save").click(function () {
         $.get("/get", { save: "yes" }).done(function (data) {
           $("#savemsg").text("Configuration sauvegardée").show().fadeOut(5000);
