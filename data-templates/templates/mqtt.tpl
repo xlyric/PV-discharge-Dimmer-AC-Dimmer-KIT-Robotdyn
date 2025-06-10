@@ -199,7 +199,8 @@
 </%block>
 <%block name="pagescript">
 <%text>
-    <script type="text/javascript">
+    
+    <script type="text/javascript" defer>
       function save() {
         $.get("/getmqtt", { save: "yes" }).done(function (data) {});
       }

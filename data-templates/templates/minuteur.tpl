@@ -196,7 +196,8 @@ ${config.generate_menu(page="minuteur")}
 </%block>
 <%block name="pagescript">
 <%text>
-    <script type="text/javascript">
+
+    <script type="text/javascript" defer>
       $(document).ready(function () {
         // Enable tabs
         $("#tabs button").click(function (e) {

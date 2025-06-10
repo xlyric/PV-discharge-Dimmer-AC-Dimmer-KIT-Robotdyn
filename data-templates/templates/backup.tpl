@@ -62,7 +62,8 @@ ${config.generate_menu(page="backup")}
 </%block>
 <%block name="pagescript">
 <%text>
-    <script type="text/javascript">
+    
+    <script type="text/javascript" defer>
       /*
        * Sauvergarde de la configuration
        */

@@ -482,7 +482,7 @@ ${generate_content()}
 </%block>
 <%block name="pagescript">
 <%text>
-    <script type="text/javascript">
+    <script type="text/javascript" defer>
       $('[data-toggle="popover"]').popover();
 
       //<!-- rafraichissement valeurs -->

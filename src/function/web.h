@@ -87,20 +87,24 @@ extern SSR_BURST ssr_burst;
 
 
 void call_pages() {
+
+  /*
+      {"/css/fa-solid-900.woff2", "/css/fa-solid-900.woff2"},
+    {"/favicon.ico", "/favicon.ico"},
+    ,
+    {"/style.css", "/style.css"},
+    {"/script.js", "/script.js"}
+  */
   // Static pages, see compressed
   const char* staticFiles[][2] = {
     {"/js/all.min.js", "/js/all.min.js"},
     {"/css/all.min.css", "/css/all.min.css"},
-    {"/css/fa-solid-900.woff2", "/css/fa-solid-900.woff2"},
-    {"/favicon.ico", "/favicon.ico"},
     {"/log.html", "/log.html"},
     {"/mqtt.html", "/mqtt.html"},
     {"/minuteur.html", "/minuteur.html"},
     {"/relai.html", "/relai.html"},
     {"/backup.html", "/backup.html"},
-    {"/lang.json", "/lang.json"},
-    {"/style.css", "/style.css"},
-    {"/script.js", "/script.js"}
+    {"/lang.json", "/lang.json"}
   };
 
   for (const auto& file : staticFiles) {
@@ -117,6 +121,20 @@ void call_pages() {
   } else {
     server.serveStatic("/config-AP.html", LittleFS, "/config-AP.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
   }
+
+ // server de /css/all.min.css.gz
+ server.on("/css/all.min.css.gz", HTTP_GET, [](AsyncWebServerRequest *request) {
+    delay(50); // pour éviter les problèmes de crash
+    yield();
+    request->send(LittleFS, "/css/all.min.css.gz", "text/css", true);
+  });
+
+  // serverde /js/all.min.js
+  server.on("/js/all.min.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+    delay(150); // pour éviter les problèmes de crash
+    yield();
+    request->send(LittleFS, "/js/all.min.js", "application/javascript", true);
+  });
 
   // page de index et récupération des requetes de puissance
   server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
@@ -196,14 +214,14 @@ void call_pages() {
           sysvar.change=1;
         }
         String pb=getState().c_str();
-        request->send(200, "application/json", pb.c_str() );
+        request->send_P(200, "application/json", pb.c_str() );
       }
 
       else if (request->hasParam(PARAM_INPUT_2)) {
         config.startingpow = request->getParam(PARAM_INPUT_2)->value().toInt();
         logging.Set_log_init("HTTP power at " + String(config.startingpow)+"W\r\n");
         sysvar.change=1;
-        request->send(200, "application/json", getState().c_str());
+        request->send_P(200, "application/json", getState().c_str());
       }
 
       else  {
@@ -223,7 +241,7 @@ void call_pages() {
     }
     else
     {
-      request->send(200, "text/html", textnofiles().c_str());
+      request->send_P(200, "text/html", textnofiles().c_str());
     }
 
     DEBUG_PRINTLN(sysvar.puissance);
@@ -244,16 +262,16 @@ void call_pages() {
   });
 
   server.on("/config", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(200, "application/json", getconfig().c_str());
+    request->send_P(200, "application/json", getconfig().c_str());
   });
 
   
   server.on("/getmqtt", HTTP_ANY, [] (AsyncWebServerRequest *request) {
-    request->send(200, "application/json",  getmqtt().c_str());
+    request->send_P(200, "application/json",  getmqtt().c_str());
   });
 
   server.on("/resetwifi", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain", "Resetting Wifi and reboot");
+    request->send_P(200, "text/plain", "Resetting Wifi and reboot");
     wifiManager.resetSettings();
     config.restart = true;
   });
@@ -269,7 +287,7 @@ void call_pages() {
   });
 
   server.on("/ping", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain", "pong");
+    request->send_P(200, "text/plain", "pong");
   });
 
   const char* jsonFiles[][2] = {
