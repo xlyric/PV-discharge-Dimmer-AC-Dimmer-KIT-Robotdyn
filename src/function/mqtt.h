@@ -66,7 +66,7 @@ char buffer[1024];// NOSONAR
 /// @param message
 /// @param length
 
-String stringBoolMQTT(bool mybool);
+const char* stringBoolMQTT(bool mybool);
 
 String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
 String node_id = String("dimmer-") + node_mac;
@@ -105,9 +105,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
       sysvar.puissance = puissancemqtt;
       sysvar.change=1;
     } else if (config.dimmer_on_off == 1) {
-      device_dimmer.send(String(sysvar.puissance));
-      device_dimmer_send_power.send(String(sysvar.puissance));
-      device_dimmer_power.send(String(sysvar.puissance*config.charge/100));
+      device_dimmer.sendFloat(sysvar.puissance);
+      device_dimmer_send_power.sendFloat(sysvar.puissance);
+      device_dimmer_power.sendInt(sysvar.puissance*config.charge/100);
     }
   }
   /// @brief Enregistrement temperature
@@ -124,16 +124,18 @@ void callback(char* topic, byte* payload, unsigned int length) {
       device_temp_master.HA_discovery();
       device_dimmer_maxtemp.HA_discovery();
       device_dimmer_alarm_temp.send(stringBoolMQTT(sysvar.security));
-      device_dimmer_maxtemp.send(String(config.maxtemp));
+      device_dimmer_maxtemp.sendInt(config.maxtemp);
       device_dimmer_alarm_temp_clear.HA_discovery();
     }
-    device_temp[sysvar.dallas_maitre].send(String(sysvar.celsius[sysvar.dallas_maitre]));
+    device_temp[sysvar.dallas_maitre].sendInt(sysvar.celsius[sysvar.dallas_maitre]);
     Serial.println(sysvar.celsius[sysvar.dallas_maitre]);
-    device_temp_master.send(String(sysvar.celsius[sysvar.dallas_maitre]));
+    device_temp_master.sendInt(sysvar.celsius[sysvar.dallas_maitre]);
     if (sysvar.celsius[sysvar.dallas_maitre] != temperaturemqtt ) {
       sysvar.celsius[sysvar.dallas_maitre] = temperaturemqtt;
       logging.Set_log_init("MQTT temp at ");
-      logging.Set_log_init(String(sysvar.celsius[sysvar.dallas_maitre]));
+      char buf_float[16];
+      dtostrf(sysvar.celsius[sysvar.dallas_maitre], 4, 2, buf_float);
+      logging.Set_log_init(buf_float);
       logging.Set_log_init("°C\r\n");
     }
   }
@@ -153,9 +155,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
       if ( relay == 0) { config.dimmer_on_off = false; }
       else { config.dimmer_on_off = true; }
       logging.Set_log_init("Dimmer ON_OFF at ");
-      logging.Set_log_init(String(config.dimmer_on_off).c_str());
+      char buf_int[12];    // Pour les entiers
+      itoa(config.dimmer_on_off, buf_int, 10);
+      logging.Set_log_init(buf_int);
       logging.Set_log_init("\r\n");
-      device_dimmer_on_off.send(String(config.dimmer_on_off));
+      device_dimmer_on_off.sendInt(config.dimmer_on_off);
       sysvar.change=1;
     }
   }
@@ -175,7 +179,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
         sysvar.puissance = powdimmer;
         sysvar.change=1;
         logging.Set_log_init("MQTT power at ");
-        logging.Set_log_init(String(powdimmer).c_str());
+        char buf_int[12];    // Pour les entiers
+        itoa(powdimmer, buf_int, 10);
+        logging.Set_log_init(buf_int);
         logging.Set_log_init("%\r\n");
       }
     }
@@ -207,9 +213,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
       String childmode = doc2["child_mode"];
       if (config.mode != doc2["child_mode"] ) {
         strlcpy(config.mode, doc2["child_mode"], sizeof(config.mode));
-        device_dimmer_child_mode.send(String(config.mode));
+        device_dimmer_child_mode.send(config.mode);
         logging.Set_log_init("MQTT child mode at ");
-        logging.Set_log_init(String(childmode).c_str());
+        logging.Set_log_init((childmode).c_str());
         logging.Set_log_init("\r\n");
 
       }
@@ -238,50 +244,48 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   if (strcmp( topic, HA_status.c_str() ) == 0) {
     logging.Set_log_init("MQTT HA_status ",true);
-    logging.Set_log_init(fixedpayload);
+    logging.Set_log_init(fixedpayload.c_str());
     logging.Set_log_init("\r\n");
     if (strcmp( fixedpayload.c_str(), "online" ) == 0) {
       logging.Set_log_init("MQTT resend HA discovery \r\n",true);
       HA_discover();
       logging.Set_log_init("MQTT resend all values \r\n",true);
-      device_dimmer.send(String(sysvar.puissance));
-      device_dimmer_send_power.send(String(sysvar.puissance));
-      device_dimmer_power.send(String(sysvar.puissance* config.charge/100));
+      device_dimmer.sendInt(sysvar.puissance);
+      device_dimmer_send_power.sendInt(sysvar.puissance);
+      device_dimmer_power.sendInt(sysvar.puissance* config.charge/100);
       if (
         strcmp(String(config.PVROUTER).c_str(), "http") == 0
         ) {
-        device_dimmer_total_power.send(
-          String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100))
-          );
+        device_dimmer_total_power.sendInt(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100));
       }
       device_cooler.send(stringBoolMQTT(sysvar.cooler));
-      device_temp_master.send(String(sysvar.celsius[sysvar.dallas_maitre]));
-      device_dimmer_starting_pow.send(String(config.startingpow));
-      device_dimmer_minpow.send(String(config.minpow));
-      device_dimmer_maxpow.send(String(config.maxpow));
-      device_dimmer_maxtemp.send(String(config.maxtemp));
+      device_temp_master.sendInt(sysvar.celsius[sysvar.dallas_maitre]);
+      device_dimmer_starting_pow.sendInt(config.startingpow);
+      device_dimmer_minpow.sendInt(config.minpow);
+      device_dimmer_maxpow.sendInt(config.maxpow);
+      device_dimmer_maxtemp.sendInt(config.maxtemp);
       if (strcmp(String(config.PVROUTER).c_str(), "http") == 0) {
-        device_dimmer_child_mode.send(String(config.mode));
+        device_dimmer_child_mode.send(config.mode);
       }
-      device_dimmer_on_off.send(String(config.dimmer_on_off));
+      device_dimmer_on_off.sendInt(config.dimmer_on_off);
       device_dimmer_boost.send("0");
 
       #ifdef RELAY1
       int relaystate = !digitalRead(RELAY1); // correction bug de démarrage en GPIO 0
-      device_relay1.send(String(relaystate));
+      device_relay1.sendInt(relaystate);
       #endif
       #ifdef RELAY2
       relaystate = digitalRead(RELAY2);
-      device_relay2.send(String(relaystate));
+      device_relay2.sendInt(relaystate);
       #endif
       if (discovery_temp) {
         for (int i = 0; i < deviceCount; i++) {      //NOSONAR
-          device_temp[i].send(String(sysvar.celsius[i]));
+          device_temp[i].sendFloat(sysvar.celsius[i]);
         }
-        device_temp_master.send(String(sysvar.celsius[sysvar.dallas_maitre]));
+        device_temp_master.sendFloat(sysvar.celsius[sysvar.dallas_maitre]);
         Serial.println(sysvar.celsius[sysvar.dallas_maitre]);
         device_dimmer_alarm_temp.send(stringBoolMQTT(sysvar.security));
-        device_dimmer_maxtemp.send(String(config.maxtemp));
+        device_dimmer_maxtemp.sendInt(config.maxtemp);
       }
     }
   }
@@ -384,8 +388,8 @@ void connect_and_subscribe() {
       int instant_power = sysvar.puissance;
       /// correction 19/04 valeur remonté au dessus du max conf
       Mqtt_send_DOMOTICZ(String(config.IDX), String (sysvar.puissance * config.charge/100));
-      device_dimmer.send(String(instant_power));
-      device_dimmer_power.send(String(instant_power * config.charge/100));
+      device_dimmer.sendInt(instant_power);
+      device_dimmer_power.sendInt(instant_power * config.charge/100);
     }
 
 }
@@ -409,7 +413,9 @@ void async_mqtt_init() {
 void connectToMqtt() {
   if (!client.connected() ) {
     DEBUG_PRINTLN(Connecting_MQTT);
-    logging.Set_log_init(String(Connecting_MQTT) + String(config.say_my_name) + " \r\n");
+    char temp_buffer[128]; // Ajustez la taille en fonction de la longueur maximale attendue
+    snprintf(temp_buffer, sizeof(temp_buffer), "%s%s \r\n", Connecting_MQTT, config.say_my_name);
+    logging.Set_log_init(temp_buffer);
     delay(500); // pour laisser le temps de se connecter au wifi ou ne pas spam le serveur
     
     // PROTECTION : Vérifiez que hostname est valide
@@ -481,22 +487,21 @@ void onMqttSubscribe(uint16_t packetId, uint8_t qos) {
   DEBUG_PRINTLN("  qos: ");
   DEBUG_PRINTLN(qos);
 }
-String stringBoolMQTT(bool mybool){
-  String truefalse = "true";
-  if (mybool == false ) {truefalse = "false";}
-  return String(truefalse);
+
+const char* stringBoolMQTT(bool mybool) {
+  return mybool ? "true" : "false";
 }
 
 void recreate_topic(){
   String topic_Xlyric = "Xlyric/" + String(config.say_my_name) +"/";
-  Serial.println("test "+String(config.say_my_name));
-  command_switch = String(topic_Xlyric + "command/switch");
-  command_number = String(topic_Xlyric + "command/number");
-  command_select = String(topic_Xlyric + "command/select");
-  command_button = String(topic_Xlyric + "command/button");
+  Serial.printf("test %s\n", config.say_my_name);
+  command_switch  = topic_Xlyric + "command/switch";
+  command_number  = topic_Xlyric + "command/number";
+  command_select  = topic_Xlyric + "command/select";
+  command_button  = topic_Xlyric + "command/button";
   Serial.println(command_button);
 
-  command_save = String("Xlyric/sauvegarde/"+ node_id );
+  command_save = "Xlyric/sauvegarde/" + node_id;
 }
 
 /// @brief  Gestion des relais ( factorisation )
@@ -515,10 +520,14 @@ void handleRelay(const JsonDocument& doc, const char* relayKey, int relayPin, co
             digitalWrite(relayPin, relay == 0 ? LOW : HIGH);
         }
 
-        logging.Set_log_init(String(relayName) + " at ");
-        logging.Set_log_init(String(relay).c_str());
+        char temp_buffer[64];
+        snprintf(temp_buffer, sizeof(temp_buffer), "%s at", relayName);
+        logging.Set_log_init(temp_buffer);
+        char buf_int[12];    // Pour les entiers
+        itoa(relay, buf_int, 10);
+        logging.Set_log_init(buf_int);
         logging.Set_log_init("\r\n");
-        device.send(String(relay));
+        device.sendInt(relay);
     }
 }
 
@@ -529,9 +538,11 @@ void handleNumberParameter(const JsonDocument& doc, const char* key, int& config
         if (configParam != value) {
             configParam = value;
             logging.Set_log_init(logMessage);
-            logging.Set_log_init(String(value).c_str());
+            char buf_int[12];    // Pour les entiers
+            itoa(value, buf_int, 10);
+            logging.Set_log_init(buf_int);
             logging.Set_log_init("%\r\n");
-            device.send(String(value));
+            device.sendInt(value);
             sysvar.change = 1;
         }
     }

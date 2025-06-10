@@ -43,7 +43,9 @@ void mqttdallas() {
            (sysvar.celsius[a] > 200.00) ) {
         sysvar.celsius[a]=previous_celsius[a];
         dallas_error[a]++;  // incrémente le compteur d'erreur
-        logging.Set_log_init("Dallas " + String(a) + " : échec "+ String(dallas_error[a]) + "\r\n",true);
+        char temp_buffer[128]; // Ajustez la taille en fonction de la longueur maximale attendue
+        snprintf(temp_buffer, sizeof(temp_buffer), "Dallas %d : échec %d\r\n", a, dallas_error[a]);
+        logging.Set_log_init(temp_buffer,true);
         if ( timer_dallas < DALLAS_TIMEOUT )  { timer_dallas = timer_dallas + 100; ; } // on augmente le timer pour la prochaine lecture
         if ( temp_reponse_dallas < temp_reponse_dallas_max )  { temp_reponse_dallas = temp_reponse_dallas + 100; ; } // ça permet de s'adapter aux sondes qui répondent mal
       }
@@ -67,7 +69,7 @@ void mqttdallas() {
         device_temp_master.HA_discovery();
         device_dimmer_maxtemp.HA_discovery();
         device_dimmer_alarm_temp.send(stringBoolMQTT(sysvar.security));
-        device_dimmer_maxtemp.send(String(config.maxtemp));
+        device_dimmer_maxtemp.sendInt(config.maxtemp);
         device_dimmer_alarm_temp_clear.HA_discovery();
       }
 
@@ -76,15 +78,17 @@ void mqttdallas() {
       for (int i = 0; i < deviceCount; i++) {
 
         if ( sysvar.celsius[i] != previous_celsius[i] || sysvar.celsius[i] != 0.99) {
-          device_temp[i].send(String(sysvar.celsius[i]));
+          device_temp[i].sendFloat(sysvar.celsius[i]);
           previous_celsius[i]=sysvar.celsius[i];
           if ( dallas_wait_log > 5 ) { /// limitation de l'affichage des logs de température
-            logging.Set_log_init("Dallas " + String(i) + " : " + String(sysvar.celsius[i]) + "\r\n",false);
+            char temp_buffer[128]; 
+            snprintf(temp_buffer, sizeof(temp_buffer), "Dallas %d : %.1f\r\n", i, sysvar.celsius[i]);
+            logging.Set_log_init(temp_buffer,false);
           }
         }
       }
       if ( dallas_wait_log > 5 ) { dallas_wait_log = 0; }
-      device_temp_master.send(String(sysvar.celsius[sysvar.dallas_maitre]));
+      device_temp_master.sendFloat(sysvar.celsius[sysvar.dallas_maitre]);
     }
     // on demande la température suivante pour le prochain cycle
     sensors.requestTemperatures();
@@ -123,7 +127,9 @@ void mqttdallas() {
       DEBUG_PRINTLN("détection perte sonde dallas");
 
       Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String(Dallas_lost),"Dallas perdue");
-      logging.Set_log_init(String(Dallas_lost) + "\r\n",true);
+      char temp_buffer[64];    // Pour les entiers
+      snprintf(temp_buffer, sizeof(temp_buffer), "Dallas %d perdue après %d échecs", a, dallas_error[a]);
+      logging.Set_log_init(temp_buffer,true);
       dallas_error[a] = 0; // remise à zéro du compteur d'erreur
       /// mise en sécurité
       sysvar.celsius[a] = 99.9;
@@ -154,7 +160,9 @@ void mqttdallas() {
       deviceCount = sensors.getDeviceCount();
     }
 
-    logging.Set_log_init(String(deviceCount));
+    char buf_int[12];    // Pour les entiers
+    itoa(deviceCount, buf_int, 10);
+    logging.Set_log_init(buf_int);
     logging.Set_log_init(DALLAS_detected);
     if ( deviceCount > 0 )  {
       present = 1;
@@ -197,8 +205,10 @@ void restart_dallas() {
     delay(DALLAS_TIMEOUT);
     deviceCount = sensors.getDeviceCount();
     if ( deviceCount > 0 )  {
+      char buf_int[12];    // Pour les entiers
       present = 1;
-      logging.Set_log_init(String(deviceCount));
+      itoa(deviceCount, buf_int, 10);
+      logging.Set_log_init(buf_int);
       logging.Set_log_init(" DALLAS detected\r\n");
       devices_init(); // initialisation des devices HA
     }
@@ -276,9 +286,11 @@ bool dallaspresent () {
     }
 
     logging.Set_log_init(Dallas_sensor);
-    logging.Set_log_init(String(a).c_str());
+    char buf_int[12];    // Pour les entiers
+    itoa(a, buf_int, 10);
+    logging.Set_log_init(buf_int);
     logging.Set_log_init(found_Address);
-    logging.Set_log_init(String(address).c_str());
+    logging.Set_log_init(address.c_str());
     logging.Set_log_init("\r\n");
     present = 1;
     if (sensors.isParasitePowerMode())  { logging.Set_log_init("parasite power is on"); }
@@ -289,7 +301,9 @@ bool dallaspresent () {
     /// cas d'une adresse à 0 0 0 0 0 0 0 0
     for (int i = 0; i < deviceCount; i++)  {
       if (addr[i][0] == 0 && addr[i][1] == 0 && addr[i][2] == 0 && addr[i][3] == 0 && addr[i][4] == 0 && addr[i][5] == 0 && addr[i][6] == 0 && addr[i][7] == 0) {
-        logging.Set_log_init("Dallas " + String(i) + " : " + "Adresse 0 0 0 0 0 0 0 0" + "\r\n",true);
+        char temp_buffer[64]; 
+        snprintf(temp_buffer, sizeof(temp_buffer)," Dallas %d : Adresse 0 0 0 0 0 0 0 0\r\n", i);
+        logging.Set_log_init(temp_buffer,true);
         present = 0;
         restart_dallas();
       }

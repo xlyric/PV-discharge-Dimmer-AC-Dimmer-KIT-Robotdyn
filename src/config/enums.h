@@ -33,29 +33,35 @@ public:
   // retrait des setter/getter pour les logs d'alerte web ( pour éviter les problèmes de mémoire )
 
 /// setter log_init
-public: void Set_log_init(String setter, bool logtime=false) {
+public: void Set_log_init(const char* setter, bool logtime = false) {
 
     if (lock_log) {
       return;
     } else {
         lock_log = true;
         // Vérifier si la longueur de la chaîne ajoutée ne dépasse pas LOG_MAX_STRING_LENGTH
-        size_t setterLength = strlen(setter.c_str()); // NOSONAR
-        size_t logInitLength = strlen(log_init);  // NOSONAR
-        size_t logUptimeLength = strlen(loguptime()); // NOSONAR
-        size_t maxLength = static_cast<size_t>(MaxString); // NOSONAR
+        
+        size_t setterLength = strlen(setter);
+        size_t logInitLength = strlen(log_init);
+        size_t logUptimeLength = strlen(loguptime()); 
+        size_t maxLength = LOG_MAX_STRING_LENGTH - 1; // Toujours laisser de la place pour le '\0'
 
-        if ( setterLength + logInitLength < maxLength )  {
-
-          if ( logtime && ( setterLength + logInitLength + logUptimeLength < maxLength))  {
-              // protection dépassements de tampon (buffer overflow)
-              strncat(log_init, loguptime(), maxLength - logInitLength - 1); // NOSONAR
-          }
-          // protection dépassements de tampon (buffer overflow)
-          strncat(log_init, setter.c_str(), maxLength - logInitLength - 1); // NOSONAR
-        } else {
-          // Si la taille est trop grande, réinitialiser le log_init
+        // Vérifier si la taille totale dépasse la capacité
+        if (setterLength + logInitLength >= maxLength) {
           reset_log_init();
+        } else {
+          // Vérifier si on peut ajouter le uptime
+          if (logtime && (setterLength + logInitLength + logUptimeLength >= maxLength)) {
+            // Ne pas ajouter l'uptime
+          }
+
+          // Ajouter l'uptime en premier si nécessaire
+          if (logtime) {
+            strncat(log_init, loguptime(), maxLength - logInitLength - 1);
+          }
+
+          // Ajouter le setter
+          strncat(log_init, setter, maxLength - logInitLength - 1);
         }
         lock_log = false;
     }
@@ -218,7 +224,7 @@ public:
 //************* Gestion de la configuration - sauvegarde du fichier de configuration
 //***********************************
 
-  String saveConfiguration() {
+  const char* saveConfiguration() {
     String message = "";
     check_trigger();
     // Open file for writing
@@ -268,7 +274,7 @@ public:
     }
     // Close the file
     configFile.close();
-    return message;
+    return message.c_str();
   }
 
   void calcul_charge() {
@@ -317,7 +323,7 @@ public:
     return message;
   }
 
-  String savemqtt() {
+  const char* savemqtt() {
     // Open file for writing
     File configFile = LittleFS.open(filename_mqtt, "w");
     String message = filename_mqtt;
@@ -343,7 +349,7 @@ public:
     // Close the file
     configFile.close();
     // config.restart = true; /// à voir si on rajoute pour reboot après config MQTT
-    return message;
+    return message.c_str();
   }
 
 
@@ -369,7 +375,7 @@ struct System {
   /// @brief  puissance dispo en watt
   int puissance_dispo=0;
 
-  int change=0;
+  bool change=0;
   /// @brief état du ventilateur
   bool cooler=false;
   /// @brief  puissance cumulée en Watt (remonté par l'enfant toute les 10 secondes)

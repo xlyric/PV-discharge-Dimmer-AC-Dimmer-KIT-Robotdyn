@@ -66,20 +66,30 @@ struct Oled {
 // affichage de l'IP
     void display_ip() {
         display.setFont(ArialMT_Plain_10);
-        String ip = WiFi.localIP().toString();
-        String rssi = String(WiFi.RSSI());
-        display.drawString(0, 0, ip);
-        display.drawString(100, 0, rssi + "dB");
+
+        // IP vers buffer
+        IPAddress ip = WiFi.localIP();
+        char ipBuffer[16]; // "xxx.xxx.xxx.xxx" + null
+        snprintf(ipBuffer, sizeof(ipBuffer), "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+
+        // RSSI vers buffer
+        int rssi = WiFi.RSSI();
+        char rssiBuffer[8]; // ex: "-85dB" + null
+        snprintf(rssiBuffer, sizeof(rssiBuffer), "%ddB", rssi);
+
+        display.drawString(0, 0, ipBuffer);
+        display.drawString(100, 0, rssiBuffer);
+
         display.setFont(defaultFont);
     }
 
     void wait_for_wifi(uint8_t counter) {
-    display.clear();
-    display.drawString(64, 10, "Connecting to WiFi");
-    display.drawXbm(46, 30, 8, 8, counter % 3 == 0 ? activeSymbole : inactiveSymbole);
-    display.drawXbm(60, 30, 8, 8, counter % 3 == 1 ? activeSymbole : inactiveSymbole);
-    display.drawXbm(74, 30, 8, 8, counter % 3 == 2 ? activeSymbole : inactiveSymbole);
-    display.display();
+        display.clear();
+        display.drawString(64, 10, "Connecting to WiFi");
+        display.drawXbm(46, 30, 8, 8, counter % 3 == 0 ? activeSymbole : inactiveSymbole);
+        display.drawXbm(60, 30, 8, 8, counter % 3 == 1 ? activeSymbole : inactiveSymbole);
+        display.drawXbm(74, 30, 8, 8, counter % 3 == 2 ? activeSymbole : inactiveSymbole);
+        display.display();
     }
    
 };
@@ -123,19 +133,25 @@ void oled_task(void *parameter) {
 //// affichage des infos basse de l'écran
     void drawHeaderOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
     now = time(nullptr);
-    struct tm* timeInfo;
-    timeInfo = localtime(&now);
-    char buff[14];
-    sprintf_P(buff, PSTR("%02d:%02d"), timeInfo->tm_hour, timeInfo->tm_min);
+    struct tm* timeInfo = localtime(&now);
+    
+    char timeBuffer[6]; // "HH:MM" + null
+    snprintf(timeBuffer, sizeof(timeBuffer), "%02d:%02d", timeInfo->tm_hour, timeInfo->tm_min);
+
+    int puissance_corrigee = unified_dimmer.get_power() * config.charge / 100;
+    char powerBuffer[8]; // Assez pour "123456W" + null
+    snprintf(powerBuffer, sizeof(powerBuffer), "%d", puissance_corrigee);
 
     display->setColor(WHITE);
     display->setFont(ArialMT_Plain_10);
     display->setTextAlignment(TEXT_ALIGN_LEFT);
-    display->drawString(0, 54, String(buff));
+    display->drawString(0, 54, timeBuffer);
+
     display->setTextAlignment(TEXT_ALIGN_RIGHT);
-    display->drawString(128, 54, String(unified_dimmer.get_power()*config.charge/100) );
+    display->drawString(128, 54, powerBuffer);
     display->drawHorizontalLine(0, 52, 128);
-    }
+    
+}
 
 
     void drawProgress(OLEDDisplay *display, int percentage, String label) {
@@ -152,20 +168,25 @@ void oled_task(void *parameter) {
 
         display->setTextAlignment(TEXT_ALIGN_CENTER);
         display->setFont(ArialMT_Plain_24);
-        int puissance_temp = unified_dimmer.get_power();
-        String info_puissance = String(puissance_temp*config.charge/100) + "W";
-        display->drawString(64 + x, 0 + y, String( info_puissance ));
-        display->setFont(ArialMT_Plain_24);
-        String inside_temp = String(sysvar.celsius[sysvar.dallas_maitre]) + "°C";
-        display->drawString(64 + x, 24 + y, String( inside_temp ));
+        int info_puissance  = unified_dimmer.get_power()*config.charge/100 ;
+
+        char buffer_power[16];  // Pour les flottants
+        snprintf(buffer_power, sizeof(buffer_power), "%dW", info_puissance);
+        display->drawString(64 + x, 0 + y, buffer_power);
+
+        snprintf(buffer_power, sizeof(buffer_power), "%.1f°C", sysvar.celsius[sysvar.dallas_maitre]);
+        display->drawString(64 + x, 24 + y, buffer_power);
  
     }
 
     void display_routage(OLEDDisplay *display, OLEDDisplayUiState* state, short int x, short int y) {
         display->setTextAlignment(TEXT_ALIGN_CENTER);
         display->setFont(ArialMT_Plain_24);
-        String info_puissance = String(unified_dimmer.get_power()) + "W";
-        display->drawString(64 + x, 0 + y, String( info_puissance ));
+        
+        char buffer[16]; // largement suffisant pour "9999W"
+        snprintf(buffer, sizeof(buffer), "%dW", unified_dimmer.get_power());
+
+        display->drawString(64 + x, 0 + y, buffer); // accepte const char*
     }
 
 

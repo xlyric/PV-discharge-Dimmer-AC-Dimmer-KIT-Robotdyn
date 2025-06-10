@@ -122,22 +122,9 @@ void call_pages() {
     server.serveStatic("/config-AP.html", LittleFS, "/config-AP.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
   }
 
- // server de /css/all.min.css.gz
- server.on("/css/all.min.css.gz", HTTP_GET, [](AsyncWebServerRequest *request) {
-    delay(50); // pour éviter les problèmes de crash
-    yield();
-    request->send(LittleFS, "/css/all.min.css.gz", "text/css", true);
-  });
-
-  // serverde /js/all.min.js
-  server.on("/js/all.min.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-    delay(150); // pour éviter les problèmes de crash
-    yield();
-    request->send(LittleFS, "/js/all.min.js", "application/javascript", true);
-  });
-
   // page de index et récupération des requetes de puissance
   server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
+    Serial.printf("Free heap debut /: %d bytes\n", ESP.getFreeHeap());
     sysvar.lock_mqtt=true;  // on bloque les requetes MQTT 
     if  (LittleFS.exists("/index.html")) {
       DEBUG_PRINTLN(("%d------------------",__LINE__));
@@ -208,7 +195,9 @@ void call_pages() {
         int max = 200;
         if (strcmp(config.child,"none") == 0 || strcmp(config.mode,"off") == 0 ) { max = 100; }
         if (sysvar.puissance >= max) {sysvar.puissance = max; }
-        logging.Set_log_init("HTTP power at " + String(sysvar.puissance) + "%\r\n");
+        char temp_buffer[128]; // Ajustez la taille en fonction de la longueur maximale attendue
+        snprintf(temp_buffer, sizeof(temp_buffer),  "HTTP power at %.2f%%\r\n", sysvar.puissance);
+        logging.Set_log_init(temp_buffer);
         // Modif RV - correction bug si dimmer configuré mais pas allumé ou planté
         if (sysvar.change == 0) {
           sysvar.change=1;
@@ -219,7 +208,9 @@ void call_pages() {
 
       else if (request->hasParam(PARAM_INPUT_2)) {
         config.startingpow = request->getParam(PARAM_INPUT_2)->value().toInt();
-        logging.Set_log_init("HTTP power at " + String(config.startingpow)+"W\r\n");
+        char temp_buffer[128]; // Ajustez la taille en fonction de la longueur maximale attendue
+        snprintf(temp_buffer, sizeof(temp_buffer),  "HTTP power at %dW\r\n", config.startingpow);
+        logging.Set_log_init(temp_buffer);
         sysvar.change=1;
         request->send_P(200, "application/json", getState().c_str());
       }
@@ -247,6 +238,7 @@ void call_pages() {
     DEBUG_PRINTLN(sysvar.puissance);
     DEBUG_PRINTLN(("%d------------------",__LINE__));
     sysvar.lock_mqtt=false; // on débloque les requetes MQTT
+    Serial.printf("Free heap fin /: %d bytes\n", ESP.getFreeHeap());
   });
 
   server.on("/state", HTTP_ANY, [](AsyncWebServerRequest *request){
@@ -458,7 +450,7 @@ void call_pages() {
     if (request->hasParam("idxtemp")) { config.IDXTemp = request->getParam("idxtemp")->value().toInt(); }
     if (request->hasParam("maxtemp")) {
       config.maxtemp = request->getParam("maxtemp")->value().toInt();
-      if (!AP && mqtt_config.mqtt) { device_dimmer_maxtemp.send(String(config.maxtemp));}
+      if (!AP && mqtt_config.mqtt) { device_dimmer_maxtemp.sendInt(config.maxtemp);}
     }
     if (request->hasParam("charge1")) {
       config.charge1 = request->getParam("charge1")->value().toInt();
@@ -477,23 +469,22 @@ void call_pages() {
     if (request->hasParam("startingpow")) {
       config.startingpow = request->getParam("startingpow")->value().toInt();
       if (!AP && mqtt_config.mqtt) {
-        device_dimmer_starting_pow.send(
-          String(config.startingpow));
+        device_dimmer_starting_pow.sendInt(config.startingpow);
       }
     }
     if (request->hasParam("minpow")) {
       config.minpow = request->getParam("minpow")->value().toInt();
-      if (!AP && mqtt_config.mqtt) { device_dimmer_minpow.send(String(config.minpow)); }
+      if (!AP && mqtt_config.mqtt) { device_dimmer_minpow.sendInt(config.minpow); }
     }
     if (request->hasParam("maxpow")) {
       config.maxpow = request->getParam("maxpow")->value().toInt();
-      if (!AP && mqtt_config.mqtt) { device_dimmer_maxpow.send(String(config.maxpow)); }
+      if (!AP && mqtt_config.mqtt) { device_dimmer_maxpow.sendInt(config.maxpow); }
     }
 
     if (request->hasParam("child")) { request->getParam("child")->value().toCharArray(config.child,64); }
     if (request->hasParam("mode")) {
       request->getParam("mode")->value().toCharArray(config.mode,10);
-      if (!AP && mqtt_config.mqtt) { device_dimmer_child_mode.send(String(config.mode)); }
+      if (!AP && mqtt_config.mqtt) { device_dimmer_child_mode.send(config.mode); }
     }
 
     if (request->hasParam("dimmername")) {
@@ -512,7 +503,7 @@ void call_pages() {
     }
     if (request->hasParam("dimmer_on_off")) {
       config.dimmer_on_off = request->getParam("dimmer_on_off")->value().toInt();
-      if (!AP && mqtt_config.mqtt) { device_dimmer_on_off.send(String(config.dimmer_on_off));}
+      if (!AP && mqtt_config.mqtt) { device_dimmer_on_off.sendInt(config.dimmer_on_off);}
     }
     if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,50); }
     if (request->hasParam("mqttpassword")) {
@@ -559,7 +550,7 @@ void call_pages() {
       char str[8];  // NOSONAR
       itoa( relaystate, str, 10 );
       request->send(200, "application/json", str );
-      if (!AP && mqtt_config.mqtt) { device_relay1.send(String(relaystate));}
+      if (!AP && mqtt_config.mqtt) { device_relay1.sendInt(relaystate);}
       return;
     }
   #endif
@@ -573,7 +564,7 @@ void call_pages() {
       char str[8];  // NOSONAR
       itoa( relaystate, str, 10 );
       request->send(200, "application/json", str );
-      if (!AP && mqtt_config.mqtt) { device_relay2.send(String(relaystate));}
+      if (!AP && mqtt_config.mqtt) { device_relay2.sendInt(relaystate);}
       return;
     }
   #endif

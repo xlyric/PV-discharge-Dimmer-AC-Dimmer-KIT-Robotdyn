@@ -18,8 +18,10 @@ extern dimmerLamp dimmer3;
 struct gestion_puissance {
 private: 
         unsigned long last_time = millis();
+        char temp_buffer[128];
 
 public: float power;
+
 
   // setter
   void set_power(float is_set_power){
@@ -131,11 +133,10 @@ public: float power;
       else { dimmer3.setPower(dimmer3_pwr); }
     }
     #endif
-    logging.Set_log_init("dimmer 1: " + String(dimmer1_pwr) + "%\r\n" );
-    #ifdef outputPin2
-    logging.Set_log_init("dimmer 2: " + String(dimmer2_pwr) + "%\r\n" );
-    logging.Set_log_init("dimmer 3: " + String(dimmer3_pwr) + "%\r\n" );
-    #endif
+    snprintf(temp_buffer, sizeof(temp_buffer),
+             "dimmer 1: %d%%, dimmer 2: %d%%, dimmer 3: %d%%\r\n",
+             dimmer1_pwr, dimmer2_pwr, dimmer3_pwr);
+    logging.Set_log_init(temp_buffer);
   #endif
   }
 

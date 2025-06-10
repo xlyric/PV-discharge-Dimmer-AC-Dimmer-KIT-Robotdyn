@@ -213,7 +213,6 @@ int timesync_refresh = 120;
 ///     AP MODE
 /////////////////////////////////
 
-String routeur="PV-ROUTER";
 bool AP = false;
 bool discovery_temp;
 
@@ -245,7 +244,7 @@ Programme programme_marche_forcee;
 String getmqtt();
 void savemqtt(const char *filename, const Mqtt &mqtt_config); // NOSONAR
 bool pingIP(IPAddress ip);
-String stringBool(bool mybool);
+const char* stringBool(bool mybool);
 String getServermode(String Servermode);
 String switchstate(int state);
 void tests ();
@@ -296,6 +295,7 @@ IPAddress _ip,_gw,_sn,gatewayIP;   // NOSONAR
 
 void setup() {
   Serial.begin(115200);
+  char temp_buffer[128];
   
   #if defined(ESP8266)
   /// init des tasks 
@@ -310,7 +310,7 @@ void setup() {
     oled.wait_for_wifi(0);
   #endif
   
-
+  
   #ifdef ESP32ETH
   ETH.begin(ETH_ADDR, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_TYPE, ETH_CLK_MODE);
   #endif
@@ -343,12 +343,13 @@ void setup() {
   #if defined(ESP32) || defined(ESP32ETH)
   esp_reset_reason_t reset_reason = esp_reset_reason();
   Serial.printf("Reason for reset: %d\n", reset_reason);
-  logging.Set_log_init(String(Reason_for_reset) + String(reset_reason) + " --\r\n" );
+  
+  snprintf(temp_buffer, sizeof(temp_buffer), "Reason for reset: %d", reset_reason);
+  logging.Set_log_init(temp_buffer);
 
   #else
   rst_info *reset_info = ESP.getResetInfoPtr();
   Serial.printf("Reason for reset: %d\n", reset_info->reason);
-  logging.Set_log_init(String(Reason_for_reset) + String(reset_info->reason) + " --\r\n");
 
   #endif
 
@@ -365,8 +366,9 @@ void setup() {
   pinMode(COOLER, OUTPUT);
   digitalWrite(COOLER, LOW);
 
-  logging.Set_log_init("-- " + String(VERSION) + " --\r\n");
 
+  snprintf(temp_buffer, sizeof(temp_buffer), "-- %s -- \r\n", VERSION);
+  logging.Set_log_init(temp_buffer);
   // démarrage file system
   LittleFS.begin();
   // correction d'erreur de chargement de FS
@@ -399,7 +401,6 @@ void setup() {
   #endif
 #endif
 
-
   /// init de sécurité
   #ifdef ROBOTDYN
   dimmer.setState(OFF);
@@ -422,12 +423,12 @@ void setup() {
   // Should load default config if run for the first time
   Serial.println(F("Loading configuration..."));
   logging.Set_log_init(Load_configuration);
-  logging.Set_log_init(config.loadConfiguration()); // charge la configuration
+  logging.Set_log_init(config.loadConfiguration().c_str()); // charge la configuration
 
   // Load configuration file mqtt
   Serial.println(F("Loading mqtt_conf configuration..."));
   logging.Set_log_init(Load_configuration_MQTT);
-  logging.Set_log_init(mqtt_config.loadmqtt());  // charge la configuration mqtt
+  logging.Set_log_init(mqtt_config.loadmqtt().c_str());  // charge la configuration mqtt
 
   // chargement des conf de wifi
   Serial.println(F("Loading wifi configuration..."));
@@ -457,7 +458,6 @@ void setup() {
   logging.Set_log_init(Start_Wifiautoconnect);
 
   // préparation  configuration IP fixe
-
   AsyncWiFiManagerParameter custom_IP_Address("server", "IP", wifi_config_fixe.static_ip, 16);
   wifiManager.addParameter(&custom_IP_Address);
   AsyncWiFiManagerParameter custom_IP_mask("mask", "mask", wifi_config_fixe.static_sn, 16);
@@ -473,19 +473,19 @@ void setup() {
     // set static ip
 
     wifiManager.setSTAStaticIPConfig(_ip, _gw, _sn);
-    Serial.print(String(wifi_config_fixe.static_ip));
+    Serial.print(wifi_config_fixe.static_ip);
   }
 
   // doit être placé avant la connexion sinon sous ESP32, l'hostname n'est pas pris en compte
   WiFi.setHostname(config.say_my_name);
   wifiManager.autoConnect(config.say_my_name);
   // Afficher le nom :
-  Serial.println("say_my_name: " + String(config.say_my_name));
+  Serial.printf("say_my_name: %s\n", config.say_my_name);
   DEBUG_PRINTLN("end Wifiautoconnect");
   wifiManager.setSaveConfigCallback(saveConfigCallback);
   wifiManager.setConfigPortalTimeout(600);
 
-
+ 
   strcpy(wifi_config_fixe.static_ip, custom_IP_Address.getValue());
   strcpy(wifi_config_fixe.static_sn, custom_IP_mask.getValue());
   strcpy(wifi_config_fixe.static_gw, custom_IP_gateway.getValue());
@@ -502,7 +502,6 @@ void setup() {
   oled.wait_for_wifi(1);
   #endif
   WiFi.setAutoReconnect(true);
-
   /// restart si la configuration OP static est différente ip affectée suite changement ip Autoconf
   if ( !strcmp(wifi_config_fixe.static_ip, "" ) == 0 )  {
     char IP[] = "xxx.xxx.xxx.xxx";       // NOSONAR
@@ -530,8 +529,12 @@ void setup() {
   #if !defined(ESP32) && !defined(ESP32ETH)
   Serial.println(ESP.getResetReason());
   #endif
+
   //// AP MODE
-  if ( routeur.compareTo(WiFi.SSID().substring(0,9)) == 0 ) {
+  const char* expectedPrefix = "PV-ROUTER";
+  const char* currentSSID = WiFi.SSID().c_str();
+
+  if (strncmp(currentSSID, expectedPrefix, strlen(expectedPrefix)) == 0) {
     AP = true;
   }
 
@@ -558,7 +561,8 @@ void setup() {
   */
  
   logging.Set_log_init(mDNS_Responder_Started);
-  logging.Set_log_init(String(config.say_my_name) + ".local \r\n");
+  snprintf(temp_buffer, sizeof(temp_buffer), "mDNS responder %s.local", config.say_my_name);
+  logging.Set_log_init(temp_buffer);
 
   //***********************************
   //************* Setup - OTA
@@ -568,10 +572,10 @@ void setup() {
   //***********************************
   //************* Setup - Web pages
   //***********************************
-
+  Serial.printf("Free heap %d: %d bytes\n",__LINE__, ESP.getFreeHeap());
   // chargement des url des pages
   call_pages();
-
+  Serial.printf("Free heap %d: %d bytes\n",__LINE__, ESP.getFreeHeap());
   //***********************************
   //************* Setup -  demarrage du webserver et affichage de l'oled
   //***********************************
@@ -585,7 +589,7 @@ void setup() {
 
   /// recherche d'une sonde dallas
   // dallaspresent();
-
+  Serial.printf("Free heap %d: %d bytes\n",__LINE__, ESP.getFreeHeap());
   devices_init(); // initialisation des devices HA
 
   /// MQTT
@@ -601,30 +605,30 @@ void setup() {
     delay(1000);
     /// pour remonter un 0 sur le MQTT
     if (config.HA || config.JEEDOM) {
-      device_dimmer.send(String(sysvar.puissance));
-      device_dimmer_send_power.send(String(sysvar.puissance));
-      device_dimmer_power.send(String(sysvar.puissance* config.charge/100));
-      device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
+      device_dimmer.sendInt(sysvar.puissance);
+      device_dimmer_send_power.sendInt(sysvar.puissance);
+      device_dimmer_power.sendInt(sysvar.puissance* config.charge/100);
+      device_dimmer_total_power.sendInt(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100));
       device_cooler.send(stringBoolMQTT(false));
-      device_dimmer_starting_pow.send(String(config.startingpow));
-      device_dimmer_minpow.send(String(config.minpow));
-      device_dimmer_maxpow.send(String(config.maxpow));
+      device_dimmer_starting_pow.sendInt(config.startingpow);
+      device_dimmer_minpow.sendInt(config.minpow);
+      device_dimmer_maxpow.sendInt(config.maxpow);
 
-      device_dimmer_child_mode.send(String(config.mode));
-      device_dimmer_on_off.send(String(config.dimmer_on_off));
+      device_dimmer_child_mode.send(config.mode);
+      device_dimmer_on_off.sendInt(config.dimmer_on_off);
       device_dimmer_boost.send("0");
       #ifdef RELAY1
       int relaystate = !digitalRead(RELAY1); // correction bug de démarrage en GPIO 0
-      device_relay1.send(String(relaystate));
+      device_relay1.sendInt(relaystate);
       #endif
       #ifdef RELAY2
       relaystate = digitalRead(RELAY2);
-      device_relay2.send(String(relaystate));
+      device_relay2.sendInt(relaystate);
       #endif
       HA_discover();
     }
   }
-
+Serial.printf("Free heap %d: %d bytes\n",__LINE__, ESP.getFreeHeap());
   #ifdef  ZC_ESP32
   pinMode(JOTTA, OUTPUT);
   unified_dimmer.set_power(0);
@@ -639,6 +643,7 @@ void setup() {
   timer.attach_ms(10, SSR_run);
  #endif
 
+  Serial.printf("Free heap %d: %d bytes\n",__LINE__, ESP.getFreeHeap());
 
   /// init du NTP
   ntpinit();
@@ -699,7 +704,6 @@ void setup() {
 
   #endif
 
-
   #if defined(ESP8266)
   runner.addTask(Task_Cooler);
   Task_Cooler.enable();
@@ -710,6 +714,8 @@ void setup() {
   runner.addTask(Task_ping);
   Task_ping.enable();
   #endif
+
+  Serial.printf("Free heap après task: %d bytes\n", ESP.getFreeHeap());
 
   DEBUG_PRINTLN(ESP.getFreeHeap());
 
@@ -783,11 +789,11 @@ void loop() {
       Mqtt_send_DOMOTICZ(String(config.IDX), String (sysvar.puissance * config.charge/100) );   // remonté MQTT de la commande réelle
       if (config.HA) {
         int instant_power = unified_dimmer.get_power();
-        device_dimmer_on_off.send(String(config.dimmer_on_off));
-        device_dimmer.send(String(instant_power));
-        device_dimmer_send_power.send(String(instant_power));
-        device_dimmer_power.send(String(instant_power * config.charge/100));
-        device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
+        device_dimmer_on_off.sendInt(config.dimmer_on_off);
+        device_dimmer.sendInt(instant_power);
+        device_dimmer_send_power.sendInt(instant_power);
+        device_dimmer_power.sendInt(instant_power * config.charge/100);
+        device_dimmer_total_power.sendInt(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100));
       }
       // réinint de la sécurité température
       sysvar.security = false;
@@ -814,11 +820,11 @@ void loop() {
       Mqtt_send_DOMOTICZ(String(config.IDX), String (sysvar.puissance * config.charge/100) ); // remonté MQTT de la commande réelle
       if (config.HA) {
         int instant_power = unified_dimmer.get_power();
-        device_dimmer_on_off.send(String(config.dimmer_on_off));
-        device_dimmer.send(String(instant_power));
-        device_dimmer_send_power.send(String(instant_power));
-        device_dimmer_power.send(String(instant_power * config.charge/100));
-        device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
+        device_dimmer_on_off.sendInt(config.dimmer_on_off);
+        device_dimmer.sendInt(instant_power);
+        device_dimmer_send_power.sendInt(instant_power);
+        device_dimmer_power.sendInt(instant_power * config.charge/100);
+        device_dimmer_total_power.sendInt(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100));
         if ( programme_marche_forcee.run) {
           device_dimmer_boost.send("1");
         }
@@ -833,14 +839,14 @@ void loop() {
     if (programme_relay1.stop_progr()) {
       logging.Set_log_init(Stop_minuteur_relay1,true);
       digitalWrite(RELAY1, HIGH); //correction bug de démarrage en GPIO 0
-      device_relay1.send(String(0));
+      device_relay1.send("0");
     }
   }
   else {
     if (programme_relay1.start_progr()) {
       logging.Set_log_init(Start_minuteur_relay1,true);
       digitalWrite(RELAY1, LOW); // Correction bug de démarrage en GPIO 0
-      device_relay1.send(String(1));
+      device_relay1.send("1");
     }
   }
 
@@ -848,14 +854,14 @@ void loop() {
     if (programme_relay2.stop_progr()) {
       logging.Set_log_init(Stop_minuteur_relay2,true);
       digitalWrite(RELAY2, LOW);
-      device_relay2.send(String(0));
+      device_relay2.send("0");
     }
   }
   else {
     if (programme_relay2.start_progr()) {
       logging.Set_log_init(Start_minuteur_relay2,true);
       digitalWrite(RELAY2, HIGH);
-      device_relay2.send(String(1));
+      device_relay2.send("1");
     }
   }
 #endif
@@ -1000,20 +1006,20 @@ void loop() {
         else if ( sysvar.puissance > config.maxpow ) {
           Mqtt_send_DOMOTICZ(String(config.IDX), String (sysvar.puissance * config.charge/100) );  // remonté MQTT de la commande max
           if (config.HA) {
-            device_dimmer.send(String(config.maxpow));
+            device_dimmer.sendInt(config.maxpow);
             /// Modif RV - 20240219
             /// Oubli d'envoie "device_dimmer_power.send" + correction de "device_dimmer_total_power.send"
-            device_dimmer_power.send(String(config.maxpow * config.charge/100));
-            device_dimmer_total_power.send(String(sysvar.puissance_cumul + (config.maxpow * config.charge/100)));
+            device_dimmer_power.sendInt(config.maxpow * config.charge/100);
+            device_dimmer_total_power.sendInt(sysvar.puissance_cumul + (config.maxpow * config.charge/100));
           }                                                                                                          // remonté MQTT HA de la commande max
         }
         else {
           Mqtt_send_DOMOTICZ(String(config.IDX), String (sysvar.puissance * config.charge/100)); // remonté MQTT de la commande réelle
           if (config.HA) {
             int instant_power = unified_dimmer.get_power();
-            device_dimmer.send(String(instant_power));
-            device_dimmer_power.send(String(instant_power * config.charge/100));
-            device_dimmer_total_power.send(String(sysvar.puissance_cumul + (instant_power * config.charge/100)));
+            device_dimmer.sendInt(instant_power);
+            device_dimmer_power.sendInt(instant_power * config.charge/100);
+            device_dimmer_total_power.sendInt(sysvar.puissance_cumul + (instant_power * config.charge/100));
           }   // remonté MQTT HA de la commande réelle
         }
       }
@@ -1059,10 +1065,10 @@ void loop() {
       if (!AP && mqtt_config.Mqtt::mqtt) {
         int instant_power = unified_dimmer.get_power();
         Mqtt_send_DOMOTICZ(String(config.IDX), String (sysvar.puissance * config.charge/100) );    // correction 19/04
-        device_dimmer.send(String(instant_power));
-        device_dimmer_send_power.send(String(instant_power));
-        device_dimmer_power.send(String(instant_power * config.charge/100));
-        device_dimmer_total_power.send(String(sysvar.puissance_cumul + (instant_power*config.charge/100) ));
+        device_dimmer.sendInt(sysvar.puissance);
+        device_dimmer_send_power.sendInt(instant_power);
+        device_dimmer_power.sendInt(sysvar.puissance_cumul + (instant_power * config.charge/100));
+        device_dimmer_total_power.sendInt(sysvar.puissance_cumul + (instant_power * config.charge/100));
       }
     }
 
@@ -1081,11 +1087,13 @@ void loop() {
     float temp = sysvar.celsius[sysvar.dallas_maitre] + 0.2;
     Mqtt_send_DOMOTICZ(String(config.IDXTemp), String(temp),"Temperature"); /// remonté MQTT de la température
     if ( config.HA ) {
-      device_temp[sysvar.dallas_maitre].send(String(temp));
-      device_temp_master.send(String(temp));
+
+      
+      device_temp[sysvar.dallas_maitre].sendFloat(temp);
+      device_temp_master.sendFloat(temp);
       device_dimmer_alarm_temp.send(stringBool(sysvar.security));
-      device_dimmer_power.send(String(0));
-      device_dimmer_total_power.send(String(sysvar.puissance_cumul));
+      device_dimmer_power.sendInt(0);
+      device_dimmer_total_power.sendInt(sysvar.puissance_cumul);
     }        /// si HA remonté MQTT HA de la température
   }
 
@@ -1110,8 +1118,8 @@ void loop() {
 
 
 
-String stringBool(bool myBool) {
-  return myBool ? "true" : "false";
+const char* stringBool(bool myBool) {
+    return myBool ? "true" : "false";
 }
 
 
