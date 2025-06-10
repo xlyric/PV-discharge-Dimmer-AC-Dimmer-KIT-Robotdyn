@@ -561,7 +561,7 @@ void setup() {
   */
  
   logging.Set_log_init(mDNS_Responder_Started);
-  snprintf(temp_buffer, sizeof(temp_buffer), "mDNS responder %s.local", config.say_my_name);
+  snprintf(temp_buffer, sizeof(temp_buffer), "mDNS responder %s.local \n", config.say_my_name);
   logging.Set_log_init(temp_buffer);
 
   //***********************************

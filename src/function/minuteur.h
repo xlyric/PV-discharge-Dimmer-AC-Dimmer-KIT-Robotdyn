@@ -208,6 +208,10 @@ public: bool loadProgramme() {
     struct tm timeinfo;  // Variable locale
     int heures;
     int minutes;
+
+    // Initialisez timeinfo avant d'utiliser
+    memset(&timeinfo, 0, sizeof(timeinfo));
+
     /// sécurité temp
     if ( sysvar.celsius[sysvar.dallas_maitre]>= temperature ) {
       run=false;
@@ -222,8 +226,6 @@ public: bool loadProgramme() {
     }
 
     sscanf(heure_arret, "%d:%d", &heures, &minutes);
-
-
 
     if(getLocalTime(&timeinfo)) {
       if (heures == timeinfo.tm_hour && minutes == timeinfo.tm_min) {

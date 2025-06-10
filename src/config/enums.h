@@ -224,7 +224,7 @@ public:
 //************* Gestion de la configuration - sauvegarde du fichier de configuration
 //***********************************
 
-  const char* saveConfiguration() {
+  String saveConfiguration() {
     String message = "";
     check_trigger();
     // Open file for writing
@@ -274,7 +274,7 @@ public:
     }
     // Close the file
     configFile.close();
-    return message.c_str();
+    return message;
   }
 
   void calcul_charge() {
@@ -323,7 +323,7 @@ public:
     return message;
   }
 
-  const char* savemqtt() {
+  String savemqtt() {
     // Open file for writing
     File configFile = LittleFS.open(filename_mqtt, "w");
     String message = filename_mqtt;
@@ -349,7 +349,7 @@ public:
     // Close the file
     configFile.close();
     // config.restart = true; /// à voir si on rajoute pour reboot après config MQTT
-    return message.c_str();
+    return message;
   }
 
 

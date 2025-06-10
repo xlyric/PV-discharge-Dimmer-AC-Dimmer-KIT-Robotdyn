@@ -203,7 +203,7 @@ void call_pages() {
           sysvar.change=1;
         }
         String pb=getState().c_str();
-        request->send_P(200, "application/json", pb.c_str() );
+        request->send(200, "application/json", pb.c_str() );
       }
 
       else if (request->hasParam(PARAM_INPUT_2)) {
@@ -212,7 +212,7 @@ void call_pages() {
         snprintf(temp_buffer, sizeof(temp_buffer),  "HTTP power at %dW\r\n", config.startingpow);
         logging.Set_log_init(temp_buffer);
         sysvar.change=1;
-        request->send_P(200, "application/json", getState().c_str());
+        request->send(200, "application/json", getState().c_str());
       }
 
       else  {
@@ -232,7 +232,7 @@ void call_pages() {
     }
     else
     {
-      request->send_P(200, "text/html", textnofiles().c_str());
+      request->send(200, "text/html", textnofiles().c_str());
     }
 
     DEBUG_PRINTLN(sysvar.puissance);
@@ -254,16 +254,16 @@ void call_pages() {
   });
 
   server.on("/config", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send_P(200, "application/json", getconfig().c_str());
+    request->send(200, "application/json", getconfig().c_str());
   });
 
   
   server.on("/getmqtt", HTTP_ANY, [] (AsyncWebServerRequest *request) {
-    request->send_P(200, "application/json",  getmqtt().c_str());
+    request->send(200, "application/json",  getmqtt().c_str());
   });
 
   server.on("/resetwifi", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", "Resetting Wifi and reboot");
+    request->send(200, "text/plain", "Resetting Wifi and reboot");
     wifiManager.resetSettings();
     config.restart = true;
   });
@@ -279,7 +279,7 @@ void call_pages() {
   });
 
   server.on("/ping", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send_P(200, "text/plain", "pong");
+    request->send(200, "text/plain", "pong");
   });
 
   const char* jsonFiles[][2] = {
@@ -441,7 +441,7 @@ void call_pages() {
     ///  fonction  /get?paramettre=xxxx
     if (request->hasParam("save")) {
       Serial.println(F("Saving configuration..."));
-      logging.Set_log_init(config.saveConfiguration()); // sauvegarde de la configuration
+      logging.Set_log_init(config.saveConfiguration().c_str()); // sauvegarde de la configuration
     }
 
     if (request->hasParam("hostname")) { request->getParam("hostname")->value().toCharArray(config.hostname,16); }
@@ -508,8 +508,8 @@ void call_pages() {
     if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,50); }
     if (request->hasParam("mqttpassword")) {
       request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,50);
-      logging.Set_log_init(config.saveConfiguration()); // sauvegarde de la configuration
-      logging.Set_log_init(mqtt_config.savemqtt()); // sauvegarde et récupération de la log MQTT
+      logging.Set_log_init(config.saveConfiguration().c_str()); // sauvegarde de la configuration
+      logging.Set_log_init(mqtt_config.savemqtt().c_str()); // sauvegarde et récupération de la log MQTT
     }
     if (request->hasParam("DALLAS")) {
       request->getParam("DALLAS")->value().toCharArray(config.DALLAS,17);
@@ -573,8 +573,8 @@ void call_pages() {
     if (request->hasParam("servermode")) {
       String inputMessage = request->getParam("servermode")->value();
       getServermode(inputMessage);
-      logging.Set_log_init(config.saveConfiguration()); // sauvegarde de la configuration
-      logging.Set_log_init(mqtt_config.savemqtt()); // sauvegarde et récupération de la log MQTT
+      logging.Set_log_init(config.saveConfiguration().c_str()); // sauvegarde de la configuration
+      logging.Set_log_init(mqtt_config.savemqtt().c_str()); // sauvegarde et récupération de la log MQTT
     }
 
     request->send(200, "application/json", getconfig().c_str());

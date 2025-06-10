@@ -198,7 +198,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
         sysvar.change = 1;
     }
     else if (doc2["save"].is<int>()) {
-        logging.Set_log_init(config.saveConfiguration()); // sauvegarde de la configuration
+        logging.Set_log_init(config.saveConfiguration().c_str()); // sauvegarde de la configuration
     }
         // boost
     else if (doc2["boost"].is<int>()) {
