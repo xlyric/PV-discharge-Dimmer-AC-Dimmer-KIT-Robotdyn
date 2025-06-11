@@ -572,10 +572,10 @@ void setup() {
   //***********************************
   //************* Setup - Web pages
   //***********************************
-  Serial.printf("Free heap %d: %d bytes\n",__LINE__, ESP.getFreeHeap());
+
   // chargement des url des pages
   call_pages();
-  Serial.printf("Free heap %d: %d bytes\n",__LINE__, ESP.getFreeHeap());
+ 
   //***********************************
   //************* Setup -  demarrage du webserver et affichage de l'oled
   //***********************************
@@ -589,7 +589,7 @@ void setup() {
 
   /// recherche d'une sonde dallas
   // dallaspresent();
-  Serial.printf("Free heap %d: %d bytes\n",__LINE__, ESP.getFreeHeap());
+
   devices_init(); // initialisation des devices HA
 
   /// MQTT
@@ -628,7 +628,7 @@ void setup() {
       HA_discover();
     }
   }
-Serial.printf("Free heap %d: %d bytes\n",__LINE__, ESP.getFreeHeap());
+
   #ifdef  ZC_ESP32
   pinMode(JOTTA, OUTPUT);
   unified_dimmer.set_power(0);
@@ -643,7 +643,7 @@ Serial.printf("Free heap %d: %d bytes\n",__LINE__, ESP.getFreeHeap());
   timer.attach_ms(10, SSR_run);
  #endif
 
-  Serial.printf("Free heap %d: %d bytes\n",__LINE__, ESP.getFreeHeap());
+
 
   /// init du NTP
   ntpinit();
@@ -714,8 +714,6 @@ Serial.printf("Free heap %d: %d bytes\n",__LINE__, ESP.getFreeHeap());
   runner.addTask(Task_ping);
   Task_ping.enable();
   #endif
-
-  Serial.printf("Free heap après task: %d bytes\n", ESP.getFreeHeap());
 
   DEBUG_PRINTLN(ESP.getFreeHeap());
 

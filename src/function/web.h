@@ -124,7 +124,9 @@ void call_pages() {
 
   // page de index et récupération des requetes de puissance
   server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
-    Serial.printf("Free heap debut /: %d bytes\n", ESP.getFreeHeap());
+    // protection contre la puissance négative
+    if (sysvar.puissance < 0 ) { sysvar.puissance = 0; } // on ne peut pas être en dessous de 0
+
     sysvar.lock_mqtt=true;  // on bloque les requetes MQTT 
     if  (LittleFS.exists("/index.html")) {
       DEBUG_PRINTLN(("%d------------------",__LINE__));
@@ -196,7 +198,7 @@ void call_pages() {
         if (strcmp(config.child,"none") == 0 || strcmp(config.mode,"off") == 0 ) { max = 100; }
         if (sysvar.puissance >= max) {sysvar.puissance = max; }
         char temp_buffer[128]; // Ajustez la taille en fonction de la longueur maximale attendue
-        snprintf(temp_buffer, sizeof(temp_buffer),  "HTTP power at %.2f%%\r\n", sysvar.puissance);
+        snprintf(temp_buffer, sizeof(temp_buffer),  "%s %.2f%%\r\n",HTTP_power_at, sysvar.puissance);
         logging.Set_log_init(temp_buffer);
         // Modif RV - correction bug si dimmer configuré mais pas allumé ou planté
         if (sysvar.change == 0) {
@@ -209,7 +211,7 @@ void call_pages() {
       else if (request->hasParam(PARAM_INPUT_2)) {
         config.startingpow = request->getParam(PARAM_INPUT_2)->value().toInt();
         char temp_buffer[128]; // Ajustez la taille en fonction de la longueur maximale attendue
-        snprintf(temp_buffer, sizeof(temp_buffer),  "HTTP power at %dW\r\n", config.startingpow);
+        snprintf(temp_buffer, sizeof(temp_buffer),  "%s %dW\r\n",HTTP_power_at, config.startingpow);
         logging.Set_log_init(temp_buffer);
         sysvar.change=1;
         request->send(200, "application/json", getState().c_str());
@@ -238,7 +240,6 @@ void call_pages() {
     DEBUG_PRINTLN(sysvar.puissance);
     DEBUG_PRINTLN(("%d------------------",__LINE__));
     sysvar.lock_mqtt=false; // on débloque les requetes MQTT
-    Serial.printf("Free heap fin /: %d bytes\n", ESP.getFreeHeap());
   });
 
   server.on("/state", HTTP_ANY, [](AsyncWebServerRequest *request){
