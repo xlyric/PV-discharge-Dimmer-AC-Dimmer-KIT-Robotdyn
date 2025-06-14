@@ -30,11 +30,13 @@ public: float power;
     if ( sysvar.celsius[sysvar.dallas_maitre]> config.maxtemp ) { is_set_power = 0; }
     else if ( is_set_power > config.maxpow )  { is_set_power = config.maxpow; }
 
+  #ifndef SSR_ZC
     if ( is_set_power > 0 ) {dimmer.setState(ON); 
       #ifdef outputPin2 
         dimmer3.setState(ON); dimmer2.setState(ON); 
       #endif
       }
+  #endif
 
     this->power = is_set_power;
     /// pour le SSR
