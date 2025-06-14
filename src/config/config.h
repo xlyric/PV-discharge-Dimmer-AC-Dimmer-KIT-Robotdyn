@@ -126,7 +126,7 @@ constexpr size_t LOG_MAX_STRING_LENGTH=1000 ;// taille max des logs stockées
 #define COOLER  D7       // 0 : off  -> 1 : On --> need a dry contact or opto
 #endif
 
-#define TIME_BOOST 3600 // temps de boost en secondes
+#define TIME_BOOST 120 // temps de boost en secondes
 #define AUTO_OFF 5 // temps de coupure automatique en minutes
 #endif
 
