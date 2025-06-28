@@ -86,6 +86,7 @@ Son utilisation classique sert à chauffer des ballons de type ECS.
 #### Contrôle de Puissance
 - `http://IP/?POWER=xx` : Définir le niveau de puissance (0-100%)
 - `http://IP/state` : Obtenir l'état du système
+- détailles des autres API dans le répertoires doc 
 
 ### 🛠️ Dépannage
 
@@ -241,6 +242,7 @@ An intelligent photovoltaic router designed to manage solar energy surplus by co
 #### Power Control
 - `http://IP/?POWER=xx`: Set power level (0-100%)
 - `http://IP/state`: Get system status
+- details of other APIs in the doc directory
 
 ### 🛠️ Troubleshooting
 
