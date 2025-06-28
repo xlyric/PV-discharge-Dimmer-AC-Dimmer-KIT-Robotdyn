@@ -126,29 +126,35 @@ Son utilisation classique sert à chauffer des ballons de type ECS.
 
 #### Kit Complet Recommandé
 - Carte électronique vendue par l'association [APPER](https://www.helloasso.com/associations/apper/formulaires/7)
+
+![Apper PV Dimmer](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2024-06/scaled-1680-/image-1719325701854.png)
+
 - Composants additionnels nécessaires :
-  - TTGO Tdisplay
-  - Capteur de courant SCT013-30
-  - Alimentation AC12
+  - Wemos D1 mini ou Wemos ESP32
+  - Sonde Dallas 18B20
+  - SSR Random 
+- Composants fournis lors de la commande :
+  - Support din
+  - Connecteur jwt pour le SSR
 
 #### Détails des Composants
 - **Carte de base** : Routeur PV open-source
 - **Microcontrôleur** : ESP8266 ou ESP32
 - **Communication** : WiFi, MQTT
-- **Capteurs** : Temperature (Dallas), Courant (SCT013-30)
+- **Capteurs** : Temperature (Dallas)
 
 #### Options d'Achat
-- [Boutique APPER](https://www.helloasso.com/associations/apper/formulaires/7)
+- [Boutique APPER](https://www.helloasso.com/associations/apper/formulaires/7), l'achat de la carte ouvre droit à un crédit d'impot de 66% en France
 - Composants individuels sur plateformes de vente en ligne
 
 #### Considérations
-- Prix approximatif : 50-100€
-- Assemblage : Niveau débutant à intermédiaire
+- Prix approximatif : 25€ pour la carte et environ 15€ pour le reste des composants
+- Assemblage : Niveau débutant à intermédiaire ( savoir souder ou me contacter )
 - Usage : Routage intelligent de l'énergie solaire
 
 ### 🏆 Crédits
 
-- Développé par la communauté [APPER](https://www.apper-solaire.org/)
+- Développé gracieusement par la Société Sunstain Tech Solution pour la communauté [APPER](https://www.apper-solaire.org/)
 - Contributions de la communauté open-source
 - Projet open-source à usage non commercial
 
@@ -282,29 +288,35 @@ An intelligent photovoltaic router designed to manage solar energy surplus by co
 
 #### Recommended Complete Kit
 - Electronic board sold by [APPER Association](https://www.helloasso.com/associations/apper/formulaires/7)
+
+![Apper PV Dimmer](https://pvrouteur.apper-solaire.org/uploads/images/gallery/2024-06/scaled-1680-/image-1719325701854.png)
+
 - Additional required components:
-  - TTGO Tdisplay
-  - SCT013-30 Current Sensor
-  - AC12 Power Supply
+  - Wemos D1 mini or Wemos ESP32
+  - Dallas 18B20 Probe
+  - SSR Random
+- Components provided with the order:
+  - Din support
+  - JWT connector for SSR
 
 #### Component Details
 - **Base Board**: Open-source PV Router
 - **Microcontroller**: ESP8266 or ESP32
 - **Communication**: WiFi, MQTT
-- **Sensors**: Temperature (Dallas), Current (SCT013-30)
+- **Sensors**: Temperature (Dallas)
 
 #### Purchase Options
-- [APPER Shop](https://www.helloasso.com/associations/apper/formulaires/7)
+- [APPER Shop](https://www.helloasso.com/associations/apper/formulaires/7), buying the board gives a 66% tax credit in France
 - Individual components on online marketplaces
 
 #### Considerations
-- Approximate Price: 50-100€
-- Assembly: Beginner to Intermediate Level
-- Usage: Intelligent Solar Energy Routing
+- Approximate Price: 25€ for the board and about 15€ for other components
+- Assembly: Beginner to Intermediate level (soldering skills required or contact for help)
+- Usage: Intelligent solar energy routing
 
 ### 🏆 Credits
 
-- Developed by the [APPER](https://www.apper-solaire.org/) community
+- Generously developed by Sunstain Tech Solution for the [APPER](https://www.apper-solaire.org/) community
 - Open-source community contributions
 - Non-commercial open-source project
 
