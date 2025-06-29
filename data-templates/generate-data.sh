@@ -55,6 +55,23 @@ for filename in "${JS_FILES[@]}"; do
 done
 echo "done."
 
+# Generate HTML files using generate-html-files.py script
+python -m pip install mako
+python "$SRC_DIR/generate-html-files.py"
+
+pwd
+# si besoin installer purgecss -  npm install -g purgecss
+echo nettoyage du CSS
+
+if ! command -v purgecss &> /dev/null; then
+  echo "purgecss non installé, installation en cours..."
+  npm install -g purgecss
+else
+  echo "purgecss déjà installé."
+fi
+echo "Purge unused CSS from cache files:"
+purgecss --css ./cache/*.css --content $DST_DIR/*.html --output ./ --safelist /^nav-/,/^tab-/,active,fade,show,tab-pane
+
 echo "Generate all.min.css file:"
 rm -fr "$DST_DIR/css"
 mkdir "$DST_DIR/css"
@@ -156,10 +173,6 @@ for file in $CACHE_DIR/*; do
     fi
 done
 echo " clean done."
-
-# Generate HTML files using generate-html-files.py script
-python -m pip install mako
-python "$SRC_DIR/generate-html-files.py"
 
 # compression du fichier logs.html
 gzip -n -9 "$DST_DIR/log.html"
