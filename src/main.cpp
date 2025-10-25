@@ -771,6 +771,23 @@ void loop() {
     config.restart = true;
   }
 
+  // gestion de la température minimum.
+  
+  if ( unified_dimmer.get_power() == 0 && !config.preheat && sysvar.celsius[sysvar.dallas_maitre] <= config.mintemp && !sysvar.security) {
+      // Si la température est inférieure à la température minimale, mise en route du dimmer au limiteur localfuse
+      unified_dimmer.set_power(config.maxpow);
+      Serial.println("Température minimale atteinte, préchauffage activé");
+      config.preheat = true;
+
+  }
+  else if ( config.preheat && sysvar.celsius[sysvar.dallas_maitre] > config.mintemp)
+    { config.preheat = false;
+      unified_dimmer.set_power(0);
+      Serial.println("Fin préchauffage, dimmer arrêté");
+    }
+
+
+
   ///////////////// gestion des activité minuteur
   //// Dimmer
   if (programme.run || programme_marche_forcee.run) {

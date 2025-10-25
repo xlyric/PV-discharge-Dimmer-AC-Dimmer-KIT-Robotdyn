@@ -453,6 +453,9 @@ void call_pages() {
       config.maxtemp = request->getParam("maxtemp")->value().toInt();
       if (!AP && mqtt_config.mqtt) { device_dimmer_maxtemp.sendInt(config.maxtemp);}
     }
+    if (request->hasParam("mintemp")) {
+      config.mintemp = request->getParam("mintemp")->value().toInt();
+    }
     if (request->hasParam("charge1")) {
       config.charge1 = request->getParam("charge1")->value().toInt();
       config.charge = config.charge1 + config.charge2 + config.charge3;
@@ -699,7 +702,8 @@ String getconfig() {
   String configweb;
   JsonDocument doc;
   doc["maxtemp"] = config.maxtemp;
-
+  doc["mintemp"] = config.mintemp;  
+  
   doc["startingpow"] = config.startingpow;
   doc["minpow"] = config.minpow;
   doc["maxpow"] = config.maxpow;

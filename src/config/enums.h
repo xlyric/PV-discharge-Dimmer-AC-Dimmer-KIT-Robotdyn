@@ -137,6 +137,8 @@ public:
   char DALLAS[17]   = "none";
   char say_my_name[32] = "";    // NOSONAR
   int trigger = 0;
+  bool preheat = false;
+  int mintemp = 0;
 
   void check_trigger() {
     if (trigger < 0) { trigger = 0; }
@@ -184,6 +186,7 @@ public:
     charge2 = doc["charge2"] | 0;
     charge3 = doc["charge3"] | 0;
     trigger = doc["trigger"] | 10;
+    mintemp = doc["mintemp"] | 0;
     check_trigger();
 
     auto Publishchild = doc["child"].as<String>();
@@ -266,6 +269,7 @@ public:
     doc["charge2"] = charge2;
     doc["charge3"] = charge3;
     doc["trigger"] = trigger;
+    doc["mintemp"] = mintemp;
 
     // Serialize JSON to file
     if (serializeJson(doc, configFile) == 0) {

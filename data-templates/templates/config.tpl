@@ -199,6 +199,7 @@ ${generate_menu()}
                             <div class="col-sm-3">Trigger (&percnt;)</div>
                             <div class="col-sm-3">Min Power (&percnt;)</div>
                             <div class="col-sm-3">Max Power (&percnt;)</div>
+                            <div class="col-sm-3">Min Temp (°C)</div>
                           </div>
                           <div class="form-group row">
                             <div class="col-sm-3">
@@ -235,6 +236,15 @@ ${generate_menu()}
                                 class="form-control form-control-user"
                                 id="maxpow"
                                 placeholder="%MAXPOW%"
+                              />
+                            </div>
+                            <div class="col-sm-3">
+                              <input
+                                type="number"
+                                step="1"
+                                class="form-control form-control-user"
+                                id="mintemp"
+                                placeholder="%MINTEMP%"
                               />
                             </div>
                           </div>
@@ -593,6 +603,7 @@ ${generate_content()}
           DALLAS: $("#DALLAS").val(),
           dimmername: $("#dimmername").val(),
           trigger: $("#trigger").val(),
+          mintemp: $("#mintemp").val(),
         };
 
         $.ajax({
