@@ -197,9 +197,9 @@ ${generate_menu()}
                           <div class="form-group row">
                             <div class="col-sm-3">Max Temp (°C)</div>
                             <div class="col-sm-3">Trigger (&percnt;)</div>
-                            <div class="col-sm-3">Min Power (&percnt;)</div>
+                            <div class="col-sm-2">Min Power (&percnt;)</div>
                             <div class="col-sm-3">Max Power (&percnt;)</div>
-                            <div class="col-sm-3">Min Temp (°C)</div>
+
                           </div>
                           <div class="form-group row">
                             <div class="col-sm-3">
@@ -238,6 +238,11 @@ ${generate_menu()}
                                 placeholder="%MAXPOW%"
                               />
                             </div>
+                          </div>
+                          <div class="form-group row">
+                            <div class="col-sm-3">Min Temp (°C)</div>
+                          </div>
+                          <div class="form-group row">
                             <div class="col-sm-3">
                               <input
                                 type="number"
