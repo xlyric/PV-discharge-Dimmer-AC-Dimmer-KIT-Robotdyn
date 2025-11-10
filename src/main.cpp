@@ -772,18 +772,21 @@ void loop() {
   }
 
   // gestion de la température minimum.
-  
-  if ( unified_dimmer.get_power() == 0 && !config.preheat && sysvar.celsius[sysvar.dallas_maitre] <= config.mintemp && !sysvar.security) {
-      // Si la température est inférieure à la température minimale, mise en route du dimmer au limiteur localfuse
-      unified_dimmer.set_power(config.maxpow);
-      Serial.println("Température minimale atteinte, préchauffage activé");
-      config.preheat = true;
+  if ( sysvar.celsius[sysvar.dallas_maitre] <= config.mintemp ) {
+    if ( !config.preheat && !sysvar.security) {
+        // Si la température est inférieure à la température minimale, mise en route du dimmer au limiteur localfuse
+        unified_dimmer.set_power(config.maxpow);
+        Serial.println("Température minimale atteinte, préchauffage activé");
+        logging.Set_log_init("Préchauffage activé \n", true);
+        config.preheat = true;
 
+    }
   }
-  else if ( config.preheat && sysvar.celsius[sysvar.dallas_maitre] > config.mintemp)
+  else if ( config.preheat ) //&& sysvar.celsius[sysvar.dallas_maitre] > config.mintemp déplacé dans le test amont 
     { config.preheat = false;
       unified_dimmer.set_power(0);
       Serial.println("Fin préchauffage, dimmer arrêté");
+      logging.Set_log_init("Fin préchauffage, dimmer arrêté \n", true);
     }
 
 
@@ -941,7 +944,7 @@ void loop() {
 
   ////////////////// controle de la puissance /////////////////
 
-  if ( sysvar.change == 1  && programme.run == false  && !programme_marche_forcee.run) {   /// si changement et pas de minuteur en cours
+  if ( sysvar.change == 1  && programme.run == false  && !programme_marche_forcee.run && !config.preheat) {   /// si changement et pas de minuteur en cours
 
     if (config.dimmer_on_off == 0) {
       unified_dimmer.dimmer_off();
@@ -1118,7 +1121,7 @@ void loop() {
   }
 
   //// protection contre l'absence de commande  
-  if ( !programme.run && !programme_marche_forcee.run ) { 
+  if ( !programme.run && !programme_marche_forcee.run && !config.preheat ) { 
     unified_dimmer.auto_off(AUTO_OFF);
   }
   
