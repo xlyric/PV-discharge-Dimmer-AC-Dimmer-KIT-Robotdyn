@@ -216,7 +216,8 @@ int timesync_refresh = 120;
 bool AP = false;
 bool discovery_temp;
 
-byte present = 0;
+/// @brief  variables Dallas
+byte is_dallas_present = 0;
 
 //DeviceAddress data;   // NOSONAR
 //float previous_celsius[MAX_DALLAS] = {0.00};   // NOSONAR
@@ -772,7 +773,7 @@ void loop() {
   }
 
   // gestion de la température minimum.
-  if ( sysvar.celsius[sysvar.dallas_maitre] <= config.mintemp ) {
+  if ( sysvar.celsius[sysvar.dallas_maitre] <= config.mintemp  && is_dallas_present) {
     if ( !config.preheat && !sysvar.security) {
         // Si la température est inférieure à la température minimale, mise en route du dimmer au limiteur localfuse
         unified_dimmer.set_power(config.maxpow);

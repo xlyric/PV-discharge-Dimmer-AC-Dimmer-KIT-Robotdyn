@@ -9,7 +9,7 @@ DallasTemperature sensors(&ds);
 extern PubSubClient client;
 extern bool AP; // mode point d'accès
 extern Mqtt mqtt_config; // configuration mqtt
-extern byte present; // capteur dallas présent ou non
+extern byte is_dallas_present; // capteur dallas présent ou non
 extern String logs; // logs
 // extern byte security; // sécurité
 DeviceAddress addr[MAX_DALLAS];   // array of (up to) MAX_DALLAS temperature sensors NOSONAR
@@ -33,7 +33,7 @@ size_t dallas_fail = 0; // compteur d'erreur dallas
 /// @brief / task executé toute les n secondes pour publier la température ( voir déclaration task dans main )
 // TODO tout mettre concernant les dallas dans cette task pour isoler les effets de bord 
 void mqttdallas() {
-  if ( present == 1 ) {
+  if ( is_dallas_present == 1 ) {
     
     delay(timer_dallas);
     for (int a = 0; a < deviceCount; a++) {
@@ -147,7 +147,7 @@ void mqttdallas() {
     }
   }
 /// cas de recherche de la dallas
-  if ( present == 0 && dallas_fail < 10 ) {
+  if ( is_dallas_present == 0 && dallas_fail < 10 ) {
       //// récupération des dallas .
     Serial.println("start 18b20");
     sensors.begin();
@@ -165,7 +165,7 @@ void mqttdallas() {
     logging.Set_log_init(buf_int);
     logging.Set_log_init(DALLAS_detected);
     if ( deviceCount > 0 )  {
-      present = 1;
+      is_dallas_present = 1;
       dallaspresent();
       devices_init(); // initialisation des devices HA
     }
@@ -206,7 +206,7 @@ void restart_dallas() {
     deviceCount = sensors.getDeviceCount();
     if ( deviceCount > 0 )  {
       char buf_int[12];    // Pour les entiers
-      present = 1;
+      is_dallas_present = 1;
       itoa(deviceCount, buf_int, 10);
       logging.Set_log_init(buf_int);
       logging.Set_log_init(" DALLAS detected\r\n");
@@ -292,7 +292,7 @@ bool dallaspresent () {
     logging.Set_log_init(found_Address);
     logging.Set_log_init(address.c_str());
     logging.Set_log_init("\r\n");
-    present = 1;
+    is_dallas_present = 1;
     if (sensors.isParasitePowerMode())  { logging.Set_log_init("parasite power is on"); }
     // usage de oneWire.reset_search() pour réinitialiser la recherche
     // de la sonde suivante ( est ce vraiment utile, comme dans les docs, ça n'est pas fait )
@@ -304,7 +304,7 @@ bool dallaspresent () {
         char temp_buffer[64]; 
         snprintf(temp_buffer, sizeof(temp_buffer)," Dallas %d : Adresse 0 0 0 0 0 0 0 0\r\n", i);
         logging.Set_log_init(temp_buffer,true);
-        present = 0;
+        is_dallas_present = 0;
         restart_dallas();
       }
     }
