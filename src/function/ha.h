@@ -173,7 +173,7 @@ private: String IPaddress = WiFi.localIP().toString();
       char info[512];
 
       snprintf(info, sizeof(info),
-        R"({
+        R"(
           "dev": {
             "ids": "%s",
             "name": "%s",
@@ -182,7 +182,7 @@ private: String IPaddress = WiFi.localIP().toString();
             "mf": "Cyril Poissonnier",
             "cu": "http://%s"
           }
-        })",
+        )",
         node_id.c_str(), node_id.c_str(), VERSION, IPaddress.c_str(), IPaddress.c_str());
 
       return String(info);
