@@ -21,17 +21,39 @@ extern System sysvar;
 extern Config config;
 extern gestion_puissance unified_dimmer;
 
-struct tm timeinfo;
+
 epoc actual_time;
 
 /// @brief /////// init du NTP
 void ntpinit() {
-  // Configurer le serveur NTP et le fuseau horaire
-  // Voir Time-Zone: https://sites.google.com/a/usapiens.com/opnode/time-zones
-  configTzTime("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", NTP_SERVER);
-  getLocalTime( &timeinfo );
-  Serial.println(asctime(&timeinfo));
-
+    // Configurer le serveur NTP et le fuseau horaire
+    Serial.println("Configuring NTP...");
+    configTzTime("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", NTP_SERVER);
+    
+    // Attendre la synchronisation avec timeout
+    Serial.print("Waiting for NTP sync");
+    struct tm timeinfo;  // Variable locale
+    memset(&timeinfo, 0, sizeof(timeinfo));
+    
+    int attempts = 0;
+    const int maxAttempts = 30; // 30 secondes maximum
+    
+    while (!getLocalTime(&timeinfo, 1000) && attempts < maxAttempts) {
+        delay(500);
+        Serial.print(".");
+        attempts++;
+    }
+    
+    if (attempts >= maxAttempts) {
+        Serial.println("\nFailed to sync with NTP server!");
+        Serial.println("Check your WiFi connection and NTP server");
+        // Optionnel : définir une heure par défaut ou redémarrer
+        return;
+    }
+    
+    Serial.println("\nNTP synchronized successfully!");
+    Serial.print("Current time: ");
+    Serial.println(asctime(&timeinfo));
 }
 
 //////// structure pour les programmateurs.
@@ -66,8 +88,8 @@ public: void saveProgramme() {
     JsonDocument doc;
 
     //// vérification cohérence des données
-    if (check_data(heure_demarrage)) {strcpy(heure_demarrage, "00:00"); }
-    if (check_data(heure_arret)) {strcpy(heure_arret, "00:00"); }
+    if (check_data(heure_demarrage)) {strlcpy(heure_demarrage, "00:00", sizeof(heure_demarrage)); }
+    if (check_data(heure_arret)) {strlcpy(heure_arret, "00:00", sizeof(heure_arret)); }
 
     // Set the values in the document
     doc["heure_demarrage"] = heure_demarrage;
@@ -135,6 +157,14 @@ public: bool loadProgramme() {
   }
 
   bool start_progr() {
+    struct tm timeinfo;  // Variable locale
+    memset(&timeinfo, 0, sizeof(timeinfo));
+
+    if (!getLocalTime(&timeinfo)) {
+        Serial.println("Échec récupération heure");
+        return false;
+    }
+
     /// test de la sécurité avant relance
     if (security && ( sysvar.celsius[sysvar.dallas_maitre]> float(temperature*0.95) ) )  { return false; }
     security = false;
@@ -144,9 +174,10 @@ public: bool loadProgramme() {
 
     sscanf(heure_demarrage, "%d:%d", &heures, &minutes);
 
-    int heures_fin;
-    int minutes_fin;
-
+    int heures_debut, minutes_debut;
+    int heures_fin, minutes_fin;
+    
+    sscanf(heure_demarrage, "%d:%d", &heures_debut, &minutes_debut);
     sscanf(heure_arret, "%d:%d", &heures_fin, &minutes_fin);
 
     // si heure_demarrage == heure_arret alors on retourne false ( correction du bug si pas de programmation)
@@ -154,36 +185,48 @@ public: bool loadProgramme() {
       return false;
     }
 
-    if(getLocalTime(&timeinfo)) {
-      if (heures == timeinfo.tm_hour && minutes == timeinfo.tm_min &&
-          sysvar.celsius[sysvar.dallas_maitre]< temperature ) {  // correction bug #19
+    // Heure actuelle en minutes depuis minuit
+    int now = timeinfo.tm_hour * 60 + timeinfo.tm_min;
+    int debut = heures_debut * 60 + minutes_debut;
+    int fin = heures_fin * 60 + minutes_fin;
+
+    // Démarrage exact
+    if (heures_debut == timeinfo.tm_hour && minutes_debut == timeinfo.tm_min &&
+        sysvar.celsius[sysvar.dallas_maitre] < temperature) {
         commande_run();
         return true;
-      }
     }
 
-    // remise en route en cas de reboot et si l'heure est dépassée
-    // recherche si l'heure est passée
-    bool heure_passee = false;
-    if (timeinfo.tm_hour > heures || (timeinfo.tm_hour == heures && timeinfo.tm_min > minutes )) {
-      heure_passee = true;
-    }
-    // recherche si l'heure d'arret est est passée
-    bool heure_arret_passee = false;
-    if (timeinfo.tm_hour > heures_fin || (timeinfo.tm_hour == heures_fin && timeinfo.tm_min >= minutes_fin )) {
-      heure_arret_passee = true;
+    // Vérifier si on est dans la plage horaire
+    bool dans_plage;
+    if (fin > debut) {
+        // Plage normale (ex: 08:00 -> 18:00)
+        dans_plage = (now > debut && now < fin);
+    } else {
+        // Plage qui traverse minuit (ex: 23:00 -> 01:00)
+        dans_plage = (now > debut || now < fin);
     }
 
-    if (heure_passee && !heure_arret_passee && sysvar.celsius[sysvar.dallas_maitre]< temperature ) {
-      commande_run();
-      return true;
+    if (dans_plage && sysvar.celsius[sysvar.dallas_maitre] < temperature) {
+        commande_run();
+        return true;
     }
+    
     return false;
-  }
+}
 
   bool stop_progr() {
+    struct tm timeinfo;  // Variable locale
+    // Initialisez timeinfo avant d'utiliser
+    memset(&timeinfo, 0, sizeof(timeinfo));
+
+    if (!getLocalTime(&timeinfo)) {
+        return false;
+    }
+
     int heures;
     int minutes;
+
     /// sécurité temp
     if ( sysvar.celsius[sysvar.dallas_maitre]>= temperature ) {
       run=false;
@@ -199,8 +242,6 @@ public: bool loadProgramme() {
 
     sscanf(heure_arret, "%d:%d", &heures, &minutes);
 
-
-
     if(getLocalTime(&timeinfo)) {
       if (heures == timeinfo.tm_hour && minutes == timeinfo.tm_min) {
         run=false;
@@ -209,6 +250,7 @@ public: bool loadProgramme() {
     }
     return false;
   }
+
   /// démarrage si le seuil est atteint
   bool start_seuil() {
     if ( unified_dimmer.get_power() >= seuil_start && sysvar.celsius[sysvar.dallas_maitre]< seuil_temperature &&

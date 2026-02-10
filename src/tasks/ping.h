@@ -11,7 +11,6 @@
 #else
 // Web services
   #include <ESP8266WiFi.h>
-// #include <ESPAsyncTCP.h>
   #include <ESP8266HTTPClient.h>
 #endif
 
@@ -40,6 +39,15 @@ void ping() {
   }
   http.end();
 }
+
+#ifdef ESP32
+  void ping_32 ( void * parameter ) {
+    while (true) {
+      ping();
+      vTaskDelay(120012 / portTICK_PERIOD_MS); // Délai de 1 seconde pour ESP32
+    }
+  }
+#endif
 
 #endif
 

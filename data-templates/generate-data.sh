@@ -13,12 +13,11 @@ declare -A JS=(
     [05-google-charts.min.js]="https://www.gstatic.com/charts/loader.js"
 )
 declare -A CSS=(
-    [01-fontawesome-free.min.css]="https://raw.githubusercontent.com/StartBootstrap/startbootstrap-sb-admin-2/refs/heads/master/vendor/fontawesome-free/css/all.min.css"
     [02-sb-admin-2.min.css]="https://raw.githubusercontent.com/StartBootstrap/startbootstrap-sb-admin-2/refs/heads/master/css/sb-admin-2.min.css"
     [03-bootstrap-4.6.2.min.css]="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
 )
 declare -A WEBFONTS=(
-    [fa-solid-900.woff2]="https://raw.githubusercontent.com/StartBootstrap/startbootstrap-sb-admin-2/refs/heads/master/vendor/fontawesome-free/webfonts/fa-solid-900.woff2"
+
 )
 
 echo -n "Remove old data files... "
@@ -55,6 +54,23 @@ for filename in "${JS_FILES[@]}"; do
     echo "done."
 done
 echo "done."
+
+# Generate HTML files using generate-html-files.py script
+python -m pip install mako
+python "$SRC_DIR/generate-html-files.py"
+
+pwd
+# si besoin installer purgecss -  npm install -g purgecss
+echo nettoyage du CSS
+
+if ! command -v purgecss &> /dev/null; then
+  echo "purgecss non installé, installation en cours..."
+  npm install -g purgecss
+else
+  echo "purgecss déjà installé."
+fi
+echo "Purge unused CSS from cache files:"
+purgecss --css ./cache/*.css --content $DST_DIR/*.html --output ./ --safelist /^nav-/,/^tab-/,active,fade,show,tab-pane
 
 echo "Generate all.min.css file:"
 rm -fr "$DST_DIR/css"
@@ -157,10 +173,6 @@ for file in $CACHE_DIR/*; do
     fi
 done
 echo " clean done."
-
-# Generate HTML files using generate-html-files.py script
-python -m pip install mako
-python "$SRC_DIR/generate-html-files.py"
 
 # compression du fichier logs.html
 gzip -n -9 "$DST_DIR/log.html"

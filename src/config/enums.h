@@ -18,7 +18,7 @@
 #endif
 
 constexpr const int MAX_DALLAS=8; // nombre de sonde Dallas
-
+bool lock_log; // lock log pour éviter les problèmes de mémoire
 
 /// @brief  partie délicate car pas mal d'action sur la variable log_init et donc protection de la variable ( pour éviter les pb mémoire )
 struct Logs {
@@ -26,32 +26,44 @@ private:
 
   char log_init[LOG_MAX_STRING_LENGTH];     // NOSONAR
   int MaxString = LOG_MAX_STRING_LENGTH * .9;
-  String alerte_web = "";
+  
 
 public:
-  /// setter alerte_web
-  void Set_alerte_web(String setter) {
-    alerte_web = setter;
-  }
-  /// getter alerte_web
-  String Get_alerte_web() {
-    return alerte_web;
-  }
-
+  String alerte_web = "";
+  // retrait des setter/getter pour les logs d'alerte web ( pour éviter les problèmes de mémoire )
 
 /// setter log_init
-public: void Set_log_init(String setter, bool logtime=false) {
-    // Vérifier si la longueur de la chaîne ajoutée ne dépasse pas LOG_MAX_STRING_LENGTH
-    if ( strlen(setter.c_str()) + strlen(log_init) < static_cast<size_t>(MaxString) )  {
-      if (logtime) {
-        if ( strlen(setter.c_str()) + strlen(log_init) + strlen(loguptime()) < static_cast<size_t>(MaxString))  {
-          strcat(log_init,loguptime());
-        }
-      }
-      strcat(log_init,setter.c_str());
+public: void Set_log_init(const char* setter, bool logtime = false) {
+
+    if (lock_log) {
+      return;
     } else {
-      // Si la taille est trop grande, réinitialiser le log_init
-      reset_log_init();
+        lock_log = true;
+        // Vérifier si la longueur de la chaîne ajoutée ne dépasse pas LOG_MAX_STRING_LENGTH
+        
+        size_t setterLength = strlen(setter);
+        size_t logInitLength = strlen(log_init);
+        size_t logUptimeLength = strlen(loguptime()); 
+        size_t maxLength = LOG_MAX_STRING_LENGTH - 1; // Toujours laisser de la place pour le '\0'
+
+        // Vérifier si la taille totale dépasse la capacité
+        if (setterLength + logInitLength >= maxLength) {
+          reset_log_init();
+        } else {
+          // Vérifier si on peut ajouter le uptime
+          if (logtime && (setterLength + logInitLength + logUptimeLength >= maxLength)) {
+            // Ne pas ajouter l'uptime
+          }
+
+          // Ajouter l'uptime en premier si nécessaire
+          if (logtime) {
+            strncat(log_init, loguptime(), maxLength - logInitLength - 1);
+          }
+
+          // Ajouter le setter
+          strncat(log_init, setter, maxLength - logInitLength - 1);
+        }
+        lock_log = false;
     }
   }
 
@@ -71,7 +83,7 @@ public: void Set_log_init(String setter, bool logtime=false) {
   // reset log_init
   void reset_log_init() {
     log_init[0] = '\0';
-    strcat(log_init,"197}11}1");
+    strncat(log_init, "197}11}1", sizeof(log_init) - strlen(log_init) - 1); // NOSONAR
   }
 
   char *loguptime(bool day=false) {
@@ -86,7 +98,7 @@ public: void Set_log_init(String setter, bool logtime=false) {
     return uptime_stamp;
   }
 
-};
+};  // fin de la structure Logs
 
 
 struct Config {
@@ -125,6 +137,8 @@ public:
   char DALLAS[17]   = "none";
   char say_my_name[32] = "";    // NOSONAR
   int trigger = 0;
+  bool preheat = false;
+  int mintemp = 0;
 
   void check_trigger() {
     if (trigger < 0) { trigger = 0; }
@@ -152,12 +166,12 @@ public:
 
     /// en cas de reboot étranges, il sera bon de passer sur un format de type doc["hostname"].as<String>().c_str() pour éviter les problèmes de mémoire
     /// --> Exception 9: LoadStoreAlignmentCause: Load or store to an unaligned address. cas survenu avec les configuration MQTT
-    String hostnamevalue = doc["hostname"].as<String>();
+    auto hostnamevalue = doc["hostname"].as<String>();
     strlcpy(hostname, hostnamevalue.c_str(), sizeof(hostname));
 
     port = doc["port"] | 1883;
 
-    String PublishValue = doc["Publish"].as<String>();
+    auto PublishValue = doc["Publish"].as<String>();
     strlcpy(Publish, PublishValue.c_str(), sizeof(Publish));
 
     IDXTemp = doc["IDXTemp"] | 200;
@@ -172,18 +186,19 @@ public:
     charge2 = doc["charge2"] | 0;
     charge3 = doc["charge3"] | 0;
     trigger = doc["trigger"] | 10;
+    mintemp = doc["mintemp"] | 0;
     check_trigger();
 
-    String Publishchild = doc["child"].as<String>();
+    auto Publishchild = doc["child"].as<String>();
     strlcpy(child, Publishchild.c_str(), sizeof(child));
 
-    String Publishmode = doc["mode"].as<String>();
+    auto Publishmode = doc["mode"].as<String>();
     strlcpy(mode, Publishmode.c_str(), sizeof(mode));
 
-    String PublishSubscribePV = doc["SubscribePV"].as<String>();
+    auto PublishSubscribePV = doc["SubscribePV"].as<String>();
     strlcpy(SubscribePV, PublishSubscribePV.c_str(), sizeof(SubscribePV));
 
-    String PublishSubscribeTEMP = doc["SubscribeTEMP"].as<String>();
+    auto PublishSubscribeTEMP = doc["SubscribeTEMP"].as<String>();
     strlcpy(SubscribeTEMP, PublishSubscribeTEMP.c_str(), sizeof(SubscribeTEMP));
 
     dimmer_on_off = doc["dimmer_on_off"] | 1;
@@ -191,13 +206,13 @@ public:
     JEEDOM = doc["JEEDOM"] | true;
     DOMOTICZ = doc["DOMOTICZ"] | true;
 
-    String PublishPVROUTER = doc["PVROUTER"].as<String>();
+    auto PublishPVROUTER = doc["PVROUTER"].as<String>();
     strlcpy(PVROUTER, PublishPVROUTER.c_str(), sizeof(PVROUTER));
 
-    String PublishDALLAS = doc["DALLAS"].as<String>();
+    auto PublishDALLAS = doc["DALLAS"].as<String>();
     strlcpy(DALLAS, PublishDALLAS.c_str(), sizeof(DALLAS));
 
-    String Publishsay_my_name = doc["name"].as<String>();
+    auto Publishsay_my_name = doc["name"].as<String>();
     if (strcmp(Publishsay_my_name.c_str(), "") == 0 || strcmp(Publishsay_my_name.c_str(), "null" ) == 0 ) {
       strcpy(say_my_name, ("dimmer-"+WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17)).c_str());
     }
@@ -254,18 +269,13 @@ public:
     doc["charge2"] = charge2;
     doc["charge3"] = charge3;
     doc["trigger"] = trigger;
+    doc["mintemp"] = mintemp;
 
     // Serialize JSON to file
     if (serializeJson(doc, configFile) == 0) {
       Serial.println(F("Failed to write to file"));
       message = "Failed to write to file\r\n";
     }
-
-    // Publish on MQTT
-    // char buffer[1024];// NOSONAR
-    // serializeJson(doc, buffer);
-    // client.publish(("Xlyric/sauvegarde/"+ node_id).c_str() ,0,true, buffer);
-
     // Close the file
     configFile.close();
     return message;
@@ -275,7 +285,7 @@ public:
     charge = charge1 + charge2 + charge3;
   }
 
-};
+};  // fin de la structure Config
 
 ///// structure MQTT
 
@@ -304,10 +314,10 @@ public:
     }
 
     // Copy values from the JsonDocument to the Config
-    String usernameValue = doc["MQTT_USER"].as<String>();
+    auto usernameValue = doc["MQTT_USER"].as<String>();
     strlcpy(username, usernameValue.c_str(), sizeof(username));
 
-    String passwordValue = doc["MQTT_PASSWORD"].as<String>();
+    auto passwordValue = doc["MQTT_PASSWORD"].as<String>();
     strlcpy(password, passwordValue.c_str(), sizeof(password));
 
     mqtt = doc["mqtt"] | true;
@@ -347,7 +357,7 @@ public:
   }
 
 
-};
+};  // fin de la structure Mqtt
 
 struct Wifi_struct {
 public:
@@ -369,7 +379,7 @@ struct System {
   /// @brief  puissance dispo en watt
   int puissance_dispo=0;
 
-  int change=0;
+  bool change=0;
   /// @brief état du ventilateur
   bool cooler=false;
   /// @brief  puissance cumulée en Watt (remonté par l'enfant toute les 10 secondes)
@@ -377,12 +387,26 @@ struct System {
   /// @brief etat de la surchauffe
   int dallas_maitre=0;
   /// @brief sonde principale
-  byte security=0;
+  bool security=0;
   /// @brief  état ping
   bool ping=false;
   const char pingurl[35] = "ota.apper-solaire.org";
   int pingfail=0;
-};
+  bool lock_mqtt=false; // pour éviter les conflits de mémoire entre http et mqtt
+
+  void wait_unlock_mqtt() {
+      // on limite le temps de blocage à 3 secondes pour éviter les reboot sur blocage
+      time_t start = time(nullptr);
+      while (lock_mqtt) {
+        delay(50);
+        if (time(nullptr) - start > 3) {
+          lock_mqtt = false;
+          break;
+        }
+      }
+ }
+
+};  // fin de la structure System
 
 struct epoc {
 public:
@@ -393,9 +417,6 @@ public:
   int mois;
   int annee;
   int weekday;
-};
-
-
-
+};  // fin de la structure epoc
 
 #endif

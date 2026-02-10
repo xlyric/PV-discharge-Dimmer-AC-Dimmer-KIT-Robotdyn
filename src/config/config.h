@@ -1,10 +1,11 @@
 #ifndef CONFIG
 #define CONFIG
 
-#define VERSION "Version 20241105"
-#define FS_RELEASE "20241105" // date de la release
+#define VERSION "Version 20260125"
+#define FS_RELEASE "20251025" // date de la release
 
-#define TEMPERATURE_PRECISION 10
+constexpr size_t TEMPERATURE_PRECISION=11;
+constexpr size_t DALLAS_TIMEOUT=1500;
 // configuration for Standalone boards ( personnalisation )
 #ifdef  STANDALONE
 
@@ -38,7 +39,7 @@
 #endif
 
 #ifdef  SSR  /// même pin que le stand alone
-  #define JOTTA  D1 // for boards with CHANGEBLE input pins
+  #define JOTTA  D5 // for boards with CHANGEBLE input pins ( passage de D1 à D5 le 02/06/2025 )
   #define ONE_WIRE_BUS D7 // dallas
   #define GRIDFREQ 50 /// PWM frequency
   #define outputPin  D5
@@ -50,6 +51,15 @@
 
 
 #ifdef ESP32
+  #undef outputPin
+  #undef outputPin2
+  #undef outputPin3
+  #undef zerocross
+  #undef ONE_WIRE_BUS
+  #undef RELAY1
+  #undef RELAY2
+  #undef COOLER
+
   #define RELAY2 26
   #define outputPin  18 // PSM on board
   #define zerocross  19 // for boards with CHANGEBLE input pins // ZC on board
@@ -59,9 +69,12 @@
   #define outputPin2 22 // use JOTTA/SSR2 (SSR2) output for 2nd Robotdyn/Random SSR
   #define outputPin3 21  // (SSR3) use RELAY2/SSR3 output for 3rd Robotdyn/Random SSR ( for old boards )
   #define RELAY1 17
+  #undef JOTTA
+  #define JOTTA  18  // for boards with CHANGEBLE input pins
 #endif
 
 #ifdef ESP32ETH
+
 #undef outputPin
 #undef outputPin2
 #undef zerocross
@@ -90,7 +103,7 @@
 // #define TRIGGER 10
 #define TIMERDELAY 5 // delay before switch off
 
-#define LOG_MAX_STRING_LENGTH 1500 // taille max des logs stockées
+constexpr size_t LOG_MAX_STRING_LENGTH=1000 ;// taille max des logs stockées
 
 // activation mode debug
 // #define Debug
@@ -113,6 +126,7 @@
 #define COOLER  D7       // 0 : off  -> 1 : On --> need a dry contact or opto
 #endif
 
-
+#define TIME_BOOST 3600 // temps de boost en secondes
+#define AUTO_OFF 5 // temps de coupure automatique en minutes
 #endif
 

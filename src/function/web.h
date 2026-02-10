@@ -17,11 +17,11 @@
 #else
 // Web services
   #include <ESP8266WiFi.h>
-// #include <ESPAsyncTCP.h>
   #include <ESP8266HTTPClient.h>
 #endif
 
 #include "StreamConcat.h"
+extern bool boost();
 
 
 extern Mqtt mqtt_config;
@@ -30,10 +30,10 @@ extern System sysvar;
 extern Programme programme;
 extern Programme programme_relay1;
 extern Programme programme_relay2;
+extern Programme programme_marche_forcee;
 extern gestion_puissance unified_dimmer;
 
 extern DNSServer dns;
-// extern byte security;
 
 AsyncWebServer server(80);
 
@@ -87,21 +87,47 @@ extern SSR_BURST ssr_burst;
 
 
 void call_pages() {
-  // pages Statiques voir compressées
-  server.serveStatic("/js/all.min.js", LittleFS, "/js/all.min.js").setCacheControl("max-age=31536000");
-  server.serveStatic("/css/all.min.css", LittleFS, "/css/all.min.css").setCacheControl("max-age=31536000");
-  server.serveStatic("/css/fa-solid-900.woff2", LittleFS,
-                     "/css/fa-solid-900.woff2").setCacheControl("max-age=31536000");
-  server.serveStatic("/favicon.ico", LittleFS, "/favicon.ico").setCacheControl("max-age=31536000");
-  server.serveStatic("/log.html", LittleFS, "/log.html").setCacheControl("max-age=31536000");;
-  server.serveStatic("/mqtt.html", LittleFS, "/mqtt.html").setTemplateProcessor(processor);
-  server.serveStatic("/minuteur.html", LittleFS, "/minuteur.html").setTemplateProcessor(processor);
-  server.serveStatic("/relai.html", LittleFS, "/relai.html").setTemplateProcessor(processor);
-  server.serveStatic("/lang.json", LittleFS, "/lang.json");
+
+  /*
+      {"/css/fa-solid-900.woff2", "/css/fa-solid-900.woff2"},
+    {"/favicon.ico", "/favicon.ico"},
+    ,
+    {"/style.css", "/style.css"},
+    {"/script.js", "/script.js"}
+  */
+  // Static pages, see compressed
+  const char* staticFiles[][2] = {
+    {"/js/all.min.js", "/js/all.min.js"},
+    {"/css/all.min.css", "/css/all.min.css"},
+    {"/log.html", "/log.html"},
+    {"/mqtt.html", "/mqtt.html"},
+    {"/minuteur.html", "/minuteur.html"},
+    {"/relai.html", "/relai.html"},
+    {"/backup.html", "/backup.html"},
+    {"/lang.json", "/lang.json"}
+  };
+
+  for (const auto& file : staticFiles) {
+    if (strstr(file[0], ".html")) {
+      server.serveStatic(file[0], LittleFS, file[1]).setTemplateProcessor(processor).setCacheControl("max-age=31536000");
+    } else {
+      server.serveStatic(file[0], LittleFS, file[1]).setCacheControl("max-age=31536000");
+    }
+  }
+
+  // page config.html
+  if (!AP) {
+    server.serveStatic("/config.html", LittleFS, "/config.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
+  } else {
+    server.serveStatic("/config-AP.html", LittleFS, "/config-AP.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
+  }
 
   // page de index et récupération des requetes de puissance
   server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
+    // protection contre la puissance négative
+    if (sysvar.puissance < 0 ) { sysvar.puissance = 0; } // on ne peut pas être en dessous de 0
 
+    sysvar.lock_mqtt=true;  // on bloque les requetes MQTT 
     if  (LittleFS.exists("/index.html")) {
       DEBUG_PRINTLN(("%d------------------",__LINE__));
       DEBUG_PRINTLN(sysvar.puissance);
@@ -125,7 +151,6 @@ void call_pages() {
 
         if (input==0) {
           sysvar.puissance = 0;         // En %
-          // int dispo=0;               // En % // on ne s'en sert pas, donc commenté
           sysvar.puissance_dispo = 0;   // En W
           sysvar.change = 0;            // par sécurité, au cas ou le main n'aurait pas fini
         }
@@ -149,7 +174,7 @@ void call_pages() {
 
           // on égalise
           if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0 && strcmp(config.mode,"equal") == 0  ) {
-            if ( (sysvar.security == 1) || (unified_dimmer.get_power() >= config.maxpow) ) {
+            if ( (sysvar.security ) || (unified_dimmer.get_power() >= config.maxpow) ) {
               sysvar.puissance = sysvar.puissance + dispo;            // En %
               sysvar.puissance_dispo = sysvar.puissance_dispo * 2;    // En W - On multiplie par 2 car la fonction child_communication() fera / 2
             }
@@ -172,7 +197,9 @@ void call_pages() {
         int max = 200;
         if (strcmp(config.child,"none") == 0 || strcmp(config.mode,"off") == 0 ) { max = 100; }
         if (sysvar.puissance >= max) {sysvar.puissance = max; }
-        logging.Set_log_init("HTTP power at " + String(sysvar.puissance) + "%\r\n");
+        char temp_buffer[128]; // Ajustez la taille en fonction de la longueur maximale attendue
+        snprintf(temp_buffer, sizeof(temp_buffer),  "%s %.2f%%\r\n",HTTP_power_at, sysvar.puissance);
+        logging.Set_log_init(temp_buffer);
         // Modif RV - correction bug si dimmer configuré mais pas allumé ou planté
         if (sysvar.change == 0) {
           sysvar.change=1;
@@ -183,16 +210,25 @@ void call_pages() {
 
       else if (request->hasParam(PARAM_INPUT_2)) {
         config.startingpow = request->getParam(PARAM_INPUT_2)->value().toInt();
-        logging.Set_log_init("HTTP power at " + String(config.startingpow)+"W\r\n");
+        char temp_buffer[128]; // Ajustez la taille en fonction de la longueur maximale attendue
+        snprintf(temp_buffer, sizeof(temp_buffer),  "%s %dW\r\n",HTTP_power_at, config.startingpow);
+        logging.Set_log_init(temp_buffer);
         sysvar.change=1;
         request->send(200, "application/json", getState().c_str());
       }
 
       else  {
         if (!AP) {
-          request->send(LittleFS, "/index.html", String(), false, processor);
+          AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/index.html", String(), false, processor);
+          response->addHeader("cache-control","max-age=31536000");
+          request->send(response);
+
+          //request->send(LittleFS, "/index.html", String(), false, processor);
         } else {
-          request->send(LittleFS, "/index-AP.html", String(), false, processor);
+          AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/index-AP.html", String(), false, processor);
+          response->addHeader("cache-control","max-age=31536000");
+          request->send(response);
+          //request->send(LittleFS, "/index-AP.html", String(), false, processor);
         }
       }
     }
@@ -203,28 +239,28 @@ void call_pages() {
 
     DEBUG_PRINTLN(sysvar.puissance);
     DEBUG_PRINTLN(("%d------------------",__LINE__));
-  });
-
-  // page de config et récupération des requetes de config
-  server.on("/config.html",HTTP_ANY, [](AsyncWebServerRequest *request){
-    if  (LittleFS.exists("/config.html")) {
-      if (!AP) {
-        request->send(LittleFS, "/config.html", String(), false, processor);
-      } else {
-        request->send(LittleFS, "/config-AP.html", String(), false, processor);
-      }
-    }
-    else {
-      request->send(200, "text/html", textnofiles().c_str());
-    }
+    sysvar.lock_mqtt=false; // on débloque les requetes MQTT
   });
 
   server.on("/state", HTTP_ANY, [](AsyncWebServerRequest *request){
+    sysvar.lock_mqtt=true;  // on bloque les requetes MQTT
     request->send(200, "application/json", getState().c_str());
+    sysvar.lock_mqtt=false; // on débloque les requetes MQTT
   });
 
   server.on("/state_dallas", HTTP_ANY, [](AsyncWebServerRequest *request){
+    sysvar.lock_mqtt=true;  // on bloque les requetes MQTT
     request->send(200, "application/json", getState_dallas().c_str());
+    sysvar.lock_mqtt=false; // on débloque les requetes MQTT
+  });
+
+  server.on("/config", HTTP_ANY, [](AsyncWebServerRequest *request){
+    request->send(200, "application/json", getconfig().c_str());
+  });
+
+  
+  server.on("/getmqtt", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+    request->send(200, "application/json",  getmqtt().c_str());
   });
 
   server.on("/resetwifi", HTTP_ANY, [](AsyncWebServerRequest *request){
@@ -247,24 +283,21 @@ void call_pages() {
     request->send(200, "text/plain", "pong");
   });
 
-  server.on("/config.json", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/config.json", "application/json");
-  });
+  const char* jsonFiles[][2] = {
+    {"/config.json"},
+    {"/mqtt.json"},
+    {"/wifi.json"},
+    {"/programme.json"}
+  };
 
-  server.on("/mqtt.json", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/mqtt.json", "application/json");
-  });
+  for (const auto& file : jsonFiles) {
+    server.serveStatic(file[0], LittleFS, file[0]);
+  }
 
-  server.on("/wifi.json", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/wifi.json", "application/json");
-  });
-
-  server.on("/programme.json", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/programme.json", "application/json");
-  });
-
-  server.on("/getmqtt", HTTP_ANY, [] (AsyncWebServerRequest *request) {
-    request->send(200, "application/json",  getmqtt().c_str());
+  // ajout de la commande de boost 2h   
+  server.on("/boost", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+    boost();    
+    request->send(200, "application/json",  getMinuteur(programme_marche_forcee));
   });
 
   server.on("/getminuteur", HTTP_ANY, [] (AsyncWebServerRequest *request) {
@@ -371,12 +404,10 @@ void call_pages() {
     else { request->send(200, "application/json",  getMinuteur()); }
   });
 
-  server.on("/config", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(200, "application/json", getconfig().c_str());
-  });
 
   server.on("/reset", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain","Restarting");
+    // faire un redirect vers / 
+    request->redirect("/");
     config.restart = true;
   });
 
@@ -411,7 +442,7 @@ void call_pages() {
     ///  fonction  /get?paramettre=xxxx
     if (request->hasParam("save")) {
       Serial.println(F("Saving configuration..."));
-      logging.Set_log_init(config.saveConfiguration()); // sauvegarde de la configuration
+      logging.Set_log_init(config.saveConfiguration().c_str()); // sauvegarde de la configuration
     }
 
     if (request->hasParam("hostname")) { request->getParam("hostname")->value().toCharArray(config.hostname,16); }
@@ -420,7 +451,10 @@ void call_pages() {
     if (request->hasParam("idxtemp")) { config.IDXTemp = request->getParam("idxtemp")->value().toInt(); }
     if (request->hasParam("maxtemp")) {
       config.maxtemp = request->getParam("maxtemp")->value().toInt();
-      if (!AP && mqtt_config.mqtt) { device_dimmer_maxtemp.send(String(config.maxtemp));}
+      if (!AP && mqtt_config.mqtt) { device_dimmer_maxtemp.sendInt(config.maxtemp);}
+    }
+    if (request->hasParam("mintemp")) {
+      config.mintemp = request->getParam("mintemp")->value().toInt();
     }
     if (request->hasParam("charge1")) {
       config.charge1 = request->getParam("charge1")->value().toInt();
@@ -439,23 +473,22 @@ void call_pages() {
     if (request->hasParam("startingpow")) {
       config.startingpow = request->getParam("startingpow")->value().toInt();
       if (!AP && mqtt_config.mqtt) {
-        device_dimmer_starting_pow.send(
-          String(config.startingpow));
+        device_dimmer_starting_pow.sendInt(config.startingpow);
       }
     }
     if (request->hasParam("minpow")) {
       config.minpow = request->getParam("minpow")->value().toInt();
-      if (!AP && mqtt_config.mqtt) { device_dimmer_minpow.send(String(config.minpow)); }
+      if (!AP && mqtt_config.mqtt) { device_dimmer_minpow.sendInt(config.minpow); }
     }
     if (request->hasParam("maxpow")) {
       config.maxpow = request->getParam("maxpow")->value().toInt();
-      if (!AP && mqtt_config.mqtt) { device_dimmer_maxpow.send(String(config.maxpow)); }
+      if (!AP && mqtt_config.mqtt) { device_dimmer_maxpow.sendInt(config.maxpow); }
     }
 
     if (request->hasParam("child")) { request->getParam("child")->value().toCharArray(config.child,64); }
     if (request->hasParam("mode")) {
       request->getParam("mode")->value().toCharArray(config.mode,10);
-      if (!AP && mqtt_config.mqtt) { device_dimmer_child_mode.send(String(config.mode)); }
+      if (!AP && mqtt_config.mqtt) { device_dimmer_child_mode.send(config.mode); }
     }
 
     if (request->hasParam("dimmername")) {
@@ -474,13 +507,13 @@ void call_pages() {
     }
     if (request->hasParam("dimmer_on_off")) {
       config.dimmer_on_off = request->getParam("dimmer_on_off")->value().toInt();
-      if (!AP && mqtt_config.mqtt) { device_dimmer_on_off.send(String(config.dimmer_on_off));}
+      if (!AP && mqtt_config.mqtt) { device_dimmer_on_off.sendInt(config.dimmer_on_off);}
     }
     if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,50); }
     if (request->hasParam("mqttpassword")) {
       request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,50);
-      logging.Set_log_init(config.saveConfiguration()); // sauvegarde de la configuration
-      logging.Set_log_init(mqtt_config.savemqtt()); // sauvegarde et récupération de la log MQTT
+      logging.Set_log_init(config.saveConfiguration().c_str()); // sauvegarde de la configuration
+      logging.Set_log_init(mqtt_config.savemqtt().c_str()); // sauvegarde et récupération de la log MQTT
     }
     if (request->hasParam("DALLAS")) {
       request->getParam("DALLAS")->value().toCharArray(config.DALLAS,17);
@@ -512,14 +545,16 @@ void call_pages() {
   #ifdef RELAY1
     if (request->hasParam("relay1")) {
       int relay = request->getParam("relay1")->value().toInt();
-      if ( relay == 0) { digitalWrite(RELAY1, LOW); }
-      else if (relay == 1) { digitalWrite(RELAY1, HIGH); }
+      if ( relay == 0) { digitalWrite(RELAY1, HIGH); } // correction bug de démarrage en GPIO 0
+      else if (relay == 1) { digitalWrite(RELAY1, LOW); } // correction bug de démarrage en GPIO 0
       else if (relay == 2) { digitalWrite(RELAY1, !digitalRead(RELAY1)); }
-      int relaystate = digitalRead(RELAY1);
+      // inversion de l'état relaystate par rapport au relais , correction bug de démarrage en GPIO 0
+      int relaystate = !digitalRead(RELAY1);
+    
       char str[8];  // NOSONAR
       itoa( relaystate, str, 10 );
       request->send(200, "application/json", str );
-      if (!AP && mqtt_config.mqtt) { device_relay1.send(String(relaystate));}
+      if (!AP && mqtt_config.mqtt) { device_relay1.sendInt(relaystate);}
       return;
     }
   #endif
@@ -533,7 +568,7 @@ void call_pages() {
       char str[8];  // NOSONAR
       itoa( relaystate, str, 10 );
       request->send(200, "application/json", str );
-      if (!AP && mqtt_config.mqtt) { device_relay2.send(String(relaystate));}
+      if (!AP && mqtt_config.mqtt) { device_relay2.sendInt(relaystate);}
       return;
     }
   #endif
@@ -542,13 +577,12 @@ void call_pages() {
     if (request->hasParam("servermode")) {
       String inputMessage = request->getParam("servermode")->value();
       getServermode(inputMessage);
-      logging.Set_log_init(config.saveConfiguration()); // sauvegarde de la configuration
-      logging.Set_log_init(mqtt_config.savemqtt()); // sauvegarde et récupération de la log MQTT
+      logging.Set_log_init(config.saveConfiguration().c_str()); // sauvegarde de la configuration
+      logging.Set_log_init(mqtt_config.savemqtt().c_str()); // sauvegarde et récupération de la log MQTT
     }
 
     request->send(200, "application/json", getconfig().c_str());
   });
-
 }
 
 
@@ -600,25 +634,46 @@ String getState() {
   doc["temperature"] = buffer;
   doc["power"] = int(instant_power * config.charge/100);
   doc["Ptotal"]  = sysvar.puissance_cumul + int(instant_power * config.charge/100);
-  // recupération de l'état de surchauffe
-  doc["alerte"]  = sysvar.security;
-#ifdef RELAY1
-  doc["relay1"]   = digitalRead(RELAY1);
+  #ifdef RELAY1
+  doc["relay1"]   = !digitalRead(RELAY1);
   doc["relay2"]   = digitalRead(RELAY2);
 #else
-  doc["relay1"]   = 0;
-  doc["relay2"]   = 0;
+  doc["relay1"]   = false;
+  doc["relay2"]   = false;
 #endif
+ 
+// prévision retrait du mode de prepresseur 
+  /* doc["FS_RELEASE"] = FS_RELEASE;
+  doc["VERSION"] = VERSION;
+  doc["RSSI"] = WiFi.RSSI();
+  doc["NAME"] = String(config.say_my_name) + ".local";
+*/ 
+
+
   doc["minuteur"] = programme.run;
   doc["onoff"] = config.dimmer_on_off;
-  doc["alerte"] = logging.Get_alerte_web();
+  doc["alerte"] = logging.alerte_web; //affiche maintenant l'alerte et plus 0 ou 1 pour les alertes
+if (programme_marche_forcee.run) {
+  doc["boost"] = programme_marche_forcee.run;
+  doc["boost_endtime"] = programme_marche_forcee.heure_arret; 
+  } 
+  doc["boost_max_temp"] = programme_marche_forcee.temperature;
+    // affichage des température et adresse des sondes dallas
+  for (int i = 0; i < MAX_DALLAS; i++) {
+    char buffer[5];  // NOSONAR
+    // affichage que si != 0
+    if (sysvar.celsius[i] != 0) {
+      dtostrf(sysvar.celsius[i],2, 1, buffer);   // conversion en n.1f
+      doc["dallas"+String(i)] = buffer;
+      doc["addr"+String(i)] = devAddrNames[i];
+    }
+  }
   serializeJson(doc, state);
   return String(state);
 }
 
 String textnofiles() {
-  String state =
-    "<html><body>Filesystem is not present. <a href='https://ota.apper-solaire.org/firmware/littlefs-dimmer.bin'>download it here</a> <br>and after  <a href='/update'>upload on the ESP here </a></body></html>";
+  String state = "<html><head><meta http-equiv='refresh' content='10'></head><body>Filesystem is not present.<a href='https://ota.apper-solaire.org/firmware/littlefs-dimmer.bin'>download it here</a><br>and after <a href='/update'>upload on the ESP here</a><br>or <a href='/reset'>reboot </a></body></html>";
   return String(state);
 }
 
@@ -626,12 +681,12 @@ String processor(const String& var){
 
   if (var == "VERSION") {
     // affichage de la version et de l'environnement
-    String VERSION_http = String(VERSION) + " " + String(COMPILE_NAME);
-    return (VERSION_http);
+    auto VERSION_http = String(VERSION) + " " + String(COMPILE_NAME);
+    return VERSION_http;
   }
   if (var == "NAME") {
-    String name = String(config.say_my_name) + ".local";
-    return (name);
+    auto name = String(config.say_my_name) + ".local";
+    return name;
   }
   if (var == "RSSI") {
     return (String(WiFi.RSSI()));
@@ -647,7 +702,8 @@ String getconfig() {
   String configweb;
   JsonDocument doc;
   doc["maxtemp"] = config.maxtemp;
-
+  doc["mintemp"] = config.mintemp;  
+  
   doc["startingpow"] = config.startingpow;
   doc["minpow"] = config.minpow;
   doc["maxpow"] = config.maxpow;
@@ -671,7 +727,19 @@ String getconfig() {
 }
 
 String getMinuteur(const Programme& minuteur ) {
-  getLocalTime(&timeinfo);
+
+  // Vérifiez si le système est prêt , protection contre une corruption de la mémoire
+  if (millis() < 5000) {
+        Serial.println("System not ready yet");
+        return "false";
+  }
+
+  struct tm timeinfo;  // Déclaration locale
+    if (!getLocalTime(&timeinfo)) {
+        Serial.println("Failed to obtain time");
+        return "false";
+    }
+  
   JsonDocument doc;
   doc["heure_demarrage"] = minuteur.heure_demarrage;
   doc["heure_arret"] = minuteur.heure_arret;
@@ -688,7 +756,19 @@ String getMinuteur(const Programme& minuteur ) {
 }
 
 String getMinuteur() {
-  getLocalTime(&timeinfo);
+
+  // Vérifiez si le système est prêt , protection contre une corruption de la mémoire
+  if (millis() < 5000) {
+        Serial.println("System not ready yet");
+        return "false";
+  }
+
+  struct tm timeinfo;  // Déclaration locale
+    if (!getLocalTime(&timeinfo)) {
+        Serial.println("Failed to obtain time");
+        return "false";
+    }
+  
   JsonDocument doc;
   doc["heure"] = timeinfo.tm_hour;
   doc["minute"] = timeinfo.tm_min;
@@ -730,8 +810,8 @@ String getcomplement() {
 
 
 String readmqttsave(){
-  String node_id = config.say_my_name;
-  String save_command = String("Xlyric/sauvegarde/"+ node_id );
+  String node_id_readmqttsave = config.say_my_name;
+  auto save_command = String("Xlyric/sauvegarde/"+ node_id_readmqttsave );
   client.subscribe(save_command.c_str(),1);
   return String(
     "<html><head><meta http-equiv='refresh' content='5;url=config.html' /></head><body><h1>config restauree, retour au setup dans 5 secondes, pensez a sauvegarder sur la flash </h1></body></html>");

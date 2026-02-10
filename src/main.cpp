@@ -71,9 +71,6 @@
 
 #include <Arduino.h>
 
-// #include "Arduino.h"
-
-
 #ifdef ROBOTDYN
 // Dimmer librairy
   #include <RBDdimmer.h>   /// the corrected librairy  in personal depot , the original has a bug
@@ -85,7 +82,9 @@
 #include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
 #include <ArduinoJson.h> // ArduinoJson v6
 
+#if defined(ESP8266)
 #include <TaskScheduler.h> // gestion des taches
+#endif
 
 // ota mise à jour sans fil
 #include <ElegantOTA.h>
@@ -104,12 +103,6 @@
 #include "function/mqtt.h"
 #include "function/minuteur.h"
 
-/*
-   extern "C" {
- #include "user_interface.h"
-   }
- */
-
 #ifdef ROBOTDYN
   #include "function/dimmer.h"
 #endif
@@ -120,11 +113,18 @@
 
 #include "function/unified_dimmer.h"
 
+#ifdef WEBSOCKET
+#include "function/websocket.h"
+#endif
+
 #include "tasks/dallas.h"
 #include "tasks/cooler.h"
 #include "tasks/get_power.h"
 #include "tasks/relais.h"
 #include "tasks/ping.h"
+#ifdef ESP32
+#include "tasks/oled.h"
+#endif
 
 #if defined(ESP32) || defined(ESP32ETH)
 // Web services
@@ -142,7 +142,6 @@
 // Web services
   #include <ESP8266WiFi.h>
   #include <ESP8266mDNS.h>
-// #include <ESPAsyncTCP.h>
   #include <ESP8266HTTPClient.h>
 // File System
   #include <LittleFS.h> // NOSONAR
@@ -153,18 +152,24 @@
   #include <ETH.h>
 #endif
 
-// taches
-Task Task_dallas(8000, TASK_FOREVER, &mqttdallas);
-Task Task_Cooler(15000, TASK_FOREVER, &cooler);
-Task Task_GET_POWER(10000, TASK_FOREVER, &get_dimmer_child_power);
+#include "function/mdns.h"
+
+#if defined(ESP8266)
+// taches 
+Task Task_dallas(8123, TASK_FOREVER, &mqttdallas);
+Task Task_Cooler(15456, TASK_FOREVER, &cooler);
+Task Task_GET_POWER(10789, TASK_FOREVER, &get_dimmer_child_power);
 #ifdef RELAY1
-Task Task_relay(20000, TASK_FOREVER, &relais_controle);
+Task Task_relay(20234, TASK_FOREVER, &relais_controle);
 #endif
 /// @brief  task de ping
-Task Task_ping(120000, TASK_FOREVER, &ping);
+Task Task_ping(120567, TASK_FOREVER, &ping);
+#ifdef ESP32
+Task Task_OLED(10000, TASK_FOREVER, &oled_task);
+#endif
+
 Scheduler runner;
-
-
+#endif
 
 /***************************
  * Begin Settings
@@ -201,33 +206,26 @@ int timesync_refresh = 120;
 //***********************************
 //************* Dallas
 //***********************************
-bool dallaspresent ();
+//bool dallaspresent ();
 
 
 ////////////////////////////////////
 ///     AP MODE
 /////////////////////////////////
 
-String routeur="PV-ROUTER";
 bool AP = false;
 bool discovery_temp;
 
+/// @brief  variables Dallas
+byte is_dallas_present = 0;
 
-OneWire ds(ONE_WIRE_BUS);   //  (a 4.7K resistor is necessary - 5.7K work with 3.3 ans 5V power)
-DallasTemperature sensors(&ds);
-
-
-byte present = 0;
-
-byte data[12];   // NOSONAR
-float previous_celsius[MAX_DALLAS] = {0.00};   // NOSONAR
+//DeviceAddress data;   // NOSONAR
+//float previous_celsius[MAX_DALLAS] = {0.00};   // NOSONAR
 // byte security = 0;
 int refresh = 60;
 int refreshcount = 0;
 int deviceCount = 0;
-int devicealerte=0;
-DeviceAddress addr[MAX_DALLAS];   // array of (up to) MAX_DALLAS temperature sensors NOSONAR
-String devAddrNames[MAX_DALLAS];  // array of (up to) MAX_DALLAS temperature sensors NOSONAR
+
 /***************************
  * End Settings
  **************************/
@@ -242,14 +240,16 @@ System sysvar;
 Programme programme;
 Programme programme_relay1;
 Programme programme_relay2;
+Programme programme_marche_forcee;
 
 String getmqtt();
 void savemqtt(const char *filename, const Mqtt &mqtt_config); // NOSONAR
 bool pingIP(IPAddress ip);
-String stringBool(bool mybool);
+const char* stringBool(bool mybool);
 String getServermode(String Servermode);
 String switchstate(int state);
 void tests ();
+bool boost();
 
 /// @brief  declaration des logs
 Logs logging;/// declare logs
@@ -296,17 +296,27 @@ IPAddress _ip,_gw,_sn,gatewayIP;   // NOSONAR
 
 void setup() {
   Serial.begin(115200);
+  char temp_buffer[128];
+  
+  #if defined(ESP8266)
+  /// init des tasks 
+  runner.init();
+  runner.addTask(Task_dallas); // ajout de la tache dallas
+  runner.enableAll();
+  #endif
 
-  // reset du bus one Wire
-  // ds.reset();
-  // initialisation des dallas
-  sensors.begin();
-
+  //Task_dallas.enable();
+  #ifdef ESP32
+    oled.init();
+    oled.wait_for_wifi(0);
+  #endif
+  
+  
   #ifdef ESP32ETH
   ETH.begin(ETH_ADDR, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_TYPE, ETH_CLK_MODE);
   #endif
   logging.Set_log_init("197}11}1");
-
+  logging.alerte_web="RAS";
   // Correction issue full power at start
   pinMode(outputPin, OUTPUT);
   pinMode(zerocross, INPUT);
@@ -334,18 +344,19 @@ void setup() {
   #if defined(ESP32) || defined(ESP32ETH)
   esp_reset_reason_t reset_reason = esp_reset_reason();
   Serial.printf("Reason for reset: %d\n", reset_reason);
-  logging.Set_log_init(String(Reason_for_reset) + String(reset_reason) + " --\r\n" );
+  
+  snprintf(temp_buffer, sizeof(temp_buffer), "Reason for reset: %d", reset_reason);
+  logging.Set_log_init(temp_buffer);
 
   #else
   rst_info *reset_info = ESP.getResetInfoPtr();
   Serial.printf("Reason for reset: %d\n", reset_info->reason);
-  logging.Set_log_init(String(Reason_for_reset) + String(reset_info->reason) + " --\r\n");
 
   #endif
 
   #ifdef RELAY1 // permet de rajouter les relais en ne modifiant que config.h, et pas seulement en STANDALONE
   pinMode(RELAY1, OUTPUT);
-  digitalWrite(RELAY1, LOW);
+  digitalWrite(RELAY1, HIGH); // correction pour la nouvelle carte et corriger le bug de démarrage en GPIO 0 ( High at start )
   #endif
   #ifdef RELAY2 // permet de rajouter les relais en ne modifiant que config.h
   pinMode(RELAY2, OUTPUT);
@@ -356,8 +367,9 @@ void setup() {
   pinMode(COOLER, OUTPUT);
   digitalWrite(COOLER, LOW);
 
-  logging.Set_log_init("-- " + String(VERSION) + " --\r\n");
 
+  snprintf(temp_buffer, sizeof(temp_buffer), "-- %s -- \r\n", VERSION);
+  logging.Set_log_init(temp_buffer);
   // démarrage file system
   LittleFS.begin();
   // correction d'erreur de chargement de FS
@@ -390,16 +402,15 @@ void setup() {
   #endif
 #endif
 
-
   /// init de sécurité
   #ifdef ROBOTDYN
   dimmer.setState(OFF);
-  #endif
-  #ifdef outputPin2
-  dimmer2.setState(OFF);
-  #endif
-  #ifdef outputPin3
-  dimmer3.setState(OFF);
+    #ifdef outputPin2
+    dimmer2.setState(OFF);
+    #endif
+    #ifdef outputPin3
+    dimmer3.setState(OFF);
+    #endif
   #endif
 
   USE_SERIAL.println("Dimmer Program is starting...");
@@ -413,12 +424,12 @@ void setup() {
   // Should load default config if run for the first time
   Serial.println(F("Loading configuration..."));
   logging.Set_log_init(Load_configuration);
-  logging.Set_log_init(config.loadConfiguration()); // charge la configuration
+  logging.Set_log_init(config.loadConfiguration().c_str()); // charge la configuration
 
   // Load configuration file mqtt
   Serial.println(F("Loading mqtt_conf configuration..."));
   logging.Set_log_init(Load_configuration_MQTT);
-  logging.Set_log_init(mqtt_config.loadmqtt());  // charge la configuration mqtt
+  logging.Set_log_init(mqtt_config.loadmqtt().c_str());  // charge la configuration mqtt
 
   // chargement des conf de wifi
   Serial.println(F("Loading wifi configuration..."));
@@ -429,6 +440,8 @@ void setup() {
   programme.set_name("/dimmer");
   programme.loadProgramme();
   programme.saveProgramme();
+
+  programme_marche_forcee.set_name("/marche_forcee");
 
 #ifdef RELAY1
   programme_relay1.set_name("/relay1");
@@ -445,13 +458,7 @@ void setup() {
   Serial.print("start Wifiautoconnect");
   logging.Set_log_init(Start_Wifiautoconnect);
 
-  // WiFi.setPhyMode(WIFI_PHY_MODE_11N);
-  // wifi_set_phy_mode(PHY_MODE_11N);
-
-
-
   // préparation  configuration IP fixe
-
   AsyncWiFiManagerParameter custom_IP_Address("server", "IP", wifi_config_fixe.static_ip, 16);
   wifiManager.addParameter(&custom_IP_Address);
   AsyncWiFiManagerParameter custom_IP_mask("mask", "mask", wifi_config_fixe.static_sn, 16);
@@ -467,19 +474,19 @@ void setup() {
     // set static ip
 
     wifiManager.setSTAStaticIPConfig(_ip, _gw, _sn);
-    Serial.print(String(wifi_config_fixe.static_ip));
+    Serial.print(wifi_config_fixe.static_ip);
   }
 
   // doit être placé avant la connexion sinon sous ESP32, l'hostname n'est pas pris en compte
   WiFi.setHostname(config.say_my_name);
   wifiManager.autoConnect(config.say_my_name);
   // Afficher le nom :
-  Serial.println("say_my_name: " + String(config.say_my_name));
+  Serial.printf("say_my_name: %s\n", config.say_my_name);
   DEBUG_PRINTLN("end Wifiautoconnect");
   wifiManager.setSaveConfigCallback(saveConfigCallback);
   wifiManager.setConfigPortalTimeout(600);
 
-
+ 
   strcpy(wifi_config_fixe.static_ip, custom_IP_Address.getValue());
   strcpy(wifi_config_fixe.static_sn, custom_IP_mask.getValue());
   strcpy(wifi_config_fixe.static_gw, custom_IP_gateway.getValue());
@@ -487,20 +494,15 @@ void setup() {
   DEBUG_PRINTLN("static adress: " + String(wifi_config_fixe.static_ip) + " mask: " + String(
                   wifi_config_fixe.static_sn) + " GW: " + String(wifi_config_fixe.static_gw));
 
-  // savewifiIP(wifi_conf, wifi_config_fixe); // NOSONAR je doute que ça soit utilisé vu que c'est en autoconnect, seul le chargement est necessaire
-
   // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
+ /* while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
-  }
-
-
-  // WiFi.setPhyMode(WIFI_PHY_MODE_11N);
-  // wifi_set_phy_mode(PHY_MODE_11N);
+  }*/
+  #ifdef ESP32
+  oled.wait_for_wifi(1);
+  #endif
   WiFi.setAutoReconnect(true);
-  // WiFi.setOutputPower(20);
-
   /// restart si la configuration OP static est différente ip affectée suite changement ip Autoconf
   if ( !strcmp(wifi_config_fixe.static_ip, "" ) == 0 )  {
     char IP[] = "xxx.xxx.xxx.xxx";       // NOSONAR
@@ -528,13 +530,18 @@ void setup() {
   #if !defined(ESP32) && !defined(ESP32ETH)
   Serial.println(ESP.getResetReason());
   #endif
+
   //// AP MODE
-  if ( routeur.compareTo(WiFi.SSID().substring(0,9)) == 0 ) {
+  const char* expectedPrefix = "PV-ROUTER";
+  const char* currentSSID = WiFi.SSID().c_str();
+
+  if (strncmp(currentSSID, expectedPrefix, strlen(expectedPrefix)) == 0) {
     AP = true;
   }
 
-  // Initialize mDNS
-  // config.say_my_name)
+  mdns_hello(config.say_my_name);
+
+ /* // initialisation de la connexion MDNS pour le nom de l'ESP
   if (!MDNS.begin(config.say_my_name)) {
     Serial.println("Error setting up MDNS responder!");
     while(1) {
@@ -542,13 +549,21 @@ void setup() {
     }
   }
   Serial.println("mDNS responder started");
-  // MDNS.addService("http", "tcp", 80);
+  // déclaration des services mDNS
   MDNS.addService("http", "tcp", 1308);
+  MDNS.addServiceTxt("http", "tcp", "name", String(config.say_my_name).c_str());
+  MDNS.addServiceTxt("http", "tcp", "version", VERSION);
+  MDNS.addServiceTxt("http", "tcp", "env", COMPILE_NAME);
 
+  MDNS.addService("dimmer", "tcp", 80);
+  MDNS.addServiceTxt("dimmer", "tcp", "name", String(config.say_my_name).c_str());
+  MDNS.addServiceTxt("dimmer", "tcp", "version", VERSION);
+  MDNS.addServiceTxt("dimmer", "tcp", "env", COMPILE_NAME);
+  */
+ 
   logging.Set_log_init(mDNS_Responder_Started);
-  logging.Set_log_init(String(config.say_my_name) + ".local \r\n");
-
-
+  snprintf(temp_buffer, sizeof(temp_buffer), "mDNS responder %s.local \n", config.say_my_name);
+  logging.Set_log_init(temp_buffer);
 
   //***********************************
   //************* Setup - OTA
@@ -559,34 +574,22 @@ void setup() {
   //************* Setup - Web pages
   //***********************************
 
-
   // chargement des url des pages
   call_pages();
-
+ 
   //***********************************
   //************* Setup -  demarrage du webserver et affichage de l'oled
   //***********************************
   Serial.println("start server");
+  #ifdef WEBSOCKET
+    setupWebSocket();
+    clientWebSocket();
+  #endif
   server.begin();
-
-
-  //// récupération des dallas .
-  Serial.println("start 18b20");
-
-  delay(1000);
-  deviceCount = sensors.getDeviceCount();
-
-  if (deviceCount == 0 ) { // si toujours pas trouvé
-    sensors.begin(); // réinit du bus one wire
-    delay(1500);
-    deviceCount = sensors.getDeviceCount();
-  }
-
-  logging.Set_log_init(String(deviceCount));
-  logging.Set_log_init(DALLAS_detected);
+  
 
   /// recherche d'une sonde dallas
-  dallaspresent();
+  // dallaspresent();
 
   devices_init(); // initialisation des devices HA
 
@@ -603,55 +606,106 @@ void setup() {
     delay(1000);
     /// pour remonter un 0 sur le MQTT
     if (config.HA || config.JEEDOM) {
-      device_dimmer.send(String(sysvar.puissance));
-      device_dimmer_send_power.send(String(sysvar.puissance));
-      device_dimmer_power.send(String(sysvar.puissance* config.charge/100));
-      device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
+      device_dimmer.sendInt(sysvar.puissance);
+      device_dimmer_send_power.sendInt(sysvar.puissance);
+      device_dimmer_power.sendInt(sysvar.puissance* config.charge/100);
+      device_dimmer_total_power.sendInt(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100));
       device_cooler.send(stringBoolMQTT(false));
-      device_dimmer_starting_pow.send(String(config.startingpow));
-      device_dimmer_minpow.send(String(config.minpow));
-      device_dimmer_maxpow.send(String(config.maxpow));
+      device_dimmer_starting_pow.sendInt(config.startingpow);
+      device_dimmer_minpow.sendInt(config.minpow);
+      device_dimmer_maxpow.sendInt(config.maxpow);
 
-      device_dimmer_child_mode.send(String(config.mode));
-      device_dimmer_on_off.send(String(config.dimmer_on_off));
-
+      device_dimmer_child_mode.send(config.mode);
+      device_dimmer_on_off.sendInt(config.dimmer_on_off);
+      device_dimmer_boost.send("0");
       #ifdef RELAY1
-      int relaystate = digitalRead(RELAY1);
-      device_relay1.send(String(relaystate));
+      int relaystate = !digitalRead(RELAY1); // correction bug de démarrage en GPIO 0
+      device_relay1.sendInt(relaystate);
       #endif
       #ifdef RELAY2
       relaystate = digitalRead(RELAY2);
-      device_relay2.send(String(relaystate));
+      device_relay2.sendInt(relaystate);
       #endif
       HA_discover();
     }
   }
 
-
-  #ifdef  SSR
-    #ifdef OLDSSR
-  analogWriteFreq(GRIDFREQ);
-  analogWriteRange(100);
-  analogWrite(JOTTA, 0);
-    #elif  defined(SSR_ZC)
+  #ifdef  ZC_ESP32
   pinMode(JOTTA, OUTPUT);
   unified_dimmer.set_power(0);
   timer.attach_ms(10, SSR_run);     // Attachez la fonction task() au temporisateur pour qu'elle s'exécute toutes les 1000 ms
-    #else
   init_jotta();
   timer_init();
-    #endif
   #endif
+
+ #ifdef ZC_8266
+  pinMode(JOTTA, OUTPUT);
+  unified_dimmer.set_power(0);
+  timer.attach_ms(10, SSR_run);
+ #endif
+
 
 
   /// init du NTP
   ntpinit();
+  // INIT DE l'oled 
+  #ifdef ESP32
+  init_ui();  
 
-  /// init des tasks
-  runner.init();
-  runner.addTask(Task_dallas);
-  Task_dallas.enable();
+      xTaskCreate(
+      oled_task,
+      "taskoled",  // Task name
+      6000,            // Stack size (bytes)
+      NULL,             // Parameter
+      3,                // Task priority
+      NULL          // Task handle
+      
+    );  
 
+
+    // création de la task pour le cooler
+    xTaskCreate(
+      cooler_32,
+      "taskcooler_32",  // Task name
+      6000,            // Stack size (bytes)
+      NULL,             // Parameter
+      3,                // Task priority
+      NULL          // Task handle
+    );
+
+    // création de la task pour le get power
+    xTaskCreate(
+      get_dimmer_child_power_32,
+      "taskgetpower_32",  // Task name
+      6000,            // Stack size (bytes)
+      NULL,             // Parameter
+      3,                // Task priority
+      NULL          // Task handle
+    );
+
+    // création de la task pour le ping
+    xTaskCreate(
+      ping_32,
+      "taskping_32",  // Task name
+      6000,            // Stack size (bytes)
+      NULL,             // Parameter
+      3,                // Task priority
+      NULL          // Task handle
+    );
+
+    // création de la task pour la dallas
+    xTaskCreate(
+      mqttdallas_32,
+      "taskdallas_32",  // Task name
+      6000,            // Stack size (bytes)
+      NULL,             // Parameter
+      3,                // Task priority
+      NULL          // Task handle
+    );
+
+  #endif
+
+  #if defined(ESP8266)
   runner.addTask(Task_Cooler);
   Task_Cooler.enable();
 
@@ -660,6 +714,7 @@ void setup() {
 
   runner.addTask(Task_ping);
   Task_ping.enable();
+  #endif
 
   DEBUG_PRINTLN(ESP.getFreeHeap());
 
@@ -667,12 +722,15 @@ void setup() {
   logging.Set_log_init(End_Start);
   logging.Set_log_init("",true);
   logging.Set_log_init("\r\n");
-
+ 
+  programme_marche_forcee.temperature = config.maxtemp;
   delay(1000);
 }
 
 
 bool alerte=false;
+bool shouldRestart = false;
+unsigned long restartTime = 0;
 
 /////////////////////
 /// LOOP
@@ -680,11 +738,20 @@ bool alerte=false;
 void loop() {
   client.loop();
 
+  #ifdef WEBSOCKET
+    updateWebSocketClients();
+    clientWebSocketLoop();
+  #endif
+
   #if !defined(ESP32) && !defined(ESP32ETH)
   /// update mdns
   MDNS.update();
   #endif
-
+  
+  #ifdef ESP32
+   // oled_task();
+  #endif
+  
   /// connexion MQTT dans les cas de conf mqtt et perte de connexion
   if (!client.connected() ) {
     mqttConnected = false;
@@ -692,9 +759,9 @@ void loop() {
   if (!mqttConnected && !AP && mqtt_config.mqtt) {
     connect_and_subscribe();
   }
-
+  #if defined(ESP8266)
   runner.execute(); // gestion des taches
-
+  #endif
   /// limitation de la taille de la chaine de log
   logging.clean_log_init();
 
@@ -705,11 +772,31 @@ void loop() {
     config.restart = true;
   }
 
+  // gestion de la température minimum.
+  if ( sysvar.celsius[sysvar.dallas_maitre] <= config.mintemp  && is_dallas_present) {
+    if ( !config.preheat && !sysvar.security) {
+        // Si la température est inférieure à la température minimale, mise en route du dimmer au limiteur localfuse
+        unified_dimmer.set_power(config.maxpow);
+        Serial.println("Température minimale atteinte, préchauffage activé");
+        logging.Set_log_init("Préchauffage activé \n", true);
+        config.preheat = true;
+
+    }
+  }
+  else if ( config.preheat ) //&& sysvar.celsius[sysvar.dallas_maitre] > config.mintemp déplacé dans le test amont 
+    { config.preheat = false;
+      unified_dimmer.set_power(0);
+      Serial.println("Fin préchauffage, dimmer arrêté");
+      logging.Set_log_init("Fin préchauffage, dimmer arrêté \n", true);
+    }
+
+
+
   ///////////////// gestion des activité minuteur
   //// Dimmer
-  if (programme.run) {
+  if (programme.run || programme_marche_forcee.run) {
     //  minuteur en cours
-    if (programme.stop_progr()) {
+    if (programme.stop_progr() || programme_marche_forcee.stop_progr()) {
       // Robotdyn dimmer
       logging.Set_log_init(Stop_minuteur,true);
       unified_dimmer.set_power(0);       // necessaire pour les autres modes
@@ -721,19 +808,23 @@ void loop() {
       Mqtt_send_DOMOTICZ(String(config.IDX), String (sysvar.puissance * config.charge/100) );   // remonté MQTT de la commande réelle
       if (config.HA) {
         int instant_power = unified_dimmer.get_power();
-        device_dimmer_on_off.send(String(config.dimmer_on_off));
-        device_dimmer.send(String(instant_power));
-        device_dimmer_send_power.send(String(instant_power));
-        device_dimmer_power.send(String(instant_power * config.charge/100));
-        device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
+        device_dimmer_on_off.sendInt(config.dimmer_on_off);
+        device_dimmer.sendInt(instant_power);
+        device_dimmer_send_power.sendInt(instant_power);
+        device_dimmer_power.sendInt(instant_power * config.charge/100);
+        device_dimmer_total_power.sendInt(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100));
       }
       // réinint de la sécurité température
-      sysvar.security = 0;
+      sysvar.security = false;
+      // on remet les valeurs de temps programme_marche_force à 00:00
+      strcpy(programme_marche_forcee.heure_demarrage, "00:00"); // NOSONAR
+      strcpy(programme_marche_forcee.heure_arret, "00:00");  // NOSONAR
+      device_dimmer_boost.send("0");
     }
   }
   else {
     // minuteur à l'arret
-    if (programme.start_progr()) {
+    if (programme.start_progr() ||  programme_marche_forcee.start_progr()) {
       // definition de la puissance à appliquer
       if ( programme.puissance > config.maxpow ) {     sysvar.puissance=config.maxpow; }
       else { sysvar.puissance = programme.puissance; }
@@ -748,11 +839,14 @@ void loop() {
       Mqtt_send_DOMOTICZ(String(config.IDX), String (sysvar.puissance * config.charge/100) ); // remonté MQTT de la commande réelle
       if (config.HA) {
         int instant_power = unified_dimmer.get_power();
-        device_dimmer_on_off.send(String(config.dimmer_on_off));
-        device_dimmer.send(String(instant_power));
-        device_dimmer_send_power.send(String(instant_power));
-        device_dimmer_power.send(String(instant_power * config.charge/100));
-        device_dimmer_total_power.send(String(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100)));
+        device_dimmer_on_off.sendInt(config.dimmer_on_off);
+        device_dimmer.sendInt(instant_power);
+        device_dimmer_send_power.sendInt(instant_power);
+        device_dimmer_power.sendInt(instant_power * config.charge/100);
+        device_dimmer_total_power.sendInt(sysvar.puissance_cumul + (sysvar.puissance * config.charge/100));
+        if ( programme_marche_forcee.run) {
+          device_dimmer_boost.send("1");
+        }
       }
     }
   }
@@ -763,15 +857,15 @@ void loop() {
   if (programme_relay1.run) {
     if (programme_relay1.stop_progr()) {
       logging.Set_log_init(Stop_minuteur_relay1,true);
-      digitalWrite(RELAY1, LOW);
-      device_relay1.send(String(0));
+      digitalWrite(RELAY1, HIGH); //correction bug de démarrage en GPIO 0
+      device_relay1.send("0");
     }
   }
   else {
     if (programme_relay1.start_progr()) {
       logging.Set_log_init(Start_minuteur_relay1,true);
-      digitalWrite(RELAY1, HIGH);
-      device_relay1.send(String(1));
+      digitalWrite(RELAY1, LOW); // Correction bug de démarrage en GPIO 0
+      device_relay1.send("1");
     }
   }
 
@@ -779,23 +873,31 @@ void loop() {
     if (programme_relay2.stop_progr()) {
       logging.Set_log_init(Stop_minuteur_relay2,true);
       digitalWrite(RELAY2, LOW);
-      device_relay2.send(String(0));
+      device_relay2.send("0");
     }
   }
   else {
     if (programme_relay2.start_progr()) {
       logging.Set_log_init(Start_minuteur_relay2,true);
       digitalWrite(RELAY2, HIGH);
-      device_relay2.send(String(1));
+      device_relay2.send("1");
     }
   }
 #endif
 
   ///////////////// commande de restart /////////
-  if (config.restart) {
-    delay(5000);
-    Serial.print("Restarting Dimmer");
-    ESP.restart();
+  // Dans votre code principal :
+  if (config.restart && !shouldRestart) {
+      shouldRestart = true;
+      restartTime = millis() + 5000;
+      Serial.println("Restart scheduled in 5 seconds...");
+      config.restart = false; // Éviter la répétition
+  }
+
+  // Dans loop() :
+  if (shouldRestart && millis() >= restartTime) {
+      Serial.println("Restarting Dimmer");
+      ESP.restart();
   }
 
   //// si la sécurité température est active on coupe le dimmer
@@ -811,10 +913,11 @@ void loop() {
     unified_dimmer.dimmer_off();
   }
 
-  if ( sysvar.security == 1 ) {
+  if ( sysvar.security ) {
     if (!alerte) {
       Serial.println("Alert Temp");
       logging.Set_log_init(Alert_Temp,true);
+      logging.alerte_web=Alert_Temp;
 
       if (!AP && mqtt_config.mqtt ) {
         Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("Ballon chaud " ),"Alerte");        /// send alert to MQTT
@@ -824,7 +927,8 @@ void loop() {
     }
     //// Trigger de sécurité température
     if ( sysvar.celsius[sysvar.dallas_maitre] <= (config.maxtemp - (config.maxtemp*config.trigger/100)) ) {
-      sysvar.security = 0;
+      sysvar.security = false;
+      logging.alerte_web="RAS";
       if (!AP && mqtt_config.mqtt && config.HA) {
         device_dimmer_alarm_temp.send(stringBool(sysvar.security));
         Mqtt_send_DOMOTICZ(String(config.IDXAlarme), String("RAS" ),"Alerte");
@@ -841,7 +945,7 @@ void loop() {
 
   ////////////////// controle de la puissance /////////////////
 
-  if ( sysvar.change == 1  && programme.run == false ) {   /// si changement et pas de minuteur en cours
+  if ( sysvar.change == 1  && programme.run == false  && !programme_marche_forcee.run && !config.preheat) {   /// si changement et pas de minuteur en cours
 
     if (config.dimmer_on_off == 0) {
       unified_dimmer.dimmer_off();
@@ -859,7 +963,7 @@ void loop() {
         sysvar.puissance_cumul = 0;
       }
     }
-    if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && sysvar.security == 0)
+    if (sysvar.puissance > config.minpow && sysvar.puissance != 0 && !sysvar.security)
     {
       DEBUG_PRINTLN(("%d------------------",__LINE__));
       /// si au dessus de la consigne max configurée alors config.maxpow.
@@ -921,26 +1025,26 @@ void loop() {
         else if ( sysvar.puissance > config.maxpow ) {
           Mqtt_send_DOMOTICZ(String(config.IDX), String (sysvar.puissance * config.charge/100) );  // remonté MQTT de la commande max
           if (config.HA) {
-            device_dimmer.send(String(config.maxpow));
+            device_dimmer.sendInt(config.maxpow);
             /// Modif RV - 20240219
             /// Oubli d'envoie "device_dimmer_power.send" + correction de "device_dimmer_total_power.send"
-            device_dimmer_power.send(String(config.maxpow * config.charge/100));
-            device_dimmer_total_power.send(String(sysvar.puissance_cumul + (config.maxpow * config.charge/100)));
+            device_dimmer_power.sendInt(config.maxpow * config.charge/100);
+            device_dimmer_total_power.sendInt(sysvar.puissance_cumul + (config.maxpow * config.charge/100));
           }                                                                                                          // remonté MQTT HA de la commande max
         }
         else {
           Mqtt_send_DOMOTICZ(String(config.IDX), String (sysvar.puissance * config.charge/100)); // remonté MQTT de la commande réelle
           if (config.HA) {
             int instant_power = unified_dimmer.get_power();
-            device_dimmer.send(String(instant_power));
-            device_dimmer_power.send(String(instant_power * config.charge/100));
-            device_dimmer_total_power.send(String(sysvar.puissance_cumul + (instant_power * config.charge/100)));
+            device_dimmer.sendInt(instant_power);
+            device_dimmer_power.sendInt(instant_power * config.charge/100);
+            device_dimmer_total_power.sendInt(sysvar.puissance_cumul + (instant_power * config.charge/100));
           }   // remonté MQTT HA de la commande réelle
         }
       }
     }
     /// si la sécurité est active on déleste
-    else if ( sysvar.puissance != 0 && sysvar.security == 1)
+    else if ( sysvar.puissance != 0 && sysvar.security )
     {
 
       if ( strcmp(config.child,"") != 0 && strcmp(config.child,"none") != 0  && strcmp(config.mode,"off") != 0) {
@@ -980,10 +1084,10 @@ void loop() {
       if (!AP && mqtt_config.Mqtt::mqtt) {
         int instant_power = unified_dimmer.get_power();
         Mqtt_send_DOMOTICZ(String(config.IDX), String (sysvar.puissance * config.charge/100) );    // correction 19/04
-        device_dimmer.send(String(instant_power));
-        device_dimmer_send_power.send(String(instant_power));
-        device_dimmer_power.send(String(instant_power * config.charge/100));
-        device_dimmer_total_power.send(String(sysvar.puissance_cumul + (instant_power*config.charge/100) ));
+        device_dimmer.sendInt(sysvar.puissance);
+        device_dimmer_send_power.sendInt(instant_power);
+        device_dimmer_power.sendInt(sysvar.puissance_cumul + (instant_power * config.charge/100));
+        device_dimmer_total_power.sendInt(sysvar.puissance_cumul + (instant_power * config.charge/100));
       }
     }
 
@@ -993,145 +1097,48 @@ void loop() {
   //***********************************
   //************* LOOP - Activation de la sécurité --> doublon partiel avec la fonction sécurité ?
   //***********************************
-  if ( sysvar.celsius[sysvar.dallas_maitre] >= config.maxtemp && sysvar.security == 0 ) {
-    sysvar.security = 1;
+  if ( sysvar.celsius[sysvar.dallas_maitre] >= config.maxtemp && !sysvar.security) {
+    sysvar.security = true;
+    logging.alerte_web=Alert_Temp;
     unified_dimmer.set_power(0); // necessaire pour les autres modes
     unified_dimmer.dimmer_off();
     /// pour être sur que la dernière consigne envoyé soit au moins égale au max.temp
     float temp = sysvar.celsius[sysvar.dallas_maitre] + 0.2;
     Mqtt_send_DOMOTICZ(String(config.IDXTemp), String(temp),"Temperature"); /// remonté MQTT de la température
     if ( config.HA ) {
-      device_temp[sysvar.dallas_maitre].send(String(temp));
-      device_temp_master.send(String(temp));
+
+      
+      device_temp[sysvar.dallas_maitre].sendFloat(temp);
+      device_temp_master.sendFloat(temp);
       device_dimmer_alarm_temp.send(stringBool(sysvar.security));
-      device_dimmer_power.send(String(0));
-      device_dimmer_total_power.send(String(sysvar.puissance_cumul));
+      device_dimmer_power.sendInt(0);
+      device_dimmer_total_power.sendInt(sysvar.puissance_cumul);
     }        /// si HA remonté MQTT HA de la température
   }
 
-  //// protection contre la perte de la sonde dallas
+  //// protection contre la perte de la sonde dallas --> à basculer dans la task dallas, sinon ça peut créer des conflits
   if (strlen(config.SubscribeTEMP) == 0 ) {
     restart_dallas();
   }
-  delay(100); // 24/01/2023 changement 500 à 100ms pour plus de réactivité
+
+  //// protection contre l'absence de commande  
+  if ( !programme.run && !programme_marche_forcee.run && !config.preheat ) { 
+    unified_dimmer.auto_off(AUTO_OFF);
+  }
+  
+  delay(100); 
+   // 24/01/2023 changement 500 à 100ms pour plus de réactivité 
 }
 
 ///////////////
 //// fin de loop
 //////////////
 
-//***********************************
-//************* Test de la présence d'une 18b20
-//***********************************
-
-bool dallaspresent () {
-
-  /// alerte d'une deection de dallas passée non trouvée
-  if (deviceCount == 0 && ( strcmp("null", config.DALLAS) != 0 || strcmp("none", config.DALLAS) != 0 )) {
-    /// remonter l'alerte une fois toute les 10 secondes
-    if (devicealerte == 0) {
-      logging.Set_log_init(Alerte_Dallas_not_found);
-      Mqtt_send_DOMOTICZ(String(config.IDXTemp), String("Alerte Dallas non trouvée"),"Alerte");  /// send alert to MQTT
-      device_dimmer_alarm_temp.send("Alerte Dallas non trouvée");
-      logging.Set_alerte_web("Dallas Maitre non trouvée");
-      devicealerte++;
-    }
-    else {
-      devicealerte++;
-      if (devicealerte > 10) {
-        devicealerte = 0;
-      }
-    }
-    return false;
-  }
-
-  logging.Set_alerte_web("");
-
-  //// recherche des adresses des sondes
-
-  for (int i = 0; i < deviceCount; i++) {
-    // int attempts = 0;
-    // bool sensorFound = false;
-    /// cas pour les sondes les plus lentes
-    /*   while (!sensorFound) {
-         if (!ds.search(addr[i])) {
-           delay(200); // try again after a short delay
-           attempts++;
-           if (attempts > 5) { // timeout: 5 attempts * 200ms each
-             break;
-           }
-         } else {
-           sensorFound = true;
-         }
-       }
-
-       /// si pas de sonde trouvée
-       if (!sensorFound) {
-         logging.Set_log_init("Unable to find temperature sensors address \r\n", true);
-         return false;
-       }*/
-
-    if (!sensors.getAddress(addr[i], i)) Serial.println("Unable to find address for Device 1");
-    else {
-      sensors.setResolution(addr[i], TEMPERATURE_PRECISION);
-    }
-  }
-
-  for (int a = 0; a < deviceCount; a++) {
-    String address = "";
-    Serial.print("ROM =");
-    for (uint8_t i = 0; i < 8; i++) {
-      if (addr[a][i] < 0x10) address += "0";
-      address += String(addr[a][i], HEX);
-      Serial.write(' ');
-      Serial.print(addr[a][i], HEX);
-    }
-    devAddrNames[a] = address;
-    Serial.println();
-    if (strcmp(address.c_str(), config.DALLAS) == 0) {
-      sysvar.dallas_maitre = a;
-      logging.Set_log_init("MAIN " );
-    }
-
-    // détection de la 1ere présence d'une dallas
-    if (strcmp("none", config.DALLAS) == 0 || strcmp("null", config.DALLAS) == 0 ) {
-      sysvar.dallas_maitre = a;
-      logging.Set_log_init("Default MAIN " );
-      // sauvegarde de l'adresse de la sonde maitre
-      strcpy(config.DALLAS, address.c_str());
-      config.saveConfiguration();
-    }
-
-    logging.Set_log_init(Dallas_sensor);
-    logging.Set_log_init(String(a).c_str());
-    logging.Set_log_init(found_Address);
-    logging.Set_log_init(String(address).c_str());
-    logging.Set_log_init("\r\n");
-    present = 1;
-
-    delay(250);
-    ds.reset();
-    ds.select(addr[a]);
-
-    ds.write(0x44, 1);        // start conversion, with parasite power on at the end
-
-    delay(1000);     // maybe 750ms is enough, maybe not
-    // we might do a ds.depower() here, but the reset will take care of it.
-
-    present = ds.reset();    ///  byte 0 > 1 si present
-    delay(1000);
-
-    ds.select(addr[a]);
-    ds.write(0xBE);         // Read Scratchpad
 
 
-  }
-  return true;
-}
 
-
-String stringBool(bool myBool) {
-  return myBool ? "true" : "false";
+const char* stringBool(bool myBool) {
+    return myBool ? "true" : "false";
 }
 
 
@@ -1139,7 +1146,7 @@ void tests () {
 /// test de debug
 #ifdef ROBOTDYN
   USE_SERIAL.println("--- Toggle dimmer example start ---");
-  dimmer.setState(ON); // state: dimmer1.setState(ON/OFF);
+  dimmer.setState(ON); 
   dimmer.setState(ON);
   dimmer3.setState(ON);
   dimmer2.setState(ON);
@@ -1155,3 +1162,30 @@ void tests () {
 #endif
 }
 
+bool boost(){
+    time_t now = time(nullptr);
+    if (programme_marche_forcee.run) {
+      // on coupe le boost 
+      /*programme_marche_forcee.run = false;
+      strcpy(programme_marche_forcee.heure_demarrage, "00:00"); // NOSONAR
+      strcpy(programme_marche_forcee.heure_arret, "00:00");  // NOSONAR
+      unified_dimmer.set_power(0);
+      */
+        // sur bug avec mqtt, on fait differement : on change l'heure de fin pour mettre à maintenant
+      strftime(programme_marche_forcee.heure_arret, 6, "%H:%M", localtime(&now));
+      now += TIME_BOOST;
+      strftime(programme_marche_forcee.heure_demarrage, 6, "%H:%M", localtime(&now));
+      return false;
+    }
+    
+    // programation de l'heure de démarrage
+    strftime(programme_marche_forcee.heure_demarrage, 6, "%H:%M", localtime(&now));
+    // ajout de 2h
+    now += TIME_BOOST;
+    // programmaton de l'heure d'arrêt
+    strftime(programme_marche_forcee.heure_arret, 6, "%H:%M", localtime(&now));
+    // ajout de la température de consigne
+    programme_marche_forcee.temperature = config.maxtemp;
+    programme_marche_forcee.puissance = programme.puissance;
+    return true;
+}

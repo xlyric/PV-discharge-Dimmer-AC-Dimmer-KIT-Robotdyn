@@ -16,15 +16,27 @@ extern dimmerLamp dimmer3;
 
 // @brief  structure pour uniformiser les commandes de puissances entre robotdyn et SSR
 struct gestion_puissance {
+private: 
+        unsigned long last_time = millis();
+        char temp_buffer[128];
+
 public: float power;
+
 
   // setter
   void set_power(float is_set_power){
+    last_time = millis();
     /// si la température est supérieur à la température max on coupe tout
     if ( sysvar.celsius[sysvar.dallas_maitre]> config.maxtemp ) { is_set_power = 0; }
     else if ( is_set_power > config.maxpow )  { is_set_power = config.maxpow; }
 
-    /// vérification de la température
+  #ifndef SSR_ZC
+    if ( is_set_power > 0 ) {dimmer.setState(ON); 
+      #ifdef outputPin2 
+        dimmer3.setState(ON); dimmer2.setState(ON); 
+      #endif
+      }
+  #endif
 
     this->power = is_set_power;
     /// pour le SSR
@@ -49,6 +61,7 @@ public: float power;
     int dimmer1_pwr = 0;
     int dimmer2_pwr = 0;
     int dimmer3_pwr = 0;
+
 
     // Calcul de la puissance à envoyer à chaque dimmer
     if (tmp_pwr_watt <= config.charge1) { // Un seul dimmer à fournir
@@ -126,11 +139,10 @@ public: float power;
       else { dimmer3.setPower(dimmer3_pwr); }
     }
     #endif
-    logging.Set_log_init("dimmer 1: " + String(dimmer1_pwr) + "%\r\n" );
-    #ifdef outputPin2
-    logging.Set_log_init("dimmer 2: " + String(dimmer2_pwr) + "%\r\n" );
-    logging.Set_log_init("dimmer 3: " + String(dimmer3_pwr) + "%\r\n" );
-    #endif
+    snprintf(temp_buffer, sizeof(temp_buffer),
+             "dimmer 1: %d%%, dimmer 2: %d%%, dimmer 3: %d%%\r\n",
+             dimmer1_pwr, dimmer2_pwr, dimmer3_pwr);
+    logging.Set_log_init(temp_buffer);
   #endif
   }
 
@@ -192,6 +204,19 @@ public: float power;
     ssr_burst.set_power(0);
   #endif
   }
+
+  // fonction de coupure automatique après un certain temps
+  void auto_off(unsigned int delay_off) {
+    if (( millis() - last_time >= delay_off*60*1000)  && (power > 0) ) {
+      dimmer_off();
+      Serial.println("dimmer auto off");
+      last_time = millis();
+    }
+  }
+
 };
+
+
+
 
 #endif
