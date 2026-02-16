@@ -198,7 +198,8 @@ void call_pages() {
         if (strcmp(config.child,"none") == 0 || strcmp(config.mode,"off") == 0 ) { max = 100; }
         if (sysvar.puissance >= max) {sysvar.puissance = max; }
         char temp_buffer[128]; // Ajustez la taille en fonction de la longueur maximale attendue
-        snprintf(temp_buffer, sizeof(temp_buffer),  "%s %.2f%%\r\n",HTTP_power_at, sysvar.puissance);
+        float temp_puissance_affiche = sysvar.puissance;
+        snprintf(temp_buffer, sizeof(temp_buffer),  "%s %.2f%%\r\n",HTTP_power_at, temp_puissance_affiche);
         logging.Set_log_init(temp_buffer);
         // Modif RV - correction bug si dimmer configuré mais pas allumé ou planté
         if (sysvar.change == 0) {

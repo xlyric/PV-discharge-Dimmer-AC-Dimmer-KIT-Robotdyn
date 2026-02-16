@@ -82,7 +82,7 @@ void mqttdallas() {
           previous_celsius[i]=sysvar.celsius[i];
           if ( dallas_wait_log > 5 ) { /// limitation de l'affichage des logs de température
             char temp_buffer[128]; 
-            snprintf(temp_buffer, sizeof(temp_buffer), "Dallas %d : %.1f\r\n", i, sysvar.celsius[i]);
+            snprintf(temp_buffer, sizeof(temp_buffer), "Dallas %d : %.1f\r\n", i, previous_celsius[i]);
             logging.Set_log_init(temp_buffer,false);
           }
         }
