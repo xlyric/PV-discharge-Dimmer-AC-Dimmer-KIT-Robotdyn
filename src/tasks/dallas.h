@@ -186,7 +186,7 @@ void mqttdallas() {
 //***********************************
 
 float CheckTemperature(String label, DeviceAddress deviceAddress){ // NOSONAR
-  float tempC = sensors.getTempC(deviceAddress);
+  SafeVar<float> tempC = sensors.getTempC(deviceAddress);
   if ( (tempC == DEVICE_DISCONNECTED_C) || (tempC == -255.00) ) {
     // si problème de récupération de la température, on relance la demande
     sensors.requestTemperaturesByAddress(deviceAddress);
