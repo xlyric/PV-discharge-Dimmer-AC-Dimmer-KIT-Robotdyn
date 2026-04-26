@@ -536,7 +536,7 @@ void setup() {
   const char* expectedPrefix = "PV-ROUTER";
   const char* currentSSID = WiFi.SSID().c_str();
 
-  if (strncmp(currentSSID, expectedPrefix, strlen(expectedPrefix)) == 0) {
+  if (WiFi.SSID().startsWith("PV-ROUTER")) {
     AP = true;
   }
 
@@ -1134,8 +1134,6 @@ void loop() {
 ///////////////
 //// fin de loop
 //////////////
-
-
 
 
 const char* stringBool(bool myBool) {

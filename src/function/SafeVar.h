@@ -13,7 +13,7 @@ private:
   volatile T value;
 
 public:
-  explicit SafeVar(T initialValue = T()) : value(initialValue) {}
+  SafeVar(T initialValue = T()) : value(initialValue) {} // NOSONAR: implicit conversion needed for member initialization
   
   T get() {  
     #ifdef ESP32
