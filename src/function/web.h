@@ -148,8 +148,9 @@ void call_pages() {
 
       if (request->hasParam(PARAM_INPUT_1)) {
         float input=request->getParam(PARAM_INPUT_1)->value().toFloat();
+        
 
-        if (input==0) {
+        if (input<=0) {
           sysvar.puissance = 0;         // En %
           sysvar.puissance_dispo = 0;   // En W
           sysvar.change = 0;            // par sécurité, au cas ou le main n'aurait pas fini
