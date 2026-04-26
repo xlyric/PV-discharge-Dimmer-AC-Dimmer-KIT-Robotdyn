@@ -45,7 +45,7 @@ public: void Set_log_init(const char* setter, bool logtime = false) {
         }
         // Vérifier si la longueur de la chaîne ajoutée ne dépasse pas LOG_MAX_STRING_LENGTH
 
-        size_t setterLength = strlen(setter);
+        size_t setterLength = strlen(setter); // NOSONAR
         size_t logInitLength = strlen(log_init); // NOSONAR
         size_t logUptimeLength = strlen(loguptime()); // NOSONAR
         size_t maxLength = LOG_MAX_STRING_LENGTH - 1; // Toujours laisser de la place pour le '\0'
@@ -56,7 +56,7 @@ public: void Set_log_init(const char* setter, bool logtime = false) {
         } else {
           // Ajouter l'uptime en premier si nécessaire
           if (logtime && (logInitLength + logUptimeLength < maxLength)) {
-            strncat(log_init, loguptime(), maxLength - logInitLength - 1);
+            strncat(log_init, loguptime(), maxLength - logInitLength - 1); // NOSONAR
             logInitLength += logUptimeLength;
           }
 
