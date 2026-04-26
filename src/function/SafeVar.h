@@ -13,9 +13,9 @@ private:
   volatile T value;
 
 public:
-  SafeVar(T initialValue = T()) : value(initialValue) {}
+  explicit SafeVar(T initialValue = T()) : value(initialValue) {}
   
-  T get() {
+  T get() {  
     #ifdef ESP32
       portENTER_CRITICAL(&mux);
       T temp = value;
@@ -41,7 +41,7 @@ public:
     #endif
   }
   
-  operator T() { return get(); }
+  operator T() { return get(); } // NOSONAR: implicit conversion is intentional
   SafeVar& operator=(T newValue) {
     set(newValue);
     return *this;
