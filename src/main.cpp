@@ -70,6 +70,7 @@
  **************************/
 
 #include <Arduino.h>
+#include "function/SafeVar.h" // pour les fonctions de conversion et autres
 
 #ifdef ROBOTDYN
 // Dimmer librairy

@@ -369,11 +369,11 @@ public:
 /// variables globales
 struct System {
   /// @brief  température actuelle
-  float celsius[MAX_DALLAS] = {0.00};
+  SafeVar<float> celsius[MAX_DALLAS] = {0.00};
   /// @brief  puissance actuelle en %
-  float puissance;
+  SafeVar<float> puissance;
   /// @brief  puissance actuelle en Watt
-  int puissancewatt=0;
+  SafeVar<int> puissancewatt=0;
   /// @brief  puissance max locale en Watt
   int puissancemax=0;
   /// @brief  puissance dispo en watt
