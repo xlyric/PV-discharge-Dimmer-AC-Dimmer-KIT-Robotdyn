@@ -69,7 +69,7 @@ String getState();
 String getState_dallas();
 
 String textnofiles();
-String processor(const String& var);
+//String processor(const String& var);
 String getServermode(String Servermode);
 
 String switchstate(int state);
@@ -97,14 +97,14 @@ void call_pages() {
   */
   // Static pages, see compressed
   const char* staticFiles[][2] = {
-    {"/js/all.min.js", "/js/all.min.js"},
+   /* {"/js/all.min.js", "/js/all.min.js"},
     {"/css/all.min.css", "/css/all.min.css"},
     {"/log.html", "/log.html"},
     {"/mqtt.html", "/mqtt.html"},
     {"/minuteur.html", "/minuteur.html"},
     {"/relai.html", "/relai.html"},
-    {"/backup.html", "/backup.html"},
-    {"/lang.json", "/lang.json"},
+    {"/backup.html", "/backup.html"}
+    {"/lang.json", "/lang.json"}, */
     {"/js/app.js", "/js/app.js"},
     {"/css/style.css", "/css/style.css"},
     {"/icons.svg", "/icons.svg"},
@@ -112,19 +112,19 @@ void call_pages() {
   };
 
   for (const auto& file : staticFiles) {
-    if (strstr(file[0], ".html")) {
+   /*if (strstr(file[0], ".html")) {
       server.serveStatic(file[0], LittleFS, file[1]).setTemplateProcessor(processor).setCacheControl("max-age=31536000");
-    } else {
+    } else {*/
       server.serveStatic(file[0], LittleFS, file[1]).setCacheControl("max-age=31536000");
-    }
+    //}
   }
 
   // page config.html
-  if (!AP) {
+ /* if (!AP) {
     server.serveStatic("/config.html", LittleFS, "/config.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
   } else {
     server.serveStatic("/config-AP.html", LittleFS, "/config-AP.html").setTemplateProcessor(processor).setCacheControl("max-age=31536000");
-  }
+  }*/
 
   // page de index et récupération des requetes de puissance
   server.on("/",HTTP_ANY, [](AsyncWebServerRequest *request){
@@ -224,18 +224,19 @@ void call_pages() {
       }
 
       else  {
-        if (!AP) {
-          AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/index.html", String(), false, processor);
+        //if (!AP) 
+        {
+          AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/index.html", String(), false, nullptr);
           response->addHeader("cache-control","max-age=31536000");
           request->send(response);
 
           //request->send(LittleFS, "/index.html", String(), false, processor);
-        } else {
+        } /*else {
           AsyncWebServerResponse *response = request->beginResponse(LittleFS, "/index-AP.html", String(), false, processor);
           response->addHeader("cache-control","max-age=31536000");
           request->send(response);
           //request->send(LittleFS, "/index-AP.html", String(), false, processor);
-        }
+        }*/
       }
     }
     else
@@ -684,7 +685,7 @@ String textnofiles() {
   return String(state);
 }
 
-String processor(const String& var){
+ /*String processor(const String& var){
 
   if (var == "VERSION") {
     // affichage de la version et de l'environnement
@@ -700,9 +701,9 @@ String processor(const String& var){
   }
   if (var == "FS_RELEASE") {
     return String(FS_RELEASE);
-  }
-  return ("N/A");
-}
+  } 
+  return "";
+} */
 
 
 String getconfig() {
