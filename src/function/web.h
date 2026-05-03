@@ -104,7 +104,11 @@ void call_pages() {
     {"/minuteur.html", "/minuteur.html"},
     {"/relai.html", "/relai.html"},
     {"/backup.html", "/backup.html"},
-    {"/lang.json", "/lang.json"}
+    {"/lang.json", "/lang.json"},
+    {"/js/app.js", "/js/app.js"},
+    {"/css/style.css", "/css/style.css"},
+    {"/icons.svg", "/icons.svg"},
+
   };
 
   for (const auto& file : staticFiles) {
@@ -636,6 +640,7 @@ String getState() {
   doc["temperature"] = buffer;
   doc["power"] = int(instant_power * config.charge/100);
   doc["Ptotal"]  = sysvar.puissance_cumul + int(instant_power * config.charge/100);
+  doc["RSSI"] = WiFi.RSSI();
   #ifdef RELAY1
   doc["relay1"]   = !digitalRead(RELAY1);
   doc["relay2"]   = digitalRead(RELAY2);
