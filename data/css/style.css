@@ -239,6 +239,17 @@ a:hover { color: var(--primary-light); }
 .theme-toggle svg { width: 18px; height: 18px; fill: var(--text); }
 .theme-toggle:hover { background: var(--border); }
 
+.lang-select {
+  background: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 6px;
+  font-size: .82rem;
+  cursor: pointer;
+}
+.lang-select:hover { background: var(--border); }
+
 .menu-toggle {
   display: none;
   background: none;

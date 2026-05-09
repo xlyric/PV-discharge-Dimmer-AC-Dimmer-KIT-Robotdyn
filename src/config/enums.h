@@ -139,6 +139,8 @@ public:
   int trigger = 0;
   bool preheat = false;
   int mintemp = 0;
+  bool auth_enabled = false;
+  String auth_pass = "";
 
   void check_trigger() {
     if (trigger < 0) { trigger = 0; }
@@ -187,6 +189,8 @@ public:
     charge3 = doc["charge3"] | 0;
     trigger = doc["trigger"] | 10;
     mintemp = doc["mintemp"] | 0;
+    auth_enabled = doc["auth_enabled"] | false;
+    auth_pass = doc["auth_pass"] | "";
     check_trigger();
 
     auto Publishchild = doc["child"].as<String>();
@@ -270,6 +274,8 @@ public:
     doc["charge3"] = charge3;
     doc["trigger"] = trigger;
     doc["mintemp"] = mintemp;
+    doc["auth_enabled"] = auth_enabled;
+    doc["auth_pass"] = auth_pass;
 
     // Serialize JSON to file
     if (serializeJson(doc, configFile) == 0) {

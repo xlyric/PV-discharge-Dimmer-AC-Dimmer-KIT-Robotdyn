@@ -10,12 +10,35 @@ const App = {
 
   // ---------- Init ----------
   init() {
+    if (window.I18n) I18n.init();
     this.initTheme();
     this.initNav();
     this.initClock();
     this.initMenuToggle();
+    this.initLang();
+    this.initReboot();
     this.route(location.hash || '#dashboard');
     window.addEventListener('hashchange', () => this.route(location.hash));
+    document.addEventListener('langchange', () => {
+      if (this.currentPage) this.route('#' + this.currentPage);
+    });
+  },
+
+  t(key, vars) { return window.I18n ? I18n.t(key, vars) : key; },
+
+  initLang() {
+    const sel = document.getElementById('langSelect');
+    if (!sel || !window.I18n) return;
+    sel.value = I18n.current;
+    sel.addEventListener('change', () => I18n.set(sel.value));
+  },
+
+  initReboot() {
+    const btn = document.getElementById('rebootBtn');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      if (confirm(this.t('common.confirm_reboot_dimmer'))) fetch('/reboot');
+    });
   },
 
   // ---------- Routing ----------
@@ -31,6 +54,8 @@ const App = {
     // Close mobile sidebar
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('overlay').classList.remove('show');
+    const menuToggle = document.getElementById('menuToggle');
+    if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
 
     const pages = {
       dashboard: () => this.loadDashboard(),
@@ -39,6 +64,7 @@ const App = {
       minuteur: () => this.loadMinuteur(),
       log: () => this.loadLog(),
       backup: () => this.loadBackup(),
+      security: () => this.loadSecurity(),
     };
 
     const loader = pages[page];
@@ -51,11 +77,11 @@ const App = {
   // ---------- Dashboard ----------
   async loadDashboard() {
     document.getElementById('pageContent').innerHTML = `
-      <h2 class="page-title">Dashboard</h2>
+      <h2 class="page-title">${this.t('page.dashboard')}</h2>
       <div id="alertBox" class="alert alert-danger"></div>
       <div class="card-grid">
         <div class="card">
-          <div class="card-header">Puissance</div>
+          <div class="card-header">${this.t('dash.power')}</div>
           <div class="card-body">
             <div class="gauge-container">
               <svg class="gauge-svg" viewBox="0 0 160 100">
@@ -68,7 +94,7 @@ const App = {
           </div>
         </div>
         <div class="card">
-          <div class="card-header">Temperature</div>
+          <div class="card-header">${this.t('dash.temperature')}</div>
           <div class="card-body">
             <div class="gauge-container">
               <svg class="gauge-svg" viewBox="0 0 160 100">
@@ -81,29 +107,29 @@ const App = {
           </div>
         </div>
         <div class="card">
-          <div class="card-header">Etats du systeme</div>
+          <div class="card-header">${this.t('dash.system_states')}</div>
           <div class="card-body">
             <div class="state-list">
               <div class="state-item">
-                <span class="state-label">Ballon</span>
+                <span class="state-label">${this.t('dash.boiler')}</span>
                 <span class="state-value off" id="st-alerte">N/A</span>
               </div>
               <div class="state-item">
-                <span class="state-label">Minuteur</span>
+                <span class="state-label">${this.t('dash.timer')}</span>
                 <span class="state-value off" id="st-minuteur">N/A</span>
               </div>
               <div class="state-item">
-                <span class="state-label">Relais 1</span>
+                <span class="state-label">${this.t('dash.relay1')}</span>
                 <span class="state-value off clickable" id="st-relay1" data-action="relay1">N/A</span>
               </div>
               <div class="state-item">
-                <span class="state-label">Relais 2</span>
+                <span class="state-label">${this.t('dash.relay2')}</span>
                 <span class="state-value off clickable" id="st-relay2" data-action="relay2">N/A</span>
               </div>
               <div class="state-item">
                 <div>
-                  <span class="state-label">Boost</span>
-                  <div class="state-sub" id="st-boost-info">max: N/A°C</div>
+                  <span class="state-label">${this.t('dash.boost')}</span>
+                  <div class="state-sub" id="st-boost-info">${this.t('dash.boost_max_label', { v: 'N/A°C' })}</div>
                 </div>
                 <span class="state-value off clickable" id="st-boost" data-action="boost">N/A</span>
               </div>
@@ -111,10 +137,10 @@ const App = {
           </div>
         </div>
         <div class="card">
-          <div class="card-header">Sondes Dallas</div>
+          <div class="card-header">${this.t('dash.dallas_probes')}</div>
           <div class="card-body">
             <div class="dallas-grid" id="dallasContainer">
-              <p style="color:var(--text-muted);font-size:.85rem">Chargement...</p>
+              <p style="color:var(--text-muted);font-size:.85rem">${this.t('common.loading')}</p>
             </div>
           </div>
         </div>
@@ -164,6 +190,8 @@ const App = {
       this.updateDashboard(data);
     } catch (e) {
       console.error('State fetch error:', e);
+      const wifiBadge = document.getElementById('topbar-wifi');
+      if (wifiBadge) { wifiBadge.classList.remove('on'); wifiBadge.classList.add('off'); }
     }
   },
 
@@ -186,29 +214,29 @@ const App = {
 
     // States
     this.setState('st-alerte', d.alerte === 1 || d.alerte === '1' || d.alerte === true,
-      'Refroidissement', 'Normal', 'danger', 'on');
+      this.t('state.cooling'), this.t('state.normal'), 'danger', 'on');
     this.setState('st-minuteur', d.minuteur === 1 || d.minuteur === '1' || d.minuteur === true,
-      'Actif', 'Inactif', 'warn', 'off');
+      this.t('state.active'), this.t('state.inactive'), 'warn', 'off');
     this.setState('st-relay1', d.relay1 === 1 || d.relay1 === '1' || d.relay1 === true,
-      'ON', 'OFF', 'on', 'off');
+      this.t('state.on'), this.t('state.off'), 'on', 'off');
     this.setState('st-relay2', d.relay2 === 1 || d.relay2 === '1' || d.relay2 === true,
-      'ON', 'OFF', 'on', 'off');
+      this.t('state.on'), this.t('state.off'), 'on', 'off');
 
     const boostActive = d.boost === 1 || d.boost === '1' || d.boost === true;
-    this.setState('st-boost', boostActive, 'ON', 'OFF', 'on', 'off');
+    this.setState('st-boost', boostActive, this.t('state.on'), this.t('state.off'), 'on', 'off');
     const boostInfo = document.getElementById('st-boost-info');
     if (boostInfo) {
       const maxT = d.boost_max_temp || 'N/A';
       boostInfo.textContent = boostActive && d.boost_endtime
-        ? `Fin: ${d.boost_endtime} - max: ${maxT}°C`
-        : `max: ${maxT}°C`;
+        ? this.t('state.boost_info', { end: d.boost_endtime, max: maxT })
+        : this.t('state.boost_max', { max: maxT });
     }
 
     // Alert
     const alertBox = document.getElementById('alertBox');
     if (alertBox) {
       if (typeof d.alerte === 'string' && d.alerte.trim() && d.alerte !== 'RAS') {
-        alertBox.textContent = 'Alerte: ' + d.alerte;
+        alertBox.textContent = this.t('state.alert_prefix') + ': ' + d.alerte;
         alertBox.classList.add('show');
       } else {
         alertBox.classList.remove('show');
@@ -266,7 +294,7 @@ const App = {
     container.innerHTML = sensors.map(s => `
       <div class="dallas-item">
         <div class="dallas-icon">
-          <svg viewBox="0 0 16 16"><use href="/icons.svg#icon-thermometer"/></svg>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><use href="/icons.svg#icon-thermometer"/></svg>
         </div>
         <div>
           <div class="dallas-temp">${s.temp}°C</div>
@@ -290,117 +318,117 @@ const App = {
   // ---------- Config ----------
   async loadConfig() {
     document.getElementById('pageContent').innerHTML = `
-      <h2 class="page-title">Configuration</h2>
+      <h2 class="page-title">${this.t('page.config')}</h2>
       <div id="alertBox" class="alert alert-danger"></div>
       <div style="display:flex;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap">
-        <button class="btn btn-primary btn-sm" id="btn-apply-config">Appliquer</button>
-        <button class="btn btn-success btn-sm" id="btn-save-flash">Sauvegarder sur la flash</button>
-        <button class="btn btn-outline btn-sm" id="btn-onoff">Dimmer: ...</button>
+        <button class="btn btn-primary btn-sm" id="btn-apply-config">${this.t('btn.apply')}</button>
+        <button class="btn btn-success btn-sm" id="btn-save-flash">${this.t('btn.save_flash')}</button>
+        <button class="btn btn-outline btn-sm" id="btn-onoff">${this.t('dash.dimmer_status', { state: '...' })}</button>
       </div>
       <div id="config-status" class="alert alert-success" style="display:none"></div>
       <form id="configForm">
         <div class="card" style="margin-bottom:1rem">
-          <div class="card-header">Plage d'utilisation</div>
+          <div class="card-header">${this.t('config.range')}</div>
           <div class="card-body">
             <div class="form-row">
               <div class="form-group">
-                <label>Max Temp (°C)</label>
-                <input type="number" class="form-control" id="maxtemp">
+                <label>${this.t('form.max_temp')}</label>
+                <input type="number" class="form-control" id="maxtemp" min="0" max="100" step="1">
               </div>
               <div class="form-group">
-                <label>Min Temp (°C)</label>
-                <input type="number" class="form-control" id="mintemp">
+                <label>${this.t('form.min_temp')}</label>
+                <input type="number" class="form-control" id="mintemp" min="0" max="100" step="1">
               </div>
               <div class="form-group">
-                <label>Trigger (%)</label>
-                <input type="number" class="form-control" id="trigger">
+                <label>${this.t('form.trigger')}</label>
+                <input type="number" class="form-control" id="trigger" min="0" max="100" step="1">
               </div>
               <div class="form-group">
-                <label>Min Power (%)</label>
-                <input type="number" class="form-control" id="minpow">
+                <label>${this.t('form.min_power')}</label>
+                <input type="number" class="form-control" id="minpow" min="0" max="100" step="1">
               </div>
               <div class="form-group">
-                <label>Max Power (%)</label>
-                <input type="number" class="form-control" id="maxpow">
+                <label>${this.t('form.max_power')}</label>
+                <input type="number" class="form-control" id="maxpow" min="0" max="100" step="1">
               </div>
             </div>
           </div>
         </div>
         <div class="card" style="margin-bottom:1rem">
-          <div class="card-header">Charges</div>
+          <div class="card-header">${this.t('config.charges')}</div>
           <div class="card-body">
             <div class="form-row">
               <div class="form-group">
-                <label>Charge 1 - Dimmer (W)</label>
-                <input type="number" class="form-control" id="charge1">
+                <label>${this.t('form.charge1')}</label>
+                <input type="number" class="form-control" id="charge1" min="0" max="10000" step="1">
               </div>
               <div class="form-group">
-                <label>Charge 2 - Jotta (W)</label>
-                <input type="number" class="form-control" id="charge2">
+                <label>${this.t('form.charge2')}</label>
+                <input type="number" class="form-control" id="charge2" min="0" max="10000" step="1">
               </div>
               <div class="form-group">
-                <label>Charge 3 - Relay2 (W)</label>
-                <input type="number" class="form-control" id="charge3">
+                <label>${this.t('form.charge3')}</label>
+                <input type="number" class="form-control" id="charge3" min="0" max="10000" step="1">
               </div>
             </div>
           </div>
         </div>
         <div class="card" style="margin-bottom:1rem">
-          <div class="card-header">Child &amp; Hostname</div>
+          <div class="card-header">${this.t('config.child_hostname')}</div>
           <div class="card-body">
             <div class="form-row">
               <div class="form-group">
-                <label>Child Dimmer IP</label>
+                <label>${this.t('form.child_dimmer_ip')}</label>
                 <input type="text" class="form-control" id="child">
               </div>
               <div class="form-group">
-                <label>Child Mode</label>
+                <label>${this.t('form.child_mode')}</label>
                 <select class="form-control" id="delester">
-                  <option value="off">Off</option>
-                  <option value="delester">Delester</option>
-                  <option value="equal">Egal</option>
+                  <option value="off">${this.t('form.opt_off')}</option>
+                  <option value="delester">${this.t('form.opt_delester')}</option>
+                  <option value="equal">${this.t('form.opt_equal')}</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>Dimmer Name</label>
+                <label>${this.t('form.dimmer_name')}</label>
                 <input type="text" class="form-control" id="dimmername">
               </div>
             </div>
           </div>
         </div>
         <div class="card" style="margin-bottom:1rem">
-          <div class="card-header">Pilote MQTT</div>
+          <div class="card-header">${this.t('card.pilote_mqtt')}</div>
           <div class="card-body">
             <div class="form-row">
               <div class="form-group">
-                <label>MQTT state subscription</label>
+                <label>${this.t('form.mqtt_state_sub')}</label>
                 <input type="text" class="form-control" id="SubscribePV" placeholder="none">
               </div>
               <div class="form-group">
-                <label>MQTT temp subscription</label>
+                <label>${this.t('form.mqtt_temp_sub')}</label>
                 <input type="text" class="form-control" id="SubscribeTEMP" placeholder="none">
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Puissance de demarrage</label>
-                <input type="number" class="form-control" id="startingpow">
+                <label>${this.t('form.start_power')}</label>
+                <input type="number" class="form-control" id="startingpow" min="0" max="10000" step="1">
               </div>
               <div class="form-group">
-                <label>Etat au demarrage</label>
+                <label>${this.t('form.start_state')}</label>
                 <select class="form-control" id="dimmer_on_off">
-                  <option value="1">On</option>
-                  <option value="0">Off</option>
+                  <option value="1">${this.t('form.opt_on')}</option>
+                  <option value="0">${this.t('form.opt_off')}</option>
                 </select>
               </div>
             </div>
           </div>
         </div>
         <div class="card" style="margin-bottom:1rem">
-          <div class="card-header">Dallas Local</div>
+          <div class="card-header">${this.t('config.dallas_local')}</div>
           <div class="card-body">
             <div class="form-group">
-              <label>Adresse sonde Dallas maitre</label>
+              <label>${this.t('form.dallas_master_addr')}</label>
               <input type="text" class="form-control" id="DALLAS">
             </div>
             <div id="config-dallas" style="margin-top:.5rem;font-size:.82rem;color:var(--text-muted)"></div>
@@ -426,13 +454,14 @@ const App = {
 
       // ON/OFF button
       const onoffBtn = document.getElementById('btn-onoff');
-      onoffBtn.textContent = 'Dimmer: ' + (state.onoff ? 'ON' : 'OFF');
+      onoffBtn.textContent = this.t('dash.dimmer_status', { state: state.onoff ? this.t('state.on') : this.t('state.off') });
       onoffBtn.className = 'btn btn-sm ' + (state.onoff ? 'btn-success' : 'btn-danger');
 
       // Dallas info from state
       this.updateConfigDallas(state);
     } catch (e) {
       console.error('Config load error:', e);
+      this.showStatus('config-status', this.t('status.error_with', { msg: e.message }), true);
     }
 
     // Bind buttons
@@ -448,15 +477,17 @@ const App = {
     for (const key in data) {
       if (key.startsWith('dallas')) {
         const num = key.substring(6);
-        sensors.push(`Sonde ${num}: ${data[key]}°C (${data['addr' + num] || '?'})`);
+        sensors.push(`Sonde ${this.esc(num)}: ${this.esc(String(data[key]))}°C (${this.esc(data['addr' + num] || '?')})`);
       }
     }
     container.innerHTML = sensors.length
-      ? '<strong>Sondes presentes:</strong><br>' + sensors.join('<br>')
-      : 'Aucune sonde detectee';
+      ? '<strong>' + this.t('dash.probes_present') + '</strong><br>' + sensors.join('<br>')
+      : this.t('dash.no_probe');
   },
 
   async applyConfig() {
+    const form = document.getElementById('configForm');
+    if (form && !form.checkValidity()) { form.reportValidity(); return; }
     const fields = ['maxtemp', 'mintemp', 'startingpow', 'minpow', 'maxpow', 'child',
       'SubscribePV', 'SubscribeTEMP', 'charge1', 'charge2', 'charge3',
       'DALLAS', 'dimmername', 'trigger'];
@@ -469,18 +500,18 @@ const App = {
 
     try {
       await fetch('/get?' + params.toString());
-      this.showStatus('config-status', 'Configuration appliquee');
+      this.showStatus('config-status', this.t('status.applied'));
     } catch (e) {
-      this.showStatus('config-status', 'Erreur: ' + e.message, true);
+      this.showStatus('config-status', this.t('status.error_with', { msg: e.message }), true);
     }
   },
 
   async saveFlash() {
     try {
       await fetch('/get?save=yes');
-      this.showStatus('config-status', 'Configuration sauvegardee sur la flash');
+      this.showStatus('config-status', this.t('status.saved_flash'));
     } catch (e) {
-      this.showStatus('config-status', 'Erreur: ' + e.message, true);
+      this.showStatus('config-status', this.t('status.error_with', { msg: e.message }), true);
     }
   },
 
@@ -490,7 +521,7 @@ const App = {
       const val = await res.text();
       const btn = document.getElementById('btn-onoff');
       const isOn = val.trim() === '1';
-      btn.textContent = 'Dimmer: ' + (isOn ? 'ON' : 'OFF');
+      btn.textContent = this.t('dash.dimmer_status', { state: isOn ? this.t('state.on') : this.t('state.off') });
       btn.className = 'btn btn-sm ' + (isOn ? 'btn-success' : 'btn-danger');
     } catch (e) {
       console.error('Toggle error:', e);
@@ -500,61 +531,61 @@ const App = {
   // ---------- MQTT ----------
   async loadMqtt() {
     document.getElementById('pageContent').innerHTML = `
-      <h2 class="page-title">Configuration MQTT</h2>
+      <h2 class="page-title">${this.t('page.mqtt')}</h2>
       <div style="display:flex;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap">
-        <button class="btn btn-primary btn-sm" id="btn-apply-mqtt">Appliquer</button>
-        <button class="btn btn-success btn-sm" id="btn-save-mqtt">Sauvegarder</button>
+        <button class="btn btn-primary btn-sm" id="btn-apply-mqtt">${this.t('btn.apply')}</button>
+        <button class="btn btn-success btn-sm" id="btn-save-mqtt">${this.t('btn.save')}</button>
       </div>
       <div id="mqtt-status" class="alert alert-success" style="display:none"></div>
       <form id="mqttForm">
         <div class="card" style="margin-bottom:1rem">
-          <div class="card-header">Connexion MQTT</div>
+          <div class="card-header">${this.t('card.connection_mqtt')}</div>
           <div class="card-body">
             <div class="form-check">
               <input type="checkbox" id="MQTT" onchange="App.sendServermode('MQTT')">
-              <label for="MQTT">Activer MQTT</label>
+              <label for="MQTT">${this.t('form.activate_mqtt')}</label>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Serveur</label>
-                <input type="text" class="form-control" id="server" placeholder="IP ou hostname">
+                <label>${this.t('form.server')}</label>
+                <input type="text" class="form-control" id="server" placeholder="${this.t('form.server_placeholder')}">
               </div>
               <div class="form-group">
-                <label>Port</label>
-                <input type="number" class="form-control" id="port" placeholder="1883">
+                <label>${this.t('form.port')}</label>
+                <input type="number" class="form-control" id="port" placeholder="1883" min="1" max="65535" step="1">
               </div>
               <div class="form-group">
-                <label>Topic Domoticz</label>
+                <label>${this.t('form.topic_domoticz')}</label>
                 <input type="text" class="form-control" id="topic">
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Utilisateur</label>
+                <label>${this.t('form.user')}</label>
                 <input type="text" class="form-control" id="user">
               </div>
               <div class="form-group">
-                <label>Mot de passe</label>
+                <label>${this.t('form.password')}</label>
                 <input type="password" class="form-control" id="password">
               </div>
             </div>
           </div>
         </div>
         <div class="card" style="margin-bottom:1rem">
-          <div class="card-header">Domoticz IDX</div>
+          <div class="card-header">${this.t('card.domoticz_idx')}</div>
           <div class="card-body">
             <div class="form-row">
               <div class="form-group">
-                <label>IDX Temperature</label>
-                <input type="number" class="form-control" id="idxtemp">
+                <label>${this.t('form.idx_temp_label')}</label>
+                <input type="number" class="form-control" id="idxtemp" min="0" max="65535" step="1">
               </div>
               <div class="form-group">
-                <label>IDX Puissance</label>
-                <input type="number" class="form-control" id="IDX">
+                <label>${this.t('form.idx_power_label')}</label>
+                <input type="number" class="form-control" id="IDX" min="0" max="65535" step="1">
               </div>
               <div class="form-group">
-                <label>IDX Alarme</label>
-                <input type="number" class="form-control" id="IDXAlarme">
+                <label>${this.t('form.idx_alarm_label')}</label>
+                <input type="number" class="form-control" id="IDXAlarme" min="0" max="65535" step="1">
               </div>
             </div>
           </div>
@@ -574,20 +605,23 @@ const App = {
       }
     } catch (e) {
       console.error('MQTT config load error:', e);
+      this.showStatus('mqtt-status', this.t('status.error_with', { msg: e.message }), true);
     }
 
     document.getElementById('btn-apply-mqtt').addEventListener('click', () => this.applyMqtt());
     document.getElementById('btn-save-mqtt').addEventListener('click', async () => {
       try {
         await fetch('/getmqtt?save=yes');
-        this.showStatus('mqtt-status', 'Configuration sauvegardee');
+        this.showStatus('mqtt-status', this.t('status.saved'));
       } catch (e) {
-        this.showStatus('mqtt-status', 'Erreur', true);
+        this.showStatus('mqtt-status', this.t('status.error'), true);
       }
     });
   },
 
   async applyMqtt() {
+    const form = document.getElementById('mqttForm');
+    if (form && !form.checkValidity()) { form.reportValidity(); return; }
     const params = new URLSearchParams();
     ['server', 'port', 'topic', 'user', 'password', 'idxtemp', 'IDX', 'IDXAlarme'].forEach(f => {
       const el = document.getElementById(f);
@@ -595,10 +629,14 @@ const App = {
         f === 'user' ? 'mqttuser' : f === 'password' ? 'mqttpassword' : f, el.value);
     });
     try {
-      await fetch('/get?' + params.toString());
-      this.showStatus('mqtt-status', 'Configuration appliquee');
+      await fetch('/get', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+      });
+      this.showStatus('mqtt-status', this.t('status.applied'));
     } catch (e) {
-      this.showStatus('mqtt-status', 'Erreur: ' + e.message, true);
+      this.showStatus('mqtt-status', this.t('status.error_with', { msg: e.message }), true);
     }
   },
 
@@ -611,22 +649,23 @@ const App = {
       if (el && config[18] !== undefined) {
         el.checked = config[18] === '1' || config[18] === 'true' || config[18] === 'on';
       }
-      this.showStatus('mqtt-status', 'Configuration appliquee');
+      this.showStatus('mqtt-status', this.t('status.applied'));
     } catch (e) {
-      this.showStatus('mqtt-status', 'Erreur: ' + e.message, true);
+      this.showStatus('mqtt-status', this.t('status.error_with', { msg: e.message }), true);
     }
   },
 
   // ---------- Minuteur ----------
   async loadMinuteur() {
     const tabs = ['dimmer', 'relay1', 'relay2'];
+    const labels = { dimmer: this.t('tab.dimmer'), relay1: this.t('tab.relay1'), relay2: this.t('tab.relay2') };
     document.getElementById('pageContent').innerHTML = `
-      <h2 class="page-title">Minuteur d'appoint</h2>
+      <h2 class="page-title">${this.t('page.minuteur')}</h2>
       <div id="minuteur-status" class="alert alert-success" style="display:none"></div>
       <div class="card">
         <div class="card-header">
           <div class="tabs" style="border:none;margin:0">
-            ${tabs.map((t, i) => `<button class="tab-btn ${i === 0 ? 'active' : ''}" data-tab="${t}">${t === 'dimmer' ? 'Dimmer' : t === 'relay1' ? 'Relais 1' : 'Relais 2'}</button>`).join('')}
+            ${tabs.map((t, i) => `<button class="tab-btn ${i === 0 ? 'active' : ''}" data-tab="${t}">${labels[t]}</button>`).join('')}
           </div>
         </div>
         <div class="card-body">
@@ -635,24 +674,24 @@ const App = {
               <form id="form-${t}">
                 <div class="form-row">
                   <div class="form-group">
-                    <label>Heure de demarrage (HH:MM)</label>
+                    <label>${this.t('form.heure_demarrage')}</label>
                     <input type="text" class="form-control" id="heure_demarrage_${t}" placeholder="HH:MM">
                   </div>
                   <div class="form-group">
-                    <label>Heure d'arret (HH:MM)</label>
+                    <label>${this.t('form.heure_arret')}</label>
                     <input type="text" class="form-control" id="heure_arret_${t}" placeholder="HH:MM">
                   </div>
                   <div class="form-group">
-                    <label>Temperature consigne (°C)</label>
-                    <input type="number" class="form-control" id="temperature_${t}">
+                    <label>${this.t('form.temperature_consigne')}</label>
+                    <input type="number" class="form-control" id="temperature_${t}" min="0" max="100" step="1">
                   </div>
                   ${t === 'dimmer' ? `
                   <div class="form-group">
-                    <label>Puissance (%)</label>
-                    <input type="number" class="form-control" id="puissance_${t}">
+                    <label>${this.t('form.puissance')}</label>
+                    <input type="number" class="form-control" id="puissance_${t}" min="0" max="100" step="1">
                   </div>` : ''}
                 </div>
-                <button type="submit" class="btn btn-primary btn-sm" style="margin-top:.5rem">Appliquer ${t === 'dimmer' ? 'Dimmer' : t === 'relay1' ? 'Relais 1' : 'Relais 2'}</button>
+                <button type="submit" class="btn btn-primary btn-sm" style="margin-top:.5rem">${this.t('btn.apply_target', { target: labels[t] })}</button>
               </form>
             </div>
           `).join('')}
@@ -690,6 +729,7 @@ const App = {
     for (const t of tabs) {
       document.getElementById('form-' + t).addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (!e.target.checkValidity()) { e.target.reportValidity(); return; }
         const params = new URLSearchParams();
         params.set('heure_demarrage', document.getElementById('heure_demarrage_' + t).value);
         params.set('heure_arret', document.getElementById('heure_arret_' + t).value);
@@ -697,9 +737,9 @@ const App = {
         if (t === 'dimmer') params.set('puissance', document.getElementById('puissance_' + t).value);
         try {
           await fetch('/setminuteur?' + t + '&' + params.toString());
-          this.showStatus('minuteur-status', 'Configuration ' + t + ' appliquee');
+          this.showStatus('minuteur-status', this.t('status.applied_target', { target: labels[t] }));
         } catch (err) {
-          this.showStatus('minuteur-status', 'Erreur', true);
+          this.showStatus('minuteur-status', this.t('status.error'), true);
         }
       });
     }
@@ -708,7 +748,7 @@ const App = {
   // ---------- Log ----------
   loadLog() {
     document.getElementById('pageContent').innerHTML = `
-      <h2 class="page-title">Console Logs</h2>
+      <h2 class="page-title">${this.t('page.log')}</h2>
       <textarea class="log-console" id="logArea" readonly></textarea>
     `;
     this.logId = 0;
@@ -743,27 +783,27 @@ const App = {
   // ---------- Backup ----------
   loadBackup() {
     document.getElementById('pageContent').innerHTML = `
-      <h2 class="page-title">Sauvegarde &amp; Restauration</h2>
+      <h2 class="page-title">${this.t('page.backup')}</h2>
       <div class="card-grid" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr))">
         <div class="card">
-          <div class="card-header">Sauvegarder</div>
+          <div class="card-header">${this.t('backup.card_backup')}</div>
           <div class="card-body" style="text-align:center">
             <button class="btn btn-primary" id="btn-backup">
-              <svg viewBox="0 0 16 16"><use href="/icons.svg#icon-backup"/></svg>
-              Telecharger la sauvegarde
+              <svg viewBox="0 0 16 16" aria-hidden="true"><use href="/icons.svg#icon-backup"/></svg>
+              ${this.t('btn.download_backup')}
             </button>
             <div id="backup-log" style="margin-top:1rem;font-size:.82rem;text-align:left"></div>
           </div>
         </div>
         <div class="card">
-          <div class="card-header">Restaurer</div>
+          <div class="card-header">${this.t('backup.card_restore')}</div>
           <div class="card-body" style="text-align:center">
             <div class="form-group">
               <input type="file" class="form-control" id="restoreFile" accept=".json">
             </div>
-            <button class="btn btn-primary btn-sm" id="btn-restore">Restaurer</button>
+            <button class="btn btn-primary btn-sm" id="btn-restore">${this.t('btn.restore')}</button>
             <div style="margin-top:.75rem">
-              <button class="btn btn-outline btn-sm" id="btn-save-restore">Sauvegarder sur la flash</button>
+              <button class="btn btn-outline btn-sm" id="btn-save-restore">${this.t('btn.save_flash')}</button>
             </div>
             <div id="restore-log" style="margin-top:1rem;font-size:.82rem;text-align:left"></div>
           </div>
@@ -776,9 +816,9 @@ const App = {
     document.getElementById('btn-save-restore').addEventListener('click', async () => {
       try {
         await fetch('/get?save=yes');
-        this.appendLog('restore-log', 'Configuration sauvegardee sur la flash', 'success');
+        this.appendLog('restore-log', this.t('status.saved_flash'), 'success');
       } catch (e) {
-        this.appendLog('restore-log', 'Erreur', 'danger');
+        this.appendLog('restore-log', this.t('status.error'), 'danger');
       }
     });
   },
@@ -787,24 +827,24 @@ const App = {
     const log = 'backup-log';
     document.getElementById(log).innerHTML = '';
     const requests = [
-      { title: 'Config generale', url: '/config', key: 'general' },
-      { title: 'Config MQTT', url: '/getmqtt', key: 'mqtt' },
-      { title: 'Minuteur dimmer', url: '/getminuteur?dimmer', key: 'dimmer_timer' },
-      { title: 'Minuteur relais 1', url: '/getminuteur?relay1', key: 'relay1_timer' },
-      { title: 'Minuteur relais 2', url: '/getminuteur?relay2', key: 'relay2_timer' },
+      { title: this.t('backup.req.general'), url: '/config', key: 'general' },
+      { title: this.t('backup.req.mqtt'), url: '/getmqtt', key: 'mqtt' },
+      { title: this.t('backup.req.timer_dimmer'), url: '/getminuteur?dimmer', key: 'dimmer_timer' },
+      { title: this.t('backup.req.timer_relay1'), url: '/getminuteur?relay1', key: 'relay1_timer' },
+      { title: this.t('backup.req.timer_relay2'), url: '/getminuteur?relay2', key: 'relay2_timer' },
     ];
 
     const backup = {};
     let hasError = false;
 
     for (const req of requests) {
-      this.appendLog(log, req.title + '...', 'info');
+      this.appendLog(log, this.t('backup.loading', { title: req.title }), 'info');
       try {
         const res = await fetch(req.url);
         backup[req.key] = await res.json();
-        this.replaceLastLog(log, req.title + ' OK', 'success');
+        this.replaceLastLog(log, this.t('backup.ok', { title: req.title }), 'success');
       } catch (e) {
-        this.replaceLastLog(log, req.title + ' ERREUR', 'danger');
+        this.replaceLastLog(log, this.t('backup.fail', { title: req.title }), 'danger');
         hasError = true;
       }
     }
@@ -817,7 +857,7 @@ const App = {
       a.download = `${now}-pvdimmer-backup.json`;
       a.click();
       URL.revokeObjectURL(a.href);
-      this.appendLog(log, 'Telechargement lance', 'success');
+      this.appendLog(log, this.t('backup.download_started'), 'success');
     }
   },
 
@@ -826,7 +866,7 @@ const App = {
     document.getElementById(log).innerHTML = '';
     const input = document.getElementById('restoreFile');
     if (!input.files.length) {
-      this.appendLog(log, 'Selectionnez un fichier', 'warn');
+      this.appendLog(log, this.t('backup.select_file'), 'warn');
       return;
     }
 
@@ -834,9 +874,9 @@ const App = {
     try {
       const text = await input.files[0].text();
       data = JSON.parse(text);
-      this.appendLog(log, 'Fichier charge', 'success');
+      this.appendLog(log, this.t('backup.file_loaded'), 'success');
     } catch (e) {
-      this.appendLog(log, 'Fichier invalide ou corrompu', 'danger');
+      this.appendLog(log, this.t('backup.file_invalid'), 'danger');
       return;
     }
 
@@ -847,22 +887,25 @@ const App = {
     let currentMqtt = {};
     try { currentMqtt = await (await fetch('/getmqtt')).json(); } catch (e) {}
 
+    const titleGen = this.t('backup.req.general');
+    const titleMqtt = this.t('backup.req.mqtt');
+
     // Config generale
     if (data.general) {
-      this.appendLog(log, 'Config generale...', 'info');
+      this.appendLog(log, this.t('backup.loading', { title: titleGen }), 'info');
       const params = new URLSearchParams();
       for (const [k, v] of Object.entries(data.general)) params.set(k, v);
       try {
         await fetch('/get?' + params.toString());
-        this.replaceLastLog(log, 'Config generale OK', 'success');
-      } catch (e) { this.replaceLastLog(log, 'Config generale ERREUR', 'danger'); }
+        this.replaceLastLog(log, this.t('backup.ok', { title: titleGen }), 'success');
+      } catch (e) { this.replaceLastLog(log, this.t('backup.fail', { title: titleGen }), 'danger'); }
     } else {
-      this.appendLog(log, 'Config generale : absente du fichier', 'warn');
+      this.appendLog(log, this.t('backup.absent', { title: titleGen }), 'warn');
     }
 
     // Config MQTT (sans le toggle servermode, avec remap)
     if (data.mqtt) {
-      this.appendLog(log, 'Config MQTT...', 'info');
+      this.appendLog(log, this.t('backup.loading', { title: titleMqtt }), 'info');
       const params = new URLSearchParams();
       for (const [k, v] of Object.entries(data.mqtt)) {
         if (mqttToggles.includes(k)) continue;
@@ -870,10 +913,10 @@ const App = {
       }
       try {
         await fetch('/get?' + params.toString());
-        this.replaceLastLog(log, 'Config MQTT OK', 'success');
-      } catch (e) { this.replaceLastLog(log, 'Config MQTT ERREUR', 'danger'); }
+        this.replaceLastLog(log, this.t('backup.ok', { title: titleMqtt }), 'success');
+      } catch (e) { this.replaceLastLog(log, this.t('backup.fail', { title: titleMqtt }), 'danger'); }
     } else {
-      this.appendLog(log, 'Config MQTT : absente du fichier', 'warn');
+      this.appendLog(log, this.t('backup.absent', { title: titleMqtt }), 'warn');
     }
 
     // Toggle servermode (bascule si l'etat differe)
@@ -885,31 +928,100 @@ const App = {
       if (toBool(target) === toBool(current)) continue;
       try {
         await fetch('/get?servermode=' + key);
-        this.appendLog(log, key + ' bascule -> ' + (toBool(target) ? 'ON' : 'OFF'), 'success');
-      } catch (e) { this.appendLog(log, key + ' ERREUR', 'danger'); }
+        this.appendLog(log, this.t('backup.toggle_to', { key, state: toBool(target) ? this.t('state.on') : this.t('state.off') }), 'success');
+      } catch (e) { this.appendLog(log, this.t('backup.fail', { title: key }), 'danger'); }
     }
 
     // Minuteurs
     const timers = [
-      ['dimmer_timer', 'dimmer', 'Minuteur dimmer'],
-      ['relay1_timer', 'relay1', 'Minuteur relais 1'],
-      ['relay2_timer', 'relay2', 'Minuteur relais 2'],
+      ['dimmer_timer', 'dimmer', this.t('backup.req.timer_dimmer')],
+      ['relay1_timer', 'relay1', this.t('backup.req.timer_relay1')],
+      ['relay2_timer', 'relay2', this.t('backup.req.timer_relay2')],
     ];
     for (const [field, type, label] of timers) {
       if (!data[field]) {
-        this.appendLog(log, label + ' : absent du fichier', 'warn');
+        this.appendLog(log, this.t('backup.absent', { title: label }), 'warn');
         continue;
       }
-      this.appendLog(log, label + '...', 'info');
+      this.appendLog(log, this.t('backup.loading', { title: label }), 'info');
       const params = new URLSearchParams();
       for (const [k, v] of Object.entries(data[field])) params.set(k, v);
       try {
         await fetch('/setminuteur?' + type + '&' + params.toString());
-        this.replaceLastLog(log, label + ' OK', 'success');
-      } catch (e) { this.replaceLastLog(log, label + ' ERREUR', 'danger'); }
+        this.replaceLastLog(log, this.t('backup.ok', { title: label }), 'success');
+      } catch (e) { this.replaceLastLog(log, this.t('backup.fail', { title: label }), 'danger'); }
     }
 
-    this.appendLog(log, 'Restauration terminee. Pensez a sauvegarder sur la flash.', 'info');
+    this.appendLog(log, this.t('backup.restore_done'), 'info');
+  },
+
+  // ---------- Security ----------
+  async loadSecurity() {
+    document.getElementById('pageContent').innerHTML = `
+      <h2 class="page-title">${this.t('page.security')}</h2>
+      <div class="card" style="max-width:480px">
+        <div class="card-body">
+          <p style="color:var(--text-muted);margin-bottom:1.25rem">${this.t('security.subtitle')}</p>
+          <div class="form-check" style="margin-bottom:1.25rem">
+            <input type="checkbox" id="auth_enabled">
+            <label for="auth_enabled">${this.t('security.enable')}</label>
+          </div>
+          <div class="form-group" style="margin-bottom:1.75rem">
+            <label for="auth_pass">${this.t('security.password')}</label>
+            <input type="password" class="form-control" id="auth_pass" autocomplete="new-password">
+          </div>
+          <div id="security-status" class="alert alert-success" style="display:none;margin-bottom:1rem"></div>
+          <button class="btn btn-primary" id="btn-save-security" style="min-width:200px">${this.t('btn.save_settings')}</button>
+        </div>
+      </div>
+    `;
+
+    const cb = document.getElementById('auth_enabled');
+    const passInput = document.getElementById('auth_pass');
+
+    const syncPassState = () => {
+      passInput.disabled = !cb.checked;
+      passInput.style.opacity = cb.checked ? '1' : '0.5';
+    };
+    cb.addEventListener('change', syncPassState);
+
+    try {
+      const res = await fetch('/getauth');
+      const data = await res.json();
+      cb.checked = data.auth_enabled === true || data.auth_enabled === 1 || data.auth_enabled === '1';
+      syncPassState();
+    } catch (e) {
+      console.error('Auth config load error:', e);
+      syncPassState();
+    }
+
+    document.getElementById('btn-save-security').addEventListener('click', () => this.saveSecurity());
+  },
+
+  async saveSecurity() {
+    const enabled = document.getElementById('auth_enabled').checked;
+    const pass = document.getElementById('auth_pass').value;
+
+    if (enabled && !pass) {
+      this.showStatus('security-status', this.t('security.password_required'), true);
+      return;
+    }
+
+    const params = new URLSearchParams();
+    params.set('auth_enabled', enabled ? '1' : '0');
+    if (pass) params.set('auth_pass', pass);
+
+    try {
+      await fetch('/setauth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+      });
+      document.getElementById('auth_pass').value = '';
+      this.showStatus('security-status', this.t('status.saved'));
+    } catch (e) {
+      this.showStatus('security-status', this.t('status.error_with', { msg: e.message }), true);
+    }
   },
 
   // ---------- Helpers ----------
@@ -987,18 +1099,30 @@ const App = {
     const overlay = document.getElementById('overlay');
     const toggle = document.getElementById('menuToggle');
 
+    const openSidebar = () => {
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+      if (toggle) toggle.setAttribute('aria-expanded', 'true');
+      const firstLink = sidebar.querySelector('nav a');
+      if (firstLink) firstLink.focus();
+    };
+
+    const closeSidebar = (returnFocus) => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+      if (toggle) toggle.setAttribute('aria-expanded', 'false');
+      if (returnFocus && toggle) toggle.focus();
+    };
+
     if (toggle) {
       toggle.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        overlay.classList.toggle('show');
+        if (sidebar.classList.contains('open')) closeSidebar(true);
+        else openSidebar();
       });
     }
 
     if (overlay) {
-      overlay.addEventListener('click', () => {
-        sidebar.classList.remove('open');
-        overlay.classList.remove('show');
-      });
+      overlay.addEventListener('click', () => closeSidebar(true));
     }
   },
 };

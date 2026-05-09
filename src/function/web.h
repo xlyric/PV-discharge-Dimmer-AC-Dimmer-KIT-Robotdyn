@@ -78,6 +78,8 @@ String getMinuteur(const Programme& minuteur);
 String getMinuteur();
 String replaceSpacesWithHyphens(String input);
 
+bool checkAuth(AsyncWebServerRequest *request);
+
 extern Logs Logging;
 extern String devAddrNames[MAX_DALLAS];
 
@@ -85,6 +87,12 @@ extern String devAddrNames[MAX_DALLAS];
 extern SSR_BURST ssr_burst;
 #endif
 
+bool checkAuth(AsyncWebServerRequest *request) {
+    if (!config.auth_enabled) return true;
+    if (request->authenticate("admin", config.auth_pass.c_str())) return true;
+    request->requestAuthentication("PV Dimmer");
+    return false;
+  }
 
 void call_pages() {
 
@@ -108,6 +116,7 @@ void call_pages() {
     {"/js/app.js", "/js/app.js"},
     {"/css/style.css", "/css/style.css"},
     {"/icons.svg", "/icons.svg"},
+    {"/js/i18n.js" , "/js/i18n.js"}
 
   };
 
@@ -271,12 +280,14 @@ void call_pages() {
   });
 
   server.on("/resetwifi", HTTP_ANY, [](AsyncWebServerRequest *request){
+    if (!checkAuth(request)) return;
     request->send(200, "text/plain", "Resetting Wifi and reboot");
     wifiManager.resetSettings();
     config.restart = true;
   });
 
   server.on("/reboot", HTTP_ANY, [](AsyncWebServerRequest *request){
+    if (!checkAuth(request)) return;
     request->redirect("/");
     config.restart = true;
   });
@@ -315,6 +326,7 @@ void call_pages() {
   });
 
   server.on("/setminuteur", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+    if (!checkAuth(request)) return;
     String name;
     if (request->hasParam("dimmer")) {
       if (request->hasParam("heure_demarrage")) {
@@ -377,6 +389,7 @@ void call_pages() {
   });
 
   server.on("/setseuil", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+    if (!checkAuth(request)) return;
     String name;
     if (request->hasParam("relay1")) {
       if (request->hasParam("seuil_demarrage")) {
@@ -413,6 +426,7 @@ void call_pages() {
 
 
   server.on("/reset", HTTP_ANY, [](AsyncWebServerRequest *request){
+    if (!checkAuth(request)) return;
     // faire un redirect vers / 
     request->redirect("/");
     config.restart = true;
@@ -438,92 +452,132 @@ void call_pages() {
     request->send(200, "text/html", readmqttsave().c_str());
   });
 
+  // ── GET /getauth ─────────────────────────────────────────────────
+  server.on("/getauth", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (!checkAuth(request)) return;
+    String json = "{\"auth_enabled\":" + String(config.auth_enabled ? "true" : "false") + "}";
+    request->send(200, "application/json", json);
+  });
 
+  // ── POST /setauth ────────────────────────────────────────────────
+  server.on("/setauth", HTTP_POST, [](AsyncWebServerRequest *request) {
+    if (!checkAuth(request)) return;
 
+    auto has = [&](const char* n) {
+      return request->hasParam(n, true) || request->hasParam(n);
+    };
+    auto val = [&](const char* n) -> String {
+      if (request->hasParam(n, true)) return request->getParam(n, true)->value();
+      if (request->hasParam(n))       return request->getParam(n)->value();
+      return "";
+    };
+
+    if (has("auth_enabled")) {
+      config.auth_enabled = (val("auth_enabled") == "1");
+    }
+    if (has("auth_pass") && val("auth_pass").length() > 0) {
+      config.auth_pass = val("auth_pass");
+    }
+    
+    config.saveConfiguration().c_str();
+    
+    request->send(200, "application/json", "{\"ok\":true}");
+  });
 
 /////////////////////////
 ////// mise à jour parametre d'envoie vers domoticz et récupération des modifications de configurations
 /////////////////////////
 
   server.on("/get", HTTP_ANY, [] (AsyncWebServerRequest *request) {
+      if (!checkAuth(request)) return;
+    // Ajouter ces deux lambdas en tête du handler
+    auto has = [&](const char* n) {
+      return request->hasParam(n, true) || request->hasParam(n);
+    };
+    auto val = [&](const char* n) -> String {
+      if (request->hasParam(n, true)) return request->getParam(n, true)->value();
+      if (request->hasParam(n))       return request->getParam(n)->value();
+      return "";
+    };
+
     ///  fonction  /get?paramettre=xxxx
-    if (request->hasParam("save")) {
+    if (has("save")) {
       Serial.println(F("Saving configuration..."));
       logging.Set_log_init(config.saveConfiguration().c_str()); // sauvegarde de la configuration
     }
 
-    if (request->hasParam("hostname")) { request->getParam("hostname")->value().toCharArray(config.hostname,16); }
-    if (request->hasParam("port")) { config.port = request->getParam("port")->value().toInt();  }
-    if (request->hasParam("Publish")) { request->getParam("Publish")->value().toCharArray(config.Publish,100); }
-    if (request->hasParam("idxtemp")) { config.IDXTemp = request->getParam("idxtemp")->value().toInt(); }
-    if (request->hasParam("maxtemp")) {
-      config.maxtemp = request->getParam("maxtemp")->value().toInt();
+    if (has("hostname")) { val("hostname").toCharArray(config.hostname,16); }
+    if (has("port")) { config.port = val("port").toInt();  }
+    if (has("Publish")) { val("Publish").toCharArray(config.Publish,100); }
+    if (has("idxtemp")) { config.IDXTemp = val("idxtemp").toInt(); }
+    if (has("maxtemp")) {
+      config.maxtemp = val("maxtemp").toInt();
       if (!AP && mqtt_config.mqtt) { device_dimmer_maxtemp.sendInt(config.maxtemp);}
     }
-    if (request->hasParam("mintemp")) {
-      config.mintemp = request->getParam("mintemp")->value().toInt();
+    if (has("mintemp")) {
+      config.mintemp = val("mintemp").toInt();
     }
-    if (request->hasParam("charge1")) {
-      config.charge1 = request->getParam("charge1")->value().toInt();
+    if (has("charge1")) {
+      config.charge1 = val("charge1").toInt();
       config.charge = config.charge1 + config.charge2 + config.charge3;
     }
-    if (request->hasParam("charge2")) {
-      config.charge2 = request->getParam("charge2")->value().toInt();
+    if (has("charge2")) {
+      config.charge2 = val("charge2").toInt();
       config.charge = config.charge1 + config.charge2 + config.charge3;
     }
-    if (request->hasParam("charge3")) {
-      config.charge3 = request->getParam("charge3")->value().toInt();
+    if (has("charge3")) {
+      config.charge3 = val("charge3").toInt();
       config.charge = config.charge1 + config.charge2 + config.charge3;
     }
-    if (request->hasParam("IDXAlarme")) { config.IDXAlarme = request->getParam("IDXAlarme")->value().toInt(); }
-    if (request->hasParam("IDX")) { config.IDX = request->getParam("IDX")->value().toInt(); }
-    if (request->hasParam("startingpow")) {
-      config.startingpow = request->getParam("startingpow")->value().toInt();
+    if (has("IDXAlarme")) { config.IDXAlarme = val("IDXAlarme").toInt(); }
+    if (has("IDX")) { config.IDX = val("IDX").toInt(); }
+    if (has("startingpow")) {
+      config.startingpow = val("startingpow").toInt();
       if (!AP && mqtt_config.mqtt) {
         device_dimmer_starting_pow.sendInt(config.startingpow);
       }
     }
-    if (request->hasParam("minpow")) {
-      config.minpow = request->getParam("minpow")->value().toInt();
+    if (has("minpow")) {
+      config.minpow = val("minpow").toInt();
       if (!AP && mqtt_config.mqtt) { device_dimmer_minpow.sendInt(config.minpow); }
     }
-    if (request->hasParam("maxpow")) {
-      config.maxpow = request->getParam("maxpow")->value().toInt();
+    if (has("maxpow")) {
+      config.maxpow = val("maxpow").toInt();
       if (!AP && mqtt_config.mqtt) { device_dimmer_maxpow.sendInt(config.maxpow); }
     }
 
-    if (request->hasParam("child")) { request->getParam("child")->value().toCharArray(config.child,64); }
-    if (request->hasParam("mode")) {
-      request->getParam("mode")->value().toCharArray(config.mode,10);
+    if (has("child")) { val("child").toCharArray(config.child,64); }
+    if (has("mode")) {
+      val("mode").toCharArray(config.mode,10);
       if (!AP && mqtt_config.mqtt) { device_dimmer_child_mode.send(config.mode); }
     }
 
-    if (request->hasParam("dimmername")) {
-      request->getParam("dimmername")->value().toCharArray(config.say_my_name,100);
+    if (has("dimmername")) {
+      val("dimmername").toCharArray(config.say_my_name,100);
       String temp_dimmer_name = replaceSpacesWithHyphens(config.say_my_name);
       // copie du nom du dimmer dans le nom de l'entité
       temp_dimmer_name.toCharArray(config.say_my_name,100);
     }
-    if (request->hasParam("SubscribePV")) {
-      request->getParam("SubscribePV")->value().toCharArray(
+    if (has("SubscribePV")) {
+      val("SubscribePV").toCharArray(
         config.SubscribePV, 100);
     }
-    if (request->hasParam("SubscribeTEMP")) {
-      request->getParam("SubscribeTEMP")->value().toCharArray(
+    if (has("SubscribeTEMP")) {
+      val("SubscribeTEMP").toCharArray(
         config.SubscribeTEMP, 100);
     }
-    if (request->hasParam("dimmer_on_off")) {
-      config.dimmer_on_off = request->getParam("dimmer_on_off")->value().toInt();
+    if (has("dimmer_on_off")) {
+      config.dimmer_on_off = val("dimmer_on_off").toInt();
       if (!AP && mqtt_config.mqtt) { device_dimmer_on_off.sendInt(config.dimmer_on_off);}
     }
-    if (request->hasParam("mqttuser")) { request->getParam("mqttuser")->value().toCharArray(mqtt_config.username,50); }
-    if (request->hasParam("mqttpassword")) {
-      request->getParam("mqttpassword")->value().toCharArray(mqtt_config.password,50);
+    if (has("mqttuser")) { val("mqttuser").toCharArray(mqtt_config.username,50); }
+    if (has("mqttpassword")) {
+      val("mqttpassword").toCharArray(mqtt_config.password,50);
       logging.Set_log_init(config.saveConfiguration().c_str()); // sauvegarde de la configuration
       logging.Set_log_init(mqtt_config.savemqtt().c_str()); // sauvegarde et récupération de la log MQTT
     }
-    if (request->hasParam("DALLAS")) {
-      request->getParam("DALLAS")->value().toCharArray(config.DALLAS,17);
+    if (has("DALLAS")) {
+      val("DALLAS").toCharArray(config.DALLAS,17);
       // application de la modification sur la dallas master si existante
       for (int i = 0; i < MAX_DALLAS; i++) {
         if (strcmp(config.DALLAS,(devAddrNames[i]).c_str() ) == 0) { sysvar.dallas_maitre = i; }
@@ -531,27 +585,26 @@ void call_pages() {
     }
 
     // minuteur
-    if (request->hasParam("heure_demarrage")) {
-      request->getParam("heure_demarrage")->value().toCharArray(
+    if (has("heure_demarrage")) {
+      val("heure_demarrage").toCharArray(
         programme.heure_demarrage, 6);
     }
-    if (request->hasParam("heure_arret")) {
-      request->getParam("heure_arret")->value().toCharArray(
+    if (has("heure_arret")) {
+      val("heure_arret").toCharArray(
         programme.heure_arret, 6);
     }
-    if (request->hasParam("temperature")) {
-      programme.temperature = request->getParam(
-        "temperature")->value().toInt();  programme.saveProgramme();
+    if (has("temperature")) {
+      programme.temperature = val("temperature").toInt();  programme.saveProgramme();
     }
 
     // trigger
-    if (request->hasParam("trigger")) { config.trigger = request->getParam("trigger")->value().toInt();}
+    if (has("trigger")) { config.trigger = val("trigger").toInt();}
 
 
     // Ajout des relais
   #ifdef RELAY1
-    if (request->hasParam("relay1")) {
-      int relay = request->getParam("relay1")->value().toInt();
+    if (has("relay1")) {
+      int relay = val("relay1").toInt();
       if ( relay == 0) { digitalWrite(RELAY1, HIGH); } // correction bug de démarrage en GPIO 0
       else if (relay == 1) { digitalWrite(RELAY1, LOW); } // correction bug de démarrage en GPIO 0
       else if (relay == 2) { digitalWrite(RELAY1, !digitalRead(RELAY1)); }
@@ -566,8 +619,8 @@ void call_pages() {
     }
   #endif
   #ifdef RELAY2
-    if (request->hasParam("relay2")) {
-      int relay = request->getParam("relay2")->value().toInt();
+    if (has("relay2")) {
+      int relay = val("relay2").toInt();
       if ( relay == 0) { digitalWrite(RELAY2, LOW); }
       else if (relay == 1) { digitalWrite(RELAY2, HIGH); }
       else if (relay == 2) { digitalWrite(RELAY2, !digitalRead(RELAY2)); }
@@ -581,8 +634,8 @@ void call_pages() {
   #endif
 
     //// for check boxs in web pages
-    if (request->hasParam("servermode")) {
-      String inputMessage = request->getParam("servermode")->value();
+    if (has("servermode")) {
+      String inputMessage = val("servermode");
       getServermode(inputMessage);
       logging.Set_log_init(config.saveConfiguration().c_str()); // sauvegarde de la configuration
       logging.Set_log_init(mqtt_config.savemqtt().c_str()); // sauvegarde et récupération de la log MQTT
@@ -591,6 +644,7 @@ void call_pages() {
     request->send(200, "application/json", getconfig().c_str());
   });
 }
+
 
 
 /// @brief Pages de traitement
