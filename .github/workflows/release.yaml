@@ -23,10 +23,10 @@ jobs:
         run: ~/.venv/bin/python -m pip install platformio
       - name: Build firmware for all supported platforms
         run: ~/.venv/bin/pio run
-      - name: Generate filesystem content
-        run: |
-          source ~/.venv/bin/activate
-          ./data-templates/generate-data.sh
+    #  - name: Generate filesystem content
+    #    run: |
+    #      source ~/.venv/bin/activate
+    #      ./data-templates/generate-data.sh
       - name: Build filesystem for all supported platforms
         run: ~/.venv/bin/pio run -t buildfs
       - name: Compute version name
