@@ -23,6 +23,8 @@ Son utilisation classique sert à chauffer des ballons de type ECS.
 - 🌡️ Surveillance de la température avec sondes Dallas. 
 - 🔒 Mécanismes de sécurité intégrés
 
+![Apper PV Dimmer](images/front.png)
+
 ### 🖥️ Configurations matérielles supportées
 
 1. **StandAlone (ESP8266)**
@@ -180,6 +182,8 @@ An intelligent photovoltaic router designed to manage solar energy surplus by co
 - 🎛️ Precise power control
 - 🌡️ Temperature monitoring with Dallas sensors
 - 🔒 Integrated security mechanisms
+
+![Apper PV Dimmer](images/front.png)
 
 ### 🖥️ Supported Hardware Configurations
 
