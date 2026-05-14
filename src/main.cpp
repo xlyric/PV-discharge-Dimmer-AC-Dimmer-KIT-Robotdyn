@@ -103,6 +103,7 @@
 #include "function/littlefs.h"
 #include "function/mqtt.h"
 #include "function/minuteur.h"
+#include "function/ota.h"
 
 #ifdef ROBOTDYN
   #include "function/dimmer.h"
@@ -191,6 +192,9 @@ DNSServer dns;
 HTTPClient http;
 bool shouldSaveConfig = false;
 Wifi_struct wifi_config_fixe;
+
+/// ota 
+bool otaRequested = false;
 
 
 //***********************************
@@ -753,6 +757,12 @@ void loop() {
    // oled_task();
   #endif
   
+  // ota 
+  if (otaRequested) {
+      otaRequested = false;
+      checkForUpdate();  // bloquant, reboot à la fin si succès
+  }
+
   /// connexion MQTT dans les cas de conf mqtt et perte de connexion
   if (!client.connected() ) {
     mqttConnected = false;

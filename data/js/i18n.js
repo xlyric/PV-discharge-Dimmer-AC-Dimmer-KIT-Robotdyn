@@ -14,6 +14,7 @@ const I18n = {
       'nav.log': 'Console Logs',
       'nav.backup': 'Sauvegardes',
       'nav.security': 'Sécurité',
+      'nav.ota': 'OTA Manuel',
       'nav.update': 'OTA Update',
 
       // Topbar / common
@@ -34,6 +35,23 @@ const I18n = {
       'page.log': 'Console Logs',
       'page.backup': 'Sauvegarde & Restauration',
       'page.security': 'Sécurité',
+      'page.ota': 'Mise à jour OTA',      
+
+      // OTA Manuel
+      'ota.card_title': 'Vérification de mise à jour',
+      'ota.current_version': 'Version installée',
+      'ota.remote_version': 'Version disponible',
+      'ota.btn_check': 'Vérifier',
+      'ota.checking': 'Vérification...',
+      'ota.btn_install': 'Installer la mise à jour',
+      'ota.check_error': 'Erreur lors de la vérification',
+      'ota.update_available': 'Mise à jour disponible : {ver}',
+      'ota.up_to_date': 'Firmware à jour',
+      'ota.confirm_install': 'Lancer la mise à jour OTA ? Le routeur va redémarrer.',
+      'ota.installing': 'Lancement de la mise à jour...',
+      'ota.install_started': 'Mise à jour lancée. Le routeur va redémarrer.',
+      'ota.install_error': 'Erreur lors du lancement de la mise à jour',
+      'ota.rebooting': 'Redémarrage en cours...',
 
       // Buttons
       'btn.save_settings': 'Sauvegarder les paramètres',
@@ -76,6 +94,14 @@ const I18n = {
       'backup.loading': '{title}...',
       'backup.restored': '{title} restauree',
       'backup.toggle_to': '{key} bascule -> {state}',
+      'backup.card_browser': 'Navigateur',
+      'backup.browser_last_save': 'Dernière sauvegarde : {date}',
+      'backup.browser_no_save': 'Aucune sauvegarde locale',
+      'backup.browser_saved': 'Sauvegardé dans le navigateur',
+      'backup.browser_save_error': 'Erreur lors de la sauvegarde locale',
+      'backup.browser_empty': 'Aucune sauvegarde locale trouvée',
+      'btn.browser_save': 'Sauvegarder ici',
+      'btn.browser_restore': 'Restaurer depuis ici',
 
       // Forms
       'form.server': 'Serveur',
@@ -267,6 +293,7 @@ const I18n = {
       'nav.log': 'Console Logs',
       'nav.backup': 'Backups',
       'nav.security': 'Security',
+      'nav.ota': 'OTA Manual',
       'nav.update': 'OTA Update',
 
       'topbar.reboot': 'Reboot',
@@ -285,6 +312,23 @@ const I18n = {
       'page.log': 'Console Logs',
       'page.backup': 'Backup & Restore',
       'page.security': 'Security',
+      'page.ota': 'OTA Update',
+
+      // OTA Manual
+      'ota.card_title': 'Check for update',
+      'ota.current_version': 'Installed version',
+      'ota.remote_version': 'Available version',
+      'ota.btn_check': 'Check',
+      'ota.checking': 'Checking...',
+      'ota.btn_install': 'Install update',
+      'ota.check_error': 'Error while checking for update',
+      'ota.update_available': 'Update available: {ver}',
+      'ota.up_to_date': 'Firmware is up to date',
+      'ota.confirm_install': 'Start OTA update? The router will reboot.',
+      'ota.installing': 'Starting update...',
+      'ota.install_started': 'Update started. The router will reboot.',
+      'ota.install_error': 'Error starting the update',
+      'ota.rebooting': 'Rebooting...',
 
       'btn.save_settings': 'Save settings',
       'btn.apply': 'Apply',
@@ -324,6 +368,14 @@ const I18n = {
       'backup.loading': '{title}...',
       'backup.restored': '{title} restored',
       'backup.toggle_to': '{key} toggled -> {state}',
+      'backup.card_browser': 'Browser',
+      'backup.browser_last_save': 'Last saved: {date}',
+      'backup.browser_no_save': 'No local backup',
+      'backup.browser_saved': 'Saved in browser',
+      'backup.browser_save_error': 'Error saving locally',
+      'backup.browser_empty': 'No local backup found',
+      'btn.browser_save': 'Save here',
+      'btn.browser_restore': 'Restore from here',
 
       'form.server': 'Server',
       'form.port': 'Port',
