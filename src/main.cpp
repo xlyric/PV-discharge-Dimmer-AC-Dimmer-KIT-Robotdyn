@@ -807,7 +807,7 @@ void loop() {
   //// Dimmer
   if (programme.run || programme_marche_forcee.run) {
     //  minuteur en cours
-    if (programme.stop_progr() || programme_marche_forcee.stop_progr()) {
+  if ( (programme.run && programme.stop_progr()) || (programme_marche_forcee.run && programme_marche_forcee.stop_progr()) ) {   //Le principe : on n'appelle stop_progr() d'un programme que si c'est lui qui est actif, évitant ainsi que le minuteur principal — avec son propre seuil de température — ne coupe le boost à sa place.Merci Claude.
       // Robotdyn dimmer
       logging.Set_log_init(Stop_minuteur,true);
       unified_dimmer.set_power(0);       // necessaire pour les autres modes
