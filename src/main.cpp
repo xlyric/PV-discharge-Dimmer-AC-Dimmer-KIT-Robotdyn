@@ -842,7 +842,6 @@ void loop() {
 
       //// robotdyn dimmer
       logging.Set_log_init(Start_minuteur,true);
-
       unified_dimmer.set_power(sysvar.puissance);
       delay (50);
 
@@ -981,6 +980,7 @@ void loop() {
       if ( sysvar.puissance > config.maxpow )   // || sysvar.puissance_cumul > sysvar.puissancemax )
       {
         if (config.dimmer_on_off == 1) {
+          logging.Set_log_init("983-",false);
           unified_dimmer.set_power(config.maxpow);
           DEBUG_PRINTLN(("%d------------------",__LINE__));
         }
@@ -1000,6 +1000,7 @@ void loop() {
       else
       {
         if (config.dimmer_on_off == 1) {
+          logging.Set_log_init("1003-",false);
           unified_dimmer.set_power(sysvar.puissance);
         }
 
@@ -1070,6 +1071,7 @@ void loop() {
     //// si la commande est trop faible on coupe tout partout
     else if ( sysvar.puissance <= config.minpow ) {
       DEBUG_PRINTLN("commande est trop faible");
+      logging.Set_log_init("1074-",false);
       unified_dimmer.set_power(0);   // necessaire pour les autres modes
       unified_dimmer.dimmer_off();
       /// et sur les sous routeur
@@ -1111,6 +1113,7 @@ void loop() {
   if ( sysvar.celsius[sysvar.dallas_maitre] >= config.maxtemp && !sysvar.security) {
     sysvar.security = true;
     logging.alerte_web=Alert_Temp;
+    logging.Set_log_init("1116-",false);
     unified_dimmer.set_power(0); // necessaire pour les autres modes
     unified_dimmer.dimmer_off();
     /// pour être sur que la dernière consigne envoyé soit au moins égale au max.temp
