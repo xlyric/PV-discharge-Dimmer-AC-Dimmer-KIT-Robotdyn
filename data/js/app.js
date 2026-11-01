@@ -250,6 +250,8 @@ const App = {
     // Update sidebar RSSI
     const rssiEl = document.getElementById('sidebar-rssi');
     if (rssiEl && d.RSSI !== undefined) rssiEl.textContent = 'RSSI: ' + d.RSSI + ' dBm';
+    const b = document.getElementById('sidebar-build');
+    if (b && d.build_env) b.textContent = 'Build: ' + d.build_env;
     const v = document.getElementById('sidebar-version');
     if (v && d.version) v.textContent = d.version;
     const n = document.getElementById('sidebar-name');
@@ -1106,7 +1108,7 @@ const App = {
     if (!remoteVersion) {
       resultEl.innerHTML = `<div class="alert alert-danger show">${this.t('ota.check_error')}</div>`;
     } else if (remoteVersion > currentText) {
-      resultEl.innerHTML = `<div class="alert alert-success show">${this.t('ota.update_available', { ver: remoteVersion })}</div>`;
+      resultEl.innerHTML = `<div class="alert alert-success show">${this.t('ota.update_available', { ver: this.esc(remoteVersion) })}</div>`;
       installBtn.style.display = '';
     } else {
       resultEl.innerHTML = `<div class="alert alert-success show">${this.t('ota.up_to_date')}</div>`;

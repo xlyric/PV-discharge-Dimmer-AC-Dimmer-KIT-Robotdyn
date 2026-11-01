@@ -807,7 +807,20 @@ void loop() {
   //// Dimmer
   if (programme.run || programme_marche_forcee.run) {
     //  minuteur en cours
-    if (programme.stop_progr() || programme_marche_forcee.stop_progr()) {
+    // on ne teste l'arrêt que des programmes actifs, et chacun indépendamment
+    // (sinon l'arrêt du minuteur ou sa sécurité température coupe le boost et remet son heure à 00:00)
+    bool stop_minuteur = programme.run && programme.stop_progr();
+    bool stop_boost = programme_marche_forcee.run && programme_marche_forcee.stop_progr();
+
+    if (stop_boost) {
+      // on remet les valeurs de temps programme_marche_force à 00:00
+      strcpy(programme_marche_forcee.heure_demarrage, "00:00"); // NOSONAR
+      strcpy(programme_marche_forcee.heure_arret, "00:00");  // NOSONAR
+      device_dimmer_boost.send("0");
+    }
+
+    // on coupe le dimmer seulement si plus aucun programme ne tourne
+    if ((stop_minuteur || stop_boost) && !programme.run && !programme_marche_forcee.run) {
       // Robotdyn dimmer
       logging.Set_log_init(Stop_minuteur,true);
       unified_dimmer.set_power(0);       // necessaire pour les autres modes
@@ -827,10 +840,6 @@ void loop() {
       }
       // réinint de la sécurité température
       sysvar.security = false;
-      // on remet les valeurs de temps programme_marche_force à 00:00
-      strcpy(programme_marche_forcee.heure_demarrage, "00:00"); // NOSONAR
-      strcpy(programme_marche_forcee.heure_arret, "00:00");  // NOSONAR
-      device_dimmer_boost.send("0");
     }
   }
   else {

@@ -8,4 +8,4 @@ gzip -9 js/i18n.js -c > js/i18n.js.gz
 
 SRC_DIR="$(dirname "$(realpath "$0")")"
 DST_DIR=$(realpath "$SRC_DIR/../data")
-grep "constexpr const int FS_RELEASE" "$SRC_DIR/../src/config/config.h" | tr -d ';' | cut -d' ' -f 6 > "$DST_DIR/version"
+grep "FS_RELEASE" "../src/config/config.h" | tr -d '"' | cut -d' ' -f 3 > "$DST_DIR/version"

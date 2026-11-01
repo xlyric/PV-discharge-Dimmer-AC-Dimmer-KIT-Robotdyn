@@ -722,6 +722,7 @@ String getState() {
   doc["Ptotal"]  = sysvar.puissance_cumul + int(instant_power * config.charge/100);
   doc["RSSI"] = WiFi.RSSI();
   doc["version"] = String(VERSION);
+  doc["build_env"] = BUILD_ENV;
   #ifdef RELAY1
   doc["relay1"]   = !digitalRead(RELAY1);
   doc["relay2"]   = digitalRead(RELAY2);

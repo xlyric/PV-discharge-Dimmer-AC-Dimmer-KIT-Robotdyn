@@ -1,8 +1,13 @@
 #ifndef CONFIG
 #define CONFIG
 
-#define VERSION "Version 20260514"
-#define FS_RELEASE "20260514" // date de la release
+#define VERSION "Version 20261101"
+#define FS_RELEASE "20261101" // date de la release
+
+// nom de l'environnement platformio utilisé pour la compilation (défini dans platformio.ini)
+#ifndef BUILD_ENV
+  #define BUILD_ENV "inconnu"
+#endif
 
 constexpr size_t TEMPERATURE_PRECISION=11;
 constexpr size_t DALLAS_TIMEOUT=1500;
