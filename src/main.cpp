@@ -241,7 +241,7 @@ int deviceCount = 0;
 
 Config config;
 Mqtt mqtt_config;
-System sysvar;
+System sysvar; // NOSONAR
 Programme programme;
 Programme programme_relay1;
 Programme programme_relay2;
@@ -758,6 +758,7 @@ void loop() {
   #endif
   
   // ota 
+  ElegantOTA.loop();
   if (otaRequested) {
       otaRequested = false;
       checkForUpdate();  // bloquant, reboot à la fin si succès
