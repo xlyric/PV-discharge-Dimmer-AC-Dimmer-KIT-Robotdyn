@@ -14,7 +14,8 @@ extern String logs; // logs
 // extern byte security; // sécurité
 DeviceAddress addr[MAX_DALLAS];   // array of (up to) MAX_DALLAS temperature sensors NOSONAR
 String devAddrNames[MAX_DALLAS];  // array of (up to) MAX_DALLAS temperature sensors NOSONAR
-float previous_celsius[MAX_DALLAS] = {0.00};   // NOSONAR // température précédente // NOSONAR
+float previous_celsius[MAX_DALLAS] = {NAN,NAN,NAN,NAN,NAN,NAN,NAN,NAN};   // NOSONAR // température précédente // NOSONAR
+bool temp_valid[MAX_DALLAS] = {false};  // NOSONAR
 extern IPAddress gatewayIP;
 extern HA devicetemp[MAX_DALLAS]; // NOSONAR
 extern int deviceCount; // nombre de sonde(s) dallas détectée(s)
@@ -42,6 +43,7 @@ void mqttdallas() {
       if ( (sysvar.celsius[a] == DEVICE_DISCONNECTED_C) || (sysvar.celsius[a] == -255.00) ||
            (sysvar.celsius[a] > 200.00) ) {
         sysvar.celsius[a]=previous_celsius[a];
+        temp_valid[a] = false;
         dallas_error[a]++;  // incrémente le compteur d'erreur
         char temp_buffer[128]; // Ajustez la taille en fonction de la longueur maximale attendue
         snprintf(temp_buffer, sizeof(temp_buffer), "Dallas %d : échec %d\r\n", a, dallas_error[a]);
@@ -52,11 +54,12 @@ void mqttdallas() {
       else {
         sysvar.celsius[a] = (roundf(sysvar.celsius[a] * 10) / 10 ) + 0.1; // pour les valeurs min
         dallas_error[a] = 0; // remise à zéro du compteur d'erreur
+        temp_valid[a] = true;
       }
     }
     if (!AP && mqtt_config.mqtt) {
-      if ( sysvar.celsius[sysvar.dallas_maitre] != previous_celsius[sysvar.dallas_maitre]  ||
-           sysvar.celsius[sysvar.dallas_maitre] != 0.99) {
+      if ( temp_valid[sysvar.dallas_maitre] &&
+           sysvar.celsius[sysvar.dallas_maitre] != previous_celsius[sysvar.dallas_maitre] ) {
         Mqtt_send_DOMOTICZ(String(config.IDXTemp), String(sysvar.celsius[sysvar.dallas_maitre]),"Temperature");
       }
 
@@ -77,18 +80,20 @@ void mqttdallas() {
       dallas_wait_log++;
       for (int i = 0; i < deviceCount; i++) {
 
-        if ( sysvar.celsius[i] != previous_celsius[i] || sysvar.celsius[i] != 0.99) {
+        if ( temp_valid[i] && sysvar.celsius[i] != previous_celsius[i] ) { // NOSONAR
           device_temp[i].sendFloat(sysvar.celsius[i]);
           previous_celsius[i]=sysvar.celsius[i];
           if ( dallas_wait_log > 5 ) { /// limitation de l'affichage des logs de température
-            char temp_buffer[128]; 
+            char temp_buffer[128];
             snprintf(temp_buffer, sizeof(temp_buffer), "Dallas %d : %.1f\r\n", i, previous_celsius[i]);
             logging.Set_log_init(temp_buffer,false);
           }
         }
       }
       if ( dallas_wait_log > 5 ) { dallas_wait_log = 0; }
-      device_temp_master.sendFloat(sysvar.celsius[sysvar.dallas_maitre]);
+      if ( temp_valid[sysvar.dallas_maitre] ) {
+        device_temp_master.sendFloat(sysvar.celsius[sysvar.dallas_maitre]);
+      }
     }
     // on demande la température suivante pour le prochain cycle
     sensors.requestTemperatures();
@@ -133,6 +138,7 @@ void mqttdallas() {
       dallas_error[a] = 0; // remise à zéro du compteur d'erreur
       /// mise en sécurité
       sysvar.celsius[a] = 99.9;
+      temp_valid[a] = false;
 
       previous_celsius[a]=sysvar.celsius[a];
       if (a == sysvar.dallas_maitre) {
@@ -140,7 +146,7 @@ void mqttdallas() {
 
         String message = String(logging.loguptime()) + "Dallas maitre perdue";
         sysvar.wait_unlock_mqtt();
-        client.publish((temp_topic+"dallas").c_str(), String(message).c_str(),true);
+        mq_post((temp_topic+"dallas"), message, true);
 
         unified_dimmer.dimmer_off(); /// mise en sécurité de l'ensemble
       }
