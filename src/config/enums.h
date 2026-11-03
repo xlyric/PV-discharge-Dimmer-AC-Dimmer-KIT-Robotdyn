@@ -401,11 +401,11 @@ struct System {
   bool lock_mqtt=false; // pour éviter les conflits de mémoire entre http et mqtt
 
   void wait_unlock_mqtt() {
-      // on limite le temps de blocage à 3 secondes pour éviter les reboot sur blocage
-      time_t start = time(nullptr);
+      // délai borné basé sur millis() : time() vaut 0 avant la synchro NTP
+      uint32_t start = millis();
       while (lock_mqtt) {
-        delay(50);
-        if (time(nullptr) - start > 3) {
+        delay(10);
+        if ((uint32_t)(millis() - start) > 2000UL) {
           lock_mqtt = false;
           break;
         }
