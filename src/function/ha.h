@@ -2,6 +2,7 @@
 #define HA_FUNCTIONS
 
   #include <PubSubClient.h>
+  #include "function/mq_post.h"
 
 extern PubSubClient client;
 extern Config config; // NOSONAR
@@ -213,11 +214,11 @@ public: void HA_discovery(){
 
     if (object_id.length() != 0) {
       sysvar.wait_unlock_mqtt();
-      client.publish(String(topic+object_id+"/config").c_str(), device.c_str(),true);  // déclaration autoconf dimmer
+      mq_post(topic+object_id+"/config", device, true);  // déclaration autoconf dimmer
     }
     else {
       sysvar.wait_unlock_mqtt();
-      client.publish(String(topic+"config").c_str(), device.c_str(),true);   // déclaration autoconf dimmer
+      mq_post(topic+"config", device, true);   // déclaration autoconf dimmer
     }
 
   }
@@ -235,7 +236,7 @@ public: void HA_discovery(){
                     object_id.c_str(), value);
             
             sysvar.wait_unlock_mqtt();
-            client.publish(topic, message, retain_flag);
+            mq_post(topic, message, retain_flag);
         }
   }
 
@@ -456,51 +457,26 @@ void HA_discover(){
     Serial.println("HA discovery" );
     /// création des binary_sensor et enregistrement sous HA
     device_dimmer_on_off.HA_discovery();
-    device_dimmer_on_off.sendInt(config.dimmer_on_off);
-
     device_dimmer.HA_discovery();
-    device_dimmer.sendFloat(sysvar.puissance);
-
     device_dimmer_power.HA_discovery();
-    device_dimmer_power.sendInt(sysvar.puissance * config.charge / 100);
-
     device_dimmer_total_power.HA_discovery();
-    device_dimmer_total_power.sendInt(sysvar.puissance_cumul + (sysvar.puissance * config.charge / 100));
-
     device_cooler.HA_discovery();
-    device_cooler.send(stringBool(false));
-
     device_temp_master.HA_discovery();  // discovery fait à la 1ere réception sonde ou mqtt.
-    device_temp_master.sendInt(0);
-
     #ifdef RELAY1
     device_relay1.HA_discovery();
-    device_relay1.sendInt(0);
     #endif
     #ifdef RELAY2
     device_relay2.HA_discovery();
-    device_relay2.sendInt(0);
     #endif
 
     // boost
     device_dimmer_boost.HA_discovery();
     //device_dimmer_boost.send("0");
-
     device_dimmer_starting_pow.HA_discovery();
-    device_dimmer_starting_pow.sendInt(config.startingpow);
-
     device_dimmer_minpow.HA_discovery();
-    device_dimmer_minpow.sendInt(config.minpow);
-
     device_dimmer_maxpow.HA_discovery();
-    device_dimmer_maxpow.sendInt(config.maxpow);
-
     device_dimmer_send_power.HA_discovery();
-    device_dimmer_send_power.sendInt(sysvar.puissance);
-
     device_dimmer_child_mode.HA_discovery();
-    device_dimmer_child_mode.send(config.mode);
-
     device_dimmer_save.HA_discovery();
   }
 }

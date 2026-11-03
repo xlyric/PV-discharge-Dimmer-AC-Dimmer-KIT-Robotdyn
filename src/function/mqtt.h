@@ -18,7 +18,7 @@
 #endif
 
 extern Config config;
-extern System sysvar;
+extern System sysvar; // NOSONAR
 extern HTTPClient http;
 extern WiFiClient domotic_client;
 extern bool mqttConnected;
@@ -68,6 +68,16 @@ char buffer[1024];// NOSONAR
 
 const char* stringBoolMQTT(bool mybool);
 
+/// @brief La découverte HA doit-elle être (re)publiée ? (au plus 1 fois / 5 min)
+bool discovery_due(bool force = false) {
+  static uint32_t last_ms = 0;
+  if (!force && last_ms != 0 && (uint32_t)(millis() - last_ms) < 300000UL) {
+    return false;
+  }
+  last_ms = millis();
+  return true;
+}
+
 String node_mac = WiFi.macAddress().substring(12,14)+ WiFi.macAddress().substring(15,17);
 String node_id = String("dimmer-") + node_mac;
 
@@ -82,8 +92,12 @@ auto command_save = String("Xlyric/sauvegarde/"+ node_id );
 
 void callback(char* topic, byte* payload, unsigned int length) {
 
-  auto arrivage = new char[length + 1];
-
+  constexpr unsigned int kMaxPayload = 512;
+  if (length >= kMaxPayload) {
+    Serial.printf("MQTT: payload ignore (%u octets)\n", length);
+    return;
+  }
+  char arrivage[kMaxPayload];  // NOSONAR
   for (unsigned int i=0; i<length; i++) {
     arrivage[i] = (char)payload[i];
   }
@@ -307,7 +321,7 @@ void Mqtt_send_DOMOTICZ(String idx, String value, String name="") {
     // si config.Publish est vide, on ne publie pas
     if (strlen(config.Publish) != 0 ) { // NOSONAR
       sysvar.wait_unlock_mqtt();
-      client.publish(config.Publish, retour.c_str(), true);
+      mq_post(config.Publish, retour, true);
     }
   }
 
@@ -316,7 +330,7 @@ void Mqtt_send_DOMOTICZ(String idx, String value, String name="") {
     // si config.Publish est vide, on ne publie pas
     if (strlen(config.Publish) != 0 ) { // NOSONAR
       sysvar.wait_unlock_mqtt();
-      client.publish(jeedom_publish.c_str(), value.c_str(), true);
+      mq_post(jeedom_publish, value, true);
     }
   }
   Serial.println("MQTT SENT");
@@ -354,6 +368,9 @@ void child_communication(int delest_power, bool equal = false){
 
 void connect_and_subscribe() {
     if (!client.connected() && WiFi.isConnected()) {
+      static uint32_t last_try_ms = 0;
+      if (last_try_ms != 0 && (uint32_t)(millis() - last_try_ms) < 10000UL) { return; }
+      last_try_ms = millis();
       Serial.print("Attempting MQTT connection...\n");
       connectToMqtt();
       delay(1000);   // Attente d'avoir le callback de connexion MQTT avant de faire les subscriptions
@@ -365,10 +382,6 @@ void connect_and_subscribe() {
 
       Serial.println("connected");
       logging.Set_log_init("Connected\r\n");
-
-      logging.Set_log_init("Call HA discover\r\n");
-      Serial.println("Call HA discover");
-      HA_discover();
 
       logging.Set_log_init("Other subscriptions...\r\n");
       Serial.println("Other subscriptions...");
@@ -431,18 +444,23 @@ void connectToMqtt() {
     client.setServer(ip, config.port);
     client.setCallback(callback);
     client.setKeepAlive(120);
-    client.setBufferSize(1024);
-    client.connect(config.say_my_name, mqtt_config.username, mqtt_config.password, arrayWill, 2, true, "offline");
-
+    client.setBufferSize(2048);
+    if (!client.connect(config.say_my_name, mqtt_config.username, mqtt_config.password, arrayWill, 2, true, "offline")) {
+      Serial.printf("MQTT connect failed, rc=%d\n", client.state());
+      logging.Set_log_init("MQTT connect failed\r\n");
+      return;
+    }
   }
   // affig en debug k'état de client.connected
   if (client.connected()) {
     Serial.println("Connected to MQTT.");
     logging.Set_log_init("Connected to MQTT.\r\n");
-    /// discovery HA
     recreate_topic();
-    HA_discover();
     onMqttConnect(true);
+    /// discovery HA
+    if (discovery_due()) {
+      HA_discover();
+    }
     client.setCallback(callback);
   }
 }
@@ -457,13 +475,15 @@ void onMqttConnect(bool sessionPresent) {
 
   // Once connected, publish online to the availability topic
   sysvar.wait_unlock_mqtt();
-  client.publish(String(topic_Xlyric +"status").c_str(),"online",true);
+  mq_post(topic_Xlyric + "status", "online", true);
 
-  if (strlen(config.SubscribePV) !=0 ) {
+  if (mqtt_config.mqtt && config.SubscribePV[0] != '\0' &&
+      strcmp(config.SubscribePV, "none") != 0 && strcmp(config.SubscribePV, "null") != 0) {
     client.subscribe(config.SubscribePV,1);
     Serial.println(config.SubscribePV);
   }
-  if (strlen(config.SubscribeTEMP) != 0 ) {
+  if (mqtt_config.mqtt && config.SubscribeTEMP[0] != '\0' &&
+      strcmp(config.SubscribeTEMP, "none") != 0 && strcmp(config.SubscribeTEMP, "null") != 0) {
     client.subscribe(config.SubscribeTEMP,1);
     Serial.println(config.SubscribeTEMP);
   }
